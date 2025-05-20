@@ -4,18 +4,17 @@
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Mail, MessageSquare, Video, Users as TeamsIcon, Briefcase, Github, ExternalLink } from 'lucide-react';
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge'; // Added import
+import { Mail, MessageSquare, Video, Users as TeamsIcon, Briefcase, Github } from 'lucide-react';
+// Removed Image import as we are using simple img for placeholders
+import { Badge } from '@/components/ui/badge';
 
 const communicationPlatforms = [
-  { name: 'Email', icon: Mail, logoUrl: 'https://placehold.co/64x64.png', dataAiHint: 'email app logo', description: 'Direct team and client communication.' },
-  { name: 'Slack', icon: MessageSquare, logoUrl: 'https://placehold.co/64x64.png', dataAiHint: 'slack app logo', description: 'Instant team messaging and channels.' },
-  { name: 'Google Meet', icon: Video, logoUrl: 'https://placehold.co/64x64.png', dataAiHint: 'google meet logo', description: 'Video conferencing and meetings.' },
-  { name: 'Zoom', icon: Video, logoUrl: 'https://placehold.co/64x64.png', dataAiHint: 'zoom app logo', description: 'Video calls and webinars.' },
-  { name: 'Microsoft Teams', icon: TeamsIcon, logoUrl: 'https://placehold.co/64x64.png', dataAiHint: 'microsoft teams logo', description: 'Collaboration and chat within Microsoft ecosystem.' },
-  { name: 'GitHub', icon: Github, logoUrl: 'https://placehold.co/64x64.png', dataAiHint: 'github logo', description: 'Code collaboration and version control discussions.' },
+  { name: 'Email', icon: Mail, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'email app logo', description: 'Direct team and client communication.' },
+  { name: 'Slack', icon: MessageSquare, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'slack app logo', description: 'Instant team messaging and channels.' },
+  { name: 'Google Meet', icon: Video, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'google meet logo', description: 'Video conferencing and meetings.' },
+  { name: 'Zoom', icon: Video, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'zoom app logo', description: 'Video calls and webinars.' },
+  { name: 'Microsoft Teams', icon: TeamsIcon, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'microsoft teams logo', description: 'Collaboration and chat within Microsoft ecosystem.' },
+  { name: 'GitHub', icon: Github, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'github logo', description: 'Code collaboration and version control discussions.' },
 ];
 
 const communicationLogs = [
@@ -30,10 +29,10 @@ const communicationLogs = [
 const PlatformIcon = ({ platformName }: { platformName: string }) => {
   switch (platformName.toLowerCase()) {
     case 'email': return <Mail className="h-5 w-5 text-primary" />;
-    case 'slack': return <MessageSquare className="h-5 w-5 text-purple-500" />; // Specific color for Slack
-    case 'google meet': return <Video className="h-5 w-5 text-green-500" />; // Specific color for Meet
-    case 'zoom': return <Video className="h-5 w-5 text-blue-600" />; // Specific color for Zoom
-    case 'microsoft teams': return <TeamsIcon className="h-5 w-5 text-indigo-500" />; // Specific color for Teams
+    case 'slack': return <MessageSquare className="h-5 w-5 text-purple-500" />;
+    case 'google meet': return <Video className="h-5 w-5 text-green-500" />;
+    case 'zoom': return <Video className="h-5 w-5 text-blue-600" />;
+    case 'microsoft teams': return <TeamsIcon className="h-5 w-5 text-indigo-500" />;
     case 'github': return <Github className="h-5 w-5 text-foreground" />;
     default: return <Briefcase className="h-5 w-5 text-muted-foreground" />;
   }
@@ -49,23 +48,39 @@ export default function UnifiedCommunicationsPage() {
 
       <Card className="mb-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader>
-          <CardTitle>Integrated Platforms</CardTitle>
-          <CardDescription>Connect and monitor your communication channels seamlessly.</CardDescription>
+          <CardTitle>Integrated Platforms Overview</CardTitle>
+          <CardDescription>Your connected tools at a glance.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <CardContent className="flex flex-col items-center pt-4">
+          {/* Speech bubble */}
+          <div className="relative mb-4">
+            <div className="bg-foreground text-background p-3 rounded-lg shadow-md">
+              <p className="text-sm font-medium text-center">You are using {communicationPlatforms.length} tools to streamline your work!</p>
+            </div>
+            {/* Triangle for speech bubble */}
+            <div className="absolute left-1/2 transform -translate-x-1/2 top-full w-0 h-0
+              border-l-[10px] border-l-transparent
+              border-t-[10px] border-t-foreground
+              border-r-[10px] border-r-transparent">
+            </div>
+          </div>
+
+          {/* Icon bar */}
+          <div className="flex justify-center items-center space-x-2 p-4 bg-secondary rounded-xl shadow-lg mt-6 w-auto max-w-md">
             {communicationPlatforms.map((platform) => (
-              <Card key={platform.name} className="p-4 flex flex-col items-start hover:shadow-md transition-shadow duration-200 ease-in-out transform hover:-translate-y-1">
-                <div className="flex items-center mb-3 w-full">
-                  <Image src={platform.logoUrl} alt={`${platform.name} logo`} width={48} height={48} className="rounded-lg" data-ai-hint={platform.dataAiHint} />
-                  <CardTitle className="ml-3 text-lg">{platform.name}</CardTitle>
-                </div>
-                <p className="text-xs text-muted-foreground mb-3 flex-grow">{platform.description}</p>
-                <Button variant="outline" size="sm" className="w-full">
-                  <ExternalLink className="mr-2 h-3 w-3" />
-                  View Settings
-                </Button>
-              </Card>
+              <div key={platform.name} className="group relative" title={platform.name}>
+                <img 
+                  src={platform.logoUrl} 
+                  alt={`${platform.name} logo`} 
+                  width={56} 
+                  height={56} 
+                  className="rounded-lg transition-transform duration-200 ease-in-out group-hover:scale-110 cursor-pointer object-contain" 
+                  data-ai-hint={platform.dataAiHint} 
+                />
+                <span className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-foreground text-background text-xs px-2 py-1 rounded-md shadow-lg transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                  {platform.name}
+                </span>
+              </div>
             ))}
           </div>
         </CardContent>
@@ -115,3 +130,4 @@ export default function UnifiedCommunicationsPage() {
     </>
   );
 }
+
