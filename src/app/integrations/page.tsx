@@ -1,0 +1,172 @@
+
+'use client';
+
+import { useState } from 'react';
+import PageHeader from '@/components/page-header';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Github, Link, CheckCircle, XCircle, Settings, ExternalLink } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import Image from 'next/image';
+import { useToast } from "@/hooks/use-toast";
+
+interface Integration {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ElementType;
+  logoUrl?: string;
+  dataAiHint?: string;
+  category: string;
+  isConnected: boolean;
+  features: string[];
+}
+
+const initialIntegrations: Integration[] = [
+  {
+    id: 'github',
+    name: 'GitHub',
+    description: 'Connect your GitHub account to sync repositories, track issues, and analyze developer activity.',
+    icon: Github,
+    logoUrl: 'https://placehold.co/64x64.png',
+    dataAiHint: 'github logo',
+    category: 'Development',
+    isConnected: false,
+    features: ['Repository Sync', 'Issue Tracking', 'Activity Summary'],
+  },
+  {
+    id: 'slack',
+    name: 'Slack',
+    description: 'Integrate Slack for notifications, quick actions, and communication logging.',
+    icon: MessageSquare, // Assuming MessageSquare is imported from lucide-react
+    logoUrl: 'https://placehold.co/64x64.png',
+    dataAiHint: 'slack app logo',
+    category: 'Communication',
+    isConnected: true,
+    features: ['Notifications', 'Slash Commands', 'Message Logging'],
+  },
+   {
+    id: 'google-calendar',
+    name: 'Google Calendar',
+    description: 'Sync calendars for scheduling interviews, meetings, and managing team availability.',
+    icon: Briefcase, // Placeholder, replace with CalendarDays if available
+    logoUrl: 'https://placehold.co/64x64.png',
+    dataAiHint: 'google calendar logo',
+    category: 'Productivity',
+    isConnected: false,
+    features: ['Meeting Scheduling', 'Availability Sync', 'Leave Management'],
+  },
+];
+
+// Dummy MessageSquare and Briefcase if not available (should be from lucide-react)
+const MessageSquare = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>;
+// const Briefcase = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>;
+
+
+export default function IntegrationsPage() {
+  const [integrations, setIntegrations] = useState<Integration[]>(initialIntegrations);
+  const { toast } = useToast();
+
+  const toggleConnection = (id: string) => {
+    setIntegrations(prev =>
+      prev.map(int =>
+        int.id === id ? { ...int, isConnected: !int.isConnected } : int
+      )
+    );
+    const updatedIntegration = integrations.find(int => int.id === id);
+    if (updatedIntegration) {
+        toast({
+            title: `${updatedIntegration.name} ${!updatedIntegration.isConnected ? 'Connected' : 'Disconnected'}`,
+            description: `Successfully ${!updatedIntegration.isConnected ? 'connected to' : 'disconnected from'} ${updatedIntegration.name}.`,
+            variant: !updatedIntegration.isConnected ? "default" : "destructive",
+        });
+    }
+  };
+
+  return (
+    <>
+      <PageHeader
+        title="Manage Integrations"
+        description="Connect and configure third-party services to enhance your HR workflow."
+      />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {integrations.map(integration => (
+          <Card key={integration.id} className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
+            <CardHeader>
+              <div className="flex items-center justify-between mb-2">
+                 <div className="flex items-center">
+                    {integration.logoUrl ? (
+                       <Image src={integration.logoUrl} alt={`${integration.name} logo`} width={40} height={40} className="rounded-md" data-ai-hint={integration.dataAiHint}/>
+                    ) : (
+                      <integration.icon className="h-10 w-10 text-primary" />
+                    )}
+                    <CardTitle className="ml-3 text-xl">{integration.name}</CardTitle>
+                 </div>
+                 <Badge variant="outline">{integration.category}</Badge>
+              </div>
+              <CardDescription className="text-sm min-h-[40px]">{integration.description}</CardDescription>
+            </CardHeader>
+            <CardContent className="flex-grow space-y-3">
+              <h4 className="text-xs font-semibold text-muted-foreground">FEATURES:</h4>
+              <ul className="space-y-1 text-xs">
+                {integration.features.map(feature => (
+                  <li key={feature} className="flex items-center">
+                    <CheckCircle className="h-3 w-3 mr-2 text-green-500" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+            <CardContent className="border-t pt-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id={`switch-${integration.id}`}
+                    checked={integration.isConnected}
+                    onCheckedChange={() => toggleConnection(integration.id)}
+                    aria-label={`Connect to ${integration.name}`}
+                  />
+                  <Label htmlFor={`switch-${integration.id}`} className={integration.isConnected ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                    {integration.isConnected ? 'Connected' : 'Disconnected'}
+                  </Label>
+                </div>
+                {integration.isConnected ? (
+                  <Button variant="outline" size="sm">
+                    <Settings className="mr-2 h-4 w-4" /> Configure
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={() => toggleConnection(integration.id)}>
+                    <Link className="mr-2 h-4 w-4" /> Connect
+                  </Button>
+                )}
+              </div>
+              {integration.id === 'github' && !integration.isConnected && (
+                <p className="text-xs text-muted-foreground mt-3">
+                  Connecting GitHub requires OAuth authentication.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+       <Card className="mt-8 shadow-lg">
+        <CardHeader>
+          <CardTitle>Request New Integration</CardTitle>
+          <CardDescription>Can't find an integration you need? Let us know!</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            We are always looking to expand our supported integrations. If there's a service you'd like to see here, please submit a request.
+          </p>
+          <Button>
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Request Integration
+          </Button>
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
+    

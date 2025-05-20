@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -15,6 +16,8 @@ import {
   Users,
   FileSignature,
   Briefcase,
+  Plug, // New icon for Integrations
+  GitFork, // Using GitFork for Recruitment as Briefcase is used elsewhere.
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -30,8 +33,9 @@ const navItems: NavItem[] = [
   { href: '/email-assistance', label: 'Email Assistance', icon: MailPlus, tooltip: 'Email Assistance' },
   { href: '/attendance-reporting', label: 'Attendance', icon: CalendarCheck, tooltip: 'Attendance & Reporting' },
   { href: '/unified-communications', label: 'Communications', icon: MessagesSquare, tooltip: 'Unified Communications' },
-  { href: '/recruitment', label: 'Recruitment', icon: Briefcase, tooltip: 'AI Recruitment' },
+  { href: '/recruitment', label: 'Recruitment', icon: GitFork, tooltip: 'AI Recruitment' },
   { href: '/smart-drafting', label: 'Smart Drafting', icon: FileSignature, tooltip: 'Smart Email Drafting' },
+  { href: '/integrations', label: 'Integrations', icon: Plug, tooltip: 'Manage Integrations' },
 ];
 
 export default function SidebarNav() {
@@ -43,12 +47,12 @@ export default function SidebarNav() {
         <SidebarMenuItem key={item.href}>
           <Link href={item.href} passHref legacyBehavior>
             <SidebarMenuButton
-              isActive={pathname === item.href}
+              isActive={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))}
               tooltip={item.tooltip}
-              className="justify-start"
+              className="justify-start group-data-[collapsible=icon]:justify-center"
             >
               <item.icon className="h-5 w-5" />
-              <span>{item.label}</span>
+              <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
             </SidebarMenuButton>
           </Link>
         </SidebarMenuItem>
@@ -56,3 +60,5 @@ export default function SidebarNav() {
     </SidebarMenu>
   );
 }
+
+    

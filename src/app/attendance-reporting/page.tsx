@@ -1,24 +1,92 @@
+
+'use client';
+
+import { useState, useEffect, type FormEvent } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, UserCircle } from 'lucide-react';
+import { Download, UserCircle, Clock, LogIn, LogOut, Briefcase } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from "@/hooks/use-toast";
 
 const attendanceData = [
-  { date: '2024-07-01', status: 'Present', clockIn: '09:00 AM', clockOut: '05:30 PM' },
-  { date: '2024-07-02', status: 'Present', clockIn: '09:05 AM', clockOut: '05:35 PM' },
-  { date: '2024-07-03', status: 'Absent', clockIn: '-', clockOut: '-' },
-  { date: '2024-07-04', status: 'Late', clockIn: '09:45 AM', clockOut: '06:00 PM' },
-  { date: '2024-07-05', status: 'Present', clockIn: '08:55 AM', clockOut: '05:25 PM' },
+  { id: '1', employee: 'John Doe', date: '2024-07-01', status: 'Present', clockIn: '09:00 AM', clockOut: '05:30 PM', department: 'Engineering' },
+  { id: '2', employee: 'John Doe', date: '2024-07-02', status: 'Present', clockIn: '09:05 AM', clockOut: '05:35 PM', department: 'Engineering' },
+  { id: '3', employee: 'John Doe', date: '2024-07-03', status: 'Absent', clockIn: '-', clockOut: '-', department: 'Engineering' },
+  { id: '4', employee: 'Jane Smith', date: '2024-07-03', status: 'Present', clockIn: '09:00 AM', clockOut: '05:00 PM', department: 'Marketing' },
+  { id: '5', employee: 'John Doe', date: '2024-07-04', status: 'Late', clockIn: '09:45 AM', clockOut: '06:00 PM', department: 'Engineering' },
+  { id: '6', employee: 'John Doe', date: '2024-07-05', status: 'Present', clockIn: '08:55 AM', clockOut: '05:25 PM', department: 'Engineering' },
+];
+
+const productivityData = [
+    { employee: 'John Doe', tasksCompleted: 15, targetTasks: 12, project: 'Project Phoenix', rating: 'High' },
+    { employee: 'Jane Smith', tasksCompleted: 10, targetTasks: 10, project: 'Campaign Alpha', rating: 'Met Expectations' },
 ];
 
 export default function AttendanceReportingPage() {
+  const [currentTime, setCurrentTime] = useState('');
+  const [isClockedIn, setIsClockedIn] = useState(false);
+  const [clockInTime, setClockInTime] = useState<Date | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleClockIn = () => {
+    const now = new Date();
+    setIsClockedIn(true);
+    setClockInTime(now);
+    toast({
+      title: "Clocked In",
+      description: `You clocked in at ${now.toLocaleTimeString()}.`,
+    });
+  };
+
+  const handleClockOut = () => {
+    setIsClockedIn(false);
+    // Here you would typically save the clock-out time to a backend
+    toast({
+      title: "Clocked Out",
+      description: `You clocked out at ${new Date().toLocaleTimeString()}.`,
+    });
+  };
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'present':
+        return 'default'; // Uses primary color by default
+      case 'absent':
+        return 'destructive';
+      case 'late':
+        return 'secondary'; // Uses accent or secondary for late
+      default:
+        return 'outline';
+    }
+  };
+  
+  const getStatusBadgeClassName = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'present':
+        return 'bg-green-500 hover:bg-green-600 text-white'; 
+      case 'late':
+        return 'bg-yellow-500 hover:bg-yellow-600 text-black';
+      default:
+        return '';
+    }
+  }
+
+
   return (
     <>
       <PageHeader
-        title="Attendance &amp; Reporting"
-        description="View individual monthly attendance, productivity, and behavior reports."
+        title="Attendance & Reporting"
+        description="Manage attendance, view reports, and track productivity."
       >
         <div className="flex space-x-2">
           <Button variant="outline">
@@ -32,23 +100,57 @@ export default function AttendanceReportingPage() {
         </div>
       </PageHeader>
 
-      <Card className="shadow-lg">
-        <CardHeader>
-          <div className="flex items-center space-x-3">
-            <UserCircle className="h-10 w-10 text-primary" />
-            <div>
-              <CardTitle className="text-xl">Monthly Report - John Doe</CardTitle>
-              <CardDescription>July 2024</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <section className="mb-6">
-            <h3 className="text-lg font-semibold mb-2">Attendance Details</h3>
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="md:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <CardHeader>
+            <CardTitle className="flex items-center text-xl">
+              <Clock className="mr-2 h-6 w-6 text-primary" />
+              Clock In/Out
+            </CardTitle>
+            <CardDescription>Your current time: {currentTime}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isClockedIn ? (
+              <div className="text-center p-4 bg-green-100 dark:bg-green-900/30 rounded-md">
+                <p className="font-semibold text-green-700 dark:text-green-400">You are Clocked In</p>
+                {clockInTime && <p className="text-sm text-muted-foreground">Since: {clockInTime.toLocaleTimeString()}</p>}
+              </div>
+            ) : (
+              <div className="text-center p-4 bg-yellow-100 dark:bg-yellow-900/30 rounded-md">
+                <p className="font-semibold text-yellow-700 dark:text-yellow-400">You are Clocked Out</p>
+              </div>
+            )}
+            {!isClockedIn ? (
+              <Button onClick={handleClockIn} className="w-full" size="lg">
+                <LogIn className="mr-2 h-5 w-5" /> Clock In
+              </Button>
+            ) : (
+              <Button onClick={handleClockOut} variant="destructive" className="w-full" size="lg">
+                <LogOut className="mr-2 h-5 w-5" /> Clock Out
+              </Button>
+            )}
+             <p className="text-xs text-muted-foreground text-center">
+              Remember to clock in when you start and clock out when you finish your workday.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <CardHeader>
+             <div className="flex items-center space-x-3">
+                <UserCircle className="h-10 w-10 text-primary" />
+                <div>
+                  <CardTitle className="text-xl">Employee Attendance Overview</CardTitle>
+                  <CardDescription>Monthly attendance summary for all employees.</CardDescription>
+                </div>
+              </div>
+          </CardHeader>
+          <CardContent>
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Employee</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Clock In</TableHead>
@@ -56,20 +158,14 @@ export default function AttendanceReportingPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {attendanceData.map((entry) => (
-                    <TableRow key={entry.date}>
+                  {attendanceData.slice(0, 5).map((entry) => ( // Show limited entries for brevity
+                    <TableRow key={entry.id}>
+                      <TableCell className="font-medium">{entry.employee}</TableCell>
                       <TableCell>{entry.date}</TableCell>
                       <TableCell>
                         <Badge
-                          variant={
-                            entry.status === 'Present' ? 'default' :
-                            entry.status === 'Absent' ? 'destructive' :
-                            'secondary' // For 'Late'
-                          }
-                          className={
-                            entry.status === 'Present' ? 'bg-green-500 hover:bg-green-600 text-white' :
-                            entry.status === 'Late' ? 'bg-yellow-500 hover:bg-yellow-600 text-black' : ''
-                          }
+                          variant={getStatusBadgeVariant(entry.status)}
+                          className={getStatusBadgeClassName(entry.status)}
                         >
                           {entry.status}
                         </Badge>
@@ -81,33 +177,49 @@ export default function AttendanceReportingPage() {
                 </TableBody>
               </Table>
             </div>
-          </section>
-
+          </CardContent>
+        </Card>
+      </div>
+      
+      <Card className="mt-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <CardHeader>
+          <CardTitle className="flex items-center text-xl">
+            <Briefcase className="mr-2 h-6 w-6 text-primary" />
+            Productivity & Behavior Reports
+          </CardTitle>
+          <CardDescription>Individual monthly productivity and behavior summaries.</CardDescription>
+        </CardHeader>
+        <CardContent>
           <div className="grid md:grid-cols-2 gap-6">
-            <section>
-              <h3 className="text-lg font-semibold mb-2">Productivity Summary</h3>
-              <Card className="bg-secondary/30 p-4">
-                <p className="text-sm text-muted-foreground">
-                  John completed 15 tasks this month, exceeding the target of 12 tasks.
-                  Key contributions include leading the X project and resolving Y critical bug.
-                  Overall productivity rated as 'High'.
-                </p>
+            {productivityData.map(data => (
+              <Card key={data.employee} className="bg-card border shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <CardTitle className="text-lg">{data.employee}</CardTitle>
+                  <CardDescription>{data.project}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Tasks Completed:</span>
+                      <span className="font-semibold">{data.tasksCompleted} / {data.targetTasks}</span>
+                    </div>
+                    <Progress value={(data.tasksCompleted / data.targetTasks) * 100} className="h-2" />
+                  </div>
+                  <p className="text-sm"><span className="font-medium">Rating:</span> {data.rating}</p>
+                  <p className="text-sm text-muted-foreground pt-2 border-t">
+                    {data.employee === 'John Doe' ? 
+                     "Consistently demonstrates strong teamwork and proactive problem-solving. Key contributions to Project Phoenix." :
+                     "Met expectations for Campaign Alpha. Good collaboration skills."
+                    }
+                  </p>
+                </CardContent>
               </Card>
-            </section>
-
-            <section>
-              <h3 className="text-lg font-semibold mb-2">Behavior Notes</h3>
-              <Card className="bg-secondary/30 p-4">
-                <p className="text-sm text-muted-foreground">
-                  John consistently demonstrates strong teamwork and communication skills.
-                  Proactive in meetings and always willing to help colleagues.
-                  Received positive feedback from team members on collaboration.
-                </p>
-              </Card>
-            </section>
+            ))}
           </div>
         </CardContent>
       </Card>
     </>
   );
 }
+
+    
