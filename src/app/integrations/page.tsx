@@ -5,11 +5,12 @@ import { useState } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Github, Link, CheckCircle, XCircle, Settings, ExternalLink } from 'lucide-react';
+import { Github, Link, CheckCircle, XCircle, Settings, ExternalLink, MessageSquare, Briefcase, CalendarDays } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from '@/components/ui/badge';
 
 interface Integration {
   id: string;
@@ -39,7 +40,7 @@ const initialIntegrations: Integration[] = [
     id: 'slack',
     name: 'Slack',
     description: 'Integrate Slack for notifications, quick actions, and communication logging.',
-    icon: MessageSquare, // Assuming MessageSquare is imported from lucide-react
+    icon: MessageSquare, 
     logoUrl: 'https://placehold.co/64x64.png',
     dataAiHint: 'slack app logo',
     category: 'Communication',
@@ -50,7 +51,7 @@ const initialIntegrations: Integration[] = [
     id: 'google-calendar',
     name: 'Google Calendar',
     description: 'Sync calendars for scheduling interviews, meetings, and managing team availability.',
-    icon: Briefcase, // Placeholder, replace with CalendarDays if available
+    icon: CalendarDays, // Using CalendarDays from lucide-react
     logoUrl: 'https://placehold.co/64x64.png',
     dataAiHint: 'google calendar logo',
     category: 'Productivity',
@@ -58,10 +59,6 @@ const initialIntegrations: Integration[] = [
     features: ['Meeting Scheduling', 'Availability Sync', 'Leave Management'],
   },
 ];
-
-// Dummy MessageSquare and Briefcase if not available (should be from lucide-react)
-const MessageSquare = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>;
-// const Briefcase = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>;
 
 
 export default function IntegrationsPage() {
@@ -168,5 +165,3 @@ export default function IntegrationsPage() {
     </>
   );
 }
-
-    
