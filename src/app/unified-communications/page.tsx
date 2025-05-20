@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Mail, MessageSquare, Video, Users as TeamsIcon, Briefcase, Github, ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge'; // Added import
 
 const communicationPlatforms = [
   { name: 'Email', icon: Mail, logoUrl: 'https://placehold.co/64x64.png', dataAiHint: 'email app logo', description: 'Direct team and client communication.' },
@@ -28,13 +29,13 @@ const communicationLogs = [
 
 const PlatformIcon = ({ platformName }: { platformName: string }) => {
   switch (platformName.toLowerCase()) {
-    case 'email': return <Mail className="h-5 w-5 text-blue-500" />;
-    case 'slack': return <MessageSquare className="h-5 w-5 text-purple-500" />;
-    case 'google meet': return <Video className="h-5 w-5 text-green-500" />;
-    case 'zoom': return <Video className="h-5 w-5 text-blue-600" />;
-    case 'microsoft teams': return <TeamsIcon className="h-5 w-5 text-indigo-500" />;
-    case 'github': return <Github className="h-5 w-5 text-gray-700 dark:text-gray-300" />;
-    default: return <Briefcase className="h-5 w-5 text-gray-500" />;
+    case 'email': return <Mail className="h-5 w-5 text-primary" />;
+    case 'slack': return <MessageSquare className="h-5 w-5 text-purple-500" />; // Specific color for Slack
+    case 'google meet': return <Video className="h-5 w-5 text-green-500" />; // Specific color for Meet
+    case 'zoom': return <Video className="h-5 w-5 text-blue-600" />; // Specific color for Zoom
+    case 'microsoft teams': return <TeamsIcon className="h-5 w-5 text-indigo-500" />; // Specific color for Teams
+    case 'github': return <Github className="h-5 w-5 text-foreground" />;
+    default: return <Briefcase className="h-5 w-5 text-muted-foreground" />;
   }
 };
 
@@ -114,5 +115,3 @@ export default function UnifiedCommunicationsPage() {
     </>
   );
 }
-
-    
