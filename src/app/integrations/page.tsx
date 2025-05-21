@@ -40,7 +40,7 @@ const initialIntegrations: Integration[] = [
     id: 'slack',
     name: 'Slack',
     description: 'Integrate Slack for notifications, quick actions, and communication logging.',
-    icon: MessageSquare, 
+    icon: MessageSquare,
     logoUrl: 'https://placehold.co/64x64.png',
     dataAiHint: 'slack app logo',
     category: 'Communication',
@@ -171,27 +171,33 @@ export default function IntegrationsPage() {
               </ul>
             </CardContent>
             <CardContent className="border-t pt-4 mt-auto">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center space-x-2"> {/* min-w-0 allows truncate to work in flex child */}
                   <Switch
                     id={`switch-${integration.id}`}
                     checked={integration.isConnected}
                     onCheckedChange={() => toggleConnection(integration.id)}
                     aria-label={`Connect to ${integration.name}`}
+                    className="flex-shrink-0" // Prevent switch from shrinking
                   />
-                  <Label htmlFor={`switch-${integration.id}`} className={integration.isConnected ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                  <Label
+                    htmlFor={`switch-${integration.id}`}
+                    className={`truncate ${integration.isConnected ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} // Added truncate
+                  >
                     {integration.isConnected ? 'Connected' : 'Disconnected'}
                   </Label>
                 </div>
-                {integration.isConnected ? (
-                  <Button variant="outline" size="sm">
-                    <Settings className="mr-2 h-4 w-4" /> Configure
-                  </Button>
-                ) : (
-                  <Button size="sm" onClick={() => toggleConnection(integration.id)}>
-                    <Link className="mr-2 h-4 w-4" /> Connect
-                  </Button>
-                )}
+                <div className="flex-shrink-0"> {/* Prevent button group from shrinking */}
+                  {integration.isConnected ? (
+                    <Button variant="outline" size="sm">
+                      <Settings className="mr-2 h-4 w-4" /> Configure
+                    </Button>
+                  ) : (
+                    <Button size="sm" onClick={() => toggleConnection(integration.id)}>
+                      <Link className="mr-2 h-4 w-4" /> Connect
+                    </Button>
+                  )}
+                </div>
               </div>
               {integration.id === 'github' && !integration.isConnected && (
                 <p className="text-xs text-muted-foreground mt-3">
@@ -220,3 +226,4 @@ export default function IntegrationsPage() {
     </>
   );
 }
+
