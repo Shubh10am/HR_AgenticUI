@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, type FormEvent } from 'react';
@@ -12,6 +13,7 @@ import { Loader2, Wand2, UserCheck, FileText, PlayCircle, Briefcase } from 'luci
 import { generateJobDescription, type GenerateJobDescriptionInput, type GenerateJobDescriptionOutput } from '@/ai/flows/generate-job-description';
 import { aiInterviewer, type AiInterviewerInput, type AiInterviewerOutput } from '@/ai/flows/ai-interviewer';
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from '@/components/ui/badge';
 
 export default function RecruitmentPage() {
   const [jdPrompt, setJdPrompt] = useState('');
@@ -21,7 +23,7 @@ export default function RecruitmentPage() {
   const [interviewerJobDesc, setInterviewerJobDesc] = useState('');
   const [candidateResume, setCandidateResume] = useState('');
   const [candidateName, setCandidateName] = useState('');
-  const [interviewRounds, setInterviewRounds] = useState(3);
+  const [interviewRounds, setInterviewRounds] = useState('3'); // Changed to string, default '3'
   const [interviewResult, setInterviewResult] = useState<AiInterviewerOutput | null>(null);
   const [isInterviewLoading, setIsInterviewLoading] = useState(false);
   const { toast } = useToast();
@@ -52,6 +54,17 @@ export default function RecruitmentPage() {
       toast({ title: "Input Required", description: "Please fill all fields for AI Interviewer.", variant: "destructive" });
       return;
     }
+
+    const numInterviewRounds = parseInt(interviewRounds, 10);
+    if (isNaN(numInterviewRounds) || numInterviewRounds < 1 || numInterviewRounds > 10) {
+      toast({
+        title: "Invalid Input",
+        description: "Number of interview rounds must be an integer between 1 and 10.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsInterviewLoading(true);
     setInterviewResult(null);
     try {
@@ -59,7 +72,7 @@ export default function RecruitmentPage() {
         jobDescription: interviewerJobDesc,
         candidateResume,
         candidateName,
-        interviewRounds
+        interviewRounds: numInterviewRounds // Pass the parsed number
       };
       const result: AiInterviewerOutput = await aiInterviewer(input);
       setInterviewResult(result);
@@ -184,7 +197,15 @@ export default function RecruitmentPage() {
                 </div>
                  <div>
                   <Label htmlFor="interviewRounds">Number of Interview Rounds</Label>
-                  <Input id="interviewRounds" type="number" value={interviewRounds} onChange={(e) => setInterviewRounds(parseInt(e.target.value))} className="mt-1" min="1" max="10" />
+                  <Input 
+                    id="interviewRounds" 
+                    type="number" 
+                    value={interviewRounds} 
+                    onChange={(e) => setInterviewRounds(e.target.value)} // Directly set the string value
+                    className="mt-1" 
+                    min="1" 
+                    max="10" 
+                  />
                 </div>
                 <Button type="submit" disabled={isInterviewLoading}>
                   {isInterviewLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
@@ -196,7 +217,7 @@ export default function RecruitmentPage() {
                   <Card className="bg-secondary/30">
                     <CardHeader><CardTitle className="text-lg">Interview Summary</CardTitle></CardHeader>
                     <CardContent>
-                      <p><strong>Candidate Fit Score:</strong> <Badge variant={interviewResult.candidateFitScore > 70 ? "default" : "secondary"} className={interviewResult.candidateFitScore > 70 ? "bg-green-500" : "bg-yellow-500"}>{interviewResult.candidateFitScore}/100</Badge></p>
+                      <p><strong>Candidate Fit Score:</strong> <Badge variant={interviewResult.candidateFitScore > 70 ? "default" : "secondary"} className={interviewResult.candidateFitScore > 70 ? "bg-green-500 text-white" : interviewResult.candidateFitScore > 50 ? "bg-yellow-500 text-black" : "bg-red-500 text-white" }>{interviewResult.candidateFitScore}/100</Badge></p>
                       <h4 className="font-semibold mt-2 mb-1">Overall Feedback:</h4>
                       <p className="text-sm whitespace-pre-wrap">{interviewResult.overallFeedback}</p>
                     </CardContent>
@@ -216,3 +237,4 @@ export default function RecruitmentPage() {
     </>
   );
 }
+
