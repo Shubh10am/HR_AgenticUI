@@ -10,6 +10,7 @@ import { ArrowRight, Mail, Users, FileText, MessageSquare, ListChecks, CalendarD
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label'; // Added import for Label
 import { useToast } from '@/hooks/use-toast';
 
 interface QuickAction {
@@ -33,13 +34,15 @@ const initialProjectTasks: ProjectTask[] = [
     { id: '2', name: 'Design new dashboard widgets', status: 'In Progress', assignee: 'Bob', dueDate: '2024-07-20' },
     { id: '3', name: 'Integrate payment gateway', status: 'In Progress', assignee: 'Charlie', dueDate: '2024-07-25' },
     { id: '4', name: 'User testing for mobile app', status: 'Todo', dueDate: '2024-08-01' },
-    { id: '5', name: 'Update documentation', status: 'Todo', dueDate: '2024-08-05' },
+    { id: '5', name: 'Update documentation', status: 'Todo' }, // Removed due date for variety
 ];
 
 
 export default function DashboardPage() {
   const [projectTasks, setProjectTasks] = useState<ProjectTask[]>(initialProjectTasks);
   const [newTaskName, setNewTaskName] = useState('');
+  const [newTaskAssignee, setNewTaskAssignee] = useState('');
+  const [newTaskDueDate, setNewTaskDueDate] = useState('');
   const { toast } = useToast();
 
   const quickActions: QuickAction[] = [
@@ -65,9 +68,13 @@ export default function DashboardPage() {
       id: Date.now().toString(),
       name: newTaskName.trim(),
       status: 'Todo',
+      assignee: newTaskAssignee.trim() || undefined,
+      dueDate: newTaskDueDate.trim() || undefined,
     };
     setProjectTasks(prevTasks => [newTask, ...prevTasks]);
     setNewTaskName('');
+    setNewTaskAssignee('');
+    setNewTaskDueDate('');
     toast({ title: "Task Added", description: `"${newTask.name}" has been added.` });
   };
 
@@ -96,7 +103,7 @@ export default function DashboardPage() {
 
   const getStatusIcon = (status: ProjectTask['status']) => {
     if (status === 'Done') return <CheckCircle className="h-5 w-5 text-green-500" />;
-    if (status === 'In Progress') return <RefreshCw className="h-5 w-5 text-yellow-500 animate-spin-slow" />; // Added slow spin
+    if (status === 'In Progress') return <RefreshCw className="h-5 w-5 text-yellow-500 animate-spin-slow" />;
     return <Circle className="h-5 w-5 text-muted-foreground" />;
   };
   
@@ -172,18 +179,46 @@ export default function DashboardPage() {
               </div>
               <Progress value={progressPercentage} className="w-full h-3" />
             </div>
-            <form onSubmit={handleAddTask} className="flex gap-2 mt-4">
-              <Input 
-                type="text" 
-                value={newTaskName}
-                onChange={(e) => setNewTaskName(e.target.value)}
-                placeholder="Add a new task..."
-                className="flex-grow"
-              />
-              <Button type="submit" size="sm">
+            
+            <form onSubmit={handleAddTask} className="space-y-3 pt-4 border-t">
+              <div>
+                <Label htmlFor="newTaskName" className="text-xs font-medium">Task Name</Label>
+                <Input 
+                  id="newTaskName" 
+                  value={newTaskName}
+                  onChange={(e) => setNewTaskName(e.target.value)}
+                  placeholder="Enter task name..."
+                  className="mt-1 h-9" 
+                  required 
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="newTaskAssignee" className="text-xs font-medium">Assignee (Optional)</Label>
+                  <Input 
+                    id="newTaskAssignee" 
+                    value={newTaskAssignee}
+                    onChange={(e) => setNewTaskAssignee(e.target.value)}
+                    placeholder="e.g., Alice"
+                    className="mt-1 h-9"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="newTaskDueDate" className="text-xs font-medium">Due Date (Optional)</Label>
+                  <Input 
+                    id="newTaskDueDate" 
+                    value={newTaskDueDate}
+                    onChange={(e) => setNewTaskDueDate(e.target.value)}
+                    placeholder="e.g., 2024-08-15"
+                    className="mt-1 h-9"
+                  />
+                </div>
+              </div>
+              <Button type="submit" size="sm" className="w-full">
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Task
               </Button>
             </form>
+
             <div className="space-y-2 mt-4 max-h-60 overflow-y-auto pr-2">
                 {projectTasks.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-4">No tasks yet. Add one above!</p>
@@ -273,5 +308,3 @@ export default function DashboardPage() {
     </>
   );
 }
-
-    
