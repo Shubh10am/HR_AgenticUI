@@ -4,7 +4,7 @@
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Mail, MessageSquare, Video, Users as TeamsIcon, Briefcase, Github } from 'lucide-react';
+import { Mail, MessageSquare, Video, Users as TeamsIcon, Briefcase, Github, Webcam } from 'lucide-react';
 // Removed Image import as we are using simple img for placeholders
 import { Badge } from '@/components/ui/badge';
 
@@ -12,7 +12,7 @@ const communicationPlatforms = [
   { name: 'Email', icon: Mail, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'email app logo', description: 'Direct team and client communication.' },
   { name: 'Slack', icon: MessageSquare, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'slack app logo', description: 'Instant team messaging and channels.' },
   { name: 'Google Meet', icon: Video, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'google meet logo', description: 'Video conferencing and meetings.' },
-  { name: 'Zoom', icon: Video, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'zoom app logo', description: 'Video calls and webinars.' },
+  { name: 'Zoom', icon: Webcam, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'zoom app logo', description: 'Video calls and webinars.' },
   { name: 'Microsoft Teams', icon: TeamsIcon, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'microsoft teams logo', description: 'Collaboration and chat within Microsoft ecosystem.' },
   { name: 'GitHub', icon: Github, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'github logo', description: 'Code collaboration and version control discussions.' },
 ];
@@ -31,7 +31,7 @@ const PlatformIcon = ({ platformName }: { platformName: string }) => {
     case 'email': return <Mail className="h-5 w-5 text-primary" />;
     case 'slack': return <MessageSquare className="h-5 w-5 text-purple-500" />;
     case 'google meet': return <Video className="h-5 w-5 text-green-500" />;
-    case 'zoom': return <Video className="h-5 w-5 text-blue-600" />;
+    case 'zoom': return <Webcam className="h-5 w-5 text-blue-600" />;
     case 'microsoft teams': return <TeamsIcon className="h-5 w-5 text-indigo-500" />;
     case 'github': return <Github className="h-5 w-5 text-foreground" />;
     default: return <Briefcase className="h-5 w-5 text-muted-foreground" />;
@@ -130,4 +130,3 @@ export default function UnifiedCommunicationsPage() {
     </>
   );
 }
-
