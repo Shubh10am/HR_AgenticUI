@@ -13,6 +13,8 @@ import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, typ
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+const NONE_TEAM_VALUE = "--none--";
+
 export default function SmartDraftingPage() {
   const [prompt, setPrompt] = useState('');
   const [originalDraft, setOriginalDraft] = useState('');
@@ -92,7 +94,7 @@ export default function SmartDraftingPage() {
   };
 
   const handleCopy = () => {
-    const textToCopy = `Subject: ${subject}\n\nTo: ${recipients || selectedTeam || 'N/A'}\n\nBody:\n${isEditing ? editableDraft : originalDraft}`;
+    const textToCopy = `Subject: ${subject}\n\nTo: ${selectedTeam || recipients || 'N/A'}\n\nBody:\n${isEditing ? editableDraft : originalDraft}`;
     navigator.clipboard.writeText(textToCopy);
     toast({
       title: "Copied to Clipboard",
@@ -205,12 +207,22 @@ export default function SmartDraftingPage() {
             </div>
              <div>
               <Label htmlFor="sendToTeam">Or Send to Team</Label>
-              <Select value={selectedTeam} onValueChange={(value) => {setSelectedTeam(value); if(value) setRecipients('');}}>
+              <Select 
+                value={selectedTeam} 
+                onValueChange={(value) => {
+                  if (value === NONE_TEAM_VALUE) {
+                    setSelectedTeam('');
+                  } else {
+                    setSelectedTeam(value);
+                    setRecipients(''); 
+                  }
+                }}
+              >
                 <SelectTrigger id="sendToTeam" className="mt-1">
                   <SelectValue placeholder="Select a team (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None (Manual Recipients)</SelectItem>
+                  <SelectItem value={NONE_TEAM_VALUE}>None (Manual Recipients)</SelectItem>
                   <SelectItem value="all-employees@hrstreamline.ai">All Employees</SelectItem>
                   <SelectItem value="engineering@hrstreamline.ai">Engineering Team</SelectItem>
                   <SelectItem value="marketing@hrstreamline.ai">Marketing Team</SelectItem>
