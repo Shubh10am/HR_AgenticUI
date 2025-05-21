@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, type FormEvent } from 'react';
@@ -6,14 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2 } from 'lucide-react';
+import { Loader2, Wand2, Edit3, Save, XCircle } from 'lucide-react';
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, type GenerateDraftEmailResponsesOutput } from '@/ai/flows/draft-email-response';
 import { useToast } from "@/hooks/use-toast";
 
 export default function SmartDraftingPage() {
   const [prompt, setPrompt] = useState('');
-  const [draft, setDraft] = useState('');
+  const [originalDraft, setOriginalDraft] = useState('');
+  const [editableDraft, setEditableDraft] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -27,14 +30,18 @@ export default function SmartDraftingPage() {
       return;
     }
     setIsLoading(true);
-    setDraft('');
+    setOriginalDraft('');
+    setEditableDraft('');
+    setIsEditing(false);
 
     try {
       const input: GenerateDraftEmailResponsesInput = { query: `Draft an email based on the following prompt: ${prompt}` };
       const result: GenerateDraftEmailResponsesOutput = await generateDraftEmailResponses(input);
       
       if (result.draftResponses && result.draftResponses.length > 0) {
-        setDraft(result.draftResponses[0]); // Display the first draft
+        const firstDraft = result.draftResponses[0];
+        setOriginalDraft(firstDraft);
+        setEditableDraft(firstDraft);
       } else {
         toast({
           title: "No Draft Generated",
@@ -52,6 +59,33 @@ export default function SmartDraftingPage() {
       setIsLoading(false);
     }
   }
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleSave = () => {
+    setOriginalDraft(editableDraft); // Save changes to be the new "original" for further edits
+    setIsEditing(false);
+    toast({
+      title: "Draft Saved",
+      description: "Your changes to the draft have been saved.",
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditableDraft(originalDraft); // Revert to last saved/generated draft
+    setIsEditing(false);
+  };
+
+  const handleCopy = () => {
+    const textToCopy = isEditing ? editableDraft : originalDraft;
+    navigator.clipboard.writeText(textToCopy);
+    toast({
+      title: "Copied to Clipboard",
+      description: "The draft content has been copied.",
+    });
+  };
 
   return (
     <>
@@ -78,6 +112,7 @@ export default function SmartDraftingPage() {
                   placeholder="e.g., 'Company-wide holiday party announcement for next Friday at 7 PM...'"
                   className="mt-1 min-h-[150px]"
                   required
+                  disabled={isLoading}
                 />
               </div>
               <Button type="submit" disabled={isLoading} className="w-full">
@@ -95,7 +130,7 @@ export default function SmartDraftingPage() {
         <Card className="lg:col-span-2 shadow-lg">
           <CardHeader>
             <CardTitle>Generated Email Draft</CardTitle>
-            <CardDescription>Review the AI-generated email draft below.</CardDescription>
+            <CardDescription>Review and edit the AI-generated email draft below.</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading && (
@@ -104,17 +139,38 @@ export default function SmartDraftingPage() {
                 <p className="ml-2">Generating draft...</p>
               </div>
             )}
-            {!isLoading && !draft && (
+            {!isLoading && !originalDraft && (
               <p className="text-center text-muted-foreground py-8">
                 No draft generated yet. Enter a prompt and click "Generate Email Draft".
               </p>
             )}
-            {draft && (
+            {originalDraft && (
               <div className="p-4 border rounded-md bg-secondary/30">
-                <pre className="text-sm whitespace-pre-wrap">{draft}</pre>
+                {isEditing ? (
+                  <Textarea
+                    value={editableDraft}
+                    onChange={(e) => setEditableDraft(e.target.value)}
+                    className="min-h-[200px] text-sm bg-background"
+                  />
+                ) : (
+                  <pre className="text-sm whitespace-pre-wrap min-h-[200px] p-2 bg-background rounded-md">{originalDraft}</pre>
+                )}
                 <div className="mt-4 flex justify-end space-x-2">
-                  <Button variant="outline" size="sm">Copy</Button>
-                  <Button size="sm">Edit &amp; Send</Button>
+                  <Button variant="outline" size="sm" onClick={handleCopy}>Copy</Button>
+                  {isEditing ? (
+                    <>
+                      <Button size="sm" onClick={handleSave} variant="default">
+                        <Save className="mr-2 h-4 w-4" /> Save Changes
+                      </Button>
+                      <Button size="sm" onClick={handleCancelEdit} variant="ghost">
+                        <XCircle className="mr-2 h-4 w-4" /> Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <Button size="sm" onClick={handleEdit}>
+                      <Edit3 className="mr-2 h-4 w-4" /> Edit &amp; Send
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
