@@ -55,13 +55,11 @@ export default function AttendanceReportingPage() {
   });
 
   useEffect(() => {
-    // Set initial time on client mount
     setCurrentTime(new Date().toLocaleTimeString());
     const timer = setInterval(() => {
       setCurrentTime(new Date().toLocaleTimeString());
     }, 1000);
 
-    // Attempt to retrieve clock-in state from localStorage
     const storedClockInStatus = localStorage.getItem('clockInStatus');
     const storedClockInTime = localStorage.getItem('clockInTime');
     if (storedClockInStatus === 'true' && storedClockInTime) {
@@ -87,7 +85,6 @@ export default function AttendanceReportingPage() {
     setIsClockedIn(false);
     localStorage.removeItem('clockInStatus');
     localStorage.removeItem('clockInTime');
-    // Here you would typically save the clock-out time to a backend
     toast({
       title: "Clocked Out",
       description: `You clocked out at ${new Date().toLocaleTimeString()}.`,
@@ -137,7 +134,6 @@ export default function AttendanceReportingPage() {
       title: "Leave Request Submitted (Mock)",
       description: `Request for ${leaveRequest.leaveType} leave from ${format(leaveRequest.startDate, 'PPP')} to ${format(leaveRequest.endDate, 'PPP')} has been submitted.`,
     });
-    // Reset form (optional)
     setLeaveRequest({
       employeeName: 'John Doe',
       leaveType: '',
@@ -153,7 +149,7 @@ export default function AttendanceReportingPage() {
         title="Attendance & Reporting"
         description="Manage attendance, view reports, request leave, and track productivity."
       >
-        <div className="flex space-x-2">
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           <Button variant="outline">
             <Download className="mr-2 h-4 w-4" />
             Download PDF
@@ -228,7 +224,7 @@ export default function AttendanceReportingPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="startDate">Start Date</Label>
                   <Popover>
@@ -339,8 +335,8 @@ export default function AttendanceReportingPage() {
       
       <Card className="mt-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader>
-           <div className="flex items-center space-x-3">
-              <UserCircle className="h-10 w-10 text-primary" />
+           <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3">
+              <UserCircle className="h-10 w-10 text-primary mb-2 sm:mb-0" />
               <div>
                 <CardTitle className="text-xl">Employee Attendance Overview</CardTitle>
                 <CardDescription>Monthly attendance summary for all employees.</CardDescription>
@@ -348,7 +344,7 @@ export default function AttendanceReportingPage() {
             </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>

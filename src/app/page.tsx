@@ -10,7 +10,7 @@ import { ArrowRight, Mail, Users, FileText, MessageSquare, ListChecks, CalendarD
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label'; // Added import for Label
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 
 interface QuickAction {
@@ -34,7 +34,7 @@ const initialProjectTasks: ProjectTask[] = [
     { id: '2', name: 'Design new dashboard widgets', status: 'In Progress', assignee: 'Bob', dueDate: '2024-07-20' },
     { id: '3', name: 'Integrate payment gateway', status: 'In Progress', assignee: 'Charlie', dueDate: '2024-07-25' },
     { id: '4', name: 'User testing for mobile app', status: 'Todo', dueDate: '2024-08-01' },
-    { id: '5', name: 'Update documentation', status: 'Todo' }, // Removed due date for variety
+    { id: '5', name: 'Update documentation', status: 'Todo' },
 ];
 
 
@@ -132,7 +132,7 @@ export default function DashboardPage() {
     <>
       <PageHeader
         title={pageTitle}
-        titleClassName="text-5xl lg:text-6xl"
+        titleClassName="text-3xl sm:text-4xl md:text-5xl lg:text-6xl"
         description="Your intelligent assistant for efficient HR operations."
       />
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -192,7 +192,7 @@ export default function DashboardPage() {
                   required 
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label htmlFor="newTaskAssignee" className="text-xs font-medium">Assignee (Optional)</Label>
                   <Input 
