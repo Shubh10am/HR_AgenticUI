@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, type FormEvent } from 'react';
@@ -6,15 +7,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Send } from 'lucide-react';
+import { Loader2, Wand2, Send, Edit3 } from 'lucide-react'; // Added Edit3 for clarity
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, type GenerateDraftEmailResponsesOutput } from '@/ai/flows/draft-email-response';
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from 'next/navigation'; // Import useRouter
 
 export default function EmailAssistancePage() {
   const [query, setQuery] = useState('');
   const [drafts, setDrafts] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const router = useRouter(); // Initialize useRouter
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -51,6 +54,15 @@ export default function EmailAssistancePage() {
       setIsLoading(false);
     }
   }
+
+  const handleUseDraft = (draftContent: string) => {
+    localStorage.setItem('selectedEmailDraftForSmartDrafting', draftContent);
+    toast({
+      title: "Draft Selected",
+      description: "Redirecting to Smart Drafting page with the selected draft...",
+    });
+    router.push('/smart-drafting');
+  };
 
   return (
     <>
@@ -94,7 +106,7 @@ export default function EmailAssistancePage() {
         <Card className="lg:col-span-2 shadow-lg">
           <CardHeader>
             <CardTitle>Generated Draft Responses</CardTitle>
-            <CardDescription>Review and select a draft to use.</CardDescription>
+            <CardDescription>Review and select a draft to use or compose new.</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading && (
@@ -104,9 +116,14 @@ export default function EmailAssistancePage() {
               </div>
             )}
             {!isLoading && drafts.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">
-                No drafts generated yet. Enter a query and click "Generate Drafts".
-              </p>
+              <div className="text-center text-muted-foreground py-8 space-y-2">
+                <p>
+                  No drafts generated yet. Enter a query and click "Generate Drafts".
+                </p>
+                <Button onClick={() => router.push('/smart-drafting')}>
+                  <Edit3 className="mr-2 h-4 w-4" /> Go to Smart Drafting
+                </Button>
+              </div>
             )}
             {drafts.length > 0 && (
               <div className="space-y-4">
@@ -116,12 +133,11 @@ export default function EmailAssistancePage() {
                       <CardTitle className="text-base">Draft {index + 1}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm whitespace-pre-wrap">{draft}</p>
+                      <p className="text-sm whitespace-pre-wrap max-h-60 overflow-y-auto p-2 border rounded-md bg-background">{draft}</p>
                       <div className="mt-4 flex justify-end space-x-2">
-                        <Button variant="outline" size="sm">Copy</Button>
-                        <Button size="sm">
+                        <Button size="sm" onClick={() => handleUseDraft(draft)}>
                           <Send className="mr-2 h-4 w-4" />
-                          Use this draft
+                          Use this draft in Composer
                         </Button>
                       </div>
                     </CardContent>

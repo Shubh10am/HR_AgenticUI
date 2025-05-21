@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, useEffect } from 'react'; // Added useEffect
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -27,6 +27,20 @@ export default function SmartDraftingPage() {
   const [subject, setSubject] = useState('');
   const [selectedTeam, setSelectedTeam] = useState('');
 
+  useEffect(() => {
+    const draftFromAssistance = localStorage.getItem('selectedEmailDraftForSmartDrafting');
+    if (draftFromAssistance) {
+      setOriginalDraft(draftFromAssistance);
+      setEditableDraft(draftFromAssistance);
+      // setPrompt(''); // Optional: Clear prompt if draft is loaded
+      localStorage.removeItem('selectedEmailDraftForSmartDrafting');
+      toast({
+        title: "Draft Loaded",
+        description: "Email body populated from Email Assistance. You can now edit and add recipients/subject.",
+      });
+    }
+  }, []); // Empty dependency array: runs once on mount
+
   async function handleSubmitPrompt(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!prompt.trim()) {
@@ -41,12 +55,7 @@ export default function SmartDraftingPage() {
     setOriginalDraft('');
     setEditableDraft('');
     setIsEditing(false);
-    // Optionally clear previous subject/recipients when generating a new draft
-    // setSubject(''); 
-    // setRecipients('');
-    // setSelectedTeam('');
-
-
+    
     try {
       const input: GenerateDraftEmailResponsesInput = { query: `Draft an email based on the following prompt: ${prompt}` };
       const result: GenerateDraftEmailResponsesOutput = await generateDraftEmailResponses(input);
@@ -56,8 +65,9 @@ export default function SmartDraftingPage() {
         setOriginalDraft(firstDraft);
         setEditableDraft(firstDraft);
       } else {
-        setOriginalDraft("The AI couldn't generate a draft for this prompt. Please try rephrasing or be more specific.");
-        setEditableDraft("The AI couldn't generate a draft for this prompt. Please try rephrasing or be more specific.");
+        const fallbackMessage = "The AI couldn't generate a draft for this prompt. Please try rephrasing or be more specific.";
+        setOriginalDraft(fallbackMessage);
+        setEditableDraft(fallbackMessage);
         toast({
           title: "No Draft Generated",
           description: "The AI couldn't generate a draft for this prompt. Try rephrasing.",
@@ -94,6 +104,10 @@ export default function SmartDraftingPage() {
   };
 
   const handleCopy = () => {
+    if (!editableDraft && !originalDraft) {
+        toast({ title: "Nothing to Copy", description: "Generate or load a draft first.", variant: "destructive" });
+        return;
+    }
     const textToCopy = `Subject: ${subject}\n\nTo: ${selectedTeam || recipients || 'N/A'}\n\nBody:\n${isEditing ? editableDraft : originalDraft}`;
     navigator.clipboard.writeText(textToCopy);
     toast({
@@ -111,7 +125,7 @@ export default function SmartDraftingPage() {
       });
       return;
     }
-     if (!subject) {
+     if (!subject.trim()) {
        toast({
         title: "Subject Missing",
         description: "Please enter a subject for the email.",
@@ -138,33 +152,26 @@ export default function SmartDraftingPage() {
       title: "Email Sent (Mock)",
       description: `Email to ${finalRecipients} with subject "${subject}" has been "sent".`,
     });
-    // Optionally clear fields after sending
-    // setRecipients('');
-    // setSubject('');
-    // setSelectedTeam('');
-    // setOriginalDraft('');
-    // setEditableDraft('');
-    // setPrompt('');
   };
 
 
   return (
     <>
       <PageHeader
-        title="Smart Email Drafting"
-        description="Generate, compose, and (mock) send professional emails."
+        title="Smart Email Drafting & Composer"
+        description="Generate, compose, and (mock) send professional emails. Optionally load a draft from Email Assistance."
       />
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-1 shadow-lg">
           <CardHeader>
-            <CardTitle>Email Prompt</CardTitle>
-            <CardDescription>Enter keywords or a detailed prompt to generate the email body.</CardDescription>
+            <CardTitle>Email Prompt (Optional)</CardTitle>
+            <CardDescription>Use this to generate a new email body directly on this page.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmitPrompt} className="space-y-4">
               <div>
                 <Label htmlFor="prompt" className="text-sm font-medium">
-                  Keywords/Prompt for Email Body
+                  Keywords/Prompt for New Email Body
                 </Label>
                 <Textarea
                   id="prompt"
@@ -172,7 +179,6 @@ export default function SmartDraftingPage() {
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="e.g., 'Company-wide holiday party announcement for next Friday at 7 PM...'"
                   className="mt-1 min-h-[150px]"
-                  required
                   disabled={isLoading}
                 />
               </div>
@@ -182,7 +188,7 @@ export default function SmartDraftingPage() {
                 ) : (
                   <Wand2 className="mr-2 h-4 w-4" />
                 )}
-                Generate Email Body
+                Generate New Email Body
               </Button>
             </form>
           </CardContent>
@@ -202,7 +208,7 @@ export default function SmartDraftingPage() {
                 onChange={(e) => setRecipients(e.target.value)}
                 placeholder="e.g., employee@example.com, team@example.com"
                 className="mt-1"
-                disabled={!!selectedTeam} 
+                disabled={!!selectedTeam && selectedTeam !== NONE_TEAM_VALUE} 
               />
             </div>
              <div>
@@ -210,10 +216,8 @@ export default function SmartDraftingPage() {
               <Select 
                 value={selectedTeam} 
                 onValueChange={(value) => {
-                  if (value === NONE_TEAM_VALUE) {
-                    setSelectedTeam('');
-                  } else {
-                    setSelectedTeam(value);
+                  setSelectedTeam(value);
+                  if (value && value !== NONE_TEAM_VALUE) {
                     setRecipients(''); 
                   }
                 }}
@@ -229,7 +233,7 @@ export default function SmartDraftingPage() {
                   <SelectItem value="hr-dept@hrstreamline.ai">HR Department</SelectItem>
                 </SelectContent>
               </Select>
-              {selectedTeam && <p className="text-xs text-muted-foreground mt-1">Manual 'To' field disabled when a team is selected.</p>}
+              {selectedTeam && selectedTeam !== NONE_TEAM_VALUE && <p className="text-xs text-muted-foreground mt-1">Manual 'To' field disabled when a team is selected.</p>}
             </div>
             <div>
               <Label htmlFor="subject">Subject</Label>
@@ -244,28 +248,29 @@ export default function SmartDraftingPage() {
             
             <div>
                 <Label htmlFor="emailBody">Body</Label>
-                {isLoading && !originalDraft && (
+                {isLoading && !originalDraft && ( // Show loader only if loading and no draft yet
                   <div className="flex items-center justify-center py-8 mt-1 border rounded-md bg-muted min-h-[200px]">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     <p className="ml-2">Generating draft...</p>
                   </div>
                 )}
-                {!isLoading && !originalDraft && (
+                {!isLoading && !originalDraft && ( // No draft and not loading
                   <div className="mt-1 border rounded-md bg-muted min-h-[200px] flex items-center justify-center">
                     <p className="text-center text-muted-foreground p-4">
-                        Email body will appear here after generation. Enter a prompt and click "Generate Email Body".
+                        Email body will appear here after generation or if loaded from Email Assistance.
                     </p>
                   </div>
                 )}
-                {originalDraft && (
-                    isEditing ? (
+                {originalDraft && ( // If there is an original draft (loaded or generated)
+                    isEditing || !editableDraft ? ( // Show textarea if editing OR if editableDraft isn't set (e.g. initial load)
                     <Textarea
                         id="emailBody"
                         value={editableDraft}
                         onChange={(e) => setEditableDraft(e.target.value)}
                         className="mt-1 min-h-[200px] text-sm bg-background"
+                        placeholder="Your email content will appear here..."
                     />
-                    ) : (
+                    ) : ( // Show read-only view
                     <div className="mt-1 min-h-[200px] p-3 text-sm whitespace-pre-wrap border rounded-md bg-secondary/50">
                         {editableDraft}
                     </div>
@@ -273,7 +278,7 @@ export default function SmartDraftingPage() {
                 )}
             </div>
 
-            {originalDraft && (
+            {(originalDraft || editableDraft) && ( // Show buttons if there's any draft content
               <div className="mt-4 flex flex-wrap justify-end gap-2">
                 <Button variant="outline" size="sm" onClick={handleCopy}>
                   <Copy className="mr-2 h-4 w-4" /> Copy
@@ -281,20 +286,20 @@ export default function SmartDraftingPage() {
                 {isEditing ? (
                   <>
                     <Button size="sm" onClick={handleSave} variant="default">
-                      <Save className="mr-2 h-4 w-4" /> Save Draft
+                      <Save className="mr-2 h-4 w-4" /> Save Changes
                     </Button>
                     <Button size="sm" onClick={handleCancelEdit} variant="ghost">
-                      <XCircle className="mr-2 h-4 w-4" /> Cancel Edit
+                      <XCircle className="mr-2 h-4 w-4" /> Cancel
                     </Button>
                   </>
                 ) : (
-                  <Button size="sm" onClick={handleEdit} variant="outline" disabled={!originalDraft}>
-                    <Edit3 className="mr-2 h-4 w-4" /> Edit Draft
+                  <Button size="sm" onClick={handleEdit} variant="outline" disabled={!originalDraft && !editableDraft}>
+                    <Edit3 className="mr-2 h-4 w-4" /> Edit Body
                   </Button>
                 )}
               </div>
             )}
-            <Button onClick={handleMockSend} className="w-full mt-4" disabled={!originalDraft || isLoading}>
+            <Button onClick={handleMockSend} className="w-full mt-4" disabled={(!originalDraft && !editableDraft) || isLoading}>
                 <Send className="mr-2 h-4 w-4" /> Send Email (Mock)
             </Button>
           </CardContent>
