@@ -5,7 +5,7 @@ import { useState } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Github, Link, CheckCircle, Settings, ExternalLink, MessageSquare, CalendarDays, Webcam, Users, LayoutGrid, FileSignature, KanbanSquare } from 'lucide-react';
+import { Github, Link, CheckCircle, Settings, ExternalLink, MessageSquare, CalendarDays, Webcam, Users, LayoutGrid, FileSignature, KanbanSquare, Video } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
@@ -68,6 +68,17 @@ const initialIntegrations: Integration[] = [
     category: 'Communication',
     isConnected: false,
     features: ['Schedule Meetings', 'Cloud Recordings', 'User Management'],
+  },
+  {
+    id: 'google-meet',
+    name: 'Google Meet',
+    description: 'Integrate Google Meet for easy video calls and team meetings directly from your HR platform.',
+    icon: Video,
+    logoUrl: 'https://placehold.co/64x64.png',
+    dataAiHint: 'google meet logo',
+    category: 'Communication',
+    isConnected: false,
+    features: ['Start Meetings', 'Schedule Calls', 'Sync Recordings'],
   },
   {
     id: 'microsoft-teams',
