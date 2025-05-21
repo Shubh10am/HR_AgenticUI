@@ -1,12 +1,12 @@
 
 'use client';
 
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent, type ReactNode } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowRight, Mail, Users, FileText, MessageSquare, ListChecks, CalendarDays, GitFork, BarChart3, PlusCircle, Trash2, CheckCircle, RefreshCw, Circle } from 'lucide-react';
+import { ArrowRight, Mail, Users, FileText, MessageSquare, ListChecks, CalendarDays, GitFork, BarChart3, PlusCircle, Trash2, CheckCircle, RefreshCw, Circle, Plug } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -48,7 +48,7 @@ export default function DashboardPage() {
     { title: 'Smart Drafting', description: 'Generate emails from prompts.', href: '/smart-drafting', icon: FileText },
     { title: 'Unified Comms', description: 'Aggregated communication logs.', href: '/unified-communications', icon: MessageSquare },
     { title: 'Attendance', description: 'Clock in/out and view reports.', href: '/attendance-reporting', icon: CalendarDays },
-    { title: 'Integrations', description: 'Connect to other services.', href: '/integrations', icon: Users },
+    { title: 'Integrations', description: 'Connect to other services.', href: '/integrations', icon: Plug },
   ];
   
   const completedTasks = projectTasks.filter(task => task.status === 'Done').length;
@@ -109,14 +109,23 @@ export default function DashboardPage() {
   const getStatusBadgeClassName = (status: ProjectTask['status']): string => {
      if (status === 'Done') return 'bg-green-500 hover:bg-green-600 text-white';
      if (status === 'In Progress') return 'bg-yellow-500 hover:bg-yellow-600 text-black';
-     return 'border-gray-400 text-gray-600';
+     return 'border-gray-400 text-gray-600 dark:border-gray-500 dark:text-gray-300';
   }
 
+  const pageTitle: ReactNode = (
+    <>
+      Welcome to{' '}
+      <span className="text-transparent bg-clip-text bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))]">
+        HR Streamline AI
+      </span>
+    </>
+  );
 
   return (
     <>
       <PageHeader
-        title="Welcome to HR Streamline AI"
+        title={pageTitle}
+        titleClassName="text-5xl lg:text-6xl"
         description="Your intelligent assistant for efficient HR operations."
       />
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -256,6 +265,9 @@ export default function DashboardPage() {
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        .bg-gradient-to-r.from-\\[hsl\\(var\\(--primary\\))\\].to-\\[hsl\\(var\\(--accent\\))\\] {
+          background-image: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
         }
       `}</style>
     </>

@@ -47,24 +47,33 @@ body {
   }
 
   .dark {
-    --background: 225 31% 17%; /* Dark blue-gray #1A202C */
-    --foreground: 215 28% 90%; /* Light gray #E2E8F0 */
-    --card: 225 21% 25%; /* #2D3748 */
-    --card-foreground: 215 28% 90%;
-    --popover: 225 21% 25%;
-    --popover-foreground: 215 28% 90%;
+    --background: 0 0% 4%; /* Near Black #0A0A0A */
+    --foreground: 0 0% 98%; /* Almost White #FAFAFA */
+    
+    --card: 0 0% 8%; /* Dark Gray #141414 */
+    --card-foreground: 0 0% 95%; /* Light Gray #F2F2F2 */
+    
+    --popover: 0 0% 8%; /* Dark Gray for popovers */
+    --popover-foreground: 0 0% 95%; /* Light Gray for popover text */
+    
     --primary: 231 48% 60%; /* Lighter deep blue #5C6BC0 */
-    --primary-foreground: 225 31% 12%; /* Darker for contrast */
-    --secondary: 225 21% 30%;
-    --secondary-foreground: 215 28% 90%;
-    --muted: 225 21% 30%;
-    --muted-foreground: 215 20% 65%;
+    --primary-foreground: 0 0% 98%; /* Ensure good contrast on primary buttons */
+    
+    --secondary: 0 0% 12%; /* Slightly lighter dark gray #1F1F1F for secondary elements */
+    --secondary-foreground: 0 0% 90%; /* Light gray for secondary text */
+    
+    --muted: 0 0% 12%; /* Muted backgrounds */
+    --muted-foreground: 0 0% 60%; /* Muted text, darker than main foreground */
+    
     --accent: 260 36% 68%; /* Lighter purple #9575CD */
-    --accent-foreground: 225 31% 12%; /* Darker for contrast */
-    --destructive: 0 62.8% 30.6%;
+    --accent-foreground: 0 0% 98%; /* Ensure good contrast on accent elements */
+    
+    --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 225 21% 35%;
-    --input: 225 21% 22%; /* Darker input background for dark mode */
+    
+    --border: 0 0% 15%; /* Slightly visible borders #262626 */
+    --input: 0 0% 10%; /* Dark input background #1A1A1A */
+    /* --input-foreground: 0 0% 95%; Defined by input component, should inherit from foreground */
     --ring: 231 48% 60%; /* Lighter primary for focus rings */
 
     --chart-1: 220 70% 50%;
@@ -74,13 +83,13 @@ body {
     --chart-5: 340 75% 55%;
     
     /* Sidebar specific theme variables for dark mode */
-    --sidebar-background: 225 31% 12%; /* Very dark blue-gray for sidebar */
-    --sidebar-foreground: 215 28% 85%;   /* Lighter text for sidebar */
+    --sidebar-background: 0 0% 8%; /* Dark Gray, same as cards #141414 */
+    --sidebar-foreground: 0 0% 90%;   /* Lighter text for sidebar */
     --sidebar-primary: 260 40% 60%; /* Accent color for active items in sidebar */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 225 31% 20%; /* Hover color for sidebar items */
+    --sidebar-accent: 0 0% 12%; /* Hover color for sidebar items, same as secondary bg */
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 225 31% 25%;
+    --sidebar-border: 0 0% 15%; /* Border for sidebar elements, same as main border */
     --sidebar-ring: 260 36% 68%; /* Lighter accent for focus rings in sidebar */
   }
 }
