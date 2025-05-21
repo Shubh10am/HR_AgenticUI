@@ -41,7 +41,7 @@ interface LeaveRequest {
 }
 
 export default function AttendanceReportingPage() {
-  const [currentTime, setCurrentTime] = useState('');
+  const [currentTime, setCurrentTime] = useState<string | null>(null);
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [clockInTime, setClockInTime] = useState<Date | null>(null);
   const { toast } = useToast();
@@ -55,9 +55,12 @@ export default function AttendanceReportingPage() {
   });
 
   useEffect(() => {
+    // Set initial time on client mount
+    setCurrentTime(new Date().toLocaleTimeString());
     const timer = setInterval(() => {
       setCurrentTime(new Date().toLocaleTimeString());
     }, 1000);
+
     // Attempt to retrieve clock-in state from localStorage
     const storedClockInStatus = localStorage.getItem('clockInStatus');
     const storedClockInTime = localStorage.getItem('clockInTime');
@@ -169,7 +172,7 @@ export default function AttendanceReportingPage() {
               <Clock className="mr-2 h-6 w-6 text-primary" />
               Clock In/Out
             </CardTitle>
-            <CardDescription>Your current time: {currentTime}</CardDescription>
+            <CardDescription>Your current time: {currentTime !== null ? currentTime : 'Loading...'}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {isClockedIn ? (
@@ -419,5 +422,3 @@ export default function AttendanceReportingPage() {
     </>
   );
 }
-
-    
