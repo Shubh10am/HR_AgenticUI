@@ -3,7 +3,7 @@
 
 import { useState, type FormEvent, useEffect, useCallback } from 'react';
 import PageHeader from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'; // Ensured CardFooter is imported
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,6 +36,10 @@ const initialTasks: Task[] = [
   { id: 'task-3', name: 'Write documentation for the new reporting module', description: 'Cover all features and provide examples.', assignee: 'Charlie Brown', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'person cartoon', dueDate: '2024-08-25', status: 'In Progress', tags: ['Docs'] },
   { id: 'task-4', name: 'User testing session for mobile app', description: 'Conduct tests with 5 users and gather feedback.', status: 'Todo', tags: ['Testing', 'Mobile'] },
   { id: 'task-5', name: 'Deploy staging environment updates', description: 'Merge develop branch to staging and run deployment scripts.', assignee: 'Diana Prince', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'woman superhero', status: 'Done', tags: ['DevOps', 'Release'] },
+  { id: 'task-6', name: 'AWS Lambda Integration', description: 'Use SQS and SNS there', dueDate: '2025-05-24', status: 'Todo', tags: ['Backend'] },
+  { id: 'task-7', name: 'Refactor settings page UI', description: 'Improve layout and responsiveness of the user settings page.', assignee: 'Alice Wonderland', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'woman face', dueDate: '2024-09-01', status: 'Todo', tags: ['Frontend', 'UX'] },
+  { id: 'task-8', name: 'Performance testing for Q3 release', description: 'Identify bottlenecks and optimize critical paths.', status: 'In Progress', tags: ['QA', 'Performance'] },
+
 ];
 
 interface TaskDialogContentProps {
@@ -151,7 +155,7 @@ export default function TasksPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (boardColumns.length > 0 && !boardColumns.includes(taskStatus)) {
+    if (boardColumns.length > 0 && (!taskStatus || !boardColumns.includes(taskStatus))) {
       setTaskStatus(boardColumns[0]);
     } else if (boardColumns.length === 0 && taskStatus !== '') {
       setTaskStatus(''); 
@@ -224,8 +228,8 @@ export default function TasksPage() {
     setTasks(prevTasks => [...prevTasks, newTask]);
     toast({ title: "Task Added", description: `"${newTask.name}" has been added to ${newTask.status}.` });
     setIsAddDialogOpen(false);
-    resetFormFields();
-  }, [taskName, taskDescription, taskAssignee, taskDueDate, taskStatus, taskTags, boardColumns, toast, resetFormFields, setTasks, setIsAddDialogOpen]);
+    // resetFormFields(); // Resetting is handled by onCancel in TaskDialogContent or here if needed
+  }, [taskName, taskDescription, taskAssignee, taskDueDate, taskStatus, taskTags, boardColumns, toast, /*resetFormFields,*/ setTasks, setIsAddDialogOpen]);
 
   const handleOpenEditDialog = useCallback((task: Task) => {
     setEditingTask(task);
@@ -273,9 +277,9 @@ export default function TasksPage() {
       toast({ title: "Task Updated", description: `"${updatedTaskData.name}" has been updated.` });
       setIsEditDialogOpen(false);
       setEditingTask(null);
-      resetFormFields();
+      // resetFormFields(); // Resetting handled by onCancel
     }
-  }, [editingTask, taskName, taskDescription, taskAssignee, taskDueDate, taskStatus, taskTags, boardColumns, toast, resetFormFields, setTasks, setIsEditDialogOpen, setEditingTask]);
+  }, [editingTask, taskName, taskDescription, taskAssignee, taskDueDate, taskStatus, taskTags, boardColumns, toast, /*resetFormFields,*/ setTasks, setIsEditDialogOpen, setEditingTask]);
 
   const handleDeleteTask = useCallback((taskId: string) => {
     const taskToDelete = tasks.find(task => task.id === taskId);
@@ -390,6 +394,13 @@ export default function TasksPage() {
     </Card>
   ), [boardColumns, getStatusIcon, handleOpenEditDialog, handleDeleteTask, moveTask]); 
   
+  const onDialogCancel = useCallback(() => {
+    setIsAddDialogOpen(false);
+    setIsEditDialogOpen(false);
+    setEditingTask(null);
+    resetFormFields();
+  }, [resetFormFields]);
+
   return (
     <div className="flex flex-col h-full"> 
       <PageHeader title="Task Management Board" description="Organize, track, and manage your project tasks.">
@@ -420,13 +431,13 @@ export default function TasksPage() {
               </DialogModalFooter>
             </DialogContent>
           </Dialog>
-          <Button onClick={() => handleOpenAddTaskDialog()}>
+           <Button onClick={() => handleOpenAddTaskDialog()}>
             <PlusCircle className="mr-2 h-4 w-4" /> Add New Task
           </Button>
         </div>
       </PageHeader>
 
-      <Dialog open={isAddDialogOpen} onOpenChange={(open) => { if(!open) { setEditingTask(null); resetFormFields(); } setIsAddDialogOpen(open); }}>
+      <Dialog open={isAddDialogOpen} onOpenChange={(open) => { if(!open) onDialogCancel(); else setIsAddDialogOpen(true); }}>
         <DialogContent 
           key="add-task-dialog" 
           className="sm:max-w-[480px] max-h-[calc(100vh-4rem)] flex flex-col"
@@ -445,12 +456,12 @@ export default function TasksPage() {
             taskDueDate={taskDueDate} setTaskDueDate={setTaskDueDate}
             taskStatus={taskStatus} setTaskStatus={setTaskStatus}
             taskTags={taskTags} setTaskTags={setTaskTags}
-            onCancel={() => { setIsAddDialogOpen(false); resetFormFields(); }}
+            onCancel={onDialogCancel}
           />
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isEditDialogOpen} onOpenChange={(open) => { if(!open) { setEditingTask(null); resetFormFields(); } setIsEditDialogOpen(open); }}>
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => { if(!open) onDialogCancel(); else setIsEditDialogOpen(true); }}>
         <DialogContent 
           key="edit-task-dialog" 
           className="sm:max-w-[480px] max-h-[calc(100vh-4rem)] flex flex-col"
@@ -469,14 +480,14 @@ export default function TasksPage() {
                 taskDueDate={taskDueDate} setTaskDueDate={setTaskDueDate}
                 taskStatus={taskStatus} setTaskStatus={setTaskStatus}
                 taskTags={taskTags} setTaskTags={setTaskTags}
-                onCancel={() => { setIsEditDialogOpen(false); setEditingTask(null); resetFormFields(); }}
+                onCancel={onDialogCancel}
             />
         </DialogContent>
       </Dialog>
       
-      <div className="flex overflow-x-auto gap-6 pb-4 items-start flex-grow">
+      <div className="flex overflow-x-auto gap-6 pb-4 items-stretch flex-grow">
         {boardColumns.map(columnName => (
-          <Card key={columnName} className="shadow-lg flex flex-col w-[320px] flex-shrink-0 min-h-[200px]">
+          <Card key={columnName} className="shadow-lg flex flex-col w-[320px] flex-shrink-0"> {/* Removed min-h to allow stretch */}
             <CardHeader className="border-b">
               <div className="flex justify-between items-center">
                 <CardTitle className="flex items-center text-lg">
@@ -489,7 +500,7 @@ export default function TasksPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-4 flex-grow">
+            <CardContent className="p-4 flex-1 overflow-hidden"> {/* Use flex-1 and overflow-hidden to prepare for ScrollArea */}
               <ScrollArea className="h-full pr-3"> 
                 {tasks.filter(t => t.status === columnName).length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">No tasks in {columnName}.</p>
