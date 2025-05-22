@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter as DialogModalFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter as DialogModalFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Github, PlusCircle, Trash2, ChevronLeft, ChevronRight, Circle, RefreshCw, CheckCircle, CalendarDays, User, Edit3, Columns } from 'lucide-react';
@@ -24,6 +24,7 @@ interface Task {
   description?: string;
   assignee?: string;
   assigneeAvatar?: string; 
+  dataAiHint?: string;
   dueDate?: string;
   status: TaskStatus;
   tags?: string[];
@@ -60,7 +61,7 @@ export default function TasksPage() {
   useEffect(() => {
     if (boardColumns.length > 0 && !boardColumns.includes(taskStatus)) {
       setTaskStatus(boardColumns[0]);
-    } else if (boardColumns.length === 0) {
+    } else if (boardColumns.length === 0 && taskStatus !== '') {
       setTaskStatus(''); 
     }
   }, [boardColumns, taskStatus]);
@@ -78,15 +79,21 @@ export default function TasksPage() {
     setTaskAssignee('');
     setTaskDueDate('');
     setTaskTags('');
-    // Default status will be set by handleOpenAddTaskDialog or when opening edit dialog
+    if (boardColumns.length > 0) {
+      setTaskStatus(boardColumns[0]); // Default to first column if columns exist
+    } else {
+      setTaskStatus(''); // No status if no columns
+    }
   };
   
   const handleOpenAddTaskDialog = (defaultStatus?: TaskStatus) => {
     resetFormFields();
-    if (defaultStatus) {
+    if (defaultStatus && boardColumns.includes(defaultStatus)) {
       setTaskStatus(defaultStatus);
+    } else if (boardColumns.length > 0) {
+      setTaskStatus(boardColumns[0]);
     } else {
-      setTaskStatus(boardColumns.length > 0 ? boardColumns[0] : '');
+      setTaskStatus(''); // No status if no columns exist
     }
     setEditingTask(null);
     setIsAddDialogOpen(true);
@@ -102,12 +109,18 @@ export default function TasksPage() {
        toast({ title: "Status required", description: "Please select a status for the task.", variant: "destructive" });
       return;
     }
+     if (boardColumns.length === 0 && taskStatus !== '') {
+      toast({ title: "No columns exist", description: "Please add a column before adding a task.", variant: "destructive" });
+      return;
+    }
+
 
     const taskData = {
       name: taskName.trim(),
       description: taskDescription.trim() || undefined,
       assignee: taskAssignee.trim() || undefined,
-      assigneeAvatar: taskAssignee.trim() ? `https://placehold.co/40x40.png?text=${taskAssignee.trim().substring(0,2).toUpperCase()}` : undefined,
+      assigneeAvatar: taskAssignee.trim() ? `https://placehold.co/40x40.png` : undefined,
+      dataAiHint: taskAssignee.trim() ? 'person placeholder' : undefined,
       dueDate: taskDueDate.trim() || undefined,
       status: taskStatus,
       tags: taskTags.split(',').map(tag => tag.trim()).filter(tag => tag),
@@ -131,8 +144,6 @@ export default function TasksPage() {
       toast({ title: "Task Added", description: `"${newTask.name}" has been added to ${newTask.status}.` });
       setIsAddDialogOpen(false);
     }
-    // Reset form fields is not needed here as dialog closes or context changes.
-    // It's handled by handleOpenAddTaskDialog or handleOpenEditDialog.
   };
 
   const handleOpenEditDialog = (task: Task) => {
@@ -192,7 +203,7 @@ export default function TasksPage() {
       return;
     }
     setBoardColumns(prev => [...prev, trimmedNewColumnName]);
-    if (boardColumns.length === 0) { 
+    if (boardColumns.length === 0 && taskStatus === '') { // If it's the very first column being added
       setTaskStatus(trimmedNewColumnName); 
     }
     toast({ title: "Column Added", description: `Column "${trimmedNewColumnName}" has been added.` });
@@ -213,16 +224,16 @@ export default function TasksPage() {
         {(task.assignee || task.dueDate) && (
           <div className="flex items-center justify-between text-xs text-muted-foreground min-w-0">
             {task.assignee && (
-              <div className="flex items-center gap-1 min-w-0">
+              <div className="flex items-center gap-1 min-w-0"> {/* Added min-w-0 here */}
                 <Avatar className="h-5 w-5 flex-shrink-0">
-                  <AvatarImage src={task.assigneeAvatar} alt={task.assignee || 'User'} data-ai-hint="assignee avatar" />
+                  <AvatarImage src={task.assigneeAvatar} alt={task.assignee || 'User'} data-ai-hint={task.dataAiHint || "person avatar"} />
                   <AvatarFallback>{task.assignee ? task.assignee.substring(0,1).toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
-                <span className="truncate min-w-0">{task.assignee}</span>
+                <span className="truncate min-w-0">{task.assignee}</span> {/* Added truncate and min-w-0 */}
               </div>
             )}
             {task.dueDate && (
-              <div className="flex items-center gap-1 flex-shrink-0">
+              <div className="flex items-center gap-1 flex-shrink-0"> {/* Added flex-shrink-0 */}
                 <CalendarDays className="h-3 w-3" />
                 <span>{task.dueDate}</span>
               </div>
@@ -311,7 +322,7 @@ export default function TasksPage() {
   );
 
   return (
-    <div className="flex flex-col h-full"> {/* Added flex flex-col h-full to root */}
+    <div className="flex flex-col h-full"> {/* Root of TasksPage changed from no h-full */}
       <PageHeader title="Task Management Board" description="Organize, track, and manage your project tasks.">
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           <Button variant="outline" onClick={() => toast({ title: "GitHub Sync (Mock)", description: "This would initiate GitHub project sync."})}>
@@ -330,8 +341,8 @@ export default function TasksPage() {
               </DialogHeader>
               <form onSubmit={handleAddColumn} id="addColumnForm" className="grid gap-4 py-4">
                 <div>
-                  <Label htmlFor="newColumnName">Column Name</Label>
-                  <Input id="newColumnName" value={newColumnName} onChange={(e) => setNewColumnName(e.target.value)} className="mt-1" required />
+                  <Label htmlFor="newColumnNameForm">Column Name</Label>
+                  <Input id="newColumnNameForm" value={newColumnName} onChange={(e) => setNewColumnName(e.target.value)} className="mt-1" required />
                 </div>
               </form>
               <DialogModalFooter>
@@ -340,14 +351,12 @@ export default function TasksPage() {
               </DialogModalFooter>
             </DialogContent>
           </Dialog>
-          {/* Main "Add New Task" button moved to header */}
           <Button onClick={() => handleOpenAddTaskDialog()}>
             <PlusCircle className="mr-2 h-4 w-4" /> Add New Task
           </Button>
         </div>
       </PageHeader>
 
-      {/* Dialog for Adding Tasks */}
       <Dialog open={isAddDialogOpen} onOpenChange={(open) => { if(!open) { setEditingTask(null); resetFormFields(); } setIsAddDialogOpen(open); }}>
         <DialogContent className="sm:max-w-[480px] max-h-[calc(100vh-4rem)] flex flex-col">
           <TaskDialogContent
@@ -361,7 +370,6 @@ export default function TasksPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog for Editing Tasks */}
       <Dialog open={isEditDialogOpen} onOpenChange={(open) => { if(!open) { setEditingTask(null); resetFormFields(); } setIsEditDialogOpen(open); }}>
         <DialogContent className="sm:max-w-[480px] max-h-[calc(100vh-4rem)] flex flex-col">
             <TaskDialogContent
@@ -375,7 +383,6 @@ export default function TasksPage() {
         </DialogContent>
       </Dialog>
       
-      {/* Horizontally scrollable container for columns */}
       <div className="flex overflow-x-auto gap-6 pb-4 items-start flex-grow">
         {boardColumns.map(columnName => (
           <Card key={columnName} className="shadow-lg flex flex-col w-[320px] flex-shrink-0">
@@ -391,8 +398,8 @@ export default function TasksPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-4 flex-grow min-h-[200px]"> {/* Reduced min-height for better fit */}
-              <ScrollArea className="h-[calc(100vh-22rem)] pr-3"> {/* Adjusted height for scroll area */}
+            <CardContent className="p-4 flex-grow min-h-[200px]">
+              <ScrollArea className="h-full pr-3"> 
                 {tasks.filter(t => t.status === columnName).length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">No tasks in {columnName}.</p>
                 ) : (
