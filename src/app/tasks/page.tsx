@@ -16,14 +16,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-type TaskStatus = string; // Now a string to accommodate custom column names
+type TaskStatus = string; 
 
 interface Task {
   id: string;
   name: string;
   description?: string;
   assignee?: string;
-  assigneeAvatar?: string; // URL for avatar
+  assigneeAvatar?: string; 
   dueDate?: string;
   status: TaskStatus;
   tags?: string[];
@@ -58,16 +58,17 @@ export default function TasksPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // If columns change and current taskStatus isn't in new columns, default to first column
-    if (!boardColumns.includes(taskStatus)) {
-      setTaskStatus(boardColumns[0] || '');
+    if (!boardColumns.includes(taskStatus) && boardColumns.length > 0) {
+      setTaskStatus(boardColumns[0]);
+    } else if (boardColumns.length === 0) {
+      setTaskStatus(''); // Handle case where there are no columns
     }
   }, [boardColumns, taskStatus]);
 
   const getStatusIcon = (status: TaskStatus) => {
-    // Keep default icons for known statuses, otherwise a generic one
-    if (status.toLowerCase() === 'done') return <CheckCircle className="h-5 w-5 text-green-500" />;
-    if (status.toLowerCase() === 'in progress') return <RefreshCw className="h-5 w-5 text-yellow-500 animate-spin-slow" />;
+    const lowerStatus = status.toLowerCase();
+    if (lowerStatus === 'done') return <CheckCircle className="h-5 w-5 text-green-500" />;
+    if (lowerStatus === 'in progress') return <RefreshCw className="h-5 w-5 text-yellow-500 animate-spin-slow" />;
     return <Circle className="h-5 w-5 text-muted-foreground" />;
   };
 
@@ -76,7 +77,7 @@ export default function TasksPage() {
     setTaskDescription('');
     setTaskAssignee('');
     setTaskDueDate('');
-    setTaskStatus(boardColumns[0] || 'Todo');
+    setTaskStatus(boardColumns.length > 0 ? boardColumns[0] : '');
     setTaskTags('');
   };
 
@@ -86,6 +87,11 @@ export default function TasksPage() {
       toast({ title: "Task name required", description: "Please enter a name for the task.", variant: "destructive" });
       return;
     }
+    if (!taskStatus && boardColumns.length > 0) {
+       toast({ title: "Status required", description: "Please select a status for the task.", variant: "destructive" });
+      return;
+    }
+
 
     const taskData = {
       name: taskName.trim(),
@@ -100,7 +106,7 @@ export default function TasksPage() {
     if (editingTask) {
       setTasks(prevTasks =>
         prevTasks.map(t =>
-          t.id === editingTask.id ? { ...t, ...taskData } : t
+          t.id === editingTask.id ? { ...editingTask, ...taskData } : t
         )
       );
       toast({ title: "Task Updated", description: `"${taskData.name}" has been updated.` });
@@ -165,16 +171,20 @@ export default function TasksPage() {
 
   const handleAddColumn = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!newColumnName.trim()) {
+    const trimmedNewColumnName = newColumnName.trim();
+    if (!trimmedNewColumnName) {
       toast({ title: "Column name required", variant: "destructive" });
       return;
     }
-    if (boardColumns.map(c => c.toLowerCase()).includes(newColumnName.trim().toLowerCase())) {
+    if (boardColumns.map(c => c.toLowerCase()).includes(trimmedNewColumnName.toLowerCase())) {
       toast({ title: "Column already exists", description: "Please use a unique column name.", variant: "destructive" });
       return;
     }
-    setBoardColumns(prev => [...prev, newColumnName.trim()]);
-    toast({ title: "Column Added", description: `Column "${newColumnName.trim()}" has been added.` });
+    setBoardColumns(prev => [...prev, trimmedNewColumnName]);
+    if (boardColumns.length === 0) { // If this is the first column being added
+      setTaskStatus(trimmedNewColumnName); // Set it as the default status
+    }
+    toast({ title: "Column Added", description: `Column "${trimmedNewColumnName}" has been added.` });
     setNewColumnName('');
     setIsAddColumnDialogOpen(false);
   };
@@ -190,12 +200,12 @@ export default function TasksPage() {
       </CardHeader>
       <CardContent className="px-3 pb-3 space-y-2">
         {(task.assignee || task.dueDate) && (
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center justify-between text-xs text-muted-foreground min-w-0">
             {task.assignee && (
               <div className="flex items-center gap-1 min-w-0">
                 <Avatar className="h-5 w-5 flex-shrink-0">
                   <AvatarImage src={task.assigneeAvatar} alt={task.assignee || 'User'} data-ai-hint="assignee avatar" />
-                  <AvatarFallback>{task.assignee ? task.assignee.substring(0,1) : 'U'}</AvatarFallback>
+                  <AvatarFallback>{task.assignee ? task.assignee.substring(0,1).toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
                 <span className="truncate min-w-0">{task.assignee}</span>
               </div>
@@ -209,7 +219,7 @@ export default function TasksPage() {
           </div>
         )}
         {task.tags && task.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2"> {/* Added mt-2 for spacing */}
+            <div className="flex flex-wrap gap-1 mt-2">
                 {task.tags.map(tag => (
                     <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
                 ))}
@@ -244,38 +254,42 @@ export default function TasksPage() {
       <div className="flex-grow overflow-y-auto px-6">
         <form onSubmit={onSubmit} id={formId} className="grid gap-4 py-4">
           <div>
-            <Label htmlFor="taskName">Task Name</Label>
-            <Input id="taskName" value={taskName} onChange={(e) => setTaskName(e.target.value)} className="mt-1" required />
+            <Label htmlFor={`${formId}-taskName`}>Task Name</Label>
+            <Input id={`${formId}-taskName`} value={taskName} onChange={(e) => setTaskName(e.target.value)} className="mt-1" required />
           </div>
           <div>
-            <Label htmlFor="taskDescription">Description (Optional)</Label>
-            <Textarea id="taskDescription" value={taskDescription} onChange={(e) => setTaskDescription(e.target.value)} className="mt-1" placeholder="Brief description of the task..." />
+            <Label htmlFor={`${formId}-taskDescription`}>Description (Optional)</Label>
+            <Textarea id={`${formId}-taskDescription`} value={taskDescription} onChange={(e) => setTaskDescription(e.target.value)} className="mt-1" placeholder="Brief description of the task..." />
           </div>
           <div>
-            <Label htmlFor="taskAssignee">Assignee (Optional)</Label>
-            <Input id="taskAssignee" value={taskAssignee} onChange={(e) => setTaskAssignee(e.target.value)} className="mt-1" placeholder="e.g., Jane Doe / Engineering Lead" />
+            <Label htmlFor={`${formId}-taskAssignee`}>Assignee (Optional)</Label>
+            <Input id={`${formId}-taskAssignee`} value={taskAssignee} onChange={(e) => setTaskAssignee(e.target.value)} className="mt-1" placeholder="e.g., Jane Doe / Engineering Lead" />
           </div>
           <div>
-            <Label htmlFor="taskDueDate">Due Date (Optional)</Label>
-            <Input id="taskDueDate" type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)} className="mt-1" />
+            <Label htmlFor={`${formId}-taskDueDate`}>Due Date (Optional)</Label>
+            <Input id={`${formId}-taskDueDate`} type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)} className="mt-1" />
           </div>
           <div>
-            <Label htmlFor="taskTags">Tags (Optional, comma-separated)</Label>
-            <Input id="taskTags" value={taskTags} onChange={(e) => setTaskTags(e.target.value)} className="mt-1" placeholder="e.g., UX, Backend, Urgent" />
+            <Label htmlFor={`${formId}-taskTags`}>Tags (Optional, comma-separated)</Label>
+            <Input id={`${formId}-taskTags`} value={taskTags} onChange={(e) => setTaskTags(e.target.value)} className="mt-1" placeholder="e.g., UX, Backend, Urgent" />
           </div>
-          <div>
-            <Label htmlFor="taskStatus">Status</Label>
-            <Select value={taskStatus} onValueChange={(value: TaskStatus) => setTaskStatus(value)}>
-              <SelectTrigger id="taskStatus" className="mt-1">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                {currentStatusList.map(status => (
-                  <SelectItem key={status} value={status}>{status}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {currentStatusList.length > 0 ? (
+            <div>
+                <Label htmlFor={`${formId}-taskStatus`}>Status</Label>
+                <Select value={taskStatus} onValueChange={(value: TaskStatus) => setTaskStatus(value)}>
+                <SelectTrigger id={`${formId}-taskStatus`} className="mt-1">
+                    <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                    {currentStatusList.map(status => (
+                    <SelectItem key={status} value={status}>{status}</SelectItem>
+                    ))}
+                </SelectContent>
+                </Select>
+            </div>
+             ) : (
+            <p className="text-sm text-muted-foreground">Add a column to set task status.</p>
+          )}
         </form>
       </div>
       <DialogModalFooter className="p-6 pt-2 border-t flex-shrink-0">
@@ -315,7 +329,7 @@ export default function TasksPage() {
               </DialogModalFooter>
             </DialogContent>
           </Dialog>
-          <Dialog open={isAddDialogOpen} onOpenChange={(open) => { if(!open) setEditingTask(null); setIsAddDialogOpen(open); }}>
+          <Dialog open={isAddDialogOpen} onOpenChange={(open) => { if(!open) { setEditingTask(null); resetFormFields(); } setIsAddDialogOpen(open); }}>
             <DialogTrigger asChild>
               <Button onClick={() => { resetFormFields(); setEditingTask(null); setIsAddDialogOpen(true); }}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Add New Task
@@ -323,7 +337,7 @@ export default function TasksPage() {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[480px] max-h-[calc(100vh-4rem)] flex flex-col">
               <TaskDialogContent
-                formId="addOrEditTaskForm"
+                formId="addTaskForm"
                 onSubmit={handleAddOrEditTask}
                 title="Add New Task"
                 description="Fill in the details for your new task."
@@ -335,10 +349,10 @@ export default function TasksPage() {
         </div>
       </PageHeader>
 
-      <Dialog open={isEditDialogOpen} onOpenChange={(open) => { if(!open) setEditingTask(null); setIsEditDialogOpen(open); }}>
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => { if(!open) { setEditingTask(null); resetFormFields(); } setIsEditDialogOpen(open); }}>
         <DialogContent className="sm:max-w-[480px] max-h-[calc(100vh-4rem)] flex flex-col">
             <TaskDialogContent
-                formId="addOrEditTaskFormEdit" // Ensure unique form ID if both dialogs could technically be visible, or reuse if only one at a time
+                formId="editTaskForm"
                 onSubmit={handleAddOrEditTask}
                 title="Edit Task"
                 description="Update the details of your task."
@@ -348,9 +362,9 @@ export default function TasksPage() {
         </DialogContent>
       </Dialog>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+      <div className="flex overflow-x-auto gap-6 pb-4 items-start">
         {boardColumns.map(columnName => (
-          <Card key={columnName} className="shadow-lg flex flex-col">
+          <Card key={columnName} className="shadow-lg flex flex-col w-[320px] flex-shrink-0">
             <CardHeader className="border-b">
               <CardTitle className="flex items-center justify-between text-lg">
                 {columnName}
@@ -358,7 +372,7 @@ export default function TasksPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 flex-grow min-h-[300px]">
-              <ScrollArea className="h-[calc(100vh-26rem)] pr-3"> {/* Adjusted height slightly for page header */}
+              <ScrollArea className="h-[calc(100vh-30rem)] pr-3"> {/* Adjusted height based on new layout */}
                 {tasks.filter(t => t.status === columnName).length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">No tasks in {columnName}.</p>
                 ) : (
@@ -368,6 +382,11 @@ export default function TasksPage() {
             </CardContent>
           </Card>
         ))}
+         {boardColumns.length === 0 && (
+          <div className="w-full text-center py-10">
+            <p className="text-muted-foreground">No columns yet. Click "Add Column" to get started!</p>
+          </div>
+        )}
       </div>
        <style jsx global>{`
         .animate-spin-slow {
@@ -377,7 +396,28 @@ export default function TasksPage() {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
+        /* For webkit browsers like Chrome, Safari */
+        .overflow-x-auto::-webkit-scrollbar {
+            height: 8px; /* Adjust as needed */
+        }
+        .overflow-x-auto::-webkit-scrollbar-track {
+            background: hsl(var(--secondary)); 
+            border-radius: 10px;
+        }
+        .overflow-x-auto::-webkit-scrollbar-thumb {
+            background: hsl(var(--muted-foreground));
+            border-radius: 10px;
+        }
+        .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+            background: hsl(var(--primary)); 
+        }
+        /* For Firefox */
+        .overflow-x-auto {
+          scrollbar-width: thin;
+          scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--secondary));
+        }
       `}</style>
     </>
   );
 }
+
