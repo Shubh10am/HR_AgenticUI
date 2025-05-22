@@ -29,9 +29,9 @@ interface MockEmail {
 const mockEmailsData: MockEmail[] = [
   {
     id: '1',
-    sender: 'alice@example.com',
+    sender: 'alice.wonderland.long.email@example.com',
     recipient: 'admin@hrstreamline.ai',
-    subject: 'Regarding my leave application',
+    subject: 'Regarding my leave application status request',
     body: 'Hello HR Admin,\n\nI would like to follow up on my leave application submitted last week for the dates 20th July to 25th July. Could you please let me know the status?\n\nThanks,\nAlice',
     date: '2024-07-18 10:00 AM',
     read: false,
@@ -49,7 +49,7 @@ const mockEmailsData: MockEmail[] = [
   },
   {
     id: '3',
-    sender: 'charlie.dev@example.com',
+    sender: 'charlie.dev.ops@example.com',
     recipient: 'admin@hrstreamline.ai',
     subject: 'System Maintenance Notification',
     body: 'Dear All,\n\nThis is to inform you that there will be a scheduled system maintenance on Saturday, July 20th, from 2 AM to 4 AM. Services might be temporarily unavailable during this period.\n\nRegards,\nCharlie (IT Department)',
@@ -59,9 +59,9 @@ const mockEmailsData: MockEmail[] = [
   },
   {
     id: '4',
-    sender: 'vendor.services@example.com',
+    sender: 'vendor.services.inc@example.com',
     recipient: 'admin@hrstreamline.ai',
-    subject: 'Invoice INV-2024-00123',
+    subject: 'Invoice INV-2024-00123 for Services Rendered',
     body: 'Dear HR Streamline AI,\n\nAttached is invoice INV-2024-00123 for services rendered in June 2024. Please process the payment at your earliest convenience.\n\nThank you,\nVendor Services Team',
     date: '2024-07-16 11:00 AM',
     read: true,
@@ -93,18 +93,15 @@ export default function GmailInboxPage() {
     setReplySubject('');
     if (!email.read) {
       setEmails(prev => prev.map(e => e.id === email.id ? {...e, read: true} : e));
-      // In a real app, you'd call an API to mark as read on the server
-      toast({ title: "Email Marked as Read (Mock)", description: `"${email.subject}" is now marked as read.` });
+      toast({ title: "Email Marked as Read", description: `"${email.subject}" is now marked as read.` });
     }
   };
 
   const handleRefreshEmails = () => {
     setIsRefreshing(true);
-    toast({ title: "Refreshing Emails (Mock)..." });
-    // Simulate API call
+    toast({ title: "Refreshing Emails..." });
     setTimeout(() => {
-      // Potentially update mockEmailsData or fetch new ones
-      toast({ title: "Emails Refreshed (Mock)" });
+      toast({ title: "Emails Refreshed" });
       setIsRefreshing(false);
     }, 1500);
   };
@@ -183,26 +180,50 @@ Please generate a few professional reply options to this email.`;
   };
 
   const handleMockEmailAction = (actionType: 'archive' | 'delete' | 'markUnread', emailId: string, emailSubject: string) => {
-    if (!selectedEmail || selectedEmail.id !== emailId) return;
+    if (!selectedEmail || selectedEmail.id !== emailId) {
+        // If action is on non-selected email or no email is selected, find it first
+        const targetEmail = emails.find(e => e.id === emailId);
+        if (!targetEmail) return; // Should not happen if UI is correct
+
+         if (actionType === 'delete') {
+            setEmails(prev => prev.filter(e => e.id !== emailId));
+            toast({ title: "Action Performed (Mock)", description: `Email "${targetEmail.subject}" deleted (mock).` });
+            if (selectedEmail && selectedEmail.id === emailId) setSelectedEmail(null);
+            return;
+        }
+        // For other actions, they typically apply to the *selected* email context in this UI
+        // However, to be robust for future changes:
+        if (actionType === 'markUnread') {
+             setEmails(prev => prev.map(e => e.id === emailId ? {...e, read: false} : e));
+             toast({ title: "Action Performed (Mock)", description: `Email "${targetEmail.subject}" marked as unread (mock).` });
+             if (selectedEmail && selectedEmail.id === emailId) setSelectedEmail(prev => prev ? {...prev, read: false} : null);
+             return;
+        }
+         if (actionType === 'archive') {
+            // Mock: Deselect if it was selected, or remove from list if you have an archive view
+            toast({ title: "Action Performed (Mock)", description: `Email "${targetEmail.subject}" archived (mock).` });
+            if (selectedEmail && selectedEmail.id === emailId) setSelectedEmail(null);
+            // else: you might remove it from the `emails` list if not showing archived emails
+            return;
+        }
+        return;
+    }
+
 
     let actionDescription = '';
     switch (actionType) {
       case 'archive':
         actionDescription = `Email "${emailSubject}" archived (mock).`;
-        // In real app: API call to archive. Then potentially remove from current list or move to an "Archived" view.
-        // For mock, we can deselect it.
         setSelectedEmail(null); 
         break;
       case 'delete':
         actionDescription = `Email "${emailSubject}" deleted (mock).`;
-        // In real app: API call to delete. Then remove from list.
         setEmails(prev => prev.filter(e => e.id !== emailId));
         setSelectedEmail(null);
         break;
       case 'markUnread':
         actionDescription = `Email "${emailSubject}" marked as unread (mock).`;
         setEmails(prev => prev.map(e => e.id === emailId ? {...e, read: false} : e));
-        // Visually update the selected email if it's the one being marked.
         if (selectedEmail && selectedEmail.id === emailId) {
             setSelectedEmail(prev => prev ? {...prev, read: false} : null);
         }
@@ -240,9 +261,9 @@ Please generate a few professional reply options to this email.`;
                     className={`p-3 hover:shadow-md transition-shadow cursor-pointer ${selectedEmail?.id === email.id ? 'bg-secondary' : 'bg-card'} ${!email.read ? 'border-primary border-2' : 'border'}`}
                     onClick={() => handleSelectEmail(email)}
                   >
-                    <div className="flex justify-between items-start">
-                      <p className={`text-sm font-semibold ${!email.read ? 'text-primary' : 'text-foreground'}`}>{email.sender}</p>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex justify-between items-start w-full">
+                      <p className={`text-sm font-semibold truncate min-w-0 ${!email.read ? 'text-primary' : 'text-foreground'}`}>{email.sender}</p>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     </div>
                     <p className={`text-sm truncate ${!email.read ? 'font-bold' : ''}`}>{email.subject}</p>
                     <p className="text-xs text-muted-foreground truncate">{email.snippet}</p>
@@ -279,7 +300,7 @@ Please generate a few professional reply options to this email.`;
                 <CardDescription>Date: {selectedEmail.date}</CardDescription>
               </CardHeader>
               
-              <CardContent className="border-t border-b p-4 space-x-2">
+              <CardContent className="border-t border-b p-4 flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={() => handleMockEmailAction('archive', selectedEmail.id, selectedEmail.subject)}>
                     <Archive className="mr-2 h-4 w-4" /> Archive
                 </Button>
@@ -375,3 +396,4 @@ Please generate a few professional reply options to this email.`;
     </>
   );
 }
+
