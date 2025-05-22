@@ -33,7 +33,7 @@ interface Task {
 const initialTasks: Task[] = [
   { id: 'task-1', name: 'Design new onboarding flow visuals', description: 'Create mockups for all steps of the new user onboarding.', assignee: 'Alice Wonderland', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'woman face', dueDate: '2024-08-15', status: 'Todo', tags: ['UX', 'Design'] },
   { id: 'task-2', name: 'Develop API for user authentication', description: 'Implement OAuth2 and basic credential login.', assignee: 'Bob The Builder', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'man face', dueDate: '2024-08-20', status: 'In Progress', tags: ['Backend', 'API'] },
-  { id: 'task-3', name: 'Write documentation for the new reporting module', description: 'Cover all features and provide examples.', assignee: 'Charlie Brown', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'person cartoon', dueDate: '2024-08-25', status: 'In Progress', tags: ['Docs'] },
+  { id: 'task-3', name: 'Write documentation for new reporting module', description: 'Cover all features and provide examples.', assignee: 'Charlie Brown', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'person cartoon', dueDate: '2024-08-25', status: 'In Progress', tags: ['Docs'] },
   { id: 'task-4', name: 'User testing session for mobile app', description: 'Conduct tests with 5 users and gather feedback.', status: 'Todo', tags: ['Testing', 'Mobile'] },
   { id: 'task-5', name: 'Deploy staging environment updates', description: 'Merge develop branch to staging and run deployment scripts.', assignee: 'Diana Prince', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'woman superhero', status: 'Done', tags: ['DevOps', 'Release'] },
   { id: 'task-6', name: 'AWS Lambda Integration', description: 'Use SQS and SNS there. This task has a particularly long description to test how the card handles multiple lines of text and to ensure that wrapping works correctly within the defined card width. We need to see if the text wraps or if it overflows and breaks the layout of the task card. It should wrap neatly.', dueDate: '2025-05-24', status: 'Todo', tags: ['Backend', 'Cloud', 'AWS', 'Serverless'] },
@@ -46,8 +46,11 @@ const initialTasks: Task[] = [
   { id: 'task-13', name: 'Another Todo Task', description: 'Description for another todo task.', status: 'Todo', tags: ['General'] },
   { id: 'task-14', name: 'Yet Another Todo Task', description: 'This is a long description for yet another todo task to test the scrolling capability of the column. It should wrap and scroll nicely without breaking the layout.', assignee: 'Test User', dueDate: '2024-10-01', status: 'Todo', tags: ['Urgent', 'UX', 'Frontend', 'Backend'] },
   { id: 'task-15', name: 'Fifth Todo Task', description: 'Short description.', status: 'Todo' },
-  { id: 'task-16', name: 'Sixth Todo Task - Long content check', description: 'This is a task description to test vertical scrolling. It needs enough content to overflow the available space. Adding more lines. And more lines. And more lines. And more lines. And more lines. And more lines. And more lines. And more lines. And more lines. And more lines. And more lines. And more lines.', status: 'Todo' },
+  { id: 'task-16', name: 'Sixth Todo Task - Long content check', description: 'This is a task description to test vertical scrolling. It needs enough content to overflow the available space. Adding more lines. And more lines. And more lines. And more lines. And more lines. This is line six. This is line seven. This is line eight, we need this to be very long to make sure the scrollbar appears. Line nine. Line ten. Line eleven. Line twelve, almost there. Line thirteen. Line fourteen. Line fifteen, this should definitely be enough text to cause an overflow in a container with max-height of 80px or 5rem.', status: 'Todo' },
   { id: 'task-17', name: 'Seventh Todo Task', description: 'Another task for the Todo column to ensure scrolling works.', status: 'Todo' },
+  { id: 'task-18', name: 'Eight Todo Task', description: 'More tasks for scrolling.', status: 'Todo' },
+  { id: 'task-19', name: 'Ninth Todo Task', description: 'Keep them coming for scroll test.', status: 'Todo' },
+  { id: 'task-20', name: 'Tenth Todo Task', description: 'Final task for this batch of scroll testing.', status: 'Todo' },
 ];
 
 
@@ -73,7 +76,6 @@ interface TaskDialogContentProps {
   onCancel: () => void;
 }
 
-// Moved TaskDialogContent outside of TasksPage for stability
 const TaskDialogContent = ({
   formId,
   onSubmit,
@@ -356,7 +358,11 @@ export default function TasksPage() {
           <CardTitle className="text-sm font-medium leading-tight">{task.name}</CardTitle>
           {getStatusIcon(task.status)}
         </div>
-        {task.description && <CardDescription className="text-xs mt-1 max-h-20 overflow-y-auto">{task.description}</CardDescription>}
+        {task.description && (
+            <CardDescription className="text-xs mt-1 max-h-20 overflow-y-auto">
+                {task.description}
+            </CardDescription>
+        )}
       </CardHeader>
       <CardContent className="px-3 pb-3 space-y-2 flex-grow">
         {(task.assignee || task.dueDate) && (
@@ -403,7 +409,7 @@ export default function TasksPage() {
         </Button>
       </CardFooter>
     </Card>
-  ), [boardColumns, getStatusIcon, handleOpenEditDialog, handleDeleteTask, moveTask, tasks]); // Added tasks to dependency array for renderTaskCard
+  ), [getStatusIcon, boardColumns, handleOpenEditDialog, handleDeleteTask, moveTask]);
   
   return (
     <div className="flex flex-col h-full"> 
@@ -412,9 +418,9 @@ export default function TasksPage() {
           <Button variant="outline" onClick={() => toast({ title: "GitHub Sync (Mock)", description: "This would initiate GitHub project sync."})}>
             <Github className="mr-2 h-4 w-4" /> Connect to GitHub (Mock)
           </Button>
-          <Dialog open={isAddColumnDialogOpen} onOpenChange={setIsAddColumnDialogOpen}>
+          <Dialog open={isAddColumnDialogOpen} onOpenChange={(open) => { if(!open) setNewColumnName(''); setIsAddColumnDialogOpen(open);}}>
              <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" onClick={() => { setNewColumnName(''); setIsAddColumnDialogOpen(true); }}>
                   <Columns className="mr-2 h-4 w-4" /> Add Column
                 </Button>
             </DialogTrigger>
@@ -430,7 +436,7 @@ export default function TasksPage() {
                 </div>
               </form>
               <DialogModalFooter>
-                 <Button type="button" variant="outline" onClick={() => setIsAddColumnDialogOpen(false)}>Cancel</Button>
+                 <Button type="button" variant="outline" onClick={() => {setNewColumnName(''); setIsAddColumnDialogOpen(false)}}>Cancel</Button>
                 <Button type="submit" form="addColumnFormDialog">Add Column</Button>
               </DialogModalFooter>
             </DialogContent>
@@ -504,8 +510,8 @@ export default function TasksPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-0 flex-1 min-h-0"> {/* Removed padding, added min-h-0 */}
-              <ScrollArea className="h-full w-full p-4">  {/* Added w-full and p-4 for internal padding */}
+            <CardContent className="p-0 flex-1 min-h-0">
+              <ScrollArea className="h-full w-full p-4">
                 {tasks.filter(t => t.status === columnName).length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">No tasks in {columnName}.</p>
                 ) : (
