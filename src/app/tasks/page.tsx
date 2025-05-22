@@ -135,8 +135,8 @@ export default function TasksPage() {
             {task.assignee && (
               <div className="flex items-center gap-1">
                 <Avatar className="h-5 w-5">
-                  <AvatarImage src={task.assigneeAvatar} alt={task.assignee} data-ai-hint="assignee avatar" />
-                  <AvatarFallback>{task.assignee.substring(0,1)}</AvatarFallback>
+                  <AvatarImage src={task.assigneeAvatar} alt={task.assignee || 'User'} data-ai-hint="assignee avatar" />
+                  <AvatarFallback>{task.assignee ? task.assignee.substring(0,1) : 'U'}</AvatarFallback>
                 </Avatar>
                 <span>{task.assignee}</span>
               </div>
@@ -184,50 +184,52 @@ export default function TasksPage() {
                 <PlusCircle className="mr-2 h-4 w-4" /> Add New Task
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[480px]">
-              <DialogHeader>
+            <DialogContent className="sm:max-w-[480px] max-h-[calc(100vh-4rem)] flex flex-col">
+              <DialogHeader className="p-6 pb-2 flex-shrink-0">
                 <DialogTitle>Add New Task</DialogTitle>
                 <DialogDescription>Fill in the details for your new task.</DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleAddTask} className="grid gap-4 py-4">
-                <div>
-                  <Label htmlFor="newTaskName">Task Name</Label>
-                  <Input id="newTaskName" value={newTaskName} onChange={(e) => setNewTaskName(e.target.value)} className="mt-1" required />
-                </div>
-                <div>
-                  <Label htmlFor="newTaskDescription">Description (Optional)</Label>
-                  <Textarea id="newTaskDescription" value={newTaskDescription} onChange={(e) => setNewTaskDescription(e.target.value)} className="mt-1" placeholder="Brief description of the task..." />
-                </div>
-                <div>
-                  <Label htmlFor="newTaskAssignee">Assignee (Optional)</Label>
-                  <Input id="newTaskAssignee" value={newTaskAssignee} onChange={(e) => setNewTaskAssignee(e.target.value)} className="mt-1" placeholder="e.g., Jane Doe" />
-                </div>
-                <div>
-                  <Label htmlFor="newTaskDueDate">Due Date (Optional)</Label>
-                  <Input id="newTaskDueDate" type="date" value={newTaskDueDate} onChange={(e) => setNewTaskDueDate(e.target.value)} className="mt-1" />
-                </div>
-                 <div>
-                  <Label htmlFor="newTaskTags">Tags (Optional, comma-separated)</Label>
-                  <Input id="newTaskTags" value={newTaskTags} onChange={(e) => setNewTaskTags(e.target.value)} className="mt-1" placeholder="e.g., UX, Backend, Urgent" />
-                </div>
-                <div>
-                  <Label htmlFor="newTaskStatus">Status</Label>
-                  <Select value={newTaskStatus} onValueChange={(value: TaskStatus) => setNewTaskStatus(value)}>
-                    <SelectTrigger id="newTaskStatus" className="mt-1">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusColumns.map(status => (
-                        <SelectItem key={status} value={status}>{status}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <DialogModalFooter> {/* Changed from DialogFooter to DialogModalFooter */}
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                  <Button type="submit">Add Task</Button>
-                </DialogModalFooter>
-              </form>
+              <div className="flex-grow overflow-y-auto px-6">
+                <form onSubmit={handleAddTask} id="addTaskForm" className="grid gap-4 py-4">
+                  <div>
+                    <Label htmlFor="newTaskName">Task Name</Label>
+                    <Input id="newTaskName" value={newTaskName} onChange={(e) => setNewTaskName(e.target.value)} className="mt-1" required />
+                  </div>
+                  <div>
+                    <Label htmlFor="newTaskDescription">Description (Optional)</Label>
+                    <Textarea id="newTaskDescription" value={newTaskDescription} onChange={(e) => setNewTaskDescription(e.target.value)} className="mt-1" placeholder="Brief description of the task..." />
+                  </div>
+                  <div>
+                    <Label htmlFor="newTaskAssignee">Assignee (Optional)</Label>
+                    <Input id="newTaskAssignee" value={newTaskAssignee} onChange={(e) => setNewTaskAssignee(e.target.value)} className="mt-1" placeholder="e.g., Jane Doe" />
+                  </div>
+                  <div>
+                    <Label htmlFor="newTaskDueDate">Due Date (Optional)</Label>
+                    <Input id="newTaskDueDate" type="date" value={newTaskDueDate} onChange={(e) => setNewTaskDueDate(e.target.value)} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label htmlFor="newTaskTags">Tags (Optional, comma-separated)</Label>
+                    <Input id="newTaskTags" value={newTaskTags} onChange={(e) => setNewTaskTags(e.target.value)} className="mt-1" placeholder="e.g., UX, Backend, Urgent" />
+                  </div>
+                  <div>
+                    <Label htmlFor="newTaskStatus">Status</Label>
+                    <Select value={newTaskStatus} onValueChange={(value: TaskStatus) => setNewTaskStatus(value)}>
+                      <SelectTrigger id="newTaskStatus" className="mt-1">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {statusColumns.map(status => (
+                          <SelectItem key={status} value={status}>{status}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </form>
+              </div>
+              <DialogModalFooter className="p-6 pt-2 border-t flex-shrink-0">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" form="addTaskForm">Add Task</Button>
+              </DialogModalFooter>
             </DialogContent>
           </Dialog>
         </div>
