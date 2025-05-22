@@ -36,7 +36,7 @@ const initialTasks: Task[] = [
   { id: 'task-3', name: 'Write documentation for new reporting module', description: 'Cover all features and provide examples.', assignee: 'Charlie Brown', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'person cartoon', dueDate: '2024-08-25', status: 'In Progress', tags: ['Docs'] },
   { id: 'task-4', name: 'User testing session for mobile app', description: 'Conduct tests with 5 users and gather feedback.', status: 'Todo', tags: ['Testing', 'Mobile'] },
   { id: 'task-5', name: 'Deploy staging environment updates', description: 'Merge develop branch to staging and run deployment scripts.', assignee: 'Diana Prince', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'woman superhero', status: 'Done', tags: ['DevOps', 'Release'] },
-  { id: 'task-6', name: 'AWS Lambda Integration', description: 'Use SQS and SNS there. This task has a particularly long description to test how the card handles multiple lines of text and to ensure that wrapping works correctly within the defined card width. We need to see if the text wraps or if it overflows and breaks the layout of the task card. It should wrap neatly.', dueDate: '2025-05-24', status: 'Todo', tags: ['Backend', 'Cloud', 'AWS', 'Serverless'] },
+  { id: 'task-6', name: 'AWS Lambda Integration', description: 'This is a very long description for the AWS Lambda Integration task. It needs to be quite verbose to ensure that it properly overflows the max-height of 80px (max-h-20) set on the CardDescription. We need to test the vertical scrolling capability of the task description itself. This description should be long enough to demonstrate that the y-axis scrollbar appears when the content exceeds the allocated space. Adding more lines to ensure overflow. This text is intended to be very long. This text is intended to be very long. This text is intended to be very long. This text is intended to be very long. This text is intended to be very long. This text is intended to be very long. This text is intended to be very long. This text is intended to be very long. This text is intended to be very long. This text is intended to be very long.', dueDate: '2025-05-24', status: 'Todo', tags: ['Backend', 'Cloud', 'AWS', 'Serverless'] },
   { id: 'task-7', name: 'Refactor settings page UI', description: 'Improve layout and responsiveness of the user settings page.', assignee: 'Alice Wonderland', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'woman face', dueDate: '2024-09-01', status: 'Todo', tags: ['Frontend', 'UX'] },
   { id: 'task-8', name: 'Performance testing for Q3 release', description: 'Identify bottlenecks and optimize critical paths.', status: 'In Progress', tags: ['QA', 'Performance'] },
   { id: 'task-9', name: 'Setup CI/CD pipeline for new microservice', assignee: 'Bob The Builder', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'man face', dueDate: '2024-09-10', status: 'Todo', tags: ['DevOps', 'CI/CD'] },
@@ -194,7 +194,7 @@ export default function TasksPage() {
   useEffect(() => {
     if (boardColumns.length > 0 && (!taskStatus || !boardColumns.includes(taskStatus))) {
       setTaskStatus(boardColumns[0]);
-    } else if (boardColumns.length === 0 && taskStatus !== '') {
+    } else if (boardColumns.length === 0 && taskStatus !== '') { 
       setTaskStatus(''); 
     }
   }, [boardColumns, taskStatus]);
@@ -207,7 +207,7 @@ export default function TasksPage() {
   }, []);
   
   const handleOpenAddTaskDialog = useCallback((defaultStatus?: TaskStatus) => {
-    onDialogCancel(); // Resets form and editing state
+    onDialogCancel(); 
     if (defaultStatus && boardColumns.includes(defaultStatus)) {
       setTaskStatus(defaultStatus);
     } else if (boardColumns.length > 0) {
@@ -254,7 +254,7 @@ export default function TasksPage() {
   }, [taskName, taskDescription, taskAssignee, taskDueDate, taskStatus, taskTags, boardColumns, toast, onDialogCancel]);
 
   const handleOpenEditDialog = useCallback((task: Task) => {
-    onDialogCancel(); // Resets form
+    onDialogCancel(); 
     setEditingTask(task);
     setTaskName(task.name);
     setTaskDescription(task.description || '');
@@ -423,7 +423,7 @@ export default function TasksPage() {
   ), [getStatusIcon, boardColumns, handleOpenEditDialog, handleDeleteTask, moveTask]);
   
   return (
-    <div className="flex flex-col"> {/* Removed h-full */}
+    <div className="flex flex-col">
       <PageHeader title="Task Management Board" description="Organize, track, and manage your project tasks.">
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           <Button variant="outline" onClick={() => toast({ title: "GitHub Sync (Mock)", description: "This would initiate GitHub project sync."})}>
@@ -465,7 +465,7 @@ export default function TasksPage() {
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <TaskDialogContent
-            formId="addTaskForm"
+            formId="addTaskFormDialog"
             onSubmit={handleAddTask}
             title="Add New Task"
             description="Fill in the details for your new task."
@@ -489,7 +489,7 @@ export default function TasksPage() {
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
             <TaskDialogContent
-                formId="editTaskForm"
+                formId="editTaskFormDialog"
                 onSubmit={handleEditTask}
                 title="Edit Task"
                 description="Update the details of your task."
@@ -538,35 +538,6 @@ export default function TasksPage() {
           </div>
         )}
       </div>
-       <style jsx global>{`
-        .animate-spin-slow {
-          animation: spin 2s linear infinite;
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        /* For webkit browsers like Chrome, Safari */
-        .overflow-x-auto::-webkit-scrollbar {
-            height: 8px; 
-        }
-        .overflow-x-auto::-webkit-scrollbar-track {
-            background: hsl(var(--secondary)); 
-            border-radius: 10px;
-        }
-        .overflow-x-auto::-webkit-scrollbar-thumb {
-            background: hsl(var(--muted-foreground));
-            border-radius: 10px;
-        }
-        .overflow-x-auto::-webkit-scrollbar-thumb:hover {
-            background: hsl(var(--primary)); 
-        }
-        /* For Firefox */
-        .overflow-x-auto {
-          scrollbar-width: thin;
-          scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--secondary));
-        }
-      `}</style>
     </div>
   );
 }
