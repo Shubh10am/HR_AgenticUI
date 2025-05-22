@@ -46,11 +46,16 @@ const initialTasks: Task[] = [
   { id: 'task-13', name: 'Another Todo Task', description: 'Description for another todo task.', status: 'Todo', tags: ['General'] },
   { id: 'task-14', name: 'Yet Another Todo Task', description: 'This is a long description for yet another todo task to test the scrolling capability of the column. It should wrap and scroll nicely without breaking the layout.', assignee: 'Test User', dueDate: '2024-10-01', status: 'Todo', tags: ['Urgent', 'UX', 'Frontend', 'Backend'] },
   { id: 'task-15', name: 'Fifth Todo Task', description: 'Short description.', status: 'Todo' },
-  { id: 'task-16', name: 'Sixth Todo Task - Long content check', description: 'This is a task description to test vertical scrolling. It needs enough content to overflow the available space. Adding more lines. And more lines. And more lines. And more lines. And more lines. This is line six. This is line seven. This is line eight, we need this to be very long to make sure the scrollbar appears. Line nine. Line ten. Line eleven. Line twelve, almost there. Line thirteen. Line fourteen. Line fifteen, this should definitely be enough text to cause an overflow in a container with max-height of 80px or 5rem.', status: 'Todo' },
+  { id: 'task-16', name: 'Sixth Todo Task - Long content check', description: 'This is a task description to test vertical scrolling. It needs enough content to overflow the available space. Adding more lines. And more lines. And more lines. And more lines. And more lines. This is line six. This is line seven. This is line eight, we need this to be very long to make sure the scrollbar appears. Line nine. Line ten. Line eleven. Line twelve, almost there. Line thirteen. Line fourteen. Line fifteen, this should definitely be enough text to cause an overflow in a container with max-height of 80px or 5rem. This is an even longer description to ensure that the task list vertical scroll is tested. We need many tasks in one column. Let us add more content. More lines. More text. More stuff to make it scroll. This is really long now. Hopefully this is enough to test it properly. Maybe one more line. Okay, this must be it.', status: 'Todo' },
   { id: 'task-17', name: 'Seventh Todo Task', description: 'Another task for the Todo column to ensure scrolling works.', status: 'Todo' },
-  { id: 'task-18', name: 'Eight Todo Task', description: 'More tasks for scrolling.', status: 'Todo' },
+  { id: 'task-18', name: 'Eighth Todo Task', description: 'More tasks for scrolling.', status: 'Todo' },
   { id: 'task-19', name: 'Ninth Todo Task', description: 'Keep them coming for scroll test.', status: 'Todo' },
   { id: 'task-20', name: 'Tenth Todo Task', description: 'Final task for this batch of scroll testing.', status: 'Todo' },
+  { id: 'task-21', name: 'Eleventh Todo Task', description: 'One more for the Todo column.', status: 'Todo', tags: ['Test'] },
+  { id: 'task-22', name: 'Twelfth Todo Task', description: 'And another one for Todo.', status: 'Todo', tags: ['UX', 'Frontend'] },
+  { id: 'task-23', name: 'Thirteenth Todo Task', description: 'Todo column should be very full now.', status: 'Todo', tags: ['Backend', 'Urgent'] },
+  { id: 'task-24', name: 'Fourteenth Todo Task', description: 'Ensuring the Todo column scrolls vertically.', status: 'Todo', tags: ['CI/CD'] },
+  { id: 'task-25', name: 'Fifteenth Todo Task', description: 'The final test task for Todo scrolling.', status: 'Todo', tags: ['Documentation'] },
 ];
 
 
@@ -76,6 +81,7 @@ interface TaskDialogContentProps {
   onCancel: () => void;
 }
 
+// Moved TaskDialogContent outside of TasksPage for stability
 const TaskDialogContent = ({
   formId,
   onSubmit,
@@ -165,10 +171,7 @@ export default function TasksPage() {
 
   const { toast } = useToast();
   
-  const onDialogCancel = useCallback(() => {
-    setIsAddDialogOpen(false);
-    setIsEditDialogOpen(false);
-    setEditingTask(null);
+  const resetFormFields = useCallback(() => {
     setTaskName('');
     setTaskDescription('');
     setTaskAssignee('');
@@ -180,6 +183,13 @@ export default function TasksPage() {
         setTaskStatus('');
     }
   }, [boardColumns, taskStatus]);
+
+  const onDialogCancel = useCallback(() => {
+    resetFormFields();
+    setIsAddDialogOpen(false);
+    setIsEditDialogOpen(false);
+    setEditingTask(null);
+  }, [resetFormFields]);
 
   useEffect(() => {
     if (boardColumns.length > 0 && (!taskStatus || !boardColumns.includes(taskStatus))) {
@@ -197,7 +207,7 @@ export default function TasksPage() {
   }, []);
   
   const handleOpenAddTaskDialog = useCallback((defaultStatus?: TaskStatus) => {
-    onDialogCancel();
+    onDialogCancel(); // Resets form and editing state
     if (defaultStatus && boardColumns.includes(defaultStatus)) {
       setTaskStatus(defaultStatus);
     } else if (boardColumns.length > 0) {
@@ -209,7 +219,6 @@ export default function TasksPage() {
         return; 
       }
     }
-    setEditingTask(null);
     setIsAddDialogOpen(true);
   }, [boardColumns, onDialogCancel, toast, setTaskStatus]);
 
@@ -242,10 +251,10 @@ export default function TasksPage() {
     setTasks(prevTasks => [...prevTasks, newTask]);
     toast({ title: "Task Added", description: `"${newTask.name}" has been added to ${newTask.status}.` });
     onDialogCancel();
-  }, [taskName, taskDescription, taskAssignee, taskDueDate, taskStatus, taskTags, boardColumns, toast, setTasks, onDialogCancel]);
+  }, [taskName, taskDescription, taskAssignee, taskDueDate, taskStatus, taskTags, boardColumns, toast, onDialogCancel]);
 
   const handleOpenEditDialog = useCallback((task: Task) => {
-    onDialogCancel();
+    onDialogCancel(); // Resets form
     setEditingTask(task);
     setTaskName(task.name);
     setTaskDescription(task.description || '');
@@ -291,7 +300,7 @@ export default function TasksPage() {
       toast({ title: "Task Updated", description: `"${updatedTaskData.name}" has been updated.` });
       onDialogCancel();
     }
-  }, [editingTask, taskName, taskDescription, taskAssignee, taskDueDate, taskStatus, taskTags, boardColumns, toast, setTasks, onDialogCancel]);
+  }, [editingTask, taskName, taskDescription, taskAssignee, taskDueDate, taskStatus, taskTags, boardColumns, toast, onDialogCancel]);
 
   const handleDeleteTask = useCallback((taskId: string) => {
     const taskToDelete = tasks.find(task => task.id === taskId);
@@ -299,7 +308,7 @@ export default function TasksPage() {
     if (taskToDelete) {
       toast({ title: "Task Deleted", description: `"${taskToDelete.name}" has been removed.`, variant: "destructive" });
     }
-  }, [tasks, toast, setTasks]);
+  }, [tasks, toast]);
 
   const handleChangeTaskStatus = useCallback((taskId: string, newStatus: TaskStatus) => {
     setTasks(prevTasks =>
@@ -307,7 +316,7 @@ export default function TasksPage() {
         task.id === taskId ? { ...task, status: newStatus } : task
       )
     );
-  }, [setTasks]);
+  }, []);
 
   const moveTask = useCallback((taskId: string, direction: 'prev' | 'next') => {
     const task = tasks.find(t => t.id === taskId);
@@ -342,6 +351,8 @@ export default function TasksPage() {
       const newColumns = [...prev, trimmedNewColumnName];
       if (prev.length === 0 && taskStatus === '') { 
         setTaskStatus(trimmedNewColumnName); 
+      } else if (prev.length > 0 && taskStatus === '' && newColumns.length > 0) {
+        setTaskStatus(newColumns[0]);
       }
       return newColumns;
     });
@@ -364,7 +375,7 @@ export default function TasksPage() {
             </CardDescription>
         )}
       </CardHeader>
-      <CardContent className="px-3 pb-3 space-y-2 flex-grow">
+      <CardContent className="px-3 pb-3 space-y-2">
         {(task.assignee || task.dueDate) && (
           <div className="flex items-center justify-between text-xs text-muted-foreground min-w-0">
             {task.assignee && (
@@ -412,7 +423,7 @@ export default function TasksPage() {
   ), [getStatusIcon, boardColumns, handleOpenEditDialog, handleDeleteTask, moveTask]);
   
   return (
-    <div className="flex flex-col h-full"> 
+    <div className="flex flex-col"> {/* Removed h-full */}
       <PageHeader title="Task Management Board" description="Organize, track, and manage your project tasks.">
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           <Button variant="outline" onClick={() => toast({ title: "GitHub Sync (Mock)", description: "This would initiate GitHub project sync."})}>
@@ -424,7 +435,7 @@ export default function TasksPage() {
                   <Columns className="mr-2 h-4 w-4" /> Add Column
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px]" onOpenAutoFocus={(e) => e.preventDefault()}>
               <DialogHeader>
                 <DialogTitle>Add New Column</DialogTitle>
                 <DialogDescription>Enter a name for your new Kanban column.</DialogDescription>
@@ -454,7 +465,7 @@ export default function TasksPage() {
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <TaskDialogContent
-            formId="addTaskFormDialogContent"
+            formId="addTaskForm"
             onSubmit={handleAddTask}
             title="Add New Task"
             description="Fill in the details for your new task."
@@ -478,7 +489,7 @@ export default function TasksPage() {
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
             <TaskDialogContent
-                formId="editTaskFormDialogContent"
+                formId="editTaskForm"
                 onSubmit={handleEditTask}
                 title="Edit Task"
                 description="Update the details of your task."
