@@ -3,12 +3,12 @@
 
 import { useState, type FormEvent, useEffect } from 'react';
 import PageHeader from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter as DialogModalFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter as DialogModalFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Github, PlusCircle, Trash2, ChevronLeft, ChevronRight, Circle, RefreshCw, CheckCircle, CalendarDays, User, Edit3, Columns } from 'lucide-react';
@@ -94,7 +94,6 @@ export default function TasksPage() {
       setTaskStatus(boardColumns[0]);
     } else {
       // No columns exist, ensure status is empty or handled.
-      // This case might need specific handling if tasks can't be added without columns.
       setTaskStatus('');
       if (boardColumns.length === 0) {
         toast({ title: "No Columns", description: "Please add a column first to assign a status.", variant: "destructive"});
@@ -105,7 +104,7 @@ export default function TasksPage() {
     setIsAddDialogOpen(true);
   };
 
-  const handleAddOrEditTask = (event: FormEvent<HTMLFormElement>) => {
+  const handleAddTask = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!taskName.trim()) {
       toast({ title: "Task name required", description: "Please enter a name for the task.", variant: "destructive" });
@@ -115,12 +114,13 @@ export default function TasksPage() {
        toast({ title: "Status required", description: "Please select a status for the task.", variant: "destructive" });
       return;
     }
-     if (boardColumns.length === 0 && taskStatus === '') { 
+    if (boardColumns.length === 0 && taskStatus === '') { 
       toast({ title: "No columns exist", description: "Please add a column before adding a task.", variant: "destructive" });
       return;
     }
 
-    const taskData = {
+    const newTask: Task = {
+      id: `task-${Date.now()}`,
       name: taskName.trim(),
       description: taskDescription.trim() || undefined,
       assignee: taskAssignee.trim() || undefined,
@@ -130,26 +130,50 @@ export default function TasksPage() {
       status: taskStatus,
       tags: taskTags.split(',').map(tag => tag.trim()).filter(tag => tag),
     };
+    setTasks(prevTasks => [...prevTasks, newTask]);
+    toast({ title: "Task Added", description: `"${newTask.name}" has been added to ${newTask.status}.` });
+    setIsAddDialogOpen(false);
+    resetFormFields();
+  };
+
+  const handleEditTask = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+     if (!taskName.trim()) {
+      toast({ title: "Task name required", variant: "destructive" });
+      return;
+    }
+    if (!taskStatus && boardColumns.length > 0) {
+      toast({ title: "Status required", variant: "destructive" });
+      return;
+    }
+    if (boardColumns.length === 0 && taskStatus === '') {
+      toast({ title: "No columns exist", description: "Please add a column before adding a task.", variant: "destructive" });
+      return;
+    }
+
 
     if (editingTask) {
+      const updatedTaskData = {
+        name: taskName.trim(),
+        description: taskDescription.trim() || undefined,
+        assignee: taskAssignee.trim() || undefined,
+        assigneeAvatar: taskAssignee.trim() ? `https://placehold.co/40x40.png` : undefined,
+        dataAiHint: taskAssignee.trim() ? 'person placeholder' : undefined,
+        dueDate: taskDueDate.trim() || undefined,
+        status: taskStatus,
+        tags: taskTags.split(',').map(tag => tag.trim()).filter(tag => tag),
+      };
+
       setTasks(prevTasks =>
         prevTasks.map(t =>
-          t.id === editingTask.id ? { ...editingTask, ...taskData } : t
+          t.id === editingTask.id ? { ...editingTask, ...updatedTaskData } : t
         )
       );
-      toast({ title: "Task Updated", description: `"${taskData.name}" has been updated.` });
+      toast({ title: "Task Updated", description: `"${updatedTaskData.name}" has been updated.` });
       setIsEditDialogOpen(false);
       setEditingTask(null);
-    } else {
-      const newTask: Task = {
-        id: `task-${Date.now()}`,
-        ...taskData,
-      };
-      setTasks(prevTasks => [...prevTasks, newTask]);
-      toast({ title: "Task Added", description: `"${newTask.name}" has been added to ${newTask.status}.` });
-      setIsAddDialogOpen(false);
+      resetFormFields();
     }
-    resetFormFields();
   };
 
   const handleOpenEditDialog = (task: Task) => {
@@ -209,7 +233,7 @@ export default function TasksPage() {
       return;
     }
     setBoardColumns(prev => [...prev, trimmedNewColumnName]);
-    if (boardColumns.length === 0 && taskStatus === '') { 
+    if (boardColumns.length === 1 && taskStatus === '') { // If it's the first column being added
       setTaskStatus(trimmedNewColumnName); 
     }
     toast({ title: "Column Added", description: `Column "${trimmedNewColumnName}" has been added.` });
@@ -335,11 +359,9 @@ export default function TasksPage() {
             <Github className="mr-2 h-4 w-4" /> Connect to GitHub (Mock)
           </Button>
           <Dialog open={isAddColumnDialogOpen} onOpenChange={setIsAddColumnDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" onClick={() => { setNewColumnName(''); setIsAddColumnDialogOpen(true); }}>
-                <Columns className="mr-2 h-4 w-4" /> Add Column
-              </Button>
-            </DialogTrigger>
+            <Button variant="outline" onClick={() => { setNewColumnName(''); setIsAddColumnDialogOpen(true); }}>
+              <Columns className="mr-2 h-4 w-4" /> Add Column
+            </Button>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Add New Column</DialogTitle>
@@ -371,7 +393,7 @@ export default function TasksPage() {
         >
           <TaskDialogContent
             formId="addTaskForm"
-            onSubmit={handleAddOrEditTask}
+            onSubmit={handleAddTask}
             title="Add New Task"
             description="Fill in the details for your new task."
             buttonText="Add Task"
@@ -388,7 +410,7 @@ export default function TasksPage() {
         >
             <TaskDialogContent
                 formId="editTaskForm"
-                onSubmit={handleAddOrEditTask}
+                onSubmit={handleEditTask}
                 title="Edit Task"
                 description="Update the details of your task."
                 buttonText="Save Changes"
