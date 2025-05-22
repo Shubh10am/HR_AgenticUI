@@ -16,8 +16,9 @@ import {
   Users,
   FileSignature,
   Briefcase,
-  Plug, // New icon for Integrations
-  GitFork, // Using GitFork for Recruitment as Briefcase is used elsewhere.
+  Plug, 
+  GitFork, 
+  Inbox, // Added Inbox icon
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -31,6 +32,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
   { href: '/email-assistance', label: 'Email Assistance', icon: MailPlus, tooltip: 'Email Assistance' },
+  { href: '/gmail-inbox', label: 'Gmail Inbox', icon: Inbox, tooltip: 'Gmail Inbox' },
   { href: '/attendance-reporting', label: 'Attendance', icon: CalendarCheck, tooltip: 'Attendance & Reporting' },
   { href: '/unified-communications', label: 'Communications', icon: MessagesSquare, tooltip: 'Unified Communications' },
   { href: '/recruitment', label: 'Recruitment', icon: GitFork, tooltip: 'AI Recruitment' },
@@ -60,5 +62,3 @@ export default function SidebarNav() {
     </SidebarMenu>
   );
 }
-
-    

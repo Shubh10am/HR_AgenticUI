@@ -5,7 +5,7 @@ import { useState } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Github, Link, CheckCircle, Settings, ExternalLink, MessageSquare, CalendarDays, Webcam, Users, LayoutGrid, FileSignature, KanbanSquare, Video } from 'lucide-react';
+import { Github, Link, CheckCircle, Settings, ExternalLink, MessageSquare, CalendarDays, Webcam, Users, LayoutGrid, FileSignature, KanbanSquare, Video, Inbox } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
@@ -25,6 +25,17 @@ interface Integration {
 }
 
 const initialIntegrations: Integration[] = [
+  {
+    id: 'gmail',
+    name: 'Gmail',
+    description: 'Connect your Gmail account to fetch, read, and reply to emails with AI assistance.',
+    icon: Inbox,
+    logoUrl: 'https://placehold.co/64x64.png',
+    dataAiHint: 'gmail logo',
+    category: 'Email',
+    isConnected: false,
+    features: ['Fetch Emails', 'AI Reply Generation', 'Send Emails (Mock)'],
+  },
   {
     id: 'github',
     name: 'GitHub',
@@ -215,6 +226,11 @@ export default function IntegrationsPage() {
                   Connecting GitHub requires OAuth authentication.
                 </p>
               )}
+               {integration.id === 'gmail' && !integration.isConnected && (
+                <p className="text-xs text-muted-foreground mt-3">
+                  Connecting Gmail requires Google OAuth.
+                </p>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -237,4 +253,3 @@ export default function IntegrationsPage() {
     </>
   );
 }
-
