@@ -3,7 +3,7 @@
 
 import { useState, type FormEvent, useEffect } from 'react';
 import PageHeader from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -69,7 +69,7 @@ export default function TasksPage() {
   const getStatusIcon = (status: TaskStatus) => {
     const lowerStatus = status.toLowerCase();
     if (lowerStatus === 'done') return <CheckCircle className="h-5 w-5 text-green-500" />;
-    if (lowerStatus === 'in progress') return <RefreshCw className="h-5 w-5 text-yellow-500 animate-spin-slow" />;
+    if (lowerStatus.includes('progress')) return <RefreshCw className="h-5 w-5 text-yellow-500 animate-spin-slow" />;
     return <Circle className="h-5 w-5 text-muted-foreground" />;
   };
 
@@ -86,14 +86,20 @@ export default function TasksPage() {
     }
   };
   
- const handleOpenAddTaskDialog = (defaultStatus?: TaskStatus) => {
+  const handleOpenAddTaskDialog = (defaultStatus?: TaskStatus) => {
     resetFormFields();
     if (defaultStatus && boardColumns.includes(defaultStatus)) {
       setTaskStatus(defaultStatus);
     } else if (boardColumns.length > 0) {
       setTaskStatus(boardColumns[0]);
     } else {
-      setTaskStatus(''); // Or handle the case where no columns exist
+      // No columns exist, ensure status is empty or handled.
+      // This case might need specific handling if tasks can't be added without columns.
+      setTaskStatus('');
+      if (boardColumns.length === 0) {
+        toast({ title: "No Columns", description: "Please add a column first to assign a status.", variant: "destructive"});
+        return; // Prevent dialog opening if no columns
+      }
     }
     setEditingTask(null);
     setIsAddDialogOpen(true);
@@ -109,17 +115,16 @@ export default function TasksPage() {
        toast({ title: "Status required", description: "Please select a status for the task.", variant: "destructive" });
       return;
     }
-     if (boardColumns.length === 0 && taskStatus !== '') { // Should not happen if status select is disabled
+     if (boardColumns.length === 0 && taskStatus === '') { 
       toast({ title: "No columns exist", description: "Please add a column before adding a task.", variant: "destructive" });
       return;
     }
-
 
     const taskData = {
       name: taskName.trim(),
       description: taskDescription.trim() || undefined,
       assignee: taskAssignee.trim() || undefined,
-      assigneeAvatar: taskAssignee.trim() ? `https://placehold.co/40x40.png` : undefined, // Generic placeholder
+      assigneeAvatar: taskAssignee.trim() ? `https://placehold.co/40x40.png` : undefined,
       dataAiHint: taskAssignee.trim() ? 'person placeholder' : undefined,
       dueDate: taskDueDate.trim() || undefined,
       status: taskStatus,
@@ -144,7 +149,7 @@ export default function TasksPage() {
       toast({ title: "Task Added", description: `"${newTask.name}" has been added to ${newTask.status}.` });
       setIsAddDialogOpen(false);
     }
-    resetFormFields(); // Reset form fields for next entry
+    resetFormFields();
   };
 
   const handleOpenEditDialog = (task: Task) => {
@@ -221,7 +226,7 @@ export default function TasksPage() {
         </div>
         {task.description && <CardDescription className="text-xs mt-1">{task.description}</CardDescription>}
       </CardHeader>
-      <CardContent className="px-3 pb-3 space-y-2">
+      <CardContent className="px-3 pb-3 space-y-2 flex-grow">
         {(task.assignee || task.dueDate) && (
           <div className="flex items-center justify-between text-xs text-muted-foreground min-w-0">
             {task.assignee && (
@@ -359,7 +364,11 @@ export default function TasksPage() {
       </PageHeader>
 
       <Dialog open={isAddDialogOpen} onOpenChange={(open) => { if(!open) { setEditingTask(null); resetFormFields(); } setIsAddDialogOpen(open); }}>
-        <DialogContent className="sm:max-w-[480px] max-h-[calc(100vh-4rem)] flex flex-col">
+        <DialogContent 
+          key="add-task-dialog" 
+          className="sm:max-w-[480px] max-h-[calc(100vh-4rem)] flex flex-col"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           <TaskDialogContent
             formId="addTaskForm"
             onSubmit={handleAddOrEditTask}
@@ -372,7 +381,11 @@ export default function TasksPage() {
       </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={(open) => { if(!open) { setEditingTask(null); resetFormFields(); } setIsEditDialogOpen(open); }}>
-        <DialogContent className="sm:max-w-[480px] max-h-[calc(100vh-4rem)] flex flex-col">
+        <DialogContent 
+          key="edit-task-dialog" 
+          className="sm:max-w-[480px] max-h-[calc(100vh-4rem)] flex flex-col"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
             <TaskDialogContent
                 formId="editTaskForm"
                 onSubmit={handleAddOrEditTask}
@@ -386,7 +399,7 @@ export default function TasksPage() {
       
       <div className="flex overflow-x-auto gap-6 pb-4 items-start flex-grow">
         {boardColumns.map(columnName => (
-          <Card key={columnName} className="shadow-lg flex flex-col w-[320px] flex-shrink-0">
+          <Card key={columnName} className="shadow-lg flex flex-col w-[320px] flex-shrink-0 min-h-[200px]">
             <CardHeader className="border-b">
               <div className="flex justify-between items-center">
                 <CardTitle className="flex items-center text-lg">
@@ -399,7 +412,7 @@ export default function TasksPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-4 flex-grow min-h-[200px]">
+            <CardContent className="p-4 flex-grow">
               <ScrollArea className="h-full pr-3"> 
                 {tasks.filter(t => t.status === columnName).length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">No tasks in {columnName}.</p>
