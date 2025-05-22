@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter as DialogModalFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter as DialogModalFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Github, PlusCircle, Trash2, ChevronLeft, ChevronRight, Circle, RefreshCw, CheckCircle, CalendarDays, User, Edit3, Columns } from 'lucide-react';
@@ -80,9 +80,9 @@ export default function TasksPage() {
     setTaskDueDate('');
     setTaskTags('');
     if (boardColumns.length > 0) {
-      setTaskStatus(boardColumns[0]); // Default to first column if columns exist
+      setTaskStatus(boardColumns[0]); 
     } else {
-      setTaskStatus(''); // No status if no columns
+      setTaskStatus(''); 
     }
   };
   
@@ -93,7 +93,7 @@ export default function TasksPage() {
     } else if (boardColumns.length > 0) {
       setTaskStatus(boardColumns[0]);
     } else {
-      setTaskStatus(''); // No status if no columns exist
+      setTaskStatus(''); 
     }
     setEditingTask(null);
     setIsAddDialogOpen(true);
@@ -135,6 +135,7 @@ export default function TasksPage() {
       toast({ title: "Task Updated", description: `"${taskData.name}" has been updated.` });
       setIsEditDialogOpen(false);
       setEditingTask(null);
+      resetFormFields();
     } else {
       const newTask: Task = {
         id: `task-${Date.now()}`,
@@ -143,6 +144,7 @@ export default function TasksPage() {
       setTasks(prevTasks => [...prevTasks, newTask]);
       toast({ title: "Task Added", description: `"${newTask.name}" has been added to ${newTask.status}.` });
       setIsAddDialogOpen(false);
+      resetFormFields();
     }
   };
 
@@ -203,7 +205,7 @@ export default function TasksPage() {
       return;
     }
     setBoardColumns(prev => [...prev, trimmedNewColumnName]);
-    if (boardColumns.length === 0 && taskStatus === '') { // If it's the very first column being added
+    if (boardColumns.length === 0 && taskStatus === '') { 
       setTaskStatus(trimmedNewColumnName); 
     }
     toast({ title: "Column Added", description: `Column "${trimmedNewColumnName}" has been added.` });
@@ -224,16 +226,16 @@ export default function TasksPage() {
         {(task.assignee || task.dueDate) && (
           <div className="flex items-center justify-between text-xs text-muted-foreground min-w-0">
             {task.assignee && (
-              <div className="flex items-center gap-1 min-w-0"> {/* Added min-w-0 here */}
+              <div className="flex items-center gap-1 min-w-0"> 
                 <Avatar className="h-5 w-5 flex-shrink-0">
                   <AvatarImage src={task.assigneeAvatar} alt={task.assignee || 'User'} data-ai-hint={task.dataAiHint || "person avatar"} />
                   <AvatarFallback>{task.assignee ? task.assignee.substring(0,1).toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
-                <span className="truncate min-w-0">{task.assignee}</span> {/* Added truncate and min-w-0 */}
+                <span className="truncate min-w-0">{task.assignee}</span> 
               </div>
             )}
             {task.dueDate && (
-              <div className="flex items-center gap-1 flex-shrink-0"> {/* Added flex-shrink-0 */}
+              <div className="flex items-center gap-1 flex-shrink-0"> 
                 <CalendarDays className="h-3 w-3" />
                 <span>{task.dueDate}</span>
               </div>
@@ -322,7 +324,7 @@ export default function TasksPage() {
   );
 
   return (
-    <div className="flex flex-col h-full"> {/* Root of TasksPage changed from no h-full */}
+    <div className="flex flex-col"> 
       <PageHeader title="Task Management Board" description="Organize, track, and manage your project tasks.">
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           <Button variant="outline" onClick={() => toast({ title: "GitHub Sync (Mock)", description: "This would initiate GitHub project sync."})}>
