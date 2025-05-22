@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Github, Link, CheckCircle, Settings, ExternalLink, MessageSquare, CalendarDays, Webcam, Users, LayoutGrid, FileSignature, KanbanSquare, Video, Inbox } from 'lucide-react';
+import { Github, Link, CheckCircle, Settings, ExternalLink, MessageSquare, CalendarDays, Webcam, Users, LayoutGrid, FileSignature, KanbanSquare, Video, Inbox, Loader2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
@@ -22,6 +22,8 @@ interface Integration {
   category: string;
   isConnected: boolean;
   features: string[];
+  requiresOAuth?: boolean;
+  oauthConnecting?: boolean;
 }
 
 const initialIntegrations: Integration[] = [
@@ -35,6 +37,7 @@ const initialIntegrations: Integration[] = [
     category: 'Email',
     isConnected: false,
     features: ['Fetch Emails', 'AI Reply Generation', 'Send Emails (Mock)'],
+    requiresOAuth: true,
   },
   {
     id: 'github',
@@ -46,6 +49,7 @@ const initialIntegrations: Integration[] = [
     category: 'Development',
     isConnected: false,
     features: ['Repository Sync', 'Issue Tracking', 'Activity Summary'],
+    requiresOAuth: true,
   },
   {
     id: 'slack',
@@ -68,6 +72,7 @@ const initialIntegrations: Integration[] = [
     category: 'Productivity',
     isConnected: false,
     features: ['Meeting Scheduling', 'Availability Sync', 'Leave Management'],
+    requiresOAuth: true,
   },
   {
     id: 'zoom',
@@ -90,6 +95,7 @@ const initialIntegrations: Integration[] = [
     category: 'Communication',
     isConnected: false,
     features: ['Start Meetings', 'Schedule Calls', 'Sync Recordings'],
+    requiresOAuth: true,
   },
   {
     id: 'microsoft-teams',
@@ -112,6 +118,7 @@ const initialIntegrations: Integration[] = [
     category: 'Productivity',
     isConnected: false,
     features: ['Drive Integration', 'Docs Collaboration', 'Sheet Automation'],
+    requiresOAuth: true,
   },
   {
     id: 'docusign',
@@ -143,18 +150,44 @@ export default function IntegrationsPage() {
   const { toast } = useToast();
 
   const toggleConnection = (id: string) => {
-    setIntegrations(prev =>
-      prev.map(int =>
-        int.id === id ? { ...int, isConnected: !int.isConnected } : int
-      )
-    );
-    const updatedIntegration = integrations.find(int => int.id === id);
-    if (updatedIntegration) {
+    const integrationToUpdate = integrations.find(int => int.id === id);
+    if (!integrationToUpdate) return;
+
+    if (!integrationToUpdate.isConnected && integrationToUpdate.requiresOAuth) {
+      // Simulate OAuth connection
+      setIntegrations(prev =>
+        prev.map(int =>
+          int.id === id ? { ...int, oauthConnecting: true } : int
+        )
+      );
+      toast({
+        title: `Connecting to ${integrationToUpdate.name}...`,
+        description: 'Simulating OAuth authentication flow.',
+      });
+      setTimeout(() => {
+        setIntegrations(prev =>
+          prev.map(int =>
+            int.id === id ? { ...int, isConnected: true, oauthConnecting: false } : int
+          )
+        );
         toast({
-            title: `${updatedIntegration.name} ${!updatedIntegration.isConnected ? 'Connected' : 'Disconnected'}`,
-            description: `Successfully ${!updatedIntegration.isConnected ? 'connected to' : 'disconnected from'} ${updatedIntegration.name}.`,
-            variant: !updatedIntegration.isConnected ? "default" : "destructive",
+            title: `${integrationToUpdate.name} Connected`,
+            description: `Successfully connected to ${integrationToUpdate.name} (mock).`,
+            variant: "default",
         });
+      }, 1500);
+    } else {
+      // Regular toggle for non-OAuth or disconnection
+      setIntegrations(prev =>
+        prev.map(int =>
+          int.id === id ? { ...int, isConnected: !int.isConnected } : int
+        )
+      );
+      toast({
+          title: `${integrationToUpdate.name} ${!integrationToUpdate.isConnected ? 'Connected' : 'Disconnected'}`,
+          description: `Successfully ${!integrationToUpdate.isConnected ? 'connected to' : 'disconnected from'} ${integrationToUpdate.name}.`,
+          variant: !integrationToUpdate.isConnected ? "default" : "destructive",
+      });
     }
   };
 
@@ -194,41 +227,42 @@ export default function IntegrationsPage() {
             </CardContent>
             <CardContent className="border-t pt-4 mt-auto">
               <div className="flex items-center justify-between gap-2">
-                <div className="flex min-w-0 items-center space-x-2"> {/* min-w-0 allows truncate to work in flex child */}
+                <div className="flex min-w-0 items-center space-x-2">
                   <Switch
                     id={`switch-${integration.id}`}
                     checked={integration.isConnected}
                     onCheckedChange={() => toggleConnection(integration.id)}
                     aria-label={`Connect to ${integration.name}`}
-                    className="flex-shrink-0" // Prevent switch from shrinking
+                    className="flex-shrink-0"
+                    disabled={integration.oauthConnecting}
                   />
                   <Label
                     htmlFor={`switch-${integration.id}`}
-                    className={`truncate ${integration.isConnected ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} // Added truncate
+                    className={`truncate ${integration.isConnected ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
                   >
-                    {integration.isConnected ? 'Connected' : 'Disconnected'}
+                    {integration.oauthConnecting ? 'Connecting...' : (integration.isConnected ? 'Connected' : 'Disconnected')}
                   </Label>
                 </div>
-                <div className="flex-shrink-0"> {/* Prevent button group from shrinking */}
+                <div className="flex-shrink-0">
                   {integration.isConnected ? (
                     <Button variant="outline" size="sm">
                       <Settings className="mr-2 h-4 w-4" /> Configure
                     </Button>
                   ) : (
-                    <Button size="sm" onClick={() => toggleConnection(integration.id)}>
-                      <Link className="mr-2 h-4 w-4" /> Connect
+                    <Button size="sm" onClick={() => toggleConnection(integration.id)} disabled={integration.oauthConnecting}>
+                      {integration.oauthConnecting ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Link className="mr-2 h-4 w-4" />
+                      )}
+                       {integration.oauthConnecting ? 'Please wait' : 'Connect'}
                     </Button>
                   )}
                 </div>
               </div>
-              {integration.id === 'github' && !integration.isConnected && (
+              {integration.requiresOAuth && !integration.isConnected && !integration.oauthConnecting && (
                 <p className="text-xs text-muted-foreground mt-3">
-                  Connecting GitHub requires OAuth authentication.
-                </p>
-              )}
-               {integration.id === 'gmail' && !integration.isConnected && (
-                <p className="text-xs text-muted-foreground mt-3">
-                  Connecting Gmail requires Google OAuth.
+                  Connecting {integration.name} requires OAuth authentication.
                 </p>
               )}
             </CardContent>

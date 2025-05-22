@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Wand2, Send, Reply, ChevronRight, ChevronLeft, MailOpen } from 'lucide-react';
+import { Loader2, Wand2, Send, Reply, ChevronRight, ChevronLeft, MailOpen, RefreshCw, Archive, Trash2, FileWarning } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, type GenerateDraftEmailResponsesOutput } from '@/ai/flows/draft-email-response';
 import { Badge } from '@/components/ui/badge';
@@ -75,6 +75,7 @@ export default function GmailInboxPage() {
   const [generatedReplyDrafts, setGeneratedReplyDrafts] = useState<string[]>([]);
   const [isGeneratingReply, setIsGeneratingReply] = useState(false);
   const [isSendingReply, setIsSendingReply] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const [replyTo, setReplyTo] = useState('');
   const [replySubject, setReplySubject] = useState('');
@@ -90,8 +91,22 @@ export default function GmailInboxPage() {
     setReplyBody(''); 
     setReplyTo('');
     setReplySubject('');
-    // Mock marking email as read
-    setEmails(prev => prev.map(e => e.id === email.id ? {...e, read: true} : e));
+    if (!email.read) {
+      setEmails(prev => prev.map(e => e.id === email.id ? {...e, read: true} : e));
+      // In a real app, you'd call an API to mark as read on the server
+      toast({ title: "Email Marked as Read (Mock)", description: `"${email.subject}" is now marked as read.` });
+    }
+  };
+
+  const handleRefreshEmails = () => {
+    setIsRefreshing(true);
+    toast({ title: "Refreshing Emails (Mock)..." });
+    // Simulate API call
+    setTimeout(() => {
+      // Potentially update mockEmailsData or fetch new ones
+      toast({ title: "Emails Refreshed (Mock)" });
+      setIsRefreshing(false);
+    }, 1500);
   };
 
   const handleGenerateAIReply = async () => {
@@ -137,14 +152,14 @@ Please generate a few professional reply options to this email.`;
     setReplySubject(`Re: ${selectedEmail.subject}`);
     setReplyBody(draft);
     setShowReplyComposer(true);
-    setGeneratedReplyDrafts([]); // Clear drafts once one is selected
+    setGeneratedReplyDrafts([]); 
   };
   
   const handleManuallyComposeReply = () => {
     if (!selectedEmail) return;
     setReplyTo(selectedEmail.sender);
     setReplySubject(`Re: ${selectedEmail.subject}`);
-    setReplyBody(''); // Start with empty body
+    setReplyBody(''); 
     setShowReplyComposer(true);
     setGeneratedReplyDrafts([]);
   }
@@ -156,7 +171,6 @@ Please generate a few professional reply options to this email.`;
       return;
     }
     setIsSendingReply(true);
-    // Mock sending email
     await new Promise(resolve => setTimeout(resolve, 1000));
     console.log("Mock Sent Email:", { to: replyTo, subject: replySubject, body: replyBody });
     toast({
@@ -166,8 +180,37 @@ Please generate a few professional reply options to this email.`;
     setIsSendingReply(false);
     setShowReplyComposer(false);
     setReplyBody('');
-    // Optionally, clear selectedEmail or navigate away
-    // setSelectedEmail(null); 
+  };
+
+  const handleMockEmailAction = (actionType: 'archive' | 'delete' | 'markUnread', emailId: string, emailSubject: string) => {
+    if (!selectedEmail || selectedEmail.id !== emailId) return;
+
+    let actionDescription = '';
+    switch (actionType) {
+      case 'archive':
+        actionDescription = `Email "${emailSubject}" archived (mock).`;
+        // In real app: API call to archive. Then potentially remove from current list or move to an "Archived" view.
+        // For mock, we can deselect it.
+        setSelectedEmail(null); 
+        break;
+      case 'delete':
+        actionDescription = `Email "${emailSubject}" deleted (mock).`;
+        // In real app: API call to delete. Then remove from list.
+        setEmails(prev => prev.filter(e => e.id !== emailId));
+        setSelectedEmail(null);
+        break;
+      case 'markUnread':
+        actionDescription = `Email "${emailSubject}" marked as unread (mock).`;
+        setEmails(prev => prev.map(e => e.id === emailId ? {...e, read: false} : e));
+        // Visually update the selected email if it's the one being marked.
+        if (selectedEmail && selectedEmail.id === emailId) {
+            setSelectedEmail(prev => prev ? {...prev, read: false} : null);
+        }
+        break;
+      default:
+        return;
+    }
+    toast({ title: "Action Performed (Mock)", description: actionDescription });
   };
 
   return (
@@ -176,13 +219,13 @@ Please generate a few professional reply options to this email.`;
         title="Gmail Inbox"
         description="Fetch, read, and reply to your emails with AI assistance (Mock Interface)."
       >
-        <Button variant="outline" onClick={() => alert("Mock: Refreshing emails...")}>
-          <ChevronLeft className="mr-2 h-4 w-4" /> Refresh
+        <Button variant="outline" onClick={handleRefreshEmails} disabled={isRefreshing}>
+          {isRefreshing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+           {isRefreshing ? 'Refreshing...' : 'Refresh'}
         </Button>
       </PageHeader>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-10rem)]">
-        {/* Email List */}
         <Card className="md:col-span-1 shadow-lg flex flex-col h-full">
           <CardHeader>
             <CardTitle>Inbox ({emails.filter(e => !e.read).length} unread)</CardTitle>
@@ -206,12 +249,18 @@ Please generate a few professional reply options to this email.`;
                     <p className="text-xs text-muted-foreground mt-1">{email.date}</p>
                   </Card>
                 ))}
+                 {emails.length === 0 && !isRefreshing && (
+                    <div className="text-center text-muted-foreground p-6">
+                        <FileWarning className="h-12 w-12 mx-auto mb-2" />
+                        <p>No emails to display.</p>
+                        <p className="text-xs">Try refreshing or check your connection.</p>
+                    </div>
+                 )}
               </div>
             </ScrollArea>
           </CardContent>
         </Card>
 
-        {/* Email Detail & Reply Section */}
         <Card className="md:col-span-2 shadow-lg flex flex-col h-full">
           {!selectedEmail ? (
             <div className="flex-grow flex flex-col items-center justify-center text-center p-6">
@@ -229,13 +278,25 @@ Please generate a few professional reply options to this email.`;
                 </div>
                 <CardDescription>Date: {selectedEmail.date}</CardDescription>
               </CardHeader>
+              
+              <CardContent className="border-t border-b p-4 space-x-2">
+                <Button variant="outline" size="sm" onClick={() => handleMockEmailAction('archive', selectedEmail.id, selectedEmail.subject)}>
+                    <Archive className="mr-2 h-4 w-4" /> Archive
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleMockEmailAction('markUnread', selectedEmail.id, selectedEmail.subject)}>
+                    <MailOpen className="mr-2 h-4 w-4" /> Mark Unread
+                </Button>
+                 <Button variant="destructive" size="sm" onClick={() => handleMockEmailAction('delete', selectedEmail.id, selectedEmail.subject)}>
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                </Button>
+              </CardContent>
+
               <ScrollArea className="flex-grow p-0">
-                <CardContent className="whitespace-pre-wrap text-sm p-6 border-t border-b">
+                <CardContent className="whitespace-pre-wrap text-sm p-6">
                     {selectedEmail.body}
                 </CardContent>
               </ScrollArea>
               
-              {/* AI Reply Drafts or Composer */}
               <div className="p-4 space-y-4 border-t bg-background">
                 {!showReplyComposer && generatedReplyDrafts.length === 0 && (
                   <div className="flex gap-2">
