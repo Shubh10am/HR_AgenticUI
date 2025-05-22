@@ -11,12 +11,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter as DialogModalFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Github, PlusCircle, Trash2, ChevronLeft, ChevronRight, Circle, RefreshCw, CheckCircle, CalendarDays, User, Edit3 } from 'lucide-react';
+import { Github, PlusCircle, Trash2, ChevronLeft, ChevronRight, Circle, RefreshCw, CheckCircle, CalendarDays, User, Edit3, Columns } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-type TaskStatus = 'Todo' | 'In Progress' | 'Done';
+type TaskStatus = string; // Now a string to accommodate custom column names
 
 interface Task {
   id: string;
@@ -37,27 +37,37 @@ const initialTasks: Task[] = [
   { id: 'task-5', name: 'Deploy staging environment updates', description: 'Merge develop branch to staging and run deployment scripts.', assignee: 'Diana Prince', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'woman superhero', status: 'Done', tags: ['DevOps', 'Release'] },
 ];
 
-const statusColumns: TaskStatus[] = ['Todo', 'In Progress', 'Done'];
-
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [boardColumns, setBoardColumns] = useState<TaskStatus[]>(['Todo', 'In Progress', 'Done']);
+  
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAddColumnDialogOpen, setIsAddColumnDialogOpen] = useState(false);
+
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  // Reusing state for both add and edit forms
   const [taskName, setTaskName] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
   const [taskAssignee, setTaskAssignee] = useState('');
   const [taskDueDate, setTaskDueDate] = useState('');
-  const [taskStatus, setTaskStatus] = useState<TaskStatus>('Todo');
-  const [taskTags, setTaskTags] = useState(''); // Comma-separated string
+  const [taskStatus, setTaskStatus] = useState<TaskStatus>(boardColumns[0] || 'Todo');
+  const [taskTags, setTaskTags] = useState('');
+  const [newColumnName, setNewColumnName] = useState('');
 
   const { toast } = useToast();
 
+  useEffect(() => {
+    // If columns change and current taskStatus isn't in new columns, default to first column
+    if (!boardColumns.includes(taskStatus)) {
+      setTaskStatus(boardColumns[0] || '');
+    }
+  }, [boardColumns, taskStatus]);
+
   const getStatusIcon = (status: TaskStatus) => {
-    if (status === 'Done') return <CheckCircle className="h-5 w-5 text-green-500" />;
-    if (status === 'In Progress') return <RefreshCw className="h-5 w-5 text-yellow-500 animate-spin-slow" />;
+    // Keep default icons for known statuses, otherwise a generic one
+    if (status.toLowerCase() === 'done') return <CheckCircle className="h-5 w-5 text-green-500" />;
+    if (status.toLowerCase() === 'in progress') return <RefreshCw className="h-5 w-5 text-yellow-500 animate-spin-slow" />;
     return <Circle className="h-5 w-5 text-muted-foreground" />;
   };
 
@@ -66,18 +76,18 @@ export default function TasksPage() {
     setTaskDescription('');
     setTaskAssignee('');
     setTaskDueDate('');
-    setTaskStatus('Todo');
+    setTaskStatus(boardColumns[0] || 'Todo');
     setTaskTags('');
   };
 
-  const handleAddTask = (event: FormEvent<HTMLFormElement>) => {
+  const handleAddOrEditTask = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!taskName.trim()) {
       toast({ title: "Task name required", description: "Please enter a name for the task.", variant: "destructive" });
       return;
     }
-    const newTask: Task = {
-      id: `task-${Date.now()}`,
+
+    const taskData = {
       name: taskName.trim(),
       description: taskDescription.trim() || undefined,
       assignee: taskAssignee.trim() || undefined,
@@ -86,11 +96,26 @@ export default function TasksPage() {
       status: taskStatus,
       tags: taskTags.split(',').map(tag => tag.trim()).filter(tag => tag),
     };
-    setTasks(prevTasks => [...prevTasks, newTask]);
-    toast({ title: "Task Added", description: `"${newTask.name}" has been added to ${newTask.status}.` });
-    
+
+    if (editingTask) {
+      setTasks(prevTasks =>
+        prevTasks.map(t =>
+          t.id === editingTask.id ? { ...t, ...taskData } : t
+        )
+      );
+      toast({ title: "Task Updated", description: `"${taskData.name}" has been updated.` });
+      setIsEditDialogOpen(false);
+      setEditingTask(null);
+    } else {
+      const newTask: Task = {
+        id: `task-${Date.now()}`,
+        ...taskData,
+      };
+      setTasks(prevTasks => [...prevTasks, newTask]);
+      toast({ title: "Task Added", description: `"${newTask.name}" has been added to ${newTask.status}.` });
+      setIsAddDialogOpen(false);
+    }
     resetFormFields();
-    setIsAddDialogOpen(false);
   };
 
   const handleOpenEditDialog = (task: Task) => {
@@ -103,35 +128,6 @@ export default function TasksPage() {
     setTaskTags(task.tags?.join(', ') || '');
     setIsEditDialogOpen(true);
   };
-
-  const handleEditTask = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!editingTask || !taskName.trim()) {
-      toast({ title: "Task name required", description: "Please enter a name for the task.", variant: "destructive" });
-      return;
-    }
-    setTasks(prevTasks =>
-      prevTasks.map(t =>
-        t.id === editingTask.id
-          ? {
-              ...t,
-              name: taskName.trim(),
-              description: taskDescription.trim() || undefined,
-              assignee: taskAssignee.trim() || undefined,
-              assigneeAvatar: taskAssignee.trim() ? `https://placehold.co/40x40.png?text=${taskAssignee.trim().substring(0,2).toUpperCase()}` : undefined,
-              dueDate: taskDueDate.trim() || undefined,
-              status: taskStatus,
-              tags: taskTags.split(',').map(tag => tag.trim()).filter(tag => tag),
-            }
-          : t
-      )
-    );
-    toast({ title: "Task Updated", description: `"${taskName}" has been updated.` });
-    resetFormFields();
-    setEditingTask(null);
-    setIsEditDialogOpen(false);
-  };
-
 
   const handleDeleteTask = (taskId: string) => {
     const taskToDelete = tasks.find(task => task.id === taskId);
@@ -153,18 +149,34 @@ export default function TasksPage() {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
 
-    const currentIndex = statusColumns.indexOf(task.status);
+    const currentIndex = boardColumns.indexOf(task.status);
     let newIndex = currentIndex;
 
     if (direction === 'prev' && currentIndex > 0) {
       newIndex = currentIndex - 1;
-    } else if (direction === 'next' && currentIndex < statusColumns.length - 1) {
+    } else if (direction === 'next' && currentIndex < boardColumns.length - 1) {
       newIndex = currentIndex + 1;
     }
 
     if (newIndex !== currentIndex) {
-      handleChangeTaskStatus(taskId, statusColumns[newIndex]);
+      handleChangeTaskStatus(taskId, boardColumns[newIndex]);
     }
+  };
+
+  const handleAddColumn = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!newColumnName.trim()) {
+      toast({ title: "Column name required", variant: "destructive" });
+      return;
+    }
+    if (boardColumns.map(c => c.toLowerCase()).includes(newColumnName.trim().toLowerCase())) {
+      toast({ title: "Column already exists", description: "Please use a unique column name.", variant: "destructive" });
+      return;
+    }
+    setBoardColumns(prev => [...prev, newColumnName.trim()]);
+    toast({ title: "Column Added", description: `Column "${newColumnName.trim()}" has been added.` });
+    setNewColumnName('');
+    setIsAddColumnDialogOpen(false);
   };
 
   const renderTaskCard = (task: Task) => (
@@ -180,16 +192,16 @@ export default function TasksPage() {
         {(task.assignee || task.dueDate) && (
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             {task.assignee && (
-              <div className="flex items-center gap-1 min-w-0"> {/* Added min-w-0 for flex child truncation */}
-                <Avatar className="h-5 w-5 flex-shrink-0"> {/* Added flex-shrink-0 */}
+              <div className="flex items-center gap-1 min-w-0">
+                <Avatar className="h-5 w-5 flex-shrink-0">
                   <AvatarImage src={task.assigneeAvatar} alt={task.assignee || 'User'} data-ai-hint="assignee avatar" />
                   <AvatarFallback>{task.assignee ? task.assignee.substring(0,1) : 'U'}</AvatarFallback>
                 </Avatar>
-                <span className="truncate min-w-0">{task.assignee}</span> {/* Added truncate and min-w-0 */}
+                <span className="truncate min-w-0">{task.assignee}</span>
               </div>
             )}
             {task.dueDate && (
-              <div className="flex items-center gap-1 flex-shrink-0"> {/* Added flex-shrink-0 */}
+              <div className="flex items-center gap-1 flex-shrink-0">
                 <CalendarDays className="h-3 w-3" />
                 <span>{task.dueDate}</span>
               </div>
@@ -197,7 +209,7 @@ export default function TasksPage() {
           </div>
         )}
         {task.tags && task.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1">
+            <div className="flex flex-wrap gap-1 mt-2"> {/* Added mt-2 for spacing */}
                 {task.tags.map(tag => (
                     <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
                 ))}
@@ -205,7 +217,7 @@ export default function TasksPage() {
         )}
       </CardContent>
       <CardFooter className="px-3 py-2 border-t flex justify-between items-center">
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveTask(task.id, 'prev')} disabled={statusColumns.indexOf(task.status) === 0}>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveTask(task.id, 'prev')} disabled={boardColumns.indexOf(task.status) === 0}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <div className="flex items-center">
@@ -216,14 +228,14 @@ export default function TasksPage() {
                 <Trash2 className="h-4 w-4" />
             </Button>
         </div>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveTask(task.id, 'next')} disabled={statusColumns.indexOf(task.status) === statusColumns.length - 1}>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveTask(task.id, 'next')} disabled={boardColumns.indexOf(task.status) === boardColumns.length - 1}>
           <ChevronRight className="h-4 w-4" />
         </Button>
       </CardFooter>
     </Card>
   );
   
-  const TaskDialogContent = ({ formId, onSubmit, title, description, buttonText }: { formId: string, onSubmit: (event: FormEvent<HTMLFormElement>) => void, title: string, description: string, buttonText: string }) => (
+  const TaskDialogContent = ({ formId, onSubmit, title, description, buttonText, currentStatusList }: { formId: string, onSubmit: (event: FormEvent<HTMLFormElement>) => void, title: string, description: string, buttonText: string, currentStatusList: string[] }) => (
     <>
       <DialogHeader className="p-6 pb-2 flex-shrink-0">
         <DialogTitle>{title}</DialogTitle>
@@ -258,7 +270,7 @@ export default function TasksPage() {
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
-                {statusColumns.map(status => (
+                {currentStatusList.map(status => (
                   <SelectItem key={status} value={status}>{status}</SelectItem>
                 ))}
               </SelectContent>
@@ -267,67 +279,90 @@ export default function TasksPage() {
         </form>
       </div>
       <DialogModalFooter className="p-6 pt-2 border-t flex-shrink-0">
-        <Button type="button" variant="outline" onClick={() => isAddDialogOpen ? setIsAddDialogOpen(false) : setIsEditDialogOpen(false)}>Cancel</Button>
+        <Button type="button" variant="outline" onClick={() => { setIsAddDialogOpen(false); setIsEditDialogOpen(false); }}>Cancel</Button>
         <Button type="submit" form={formId}>{buttonText}</Button>
       </DialogModalFooter>
     </>
   );
 
-
   return (
     <>
       <PageHeader title="Task Management Board" description="Organize, track, and manage your project tasks.">
-        <div className="flex space-x-2">
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           <Button variant="outline" onClick={() => toast({ title: "GitHub Sync (Mock)", description: "This would initiate GitHub project sync."})}>
             <Github className="mr-2 h-4 w-4" /> Connect to GitHub (Mock)
           </Button>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <Dialog open={isAddColumnDialogOpen} onOpenChange={setIsAddColumnDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => { resetFormFields(); setIsAddDialogOpen(true); }}>
+              <Button variant="outline" onClick={() => { setNewColumnName(''); setIsAddColumnDialogOpen(true); }}>
+                <Columns className="mr-2 h-4 w-4" /> Add Column
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Add New Column</DialogTitle>
+                <DialogDescription>Enter a name for your new Kanban column.</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleAddColumn} id="addColumnForm" className="grid gap-4 py-4">
+                <div>
+                  <Label htmlFor="newColumnName">Column Name</Label>
+                  <Input id="newColumnName" value={newColumnName} onChange={(e) => setNewColumnName(e.target.value)} className="mt-1" required />
+                </div>
+              </form>
+              <DialogModalFooter>
+                 <Button type="button" variant="outline" onClick={() => setIsAddColumnDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" form="addColumnForm">Add Column</Button>
+              </DialogModalFooter>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={isAddDialogOpen} onOpenChange={(open) => { if(!open) setEditingTask(null); setIsAddDialogOpen(open); }}>
+            <DialogTrigger asChild>
+              <Button onClick={() => { resetFormFields(); setEditingTask(null); setIsAddDialogOpen(true); }}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Add New Task
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[480px] max-h-[calc(100vh-4rem)] flex flex-col">
               <TaskDialogContent
-                formId="addTaskForm"
-                onSubmit={handleAddTask}
+                formId="addOrEditTaskForm"
+                onSubmit={handleAddOrEditTask}
                 title="Add New Task"
                 description="Fill in the details for your new task."
                 buttonText="Add Task"
+                currentStatusList={boardColumns}
               />
             </DialogContent>
           </Dialog>
         </div>
       </PageHeader>
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => { if(!open) setEditingTask(null); setIsEditDialogOpen(open); }}>
         <DialogContent className="sm:max-w-[480px] max-h-[calc(100vh-4rem)] flex flex-col">
             <TaskDialogContent
-                formId="editTaskForm"
-                onSubmit={handleEditTask}
+                formId="addOrEditTaskFormEdit" // Ensure unique form ID if both dialogs could technically be visible, or reuse if only one at a time
+                onSubmit={handleAddOrEditTask}
                 title="Edit Task"
                 description="Update the details of your task."
                 buttonText="Save Changes"
+                currentStatusList={boardColumns}
             />
         </DialogContent>
       </Dialog>
 
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-        {statusColumns.map(status => (
-          <Card key={status} className="shadow-lg flex flex-col">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+        {boardColumns.map(columnName => (
+          <Card key={columnName} className="shadow-lg flex flex-col">
             <CardHeader className="border-b">
               <CardTitle className="flex items-center justify-between text-lg">
-                {status}
-                <Badge variant="secondary">{tasks.filter(t => t.status === status).length}</Badge>
+                {columnName}
+                <Badge variant="secondary">{tasks.filter(t => t.status === columnName).length}</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 flex-grow min-h-[300px]">
-              <ScrollArea className="h-[calc(100vh-22rem)] pr-3"> 
-                {tasks.filter(t => t.status === status).length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">No tasks in {status}.</p>
+              <ScrollArea className="h-[calc(100vh-26rem)] pr-3"> {/* Adjusted height slightly for page header */}
+                {tasks.filter(t => t.status === columnName).length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">No tasks in {columnName}.</p>
                 ) : (
-                  tasks.filter(t => t.status === status).map(task => renderTaskCard(task))
+                  tasks.filter(t => t.status === columnName).map(task => renderTaskCard(task))
                 )}
               </ScrollArea>
             </CardContent>
