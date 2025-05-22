@@ -30,7 +30,101 @@ interface Task {
   tags?: string[];
 }
 
-const initialTasks: Task[] = [];
+const today = new Date();
+const tomorrow = new Date(today);
+tomorrow.setDate(today.getDate() + 1);
+const nextWeek = new Date(today);
+nextWeek.setDate(today.getDate() + 7);
+const twoWeeks = new Date(today);
+twoWeeks.setDate(today.getDate() + 14);
+const yesterday = new Date(today);
+yesterday.setDate(today.getDate() -1);
+
+const formatDate = (date: Date) => date.toISOString().split('T')[0];
+
+
+const initialTasks: Task[] = [
+  // Todo
+  {
+    id: 'task-1',
+    name: 'Draft Q3 Marketing Plan',
+    assignee: 'Sarah Miller',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'woman avatar',
+    dueDate: formatDate(nextWeek),
+    status: 'Todo',
+    tags: ['Marketing', 'Planning'],
+  },
+  {
+    id: 'task-2',
+    name: 'Research New CRM Software',
+    assignee: 'John Doe',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'man avatar',
+    dueDate: formatDate(twoWeeks),
+    status: 'Todo',
+    tags: ['Sales', 'Research'],
+  },
+  {
+    id: 'task-3',
+    name: 'Onboard New Hire - Alex',
+    description: 'Complete all onboarding steps for Alex: HR paperwork, system access, team introductions, initial project assignment.',
+    assignee: 'HR Team',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'team avatar',
+    status: 'Todo',
+    tags: ['HR', 'Onboarding'],
+  },
+  // In Progress
+  {
+    id: 'task-4',
+    name: 'Develop Homepage Redesign',
+    assignee: 'Mike Chen',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'developer avatar',
+    dueDate: formatDate(tomorrow),
+    status: 'In Progress',
+    tags: ['Frontend', 'Urgent'],
+    description: 'Implement the new homepage design based on Figma mockups. Ensure responsiveness and accessibility for all screen sizes. Coordinate with backend for API integration points.',
+  },
+  {
+    id: 'task-5',
+    name: 'Write Blog Post on Industry Trends',
+    assignee: 'Laura Smith',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'writer avatar',
+    status: 'In Progress',
+    tags: ['Content', 'Marketing'],
+  },
+  // Review
+  {
+    id: 'task-6',
+    name: 'Review PR #45 for Feature X',
+    assignee: 'Jane DevRel',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'reviewer avatar',
+    status: 'Review',
+    tags: ['Code Review', 'Backend'],
+  },
+  // Done
+  {
+    id: 'task-7',
+    name: 'Fix Login Page Bug #123',
+    assignee: 'David Lee',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'engineer avatar',
+    dueDate: formatDate(yesterday),
+    status: 'Done',
+    tags: ['Backend', 'Bugfix'],
+  },
+  {
+    id: 'task-8',
+    name: 'Client Meeting - Project Alpha Kickoff',
+    description: 'Successfully conducted the kickoff meeting for Project Alpha. Action items distributed to relevant team members. Meeting minutes have been shared.',
+    status: 'Done',
+    tags: ['Client', 'Meeting'],
+  },
+];
 
 
 interface TaskDialogContentProps {
@@ -127,7 +221,7 @@ const TaskDialogContent = ({
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [boardColumns, setBoardColumns] = useState<TaskStatus[]>(['Todo', 'In Progress', 'Done']);
+  const [boardColumns, setBoardColumns] = useState<TaskStatus[]>(['Todo', 'In Progress', 'Review', 'Done']);
   
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -176,7 +270,8 @@ export default function TasksPage() {
   const getStatusIcon = useCallback((status: TaskStatus) => {
     const lowerStatus = status.toLowerCase();
     if (lowerStatus === 'done') return <CheckCircle className="h-5 w-5 text-green-500" />;
-    if (lowerStatus.includes('progress')) return <RefreshCw className="h-5 w-5 text-yellow-500 animate-spin-slow" />;
+    if (lowerStatus.includes('progress')) return <RefreshCw className="h-5 w-5 text-blue-500 animate-spin-slow" />; // Changed to blue
+    if (lowerStatus.includes('review')) return <Edit3 className="h-5 w-5 text-yellow-500" />; // Icon for review
     return <Circle className="h-5 w-5 text-muted-foreground" />;
   }, []);
   
@@ -405,7 +500,7 @@ export default function TasksPage() {
           </Button>
           <Dialog open={isAddColumnDialogOpen} onOpenChange={(open) => { if(!open) setNewColumnName(''); setIsAddColumnDialogOpen(open);}}>
              <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" onClick={() => { setNewColumnName(''); setIsAddColumnDialogOpen(true); }}>
                   <Columns className="mr-2 h-4 w-4" /> Add Column
                 </Button>
             </DialogTrigger>
@@ -516,4 +611,3 @@ export default function TasksPage() {
   );
 }
     
-
