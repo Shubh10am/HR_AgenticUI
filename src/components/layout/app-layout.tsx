@@ -1,3 +1,4 @@
+
 import type { ReactNode } from 'react';
 import {
   SidebarProvider,
@@ -44,7 +45,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </div>
           <UserNav />
         </header>
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-6 overflow-x-hidden">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
