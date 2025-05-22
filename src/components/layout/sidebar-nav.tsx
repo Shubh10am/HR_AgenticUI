@@ -13,12 +13,11 @@ import {
   MailPlus,
   CalendarCheck,
   MessagesSquare,
-  Users,
+  Plug,
+  GitFork,
+  Inbox,
   FileSignature,
-  Briefcase,
-  Plug, 
-  GitFork, 
-  Inbox, // Added Inbox icon
+  ListChecks, // Added ListChecks icon
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -37,6 +36,7 @@ const navItems: NavItem[] = [
   { href: '/unified-communications', label: 'Communications', icon: MessagesSquare, tooltip: 'Unified Communications' },
   { href: '/recruitment', label: 'Recruitment', icon: GitFork, tooltip: 'AI Recruitment' },
   { href: '/smart-drafting', label: 'Smart Drafting', icon: FileSignature, tooltip: 'Smart Email Drafting' },
+  { href: '/tasks', label: 'Tasks', icon: ListChecks, tooltip: 'Task Management' }, // New Tasks link
   { href: '/integrations', label: 'Integrations', icon: Plug, tooltip: 'Manage Integrations' },
 ];
 
