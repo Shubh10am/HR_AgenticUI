@@ -46,6 +46,8 @@ const initialTasks: Task[] = [
   { id: 'task-13', name: 'Another Todo Task', description: 'Description for another todo task.', status: 'Todo', tags: ['General'] },
   { id: 'task-14', name: 'Yet Another Todo Task', description: 'This is a long description for yet another todo task to test the scrolling capability of the column. It should wrap and scroll nicely without breaking the layout.', assignee: 'Test User', dueDate: '2024-10-01', status: 'Todo', tags: ['Urgent', 'UX', 'Frontend', 'Backend'] },
   { id: 'task-15', name: 'Fifth Todo Task', description: 'Short description.', status: 'Todo' },
+  { id: 'task-16', name: 'Sixth Todo Task - Long content check', description: 'This is a task description to test vertical scrolling. It needs enough content to overflow the available space. Adding more lines. And more lines. And more lines. And more lines. And more lines. And more lines. And more lines. And more lines. And more lines. And more lines. And more lines. And more lines.', status: 'Todo' },
+  { id: 'task-17', name: 'Seventh Todo Task', description: 'Another task for the Todo column to ensure scrolling works.', status: 'Todo' },
 ];
 
 
@@ -122,7 +124,7 @@ const TaskDialogContent = ({
                   <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
-                  {currentStatusList.map(statusItem => ( // Renamed status to statusItem
+                  {currentStatusList.map(statusItem => (
                   <SelectItem key={statusItem} value={statusItem}>{statusItem}</SelectItem>
                   ))}
               </SelectContent>
@@ -193,7 +195,7 @@ export default function TasksPage() {
   }, []);
   
   const handleOpenAddTaskDialog = useCallback((defaultStatus?: TaskStatus) => {
-    onDialogCancel(); // Resets fields and closes other dialogs first
+    onDialogCancel();
     if (defaultStatus && boardColumns.includes(defaultStatus)) {
       setTaskStatus(defaultStatus);
     } else if (boardColumns.length > 0) {
@@ -207,7 +209,7 @@ export default function TasksPage() {
     }
     setEditingTask(null);
     setIsAddDialogOpen(true);
-  }, [boardColumns, onDialogCancel, toast]);
+  }, [boardColumns, onDialogCancel, toast, setTaskStatus]);
 
   const handleAddTask = useCallback((event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -241,7 +243,7 @@ export default function TasksPage() {
   }, [taskName, taskDescription, taskAssignee, taskDueDate, taskStatus, taskTags, boardColumns, toast, setTasks, onDialogCancel]);
 
   const handleOpenEditDialog = useCallback((task: Task) => {
-    onDialogCancel(); // Resets fields and closes other dialogs first
+    onDialogCancel();
     setEditingTask(task);
     setTaskName(task.name);
     setTaskDescription(task.description || '');
@@ -354,7 +356,7 @@ export default function TasksPage() {
           <CardTitle className="text-sm font-medium leading-tight">{task.name}</CardTitle>
           {getStatusIcon(task.status)}
         </div>
-        {task.description && <CardDescription className="text-xs mt-1">{task.description}</CardDescription>}
+        {task.description && <CardDescription className="text-xs mt-1 max-h-20 overflow-y-auto">{task.description}</CardDescription>}
       </CardHeader>
       <CardContent className="px-3 pb-3 space-y-2 flex-grow">
         {(task.assignee || task.dueDate) && (
@@ -401,7 +403,7 @@ export default function TasksPage() {
         </Button>
       </CardFooter>
     </Card>
-  ), [boardColumns, getStatusIcon, handleOpenEditDialog, handleDeleteTask, moveTask]); 
+  ), [boardColumns, getStatusIcon, handleOpenEditDialog, handleDeleteTask, moveTask, tasks]); // Added tasks to dependency array for renderTaskCard
   
   return (
     <div className="flex flex-col h-full"> 
@@ -412,7 +414,7 @@ export default function TasksPage() {
           </Button>
           <Dialog open={isAddColumnDialogOpen} onOpenChange={setIsAddColumnDialogOpen}>
              <DialogTrigger asChild>
-                <Button variant="outline" onClick={() => { setNewColumnName(''); setIsAddColumnDialogOpen(true); }}>
+                <Button variant="outline">
                   <Columns className="mr-2 h-4 w-4" /> Add Column
                 </Button>
             </DialogTrigger>
@@ -421,15 +423,15 @@ export default function TasksPage() {
                 <DialogTitle>Add New Column</DialogTitle>
                 <DialogDescription>Enter a name for your new Kanban column.</DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleAddColumn} id="addColumnForm" className="grid gap-4 py-4">
+              <form onSubmit={handleAddColumn} id="addColumnFormDialog" className="grid gap-4 py-4">
                 <div>
-                  <Label htmlFor="newColumnNameForm">Column Name</Label>
-                  <Input id="newColumnNameForm" value={newColumnName} onChange={(e) => setNewColumnName(e.target.value)} className="mt-1" required />
+                  <Label htmlFor="newColumnNameFormInput">Column Name</Label>
+                  <Input id="newColumnNameFormInput" value={newColumnName} onChange={(e) => setNewColumnName(e.target.value)} className="mt-1" required />
                 </div>
               </form>
               <DialogModalFooter>
                  <Button type="button" variant="outline" onClick={() => setIsAddColumnDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" form="addColumnForm">Add Column</Button>
+                <Button type="submit" form="addColumnFormDialog">Add Column</Button>
               </DialogModalFooter>
             </DialogContent>
           </Dialog>
@@ -446,7 +448,7 @@ export default function TasksPage() {
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <TaskDialogContent
-            formId="addTaskFormDialog"
+            formId="addTaskFormDialogContent"
             onSubmit={handleAddTask}
             title="Add New Task"
             description="Fill in the details for your new task."
@@ -470,7 +472,7 @@ export default function TasksPage() {
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
             <TaskDialogContent
-                formId="editTaskFormDialog"
+                formId="editTaskFormDialogContent"
                 onSubmit={handleEditTask}
                 title="Edit Task"
                 description="Update the details of your task."
@@ -502,8 +504,8 @@ export default function TasksPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="flex-1 min-h-0 relative"> {/* Added relative */}
-              <ScrollArea className="absolute inset-0 p-4 pr-1">  {/* Changed to absolute, added p-4, adjusted pr */}
+            <CardContent className="p-0 flex-1 min-h-0"> {/* Removed padding, added min-h-0 */}
+              <ScrollArea className="h-full w-full p-4">  {/* Added w-full and p-4 for internal padding */}
                 {tasks.filter(t => t.status === columnName).length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">No tasks in {columnName}.</p>
                 ) : (
