@@ -58,10 +58,10 @@ export default function TasksPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!boardColumns.includes(taskStatus) && boardColumns.length > 0) {
+    if (boardColumns.length > 0 && !boardColumns.includes(taskStatus)) {
       setTaskStatus(boardColumns[0]);
     } else if (boardColumns.length === 0) {
-      setTaskStatus(''); // Handle case where there are no columns
+      setTaskStatus(''); 
     }
   }, [boardColumns, taskStatus]);
 
@@ -77,8 +77,19 @@ export default function TasksPage() {
     setTaskDescription('');
     setTaskAssignee('');
     setTaskDueDate('');
-    setTaskStatus(boardColumns.length > 0 ? boardColumns[0] : '');
     setTaskTags('');
+    // Default status will be set by handleOpenAddTaskDialog or when opening edit dialog
+  };
+  
+  const handleOpenAddTaskDialog = (defaultStatus?: TaskStatus) => {
+    resetFormFields();
+    if (defaultStatus) {
+      setTaskStatus(defaultStatus);
+    } else {
+      setTaskStatus(boardColumns.length > 0 ? boardColumns[0] : '');
+    }
+    setEditingTask(null);
+    setIsAddDialogOpen(true);
   };
 
   const handleAddOrEditTask = (event: FormEvent<HTMLFormElement>) => {
@@ -91,7 +102,6 @@ export default function TasksPage() {
        toast({ title: "Status required", description: "Please select a status for the task.", variant: "destructive" });
       return;
     }
-
 
     const taskData = {
       name: taskName.trim(),
@@ -121,7 +131,8 @@ export default function TasksPage() {
       toast({ title: "Task Added", description: `"${newTask.name}" has been added to ${newTask.status}.` });
       setIsAddDialogOpen(false);
     }
-    resetFormFields();
+    // Reset form fields is not needed here as dialog closes or context changes.
+    // It's handled by handleOpenAddTaskDialog or handleOpenEditDialog.
   };
 
   const handleOpenEditDialog = (task: Task) => {
@@ -181,8 +192,8 @@ export default function TasksPage() {
       return;
     }
     setBoardColumns(prev => [...prev, trimmedNewColumnName]);
-    if (boardColumns.length === 0) { // If this is the first column being added
-      setTaskStatus(trimmedNewColumnName); // Set it as the default status
+    if (boardColumns.length === 0) { 
+      setTaskStatus(trimmedNewColumnName); 
     }
     toast({ title: "Column Added", description: `Column "${trimmedNewColumnName}" has been added.` });
     setNewColumnName('');
@@ -300,7 +311,7 @@ export default function TasksPage() {
   );
 
   return (
-    <>
+    <div className="flex flex-col h-full"> {/* Added flex flex-col h-full to root */}
       <PageHeader title="Task Management Board" description="Organize, track, and manage your project tasks.">
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           <Button variant="outline" onClick={() => toast({ title: "GitHub Sync (Mock)", description: "This would initiate GitHub project sync."})}>
@@ -329,26 +340,28 @@ export default function TasksPage() {
               </DialogModalFooter>
             </DialogContent>
           </Dialog>
-          <Dialog open={isAddDialogOpen} onOpenChange={(open) => { if(!open) { setEditingTask(null); resetFormFields(); } setIsAddDialogOpen(open); }}>
-            <DialogTrigger asChild>
-              <Button onClick={() => { resetFormFields(); setEditingTask(null); setIsAddDialogOpen(true); }}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add New Task
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[480px] max-h-[calc(100vh-4rem)] flex flex-col">
-              <TaskDialogContent
-                formId="addTaskForm"
-                onSubmit={handleAddOrEditTask}
-                title="Add New Task"
-                description="Fill in the details for your new task."
-                buttonText="Add Task"
-                currentStatusList={boardColumns}
-              />
-            </DialogContent>
-          </Dialog>
+          {/* Main "Add New Task" button moved to header */}
+          <Button onClick={() => handleOpenAddTaskDialog()}>
+            <PlusCircle className="mr-2 h-4 w-4" /> Add New Task
+          </Button>
         </div>
       </PageHeader>
 
+      {/* Dialog for Adding Tasks */}
+      <Dialog open={isAddDialogOpen} onOpenChange={(open) => { if(!open) { setEditingTask(null); resetFormFields(); } setIsAddDialogOpen(open); }}>
+        <DialogContent className="sm:max-w-[480px] max-h-[calc(100vh-4rem)] flex flex-col">
+          <TaskDialogContent
+            formId="addTaskForm"
+            onSubmit={handleAddOrEditTask}
+            title="Add New Task"
+            description="Fill in the details for your new task."
+            buttonText="Add Task"
+            currentStatusList={boardColumns}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for Editing Tasks */}
       <Dialog open={isEditDialogOpen} onOpenChange={(open) => { if(!open) { setEditingTask(null); resetFormFields(); } setIsEditDialogOpen(open); }}>
         <DialogContent className="sm:max-w-[480px] max-h-[calc(100vh-4rem)] flex flex-col">
             <TaskDialogContent
@@ -361,18 +374,25 @@ export default function TasksPage() {
             />
         </DialogContent>
       </Dialog>
-
-      <div className="flex overflow-x-auto gap-6 pb-4 items-start">
+      
+      {/* Horizontally scrollable container for columns */}
+      <div className="flex overflow-x-auto gap-6 pb-4 items-start flex-grow">
         {boardColumns.map(columnName => (
           <Card key={columnName} className="shadow-lg flex flex-col w-[320px] flex-shrink-0">
             <CardHeader className="border-b">
-              <CardTitle className="flex items-center justify-between text-lg">
-                {columnName}
-                <Badge variant="secondary">{tasks.filter(t => t.status === columnName).length}</Badge>
-              </CardTitle>
+              <div className="flex justify-between items-center">
+                <CardTitle className="flex items-center text-lg">
+                  {columnName}
+                  <Badge variant="secondary" className="ml-2">{tasks.filter(t => t.status === columnName).length}</Badge>
+                </CardTitle>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleOpenAddTaskDialog(columnName)}>
+                  <PlusCircle className="h-5 w-5" />
+                  <span className="sr-only">Add task to {columnName}</span>
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent className="p-4 flex-grow min-h-[300px]">
-              <ScrollArea className="h-[calc(100vh-30rem)] pr-3"> {/* Adjusted height based on new layout */}
+            <CardContent className="p-4 flex-grow min-h-[200px]"> {/* Reduced min-height for better fit */}
+              <ScrollArea className="h-[calc(100vh-22rem)] pr-3"> {/* Adjusted height for scroll area */}
                 {tasks.filter(t => t.status === columnName).length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">No tasks in {columnName}.</p>
                 ) : (
@@ -383,7 +403,7 @@ export default function TasksPage() {
           </Card>
         ))}
          {boardColumns.length === 0 && (
-          <div className="w-full text-center py-10">
+          <div className="w-full text-center py-10 flex-grow flex items-center justify-center">
             <p className="text-muted-foreground">No columns yet. Click "Add Column" to get started!</p>
           </div>
         )}
@@ -398,7 +418,7 @@ export default function TasksPage() {
         }
         /* For webkit browsers like Chrome, Safari */
         .overflow-x-auto::-webkit-scrollbar {
-            height: 8px; /* Adjust as needed */
+            height: 8px; 
         }
         .overflow-x-auto::-webkit-scrollbar-track {
             background: hsl(var(--secondary)); 
@@ -417,7 +437,7 @@ export default function TasksPage() {
           scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--secondary));
         }
       `}</style>
-    </>
+    </div>
   );
 }
-
+    
