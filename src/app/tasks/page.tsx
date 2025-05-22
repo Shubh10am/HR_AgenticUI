@@ -86,14 +86,14 @@ export default function TasksPage() {
     }
   };
   
-  const handleOpenAddTaskDialog = (defaultStatus?: TaskStatus) => {
+ const handleOpenAddTaskDialog = (defaultStatus?: TaskStatus) => {
     resetFormFields();
     if (defaultStatus && boardColumns.includes(defaultStatus)) {
       setTaskStatus(defaultStatus);
     } else if (boardColumns.length > 0) {
       setTaskStatus(boardColumns[0]);
     } else {
-      setTaskStatus(''); 
+      setTaskStatus(''); // Or handle the case where no columns exist
     }
     setEditingTask(null);
     setIsAddDialogOpen(true);
@@ -109,7 +109,7 @@ export default function TasksPage() {
        toast({ title: "Status required", description: "Please select a status for the task.", variant: "destructive" });
       return;
     }
-     if (boardColumns.length === 0 && taskStatus !== '') {
+     if (boardColumns.length === 0 && taskStatus !== '') { // Should not happen if status select is disabled
       toast({ title: "No columns exist", description: "Please add a column before adding a task.", variant: "destructive" });
       return;
     }
@@ -119,7 +119,7 @@ export default function TasksPage() {
       name: taskName.trim(),
       description: taskDescription.trim() || undefined,
       assignee: taskAssignee.trim() || undefined,
-      assigneeAvatar: taskAssignee.trim() ? `https://placehold.co/40x40.png` : undefined,
+      assigneeAvatar: taskAssignee.trim() ? `https://placehold.co/40x40.png` : undefined, // Generic placeholder
       dataAiHint: taskAssignee.trim() ? 'person placeholder' : undefined,
       dueDate: taskDueDate.trim() || undefined,
       status: taskStatus,
@@ -135,7 +135,6 @@ export default function TasksPage() {
       toast({ title: "Task Updated", description: `"${taskData.name}" has been updated.` });
       setIsEditDialogOpen(false);
       setEditingTask(null);
-      resetFormFields();
     } else {
       const newTask: Task = {
         id: `task-${Date.now()}`,
@@ -144,8 +143,8 @@ export default function TasksPage() {
       setTasks(prevTasks => [...prevTasks, newTask]);
       toast({ title: "Task Added", description: `"${newTask.name}" has been added to ${newTask.status}.` });
       setIsAddDialogOpen(false);
-      resetFormFields();
     }
+    resetFormFields(); // Reset form fields for next entry
   };
 
   const handleOpenEditDialog = (task: Task) => {
@@ -324,7 +323,7 @@ export default function TasksPage() {
   );
 
   return (
-    <div className="flex flex-col"> 
+    <div className="flex flex-col h-full"> 
       <PageHeader title="Task Management Board" description="Organize, track, and manage your project tasks.">
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           <Button variant="outline" onClick={() => toast({ title: "GitHub Sync (Mock)", description: "This would initiate GitHub project sync."})}>
