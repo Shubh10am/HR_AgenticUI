@@ -43,6 +43,9 @@ const initialTasks: Task[] = [
   { id: 'task-10', name: 'Client feedback gathering for beta features', description: 'Schedule calls with 10 beta users and consolidate feedback.', status: 'Todo', tags: ['UX', 'Feedback'] },
   { id: 'task-11', name: 'Update brand style guide', assignee: 'Alice Wonderland', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'woman face', dueDate: '2024-08-30', status: 'In Progress', tags: ['Design', 'Branding'] },
   { id: 'task-12', name: 'Finalize Q4 budget proposal', status: 'Done', tags: ['Finance', 'Planning'] },
+  { id: 'task-13', name: 'Another Todo Task', description: 'Description for another todo task.', status: 'Todo', tags: ['General'] },
+  { id: 'task-14', name: 'Yet Another Todo Task', description: 'This is a long description for yet another todo task to test the scrolling capability of the column. It should wrap and scroll nicely without breaking the layout.', assignee: 'Test User', dueDate: '2024-10-01', status: 'Todo', tags: ['Urgent', 'UX', 'Frontend', 'Backend'] },
+  { id: 'task-15', name: 'Fifth Todo Task', description: 'Short description.', status: 'Todo' },
 ];
 
 
@@ -119,8 +122,8 @@ const TaskDialogContent = ({
                   <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
-                  {currentStatusList.map(status => (
-                  <SelectItem key={status} value={status}>{status}</SelectItem>
+                  {currentStatusList.map(statusItem => ( // Renamed status to statusItem
+                  <SelectItem key={statusItem} value={statusItem}>{statusItem}</SelectItem>
                   ))}
               </SelectContent>
               </Select>
@@ -157,6 +160,22 @@ export default function TasksPage() {
   const [newColumnName, setNewColumnName] = useState('');
 
   const { toast } = useToast();
+  
+  const onDialogCancel = useCallback(() => {
+    setIsAddDialogOpen(false);
+    setIsEditDialogOpen(false);
+    setEditingTask(null);
+    setTaskName('');
+    setTaskDescription('');
+    setTaskAssignee('');
+    setTaskDueDate('');
+    setTaskTags('');
+    if (boardColumns.length > 0 && (!taskStatus || !boardColumns.includes(taskStatus))) {
+        setTaskStatus(boardColumns[0]);
+    } else if (boardColumns.length === 0 && taskStatus !== '') {
+        setTaskStatus('');
+    }
+  }, [boardColumns, taskStatus]);
 
   useEffect(() => {
     if (boardColumns.length > 0 && (!taskStatus || !boardColumns.includes(taskStatus))) {
@@ -172,36 +191,23 @@ export default function TasksPage() {
     if (lowerStatus.includes('progress')) return <RefreshCw className="h-5 w-5 text-yellow-500 animate-spin-slow" />;
     return <Circle className="h-5 w-5 text-muted-foreground" />;
   }, []);
-
-  const resetFormFields = useCallback(() => {
-    setTaskName('');
-    setTaskDescription('');
-    setTaskAssignee('');
-    setTaskDueDate('');
-    setTaskTags('');
-    if (boardColumns.length > 0) {
-      setTaskStatus(boardColumns[0]); 
-    } else {
-      setTaskStatus(''); 
-    }
-  }, [boardColumns]);
   
   const handleOpenAddTaskDialog = useCallback((defaultStatus?: TaskStatus) => {
-    resetFormFields();
+    onDialogCancel(); // Resets fields and closes other dialogs first
     if (defaultStatus && boardColumns.includes(defaultStatus)) {
       setTaskStatus(defaultStatus);
     } else if (boardColumns.length > 0) {
       setTaskStatus(boardColumns[0]);
     } else {
-      setTaskStatus(''); // No columns, so no default status
-      if (boardColumns.length === 0) { // Check again to ensure toast is only if truly no columns
+      setTaskStatus(''); 
+      if (boardColumns.length === 0) { 
         toast({ title: "No Columns", description: "Please add a column first to assign a status.", variant: "destructive"});
         return; 
       }
     }
     setEditingTask(null);
     setIsAddDialogOpen(true);
-  }, [boardColumns, resetFormFields, toast]);
+  }, [boardColumns, onDialogCancel, toast]);
 
   const handleAddTask = useCallback((event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -231,11 +237,11 @@ export default function TasksPage() {
     };
     setTasks(prevTasks => [...prevTasks, newTask]);
     toast({ title: "Task Added", description: `"${newTask.name}" has been added to ${newTask.status}.` });
-    setIsAddDialogOpen(false);
-    // resetFormFields(); // Resetting handled by onCancel
-  }, [taskName, taskDescription, taskAssignee, taskDueDate, taskStatus, taskTags, boardColumns, toast, setTasks, setIsAddDialogOpen]);
+    onDialogCancel();
+  }, [taskName, taskDescription, taskAssignee, taskDueDate, taskStatus, taskTags, boardColumns, toast, setTasks, onDialogCancel]);
 
   const handleOpenEditDialog = useCallback((task: Task) => {
+    onDialogCancel(); // Resets fields and closes other dialogs first
     setEditingTask(task);
     setTaskName(task.name);
     setTaskDescription(task.description || '');
@@ -244,7 +250,7 @@ export default function TasksPage() {
     setTaskStatus(task.status);
     setTaskTags(task.tags?.join(', ') || '');
     setIsEditDialogOpen(true);
-  }, []);
+  }, [onDialogCancel]);
 
   const handleEditTask = useCallback((event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -279,11 +285,9 @@ export default function TasksPage() {
         )
       );
       toast({ title: "Task Updated", description: `"${updatedTaskData.name}" has been updated.` });
-      setIsEditDialogOpen(false);
-      setEditingTask(null);
-      // resetFormFields(); // Resetting handled by onCancel
+      onDialogCancel();
     }
-  }, [editingTask, taskName, taskDescription, taskAssignee, taskDueDate, taskStatus, taskTags, boardColumns, toast, setTasks, setIsEditDialogOpen, setEditingTask]);
+  }, [editingTask, taskName, taskDescription, taskAssignee, taskDueDate, taskStatus, taskTags, boardColumns, toast, setTasks, onDialogCancel]);
 
   const handleDeleteTask = useCallback((taskId: string) => {
     const taskToDelete = tasks.find(task => task.id === taskId);
@@ -332,7 +336,7 @@ export default function TasksPage() {
     }
     setBoardColumns(prev => {
       const newColumns = [...prev, trimmedNewColumnName];
-      if (prev.length === 0 && taskStatus === '') { // If it was the first column being added
+      if (prev.length === 0 && taskStatus === '') { 
         setTaskStatus(trimmedNewColumnName); 
       }
       return newColumns;
@@ -342,12 +346,6 @@ export default function TasksPage() {
     setIsAddColumnDialogOpen(false);
   }, [newColumnName, boardColumns, taskStatus, toast, setTaskStatus]);
   
-  const onDialogCancel = useCallback(() => {
-    setIsAddDialogOpen(false);
-    setIsEditDialogOpen(false);
-    setEditingTask(null);
-    resetFormFields();
-  }, [resetFormFields]);
 
   const renderTaskCard = useCallback((task: Task) => (
     <Card key={task.id} className="mb-3 shadow-md hover:shadow-lg transition-shadow duration-200 bg-card">
@@ -504,8 +502,8 @@ export default function TasksPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-4 flex-1 overflow-hidden min-h-0">
-              <ScrollArea className="h-full pr-3"> 
+            <CardContent className="flex-1 min-h-0 relative"> {/* Added relative */}
+              <ScrollArea className="absolute inset-0 p-4 pr-1">  {/* Changed to absolute, added p-4, adjusted pr */}
                 {tasks.filter(t => t.status === columnName).length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">No tasks in {columnName}.</p>
                 ) : (
