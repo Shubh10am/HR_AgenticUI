@@ -3,7 +3,7 @@
 
 import { useState, type FormEvent, useEffect, useCallback } from 'react';
 import PageHeader from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'; // Ensured CardFooter is imported
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter as DialogModalFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Github, PlusCircle, Trash2, ChevronLeft, ChevronRight, Circle, RefreshCw, CheckCircle, CalendarDays, User, Edit3, Columns } from 'lucide-react';
+import { Github, PlusCircle, Trash2, ChevronLeft, ChevronRight, Circle, RefreshCw, CheckCircle, CalendarDays, Edit3, Columns } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -60,6 +60,7 @@ interface TaskDialogContentProps {
   onCancel: () => void;
 }
 
+// Moved TaskDialogContent outside of TasksPage for stability
 const TaskDialogContent = ({
   formId,
   onSubmit,
@@ -143,7 +144,7 @@ export default function TasksPage() {
   const [taskDescription, setTaskDescription] = useState('');
   const [taskAssignee, setTaskAssignee] = useState('');
   const [taskDueDate, setTaskDueDate] = useState('');
-  const [taskStatus, setTaskStatus] = useState<TaskStatus>(boardColumns[0] || 'Todo');
+  const [taskStatus, setTaskStatus] = useState<TaskStatus>(boardColumns[0] || '');
   const [taskTags, setTaskTags] = useState('');
   const [newColumnName, setNewColumnName] = useState('');
 
@@ -157,12 +158,12 @@ export default function TasksPage() {
     }
   }, [boardColumns, taskStatus]);
 
-  const getStatusIcon = (status: TaskStatus) => {
+  const getStatusIcon = useCallback((status: TaskStatus) => {
     const lowerStatus = status.toLowerCase();
     if (lowerStatus === 'done') return <CheckCircle className="h-5 w-5 text-green-500" />;
     if (lowerStatus.includes('progress')) return <RefreshCw className="h-5 w-5 text-yellow-500 animate-spin-slow" />;
     return <Circle className="h-5 w-5 text-muted-foreground" />;
-  };
+  }, []);
 
   const resetFormFields = useCallback(() => {
     setTaskName('');
@@ -192,7 +193,7 @@ export default function TasksPage() {
     }
     setEditingTask(null);
     setIsAddDialogOpen(true);
-  }, [boardColumns, resetFormFields, toast]);
+  }, [boardColumns, resetFormFields, toast, setTaskStatus, setEditingTask, setIsAddDialogOpen]);
 
   const handleAddTask = useCallback((event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -225,6 +226,17 @@ export default function TasksPage() {
     setIsAddDialogOpen(false);
     resetFormFields();
   }, [taskName, taskDescription, taskAssignee, taskDueDate, taskStatus, taskTags, boardColumns, toast, resetFormFields, setTasks, setIsAddDialogOpen]);
+
+  const handleOpenEditDialog = useCallback((task: Task) => {
+    setEditingTask(task);
+    setTaskName(task.name);
+    setTaskDescription(task.description || '');
+    setTaskAssignee(task.assignee || '');
+    setTaskDueDate(task.dueDate || '');
+    setTaskStatus(task.status);
+    setTaskTags(task.tags?.join(', ') || '');
+    setIsEditDialogOpen(true);
+  }, [setEditingTask, setTaskName, setTaskDescription, setTaskAssignee, setTaskDueDate, setTaskStatus, setTaskTags, setIsEditDialogOpen]);
 
   const handleEditTask = useCallback((event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -264,17 +276,6 @@ export default function TasksPage() {
       resetFormFields();
     }
   }, [editingTask, taskName, taskDescription, taskAssignee, taskDueDate, taskStatus, taskTags, boardColumns, toast, resetFormFields, setTasks, setIsEditDialogOpen, setEditingTask]);
-
-  const handleOpenEditDialog = useCallback((task: Task) => {
-    setEditingTask(task);
-    setTaskName(task.name);
-    setTaskDescription(task.description || '');
-    setTaskAssignee(task.assignee || '');
-    setTaskDueDate(task.dueDate || '');
-    setTaskStatus(task.status);
-    setTaskTags(task.tags?.join(', ') || '');
-    setIsEditDialogOpen(true);
-  }, []);
 
   const handleDeleteTask = useCallback((taskId: string) => {
     const taskToDelete = tasks.find(task => task.id === taskId);
@@ -370,7 +371,7 @@ export default function TasksPage() {
             </div>
         )}
       </CardContent>
-      <CardHeader className="px-3 py-2 border-t flex justify-between items-center"> {/* Changed to CardHeader for consistency, was CardFooter */}
+      <CardFooter className="px-3 py-2 border-t flex justify-between items-center">
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveTask(task.id, 'prev')} disabled={boardColumns.indexOf(task.status) === 0}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -385,9 +386,9 @@ export default function TasksPage() {
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveTask(task.id, 'next')} disabled={boardColumns.indexOf(task.status) === boardColumns.length - 1}>
           <ChevronRight className="h-4 w-4" />
         </Button>
-      </CardHeader>
+      </CardFooter>
     </Card>
-  ), [boardColumns, handleOpenEditDialog, handleDeleteTask, moveTask]); // Dependencies for renderTaskCard
+  ), [boardColumns, getStatusIcon, handleOpenEditDialog, handleDeleteTask, moveTask]); 
   
   return (
     <div className="flex flex-col h-full"> 
@@ -398,8 +399,8 @@ export default function TasksPage() {
           </Button>
           <Dialog open={isAddColumnDialogOpen} onOpenChange={setIsAddColumnDialogOpen}>
              <DialogTrigger asChild>
-                <Button variant="outline">
-                <Columns className="mr-2 h-4 w-4" /> Add Column
+                <Button variant="outline" onClick={() => { setNewColumnName(''); setIsAddColumnDialogOpen(true); }}>
+                  <Columns className="mr-2 h-4 w-4" /> Add Column
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
