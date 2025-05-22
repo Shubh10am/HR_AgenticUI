@@ -30,33 +30,7 @@ interface Task {
   tags?: string[];
 }
 
-const initialTasks: Task[] = [
-  { id: 'task-1', name: 'Design new onboarding flow visuals', description: 'Create mockups for all steps of the new user onboarding.', assignee: 'Alice Wonderland', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'woman face', dueDate: '2024-08-15', status: 'Todo', tags: ['UX', 'Design'] },
-  { id: 'task-2', name: 'Develop API for user authentication', description: 'Implement OAuth2 and basic credential login.', assignee: 'Bob The Builder', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'man face', dueDate: '2024-08-20', status: 'In Progress', tags: ['Backend', 'API'] },
-  { id: 'task-3', name: 'Write documentation for new reporting module', description: 'Cover all features and provide examples.', assignee: 'Charlie Brown', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'person cartoon', dueDate: '2024-08-25', status: 'In Progress', tags: ['Docs'] },
-  { id: 'task-4', name: 'User testing session for mobile app', description: 'Conduct tests with 5 users and gather feedback.', status: 'Todo', tags: ['Testing', 'Mobile'] },
-  { id: 'task-5', name: 'Deploy staging environment updates', description: 'Merge develop branch to staging and run deployment scripts.', assignee: 'Diana Prince', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'woman superhero', status: 'Done', tags: ['DevOps', 'Release'] },
-  { id: 'task-6', name: 'AWS Lambda Integration', description: 'This is a very long description for the AWS Lambda Integration task. It needs to be quite verbose to ensure that it properly overflows the max-height of 80px (max-h-20) set on the CardDescription. We need to test the vertical scrolling capability of the task description itself. This description should be long enough to demonstrate that the y-axis scrollbar appears when the content exceeds the allocated space. Adding more lines to ensure overflow. This text is intended to be very long. This text is intended to be very long. This text is intended to be very long. This text is intended to be very long. This text is intended to be very long. This text is intended to be very long. This text is intended to be very long. This text is intended to be very long. This text is intended to be very long. This text is intended to be very long.', dueDate: '2025-05-24', status: 'Todo', tags: ['Backend', 'Cloud', 'AWS', 'Serverless'] },
-  { id: 'task-7', name: 'Refactor settings page UI', description: 'Improve layout and responsiveness of the user settings page.', assignee: 'Alice Wonderland', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'woman face', dueDate: '2024-09-01', status: 'Todo', tags: ['Frontend', 'UX'] },
-  { id: 'task-8', name: 'Performance testing for Q3 release', description: 'Identify bottlenecks and optimize critical paths.', status: 'In Progress', tags: ['QA', 'Performance'] },
-  { id: 'task-9', name: 'Setup CI/CD pipeline for new microservice', assignee: 'Bob The Builder', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'man face', dueDate: '2024-09-10', status: 'Todo', tags: ['DevOps', 'CI/CD'] },
-  { id: 'task-10', name: 'Client feedback gathering for beta features', description: 'Schedule calls with 10 beta users and consolidate feedback.', status: 'Todo', tags: ['UX', 'Feedback'] },
-  { id: 'task-11', name: 'Update brand style guide', assignee: 'Alice Wonderland', assigneeAvatar: 'https://placehold.co/40x40.png', dataAiHint:'woman face', dueDate: '2024-08-30', status: 'In Progress', tags: ['Design', 'Branding'] },
-  { id: 'task-12', name: 'Finalize Q4 budget proposal', status: 'Done', tags: ['Finance', 'Planning'] },
-  { id: 'task-13', name: 'Another Todo Task', description: 'Description for another todo task.', status: 'Todo', tags: ['General'] },
-  { id: 'task-14', name: 'Yet Another Todo Task', description: 'This is a long description for yet another todo task to test the scrolling capability of the column. It should wrap and scroll nicely without breaking the layout.', assignee: 'Test User', dueDate: '2024-10-01', status: 'Todo', tags: ['Urgent', 'UX', 'Frontend', 'Backend'] },
-  { id: 'task-15', name: 'Fifth Todo Task', description: 'Short description.', status: 'Todo' },
-  { id: 'task-16', name: 'Sixth Todo Task - Long content check', description: 'This is a task description to test vertical scrolling. It needs enough content to overflow the available space. Adding more lines. And more lines. And more lines. And more lines. And more lines. This is line six. This is line seven. This is line eight, we need this to be very long to make sure the scrollbar appears. Line nine. Line ten. Line eleven. Line twelve, almost there. Line thirteen. Line fourteen. Line fifteen, this should definitely be enough text to cause an overflow in a container with max-height of 80px or 5rem. This is an even longer description to ensure that the task list vertical scroll is tested. We need many tasks in one column. Let us add more content. More lines. More text. More stuff to make it scroll. This is really long now. Hopefully this is enough to test it properly. Maybe one more line. Okay, this must be it.', status: 'Todo' },
-  { id: 'task-17', name: 'Seventh Todo Task', description: 'Another task for the Todo column to ensure scrolling works.', status: 'Todo' },
-  { id: 'task-18', name: 'Eighth Todo Task', description: 'More tasks for scrolling.', status: 'Todo' },
-  { id: 'task-19', name: 'Ninth Todo Task', description: 'Keep them coming for scroll test.', status: 'Todo' },
-  { id: 'task-20', name: 'Tenth Todo Task', description: 'Final task for this batch of scroll testing.', status: 'Todo' },
-  { id: 'task-21', name: 'Eleventh Todo Task', description: 'One more for the Todo column.', status: 'Todo', tags: ['Test'] },
-  { id: 'task-22', name: 'Twelfth Todo Task', description: 'And another one for Todo.', status: 'Todo', tags: ['UX', 'Frontend'] },
-  { id: 'task-23', name: 'Thirteenth Todo Task', description: 'Todo column should be very full now.', status: 'Todo', tags: ['Backend', 'Urgent'] },
-  { id: 'task-24', name: 'Fourteenth Todo Task', description: 'Ensuring the Todo column scrolls vertically.', status: 'Todo', tags: ['CI/CD'] },
-  { id: 'task-25', name: 'Fifteenth Todo Task', description: 'The final test task for Todo scrolling.', status: 'Todo', tags: ['Documentation'] },
-];
+const initialTasks: Task[] = [];
 
 
 interface TaskDialogContentProps {
@@ -431,7 +405,7 @@ export default function TasksPage() {
           </Button>
           <Dialog open={isAddColumnDialogOpen} onOpenChange={(open) => { if(!open) setNewColumnName(''); setIsAddColumnDialogOpen(open);}}>
              <DialogTrigger asChild>
-                <Button variant="outline" onClick={() => { setNewColumnName(''); setIsAddColumnDialogOpen(true); }}>
+                <Button variant="outline">
                   <Columns className="mr-2 h-4 w-4" /> Add Column
                 </Button>
             </DialogTrigger>
@@ -542,3 +516,4 @@ export default function TasksPage() {
   );
 }
     
+
