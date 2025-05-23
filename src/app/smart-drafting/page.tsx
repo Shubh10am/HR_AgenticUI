@@ -232,7 +232,7 @@ export default function SmartDraftingPage() {
                     </CardHeader>
                     <CardContent>
                       <p className="text-xs whitespace-pre-wrap max-h-40 overflow-y-auto p-2 border rounded-md bg-background">{draft}</p>
-                      <Button size="sm" onClick={() => handleUsePromptGeneratedDraft(draft)} className="w-full mt-3">
+                      <Button size="sm" variant="outline" onClick={() => handleUsePromptGeneratedDraft(draft)} className="w-full mt-3">
                         <FileText className="mr-2 h-4 w-4" /> Use this Option
                       </Button>
                     </CardContent>

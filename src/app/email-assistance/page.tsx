@@ -120,7 +120,7 @@ export default function EmailAssistancePage() {
                 <p>
                   No drafts generated yet. Enter a query and click "Generate Drafts".
                 </p>
-                <Button onClick={() => router.push('/smart-drafting')}>
+                <Button onClick={() => router.push('/smart-drafting')} variant="outline">
                   <Edit3 className="mr-2 h-4 w-4" /> Go to Smart Drafting
                 </Button>
               </div>
@@ -135,7 +135,7 @@ export default function EmailAssistancePage() {
                     <CardContent>
                       <p className="text-sm whitespace-pre-wrap max-h-60 overflow-y-auto p-2 border rounded-md bg-background">{draft}</p>
                       <div className="mt-4 flex justify-end space-x-2">
-                        <Button size="sm" onClick={() => handleUseDraft(draft)}>
+                        <Button size="sm" variant="outline" onClick={() => handleUseDraft(draft)}>
                           <Send className="mr-2 h-4 w-4" />
                           Use this draft in Composer
                         </Button>

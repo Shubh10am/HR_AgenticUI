@@ -20,7 +20,7 @@ body {
     --secondary-foreground: 210 10% 20%;
     --muted: 210 17% 88%;
     --muted-foreground: 210 10% 45%; /* Lighter gray for muted text */
-    --accent: 260 36% 56%; /* Vibrant purple #7E57C2 */
+    --accent: 255 45% 55%; /* Refined indigo-purple */
     --accent-foreground: 0 0% 98%; /* White */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -38,12 +38,12 @@ body {
     /* Sidebar specific theme variables based on the new theme */
     --sidebar-background: 231 40% 40%; /* Darker shade of primary for sidebar */
     --sidebar-foreground: 0 0% 95%;   /* Light text for sidebar */
-    --sidebar-primary: 260 40% 60%; /* Accent color for active items in sidebar */
+    --sidebar-primary: 255 45% 60%; /* Accent color for active items in sidebar (using a lighter shade of new accent) */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 231 40% 35%; /* Hover color for sidebar items */
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 231 40% 30%;
-    --sidebar-ring: 260 36% 56%; /* Accent color for focus rings in sidebar */
+    --sidebar-ring: 255 45% 55%; /* Refined accent color for focus rings in sidebar */
   }
 
   .dark {
@@ -65,7 +65,7 @@ body {
     --muted: 0 0% 12%; /* Muted backgrounds */
     --muted-foreground: 0 0% 60%; /* Muted text, darker than main foreground */
     
-    --accent: 260 36% 68%; /* Lighter purple #9575CD */
+    --accent: 255 45% 65%; /* Refined lighter indigo-purple */
     --accent-foreground: 0 0% 98%; /* Ensure good contrast on accent elements */
     
     --destructive: 0 62.8% 50.6%;
@@ -85,12 +85,12 @@ body {
     /* Sidebar specific theme variables for dark mode */
     --sidebar-background: 0 0% 8%; /* Dark Gray, same as cards #141414 */
     --sidebar-foreground: 0 0% 90%;   /* Lighter text for sidebar */
-    --sidebar-primary: 260 40% 60%; /* Accent color for active items in sidebar */
+    --sidebar-primary: 255 45% 65%; /* Accent color for active items in sidebar */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 12%; /* Hover color for sidebar items, same as secondary bg */
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 0 0% 15%; /* Border for sidebar elements, same as main border */
-    --sidebar-ring: 260 36% 68%; /* Lighter accent for focus rings in sidebar */
+    --sidebar-ring: 255 45% 65%; /* Refined lighter accent for focus rings in sidebar */
   }
 }
 
