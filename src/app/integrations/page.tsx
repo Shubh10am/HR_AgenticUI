@@ -1,16 +1,19 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Github, Link, CheckCircle, Settings, ExternalLink, MessageSquare, CalendarDays, Webcam, Users, LayoutGrid, FileSignature, KanbanSquare, Video, Inbox, Loader2 } from 'lucide-react';
+import { Github, Link, CheckCircle, Settings, ExternalLink, MessageSquare, CalendarDays, Webcam, Users, LayoutGrid, FileSignature, KanbanSquare, Video, Inbox, Loader2, Send } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Integration {
   id: string;
@@ -149,6 +152,12 @@ export default function IntegrationsPage() {
   const [integrations, setIntegrations] = useState<Integration[]>(initialIntegrations);
   const { toast } = useToast();
 
+  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
+  const [requestedIntegrationName, setRequestedIntegrationName] = useState('');
+  const [requestReason, setRequestReason] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+
+
   const toggleConnection = (id: string) => {
     const integrationToUpdate = integrations.find(int => int.id === id);
     if (!integrationToUpdate) return;
@@ -191,6 +200,28 @@ export default function IntegrationsPage() {
     }
   };
 
+  const handleIntegrationRequestSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!requestedIntegrationName.trim() || !requestReason.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide the name of the integration and a reason for your request.",
+        variant: "destructive",
+      });
+      return;
+    }
+    // Mock submission
+    console.log("Integration Request:", { requestedIntegrationName, requestReason, contactEmail });
+    toast({
+      title: "Request Submitted (Mock)",
+      description: `Your request for "${requestedIntegrationName}" has been received. Thank you!`,
+    });
+    setRequestedIntegrationName('');
+    setRequestReason('');
+    setContactEmail('');
+    setIsRequestDialogOpen(false);
+  };
+
   return (
     <>
       <PageHeader
@@ -204,7 +235,7 @@ export default function IntegrationsPage() {
               <div className="flex items-center justify-between mb-2">
                  <div className="flex items-center">
                     {integration.logoUrl ? (
-                       <Image src={integration.logoUrl} alt={`${integration.name} logo`} width={40} height={40} className="rounded-md" data-ai-hint={integration.dataAiHint}/>
+                       <Image src={integration.logoUrl} alt={`${integration.name} logo`} width={40} height={40} className="rounded-md object-contain" data-ai-hint={integration.dataAiHint}/>
                     ) : (
                       <integration.icon className="h-10 w-10 text-primary" />
                     )}
@@ -278,12 +309,70 @@ export default function IntegrationsPage() {
           <p className="text-sm text-muted-foreground mb-4">
             We are always looking to expand our supported integrations. If there's a service you'd like to see here, please submit a request.
           </p>
-          <Button>
-            <ExternalLink className="mr-2 h-4 w-4" />
-            Request Integration
-          </Button>
+          <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Send className="mr-2 h-4 w-4" />
+                Request Integration
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[480px]">
+              <DialogHeader>
+                <DialogTitle>Request a New Integration</DialogTitle>
+                <DialogDescription>
+                  Tell us which integration you'd like to see. We'll review your request.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleIntegrationRequestSubmit} className="grid gap-4 py-4">
+                <div>
+                  <Label htmlFor="requestedIntegrationName">Integration Name</Label>
+                  <Input
+                    id="requestedIntegrationName"
+                    value={requestedIntegrationName}
+                    onChange={(e) => setRequestedIntegrationName(e.target.value)}
+                    placeholder="e.g., Awesome Service XYZ"
+                    className="mt-1"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="requestReason">Reason for Request / Use Case</Label>
+                  <Textarea
+                    id="requestReason"
+                    value={requestReason}
+                    onChange={(e) => setRequestReason(e.target.value)}
+                    placeholder="Describe how this integration would help you or your team."
+                    className="mt-1 min-h-[100px]"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contactEmail">Your Contact Email (Optional)</Label>
+                  <Input
+                    id="contactEmail"
+                    type="email"
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    placeholder="So we can follow up if needed"
+                    className="mt-1"
+                  />
+                </div>
+              </form>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsRequestDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" formAction="" onClick={() => document.querySelector<HTMLFormElement>('form[onSubmit]')?.requestSubmit()}>
+                  Submit Request
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
     </>
   );
 }
+
+
+    
