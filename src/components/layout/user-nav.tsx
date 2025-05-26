@@ -1,3 +1,6 @@
+
+'use client';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,8 +13,32 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { User } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function UserNav() {
+  const { toast } = useToast();
+
+  const handleProfileClick = () => {
+    toast({
+      title: 'Profile Clicked',
+      description: 'This would navigate to the user profile page.',
+    });
+  };
+
+  const handleSettingsClick = () => {
+    toast({
+      title: 'Settings Clicked',
+      description: 'This would navigate to the settings page.',
+    });
+  };
+
+  const handleLogoutClick = () => {
+    toast({
+      title: 'Logged Out (Mock)',
+      description: 'You have been successfully logged out.',
+    });
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -35,11 +62,11 @@ export default function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>Profile</DropdownMenuItem>
-          <DropdownMenuItem>Settings</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleProfileClick}>Profile</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleSettingsClick}>Settings</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Log out</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogoutClick}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
