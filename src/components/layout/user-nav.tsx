@@ -14,23 +14,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link'; // Import Link
 
 export default function UserNav() {
   const { toast } = useToast();
-
-  const handleProfileClick = () => {
-    toast({
-      title: 'Profile Clicked',
-      description: 'This would navigate to the user profile page.',
-    });
-  };
-
-  const handleSettingsClick = () => {
-    toast({
-      title: 'Settings Clicked',
-      description: 'This would navigate to the settings page.',
-    });
-  };
 
   const handleLogoutClick = () => {
     toast({
@@ -62,8 +49,16 @@ export default function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={handleProfileClick}>Profile</DropdownMenuItem>
-          <DropdownMenuItem onClick={handleSettingsClick}>Settings</DropdownMenuItem>
+          <Link href="/profile" passHref legacyBehavior>
+            <DropdownMenuItem asChild>
+              <a>Profile</a>
+            </DropdownMenuItem>
+          </Link>
+          <Link href="/settings" passHref legacyBehavior>
+            <DropdownMenuItem asChild>
+              <a>Settings</a>
+            </DropdownMenuItem>
+          </Link>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogoutClick}>Log out</DropdownMenuItem>
