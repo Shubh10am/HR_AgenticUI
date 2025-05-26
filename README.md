@@ -18,7 +18,7 @@ npm install
 yarn install
 ```
 
-3. **Set up Firebase Project:**   **Optional*  **
+3. **Set up Firebase Project:**   **Optional**
 
 - Create a new Firebase project in the [Firebase Console](https://console.firebase.google.com/).
 - Add a web app to your Firebase project and copy your project's configuration.
