@@ -323,7 +323,7 @@ export default function IntegrationsPage() {
                   Tell us which integration you'd like to see. We'll review your request.
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleIntegrationRequestSubmit} className="grid gap-4 py-4">
+              <form onSubmit={handleIntegrationRequestSubmit} id="integrationRequestForm" className="grid gap-4 py-4">
                 <div>
                   <Label htmlFor="requestedIntegrationName">Integration Name</Label>
                   <Input
@@ -362,7 +362,7 @@ export default function IntegrationsPage() {
                 <Button type="button" variant="outline" onClick={() => setIsRequestDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" formAction="" onClick={() => document.querySelector<HTMLFormElement>('form[onSubmit]')?.requestSubmit()}>
+                <Button type="submit" form="integrationRequestForm">
                   Submit Request
                 </Button>
               </DialogFooter>
@@ -373,6 +373,3 @@ export default function IntegrationsPage() {
     </>
   );
 }
-
-
-    
