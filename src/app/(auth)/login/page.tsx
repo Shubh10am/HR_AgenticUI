@@ -10,15 +10,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import Logo from '@/components/icons/logo';
+import { Separator } from '@/components/ui/separator';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState(''); // Reverted: No pre-filled email
-  const [password, setPassword] = useState(''); // Reverted: No pre-filled password
-  const { login, isLoading } = useAuth();
+  const [email, setEmail] = useState(''); 
+  const [password, setPassword] = useState(''); 
+  const { login, loginAsGuest, isLoading } = useAuth();
+  const [isGuestLoading, setIsGuestLoading] = useState(false);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     await login({ email, password });
+  };
+
+  const handleGuestLogin = async () => {
+    setIsGuestLoading(true);
+    await loginAsGuest();
+    setIsGuestLoading(false);
   };
 
   return (
@@ -30,7 +38,7 @@ export default function LoginPage() {
         <CardTitle className="text-2xl">Welcome Back!</CardTitle>
         <CardDescription>Enter your credentials to access HR Streamline AI.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -41,7 +49,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              disabled={isLoading}
+              disabled={isLoading || isGuestLoading}
             />
           </div>
           <div className="space-y-2">
@@ -53,14 +61,28 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              disabled={isLoading}
+              disabled={isLoading || isGuestLoading}
             />
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          <Button type="submit" className="w-full" disabled={isLoading || isGuestLoading}>
+            {isLoading && !isGuestLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Log In
           </Button>
         </form>
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-2 text-muted-foreground">
+              Or
+            </span>
+          </div>
+        </div>
+         <Button variant="outline" onClick={handleGuestLogin} className="w-full" disabled={isLoading || isGuestLoading}>
+          {isGuestLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Continue as Guest
+        </Button>
       </CardContent>
       <CardFooter className="flex-col space-y-2 text-sm">
         <p>

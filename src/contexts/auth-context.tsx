@@ -25,6 +25,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (values: Record<string, string>) => Promise<boolean>;
   register: (values: Record<string, string>) => Promise<boolean>;
+  loginAsGuest: () => Promise<boolean>;
   logout: () => void;
   checkAuth: () => void;
 }
@@ -69,13 +70,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   
   useEffect(() => {
     if (!isLoading) {
-      const isAuthenticated = !!user && !!token;
+      const isAuthenticatedUser = !!user && !!token;
       const authRoutes = ['/login', '/register'];
       const isAuthRoute = authRoutes.includes(pathname);
 
-      if (isAuthenticated && isAuthRoute) {
+      if (isAuthenticatedUser && isAuthRoute) {
         router.push('/'); 
-      } else if (!isAuthenticated && !isAuthRoute) {
+      } else if (!isAuthenticatedUser && !isAuthRoute) {
         router.push('/login'); 
       }
     }
@@ -86,8 +87,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       const endpoint = '/api/auth/login';
-      const requestUrl = API_BASE_URL ? `${API_BASE_URL.replace(/\/$/, '')}${endpoint}` : endpoint;
-
+      let requestUrl = endpoint;
+      if (API_BASE_URL) {
+        requestUrl = `${API_BASE_URL.replace(/\/$/, '')}${endpoint}`;
+      }
+      
       const response = await fetch(requestUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -121,7 +125,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       const endpoint = '/api/auth/register';
-      const requestUrl = API_BASE_URL ? `${API_BASE_URL.replace(/\/$/, '')}${endpoint}` : endpoint;
+      let requestUrl = endpoint;
+      if (API_BASE_URL) {
+        requestUrl = `${API_BASE_URL.replace(/\/$/, '')}${endpoint}`;
+      }
       
       const response = await fetch(requestUrl, {
         method: 'POST',
@@ -148,6 +155,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const loginAsGuest = async (): Promise<boolean> => {
+    setIsLoading(true);
+    // Simulate a slight delay for guest login if needed
+    // await new Promise(resolve => setTimeout(resolve, 500)); 
+
+    const guestUser: User = {
+      id: 'guest-user-id-' + Date.now(), // Make guest ID somewhat unique for session
+      name: 'Guest User',
+      email: 'guest@hrstreamline.ai',
+      role: 'Employee' as EmployeeRole, // Or define a specific 'Guest' role
+      organizationId: 'guest-org-id',
+    };
+    const guestToken = 'guest-auth-token-' + Date.now(); // Mock token
+
+    localStorage.setItem('authToken', guestToken);
+    localStorage.setItem('authUser', JSON.stringify(guestUser));
+    setToken(guestToken);
+    setUser(guestUser);
+    
+    toast({ title: 'Continuing as Guest', description: 'Welcome! Some features may be limited.' });
+    router.push('/');
+    setIsLoading(false);
+    return true;
+  };
+
   const logout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
@@ -160,7 +192,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAuthenticated = !!user && !!token;
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, isAuthenticated, login, register, logout, checkAuth }}>
+    <AuthContext.Provider value={{ user, token, isLoading, isAuthenticated, login, register, loginAsGuest, logout, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );
