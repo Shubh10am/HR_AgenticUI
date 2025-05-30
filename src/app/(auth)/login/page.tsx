@@ -12,8 +12,8 @@ import { Loader2 } from 'lucide-react';
 import Logo from '@/components/icons/logo';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@admin.com'); // Pre-filled email
+  const [password, setPassword] = useState('admin@123'); // Pre-filled password
   const { login, isLoading } = useAuth();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
