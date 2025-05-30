@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, UserCircle, Clock, LogIn, LogOut, Briefcase, CalendarDays, Send, FileText, BarChartHorizontalBig, Edit, Filter, UserSearch } from 'lucide-react';
+import { Download, UserCircle, Clock, LogIn, LogOut, Briefcase, CalendarDays, Send, FileText, BarChartHorizontalBig, Edit, Filter, UserSearch, XCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from "@/hooks/use-toast";
 import { Input } from '@/components/ui/input';
@@ -16,12 +16,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, differenceInMinutes } from 'date-fns';
+import { format, differenceInMinutes, parse, isAfter, isBefore, isEqual, startOfDay } from 'date-fns';
 
 interface AttendanceEntry {
   id: string;
   employee: string;
-  date: string;
+  date: string; // YYYY-MM-DD
   status: 'Present' | 'Absent' | 'Late' | 'On Leave' | 'No Check-in';
   clockIn?: string;
   clockOut?: string;
@@ -38,6 +38,8 @@ const initialAttendanceData: AttendanceEntry[] = [
   { id: '6', employee: 'John Doe', date: '2024-07-05', status: 'Present', clockIn: '08:55 AM', clockOut: '05:25 PM', hoursWorked: '8h 30m', department: 'Engineering' },
   { id: '7', employee: 'Alice Brown', date: '2024-07-05', status: 'On Leave', hoursWorked: 'N/A', department: 'Sales' },
   { id: '8', employee: 'Bob Green', date: '2024-07-05', status: 'No Check-in', hoursWorked: '0h 0m', department: 'Support' },
+  { id: '9', employee: 'Jane Smith', date: '2024-07-01', status: 'Present', clockIn: '09:00 AM', clockOut: '05:00 PM', hoursWorked: '8h 0m', department: 'Marketing' },
+  { id: '10', employee: 'Alice Brown', date: '2024-07-02', status: 'Late', clockIn: '09:30 AM', clockOut: '05:30 PM', hoursWorked: '8h 0m', department: 'Sales' },
 ];
 
 const productivityData = [
@@ -63,6 +65,7 @@ export default function AttendanceReportingPage() {
   const [filterEmployeeName, setFilterEmployeeName] = useState('');
   const [filterStartDate, setFilterStartDate] = useState<Date | undefined>();
   const [filterEndDate, setFilterEndDate] = useState<Date | undefined>();
+  const [displayedAttendanceData, setDisplayedAttendanceData] = useState<AttendanceEntry[]>(initialAttendanceData);
 
   const [leaveRequest, setLeaveRequest] = useState<LeaveRequest>({
     employeeName: 'John Doe', // Mock prefill
@@ -85,6 +88,8 @@ export default function AttendanceReportingPage() {
       setClockInTime(time);
       setLastClockInTimeDisplay(time.toLocaleTimeString());
     }
+    // Initialize displayed data on mount
+    setDisplayedAttendanceData(initialAttendanceData);
     return () => clearInterval(timerId);
   }, []);
 
@@ -114,8 +119,7 @@ export default function AttendanceReportingPage() {
     
     localStorage.removeItem('hrStreamlineClockInStatus');
     localStorage.removeItem('hrStreamlineClockInTime');
-    setClockInTime(null); // Clear the clockInTime state
-    // lastClockInTimeDisplay remains to show the last session's clock in time until next clock in
+    setClockInTime(null); 
     toast({
       title: "Clocked Out",
       description: `You clocked out at ${clockOutTime.toLocaleTimeString()}.${durationMessage}`,
@@ -172,11 +176,51 @@ export default function AttendanceReportingPage() {
   };
 
   const handleApplyFilters = () => {
+    let filteredData = [...initialAttendanceData];
+
+    if (filterEmployeeName.trim() !== '') {
+      filteredData = filteredData.filter(entry =>
+        entry.employee.toLowerCase().includes(filterEmployeeName.trim().toLowerCase())
+      );
+    }
+
+    if (filterStartDate) {
+      const sDate = startOfDay(filterStartDate);
+      filteredData = filteredData.filter(entry => {
+        try {
+          const entryDate = parse(entry.date, 'yyyy-MM-dd', new Date());
+          return isEqual(entryDate, sDate) || isAfter(entryDate, sDate);
+        } catch (e) { return true; } // Keep if date is invalid, or handle error
+      });
+    }
+
+    if (filterEndDate) {
+      const eDate = startOfDay(filterEndDate);
+      filteredData = filteredData.filter(entry => {
+        try {
+          const entryDate = parse(entry.date, 'yyyy-MM-dd', new Date());
+          return isEqual(entryDate, eDate) || isBefore(entryDate, eDate);
+        } catch (e) { return true; }
+      });
+    }
+    setDisplayedAttendanceData(filteredData);
     toast({
-      title: "Filters Applied (Mock)",
-      description: `Filtering by: Employee "${filterEmployeeName}", Start Date: ${filterStartDate ? format(filterStartDate, 'PPP') : 'N/A'}, End Date: ${filterEndDate ? format(filterEndDate, 'PPP') : 'N/A'}. Actual data filtering not implemented.`
+      title: "Filters Applied",
+      description: `Showing ${filteredData.length} matching records.`,
     });
   };
+
+  const handleClearFilters = () => {
+    setFilterEmployeeName('');
+    setFilterStartDate(undefined);
+    setFilterEndDate(undefined);
+    setDisplayedAttendanceData(initialAttendanceData);
+    toast({
+        title: "Filters Cleared",
+        description: "Showing all attendance records."
+    });
+  };
+
 
   return (
     <>
@@ -376,12 +420,12 @@ export default function AttendanceReportingPage() {
                 <UserCircle className="h-10 w-10 text-primary mr-3" />
                 <div>
                   <CardTitle className="text-xl">Employee Attendance Overview</CardTitle>
-                  <CardDescription>Monthly attendance summary for all employees (Mock Data).</CardDescription>
+                  <CardDescription>Monthly attendance summary for all employees.</CardDescription>
                 </div>
               </div>
             </div>
             <div className="mt-4 pt-4 border-t">
-              <CardTitle className="text-lg mb-2 flex items-center"><Filter className="mr-2 h-5 w-5" /> Filter Records (Mock)</CardTitle>
+              <CardTitle className="text-lg mb-2 flex items-center"><Filter className="mr-2 h-5 w-5" /> Filter Records</CardTitle>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                 <div className="lg:col-span-2">
                   <Label htmlFor="filterEmployeeName">Employee Name</Label>
@@ -421,9 +465,14 @@ export default function AttendanceReportingPage() {
                     </PopoverContent>
                   </Popover>
                 </div>
-                 <Button onClick={handleApplyFilters} className="w-full lg:w-auto lg:self-end">
-                  <UserSearch className="mr-2 h-4 w-4" /> Apply Filters
-                </Button>
+                <div className="flex space-x-2">
+                    <Button onClick={handleApplyFilters} className="flex-1">
+                    <UserSearch className="mr-2 h-4 w-4" /> Apply
+                    </Button>
+                    <Button onClick={handleClearFilters} variant="outline" className="flex-1">
+                    <XCircle className="mr-2 h-4 w-4" /> Clear
+                    </Button>
+                </div>
               </div>
             </div>
         </CardHeader>
@@ -441,7 +490,7 @@ export default function AttendanceReportingPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {initialAttendanceData.map((entry) => ( 
+                {displayedAttendanceData.length > 0 ? displayedAttendanceData.map((entry) => ( 
                   <TableRow key={entry.id}>
                     <TableCell className="font-medium">{entry.employee}</TableCell>
                     <TableCell>{entry.date}</TableCell>
@@ -457,13 +506,16 @@ export default function AttendanceReportingPage() {
                     <TableCell>{entry.clockOut || '-'}</TableCell>
                     <TableCell>{entry.hoursWorked || '-'}</TableCell>
                   </TableRow>
-                ))}
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                      No attendance records match your filters.
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
-           <p className="text-xs text-muted-foreground mt-4 text-center">
-            Note: Data filtering is a UI mockup. Actual data manipulation requires backend integration.
-          </p>
         </CardContent>
       </Card>
       
