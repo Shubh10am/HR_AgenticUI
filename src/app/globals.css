@@ -8,25 +8,33 @@ body {
 
 @layer base {
   :root {
-    --background: 210 17% 93%; /* Light gray #ECEFF1 */
-    --foreground: 210 10% 20%; /* Dark gray for text */
+    --background: 0 0% 98%; /* Almost White #FAFAFA */
+    --foreground: 220 15% 20%; /* Darker, slightly desaturated blue-gray for text */
+    
     --card: 0 0% 100%; /* White */
-    --card-foreground: 210 10% 20%;
+    --card-foreground: 220 15% 20%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 210 10% 20%;
-    --primary: 231 48% 48%; /* Deep blue #3F51B5 */
-    --primary-foreground: 0 0% 98%; /* White */
-    --secondary: 210 17% 88%; /* Slightly darker gray */
-    --secondary-foreground: 210 10% 20%;
-    --muted: 210 17% 88%;
-    --muted-foreground: 210 10% 45%; /* Lighter gray for muted text */
-    --accent: 255 45% 55%; /* Refined indigo-purple */
-    --accent-foreground: 0 0% 98%; /* White */
+    --popover-foreground: 220 15% 20%;
+    
+    --primary: 231 48% 48%; /* Deep blue #3F51B5 - unchanged */
+    --primary-foreground: 0 0% 98%; /* White - unchanged */
+    
+    --secondary: 220 30% 94%; /* Very light cool gray, brighter than before */
+    --secondary-foreground: 220 15% 25%; /* Slightly darker for secondary text */
+    
+    --muted: 220 30% 90%; /* Light cool gray for muted backgrounds */
+    --muted-foreground: 220 10% 45%; /* Muted text color */
+    
+    --accent: 255 45% 55%; /* Refined indigo-purple - unchanged */
+    --accent-foreground: 0 0% 98%; /* White - unchanged */
+    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 210 17% 80%; /* Darker gray for borders */
+    
+    --border: 220 20% 88%; /* Softer border */
     --input: 0 0% 100%; /* White input background */
-    --ring: 231 48% 48%; /* Primary color for focus rings */
+    --ring: 231 48% 48%; /* Primary color for focus rings - unchanged */
     --radius: 0.5rem;
 
     --chart-1: 12 76% 61%;
@@ -35,46 +43,45 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
 
-    /* Sidebar specific theme variables based on the new theme */
-    --sidebar-background: 231 40% 40%; /* Darker shade of primary for sidebar */
-    --sidebar-foreground: 0 0% 95%;   /* Light text for sidebar */
-    --sidebar-primary: 255 45% 60%; /* Accent color for active items in sidebar (using a lighter shade of new accent) */
+    /* Sidebar specific theme variables for light mode */
+    --sidebar-background: 220 30% 96%; /* Very light cool gray, slightly different from main bg */
+    --sidebar-foreground: 220 15% 25%;   /* Dark text for sidebar */
+    --sidebar-primary: hsl(var(--primary)); /* Active items use main primary */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 231 40% 35%; /* Hover color for sidebar items */
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 231 40% 30%;
-    --sidebar-ring: 255 45% 55%; /* Refined accent color for focus rings in sidebar */
+    --sidebar-accent: 220 30% 90%; /* Hover color for sidebar items, slightly darker */
+    --sidebar-accent-foreground: 220 15% 20%;
+    --sidebar-border: 220 20% 85%;
+    --sidebar-ring: hsl(var(--accent)); /* Use main accent for focus rings */
   }
 
   .dark {
-    --background: 0 0% 4%; /* Near Black #0A0A0A */
-    --foreground: 0 0% 98%; /* Almost White #FAFAFA */
+    --background: 220 15% 8%; /* Dark, slightly desaturated blue-gray #121417 */
+    --foreground: 0 0% 95%; /* Light Gray #F2F2F2 - for better readability than pure white */
     
-    --card: 0 0% 8%; /* Dark Gray #141414 */
-    --card-foreground: 0 0% 95%; /* Light Gray #F2F2F2 */
+    --card: 220 15% 12%; /* Darker shade for cards #1A1C21 */
+    --card-foreground: 0 0% 90%; 
     
-    --popover: 0 0% 8%; /* Dark Gray for popovers */
-    --popover-foreground: 0 0% 95%; /* Light Gray for popover text */
+    --popover: 220 15% 12%; 
+    --popover-foreground: 0 0% 90%;
     
     --primary: 231 48% 60%; /* Lighter deep blue #5C6BC0 */
-    --primary-foreground: 0 0% 98%; /* Ensure good contrast on primary buttons */
+    --primary-foreground: 0 0% 98%; 
     
-    --secondary: 0 0% 12%; /* Slightly lighter dark gray #1F1F1F for secondary elements */
-    --secondary-foreground: 0 0% 90%; /* Light gray for secondary text */
+    --secondary: 220 15% 18%; /* Darker, subtly cool shade for secondary elements #252930 */
+    --secondary-foreground: 0 0% 80%; 
     
-    --muted: 0 0% 12%; /* Muted backgrounds */
-    --muted-foreground: 0 0% 60%; /* Muted text, darker than main foreground */
+    --muted: 220 15% 15%; /* Muted backgrounds, very dark cool gray */
+    --muted-foreground: 0 0% 60%; 
     
     --accent: 255 45% 65%; /* Refined lighter indigo-purple */
-    --accent-foreground: 0 0% 98%; /* Ensure good contrast on accent elements */
+    --accent-foreground: 0 0% 98%; 
     
     --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 0 0% 15%; /* Slightly visible borders #262626 */
-    --input: 0 0% 10%; /* Dark input background #1A1A1A */
-    /* --input-foreground: 0 0% 95%; Defined by input component, should inherit from foreground */
-    --ring: 231 48% 60%; /* Lighter primary for focus rings */
+    --border: 220 15% 25%; /* Visible borders #343A45 */
+    --input: 220 15% 14%; /* Dark input background, slightly different from card */
+    --ring: 231 48% 60%; 
 
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
@@ -83,14 +90,14 @@ body {
     --chart-5: 340 75% 55%;
     
     /* Sidebar specific theme variables for dark mode */
-    --sidebar-background: 0 0% 8%; /* Dark Gray, same as cards #141414 */
-    --sidebar-foreground: 0 0% 90%;   /* Lighter text for sidebar */
-    --sidebar-primary: 255 45% 65%; /* Accent color for active items in sidebar */
+    --sidebar-background: 220 15% 10%; /* Slightly distinct dark for sidebar #16181C */
+    --sidebar-foreground: 0 0% 85%;   
+    --sidebar-primary: hsl(var(--primary)); 
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 12%; /* Hover color for sidebar items, same as secondary bg */
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 15%; /* Border for sidebar elements, same as main border */
-    --sidebar-ring: 255 45% 65%; /* Refined lighter accent for focus rings in sidebar */
+    --sidebar-accent: 220 15% 15%; /* Hover color for sidebar items */
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 220 15% 20%; 
+    --sidebar-ring: hsl(var(--accent)); 
   }
 }
 
