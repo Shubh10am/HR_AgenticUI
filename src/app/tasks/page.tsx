@@ -75,6 +75,67 @@ const initialTasks: Task[] = [
     status: 'Todo',
     tags: ['HR', 'Onboarding'],
   },
+  {
+    id: 'task-9',
+    name: 'Plan Team Building Event',
+    assignee: 'Admin Team',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'group avatar',
+    status: 'Todo',
+    tags: ['HR', 'Event'],
+  },
+  { 
+    id: 'task-15',
+    name: 'Update Employee Handbook',
+    description: 'Review and update the employee handbook with new policies for remote work and benefits.',
+    assignee: 'HR Team',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'team avatar',
+    status: 'Todo',
+    tags: ['HR', 'Policy'],
+  },
+  { 
+    id: 'task-16',
+    name: 'Sixth Todo Task - Long content check',
+    description: 'This is a sixth task for the Todo column to ensure vertical scrolling appears. This description needs to be long enough to make the card itself a bit taller, and combined with other cards, it should exceed the container height. We are adding more details here: review project scope, define deliverables, allocate resources, set timeline, schedule kick-off meeting. Ensure all stakeholders are aligned with the project goals. This is a test task for vertical scrolling in the Todo column. This task involves multiple steps and requires careful planning. The goal is to check if the vertical scrollbar appears when the content overflows the available height. This text is intentionally made very long to ensure the task card content pushes the limits of its container if the container height is constrained and scroll is enabled. If this text does not make the card scroll, the problem might be with the parent container heights rather than the content itself. Still adding more text to be absolutely sure. The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.',
+    assignee: 'Alice Wonderland',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'woman avatar',
+    dueDate: formatDate(nextWeek),
+    status: 'Todo',
+    tags: ['Test', 'Scrolling', 'Urgent'],
+  },
+   { 
+    id: 'task-17',
+    name: 'Seventh Todo Task',
+    description: 'Another task to ensure sufficient content for scrolling. This will involve checking API documentation and integrating a new payment gateway.',
+    assignee: 'Bob The Builder',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'man avatar',
+    status: 'Todo',
+    tags: ['General', 'API'],
+  },
+  { 
+    id: 'task-18',
+    name: 'Eighth Todo Task',
+    description: 'Design new UI mockups for the user profile page, incorporating feedback from the latest review session.',
+    assignee: 'UI/UX Team',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'design team',
+    dueDate: formatDate(twoWeeks),
+    status: 'Todo',
+    tags: ['UI', 'Design'],
+  },
+  { 
+    id: 'task-19',
+    name: 'Ninth Todo Task',
+    description: 'Prepare agenda and presentation materials for the upcoming quarterly review meeting with stakeholders.',
+    assignee: 'Project Manager',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'manager avatar',
+    status: 'Todo',
+    tags: ['Meeting', 'Admin'],
+  },
   // In Progress
   {
     id: 'task-4',
@@ -96,6 +157,16 @@ const initialTasks: Task[] = [
     status: 'In Progress',
     tags: ['Content', 'Marketing'],
   },
+  {
+    id: 'task-10',
+    name: 'Setup CI/CD Pipeline',
+    assignee: 'DevOps Team',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'devops team',
+    dueDate: formatDate(nextWeek),
+    status: 'In Progress',
+    tags: ['DevOps', 'Infra'],
+  },
   // Review
   {
     id: 'task-6',
@@ -105,6 +176,26 @@ const initialTasks: Task[] = [
     dataAiHint: 'reviewer avatar',
     status: 'Review',
     tags: ['Code Review', 'Backend'],
+  },
+  {
+    id: 'task-11',
+    name: 'Test New User Authentication Flow',
+    assignee: 'QA Team',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'qa team',
+    status: 'Review',
+    tags: ['QA', 'Testing'],
+  },
+  {
+    id: 'task-12',
+    name: 'Finalize Q3 Budget Proposal',
+    description: 'Review the draft budget with finance and get final approval.',
+    assignee: 'Finance Lead',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'finance avatar',
+    dueDate: formatDate(tomorrow),
+    status: 'Review',
+    tags: ['Finance', 'Admin'],
   },
   // Done
   {
@@ -124,8 +215,27 @@ const initialTasks: Task[] = [
     status: 'Done',
     tags: ['Client', 'Meeting'],
   },
+  {
+    id: 'task-13',
+    name: 'Publish Company Newsletter - May',
+    assignee: 'Marketing Team',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'marketing team',
+    status: 'Done',
+    tags: ['Marketing', 'Comms'],
+  },
+  {
+    id: 'task-14',
+    name: 'Server Maintenance - May Cycle',
+    description: 'Completed scheduled server maintenance. All systems operational.',
+    assignee: 'IT Ops',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'it team',
+    dueDate: formatDate(yesterday),
+    status: 'Done',
+    tags: ['Infra', 'Maintenance'],
+  },
 ];
-
 
 interface TaskDialogContentProps {
   formId: string;
@@ -171,7 +281,7 @@ const TaskDialogContent = ({
       <DialogDescription>{description}</DialogDescription>
     </DialogHeader>
     <div className="flex-grow overflow-y-auto px-6">
-      <form onSubmit={onSubmit} id={formId} className="grid gap-4 py-4">
+      <form onSubmit={onSubmit} id={`${formId}-form`} className="grid gap-4 py-4">
         <div>
           <Label htmlFor={`${formId}-taskName`}>Task Name</Label>
           <Input id={`${formId}-taskName`} value={taskName} onChange={(e) => setTaskName(e.target.value)} className="mt-1" required />
@@ -213,7 +323,7 @@ const TaskDialogContent = ({
     </div>
     <DialogModalFooter className="p-6 pt-2 border-t flex-shrink-0">
       <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-      <Button type="submit" form={formId}>{buttonText}</Button>
+      <Button type="submit" form={`${formId}-form`}>{buttonText}</Button>
     </DialogModalFooter>
   </>
 );
@@ -270,8 +380,8 @@ export default function TasksPage() {
   const getStatusIcon = useCallback((status: TaskStatus) => {
     const lowerStatus = status.toLowerCase();
     if (lowerStatus === 'done') return <CheckCircle className="h-5 w-5 text-green-500" />;
-    if (lowerStatus.includes('progress')) return <RefreshCw className="h-5 w-5 text-blue-500 animate-spin-slow" />; // Changed to blue
-    if (lowerStatus.includes('review')) return <Edit3 className="h-5 w-5 text-yellow-500" />; // Icon for review
+    if (lowerStatus.includes('progress')) return <RefreshCw className="h-5 w-5 text-blue-500" />;
+    if (lowerStatus.includes('review')) return <Edit3 className="h-5 w-5 text-yellow-500" />; 
     return <Circle className="h-5 w-5 text-muted-foreground" />;
   }, []);
   
@@ -509,15 +619,15 @@ export default function TasksPage() {
                 <DialogTitle>Add New Column</DialogTitle>
                 <DialogDescription>Enter a name for your new Kanban column.</DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleAddColumn} id="addColumnFormDialog" className="grid gap-4 py-4">
+              <form onSubmit={handleAddColumn} id="addColumnFormDialog-form" className="grid gap-4 py-4">
                 <div>
-                  <Label htmlFor="newColumnNameFormInput">Column Name</Label>
-                  <Input id="newColumnNameFormInput" value={newColumnName} onChange={(e) => setNewColumnName(e.target.value)} className="mt-1" required />
+                  <Label htmlFor="addColumnFormDialog-newColumnNameFormInput">Column Name</Label>
+                  <Input id="addColumnFormDialog-newColumnNameFormInput" value={newColumnName} onChange={(e) => setNewColumnName(e.target.value)} className="mt-1" required />
                 </div>
               </form>
               <DialogModalFooter>
                  <Button type="button" variant="outline" onClick={() => {setNewColumnName(''); setIsAddColumnDialogOpen(false)}}>Cancel</Button>
-                <Button type="submit" form="addColumnFormDialog">Add Column</Button>
+                <Button type="submit" form="addColumnFormDialog-form">Add Column</Button>
               </DialogModalFooter>
             </DialogContent>
           </Dialog>
@@ -590,7 +700,7 @@ export default function TasksPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-0 flex-1 min-h-0">
+            <CardContent className="p-0 flex-1 min-h-0"> {/* Ensures CardContent takes remaining height and allows ScrollArea to work */}
               <ScrollArea className="h-full w-full p-4">
                 {tasks.filter(t => t.status === columnName).length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">No tasks in {columnName}.</p>
