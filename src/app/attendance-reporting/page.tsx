@@ -88,7 +88,6 @@ export default function AttendanceReportingPage() {
       setClockInTime(time);
       setLastClockInTimeDisplay(time.toLocaleTimeString());
     }
-    // Initialize displayed data on mount
     setDisplayedAttendanceData(initialAttendanceData);
     return () => clearInterval(timerId);
   }, []);
@@ -190,7 +189,7 @@ export default function AttendanceReportingPage() {
         try {
           const entryDate = parse(entry.date, 'yyyy-MM-dd', new Date());
           return isEqual(entryDate, sDate) || isAfter(entryDate, sDate);
-        } catch (e) { return true; } // Keep if date is invalid, or handle error
+        } catch (e) { return true; } 
       });
     }
 
@@ -221,6 +220,52 @@ export default function AttendanceReportingPage() {
     });
   };
 
+  const triggerDownload = (content: string, fileName: string, mimeType: string) => {
+    const blob = new Blob([content], { type: mimeType });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
+
+  const handleDownloadCsv = () => {
+    if (displayedAttendanceData.length === 0) {
+      toast({ title: "No Data", description: "No data to download.", variant: "destructive" });
+      return;
+    }
+    const header = "Employee,Date,Status,Clock In,Clock Out,Hours Worked,Department\n";
+    const rows = displayedAttendanceData.map(entry => 
+      `"${entry.employee}","${entry.date}","${entry.status}","${entry.clockIn || '-'}","${entry.clockOut || '-'}","${entry.hoursWorked || '-'}","${entry.department}"`
+    ).join("\n");
+    const csvContent = header + rows;
+    triggerDownload(csvContent, 'attendance_report.csv', 'text/csv;charset=utf-8;');
+    toast({ title: "CSV Downloaded", description: "Attendance report CSV has been downloaded." });
+  };
+
+  const handleDownloadPdfMock = () => { // Renamed to avoid confusion
+    if (displayedAttendanceData.length === 0) {
+      toast({ title: "No Data", description: "No data to download for text report.", variant: "destructive" });
+      return;
+    }
+    let textContent = "Attendance Report (Mock PDF - Text Version)\n";
+    textContent += "===========================================\n\n";
+    displayedAttendanceData.forEach(entry => {
+      textContent += `Employee: ${entry.employee}\n`;
+      textContent += `Date: ${entry.date}\n`;
+      textContent += `Status: ${entry.status}\n`;
+      textContent += `Clock In: ${entry.clockIn || '-'}\n`;
+      textContent += `Clock Out: ${entry.clockOut || '-'}\n`;
+      textContent += `Hours Worked: ${entry.hoursWorked || '-'}\n`;
+      textContent += `Department: ${entry.department}\n`;
+      textContent += "-------------------------------------------\n";
+    });
+    triggerDownload(textContent, 'attendance_report_text_version.txt', 'text/plain;charset=utf-8;');
+    toast({ title: "Text Report Downloaded", description: "A text version of the attendance report has been downloaded." });
+  };
+
 
   return (
     <>
@@ -229,11 +274,11 @@ export default function AttendanceReportingPage() {
         description="Manage attendance, view reports, request leave, and track productivity."
       >
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleDownloadPdfMock}>
             <Download className="mr-2 h-4 w-4" />
-            Download PDF
+            Download PDF (Mock)
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleDownloadCsv}>
             <Download className="mr-2 h-4 w-4" />
             Download CSV
           </Button>
