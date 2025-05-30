@@ -18,13 +18,81 @@ interface QuickAction {
   label?: string;
 }
 
+const WELCOME_PART = "Welcome to ";
+const HR_AI_PART = "HR Streamline AI";
+const TYPING_SPEED_MS = 100;
+const PAUSE_DURATION_MS = 2000;
+const RESET_DELAY_MS = 50;
+
+
 export default function DashboardPage() {
   const { toast } = useToast();
+
+  const [animatedWelcomeText, setAnimatedWelcomeText] = useState('');
+  const [animatedHrText, setAnimatedHrText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentPhase, setCurrentPhase] = useState<'typingWelcome' | 'typingHr' | 'pausing' | 'resetting'>('typingWelcome');
+
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    switch (currentPhase) {
+      case 'typingWelcome':
+        if (currentIndex < WELCOME_PART.length) {
+          timer = setTimeout(() => {
+            setAnimatedWelcomeText(prev => prev + WELCOME_PART[currentIndex]);
+            setCurrentIndex(prev => prev + 1);
+          }, TYPING_SPEED_MS);
+        } else {
+          setCurrentIndex(0); // Reset index for HR_AI_PART
+          setCurrentPhase('typingHr');
+        }
+        break;
+      case 'typingHr':
+        if (currentIndex < HR_AI_PART.length) {
+          timer = setTimeout(() => {
+            setAnimatedHrText(prev => prev + HR_AI_PART[currentIndex]);
+            setCurrentIndex(prev => prev + 1);
+          }, TYPING_SPEED_MS);
+        } else {
+          setCurrentPhase('pausing');
+        }
+        break;
+      case 'pausing':
+        timer = setTimeout(() => {
+          setCurrentPhase('resetting');
+        }, PAUSE_DURATION_MS);
+        break;
+      case 'resetting':
+        setAnimatedWelcomeText('');
+        setAnimatedHrText('');
+        setCurrentIndex(0);
+        timer = setTimeout(() => {
+          setCurrentPhase('typingWelcome');
+        }, RESET_DELAY_MS);
+        break;
+    }
+
+    return () => clearTimeout(timer);
+  }, [currentIndex, currentPhase]);
+
+  const animatedPageTitle: ReactNode = (
+    <>
+      {animatedWelcomeText}
+      {(currentPhase === 'typingHr' || currentPhase === 'pausing' || (currentPhase === 'resetting' && animatedHrText.length > 0) || (currentPhase === 'typingWelcome' && animatedWelcomeText === WELCOME_PART && animatedHrText === HR_AI_PART) ) && (
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))]">
+          {animatedHrText || (currentPhase === 'typingWelcome' && animatedWelcomeText === WELCOME_PART ? HR_AI_PART : '')} 
+        </span>
+      )}
+    </>
+  );
+
 
   const quickActions: QuickAction[] = [
     { title: 'Email Assistance', description: 'AI-powered help for inquiries.', href: '/email-assistance', icon: Mail },
     { title: 'Recruitment Hub', description: 'Streamline hiring with AI tools.', href: '/recruitment', icon: GitFork },
-    { title: 'Task Management', description: 'Organize and track project tasks.', href: '/tasks', icon: ListChecks },
+    { title: 'Tasks', description: 'Organize and track project tasks.', href: '/tasks', icon: ListChecks },
     { title: 'Smart Drafting', description: 'Generate emails from prompts.', href: '/smart-drafting', icon: FileText },
     { title: 'Unified Comms', description: 'Aggregated communication logs.', href: '/unified-communications', icon: MessageSquare },
     { title: 'Attendance', description: 'Clock in/out and view reports.', href: '/attendance-reporting', icon: CalendarDays },
@@ -32,20 +100,11 @@ export default function DashboardPage() {
   ];
   
 
-  const pageTitle: ReactNode = (
-    <>
-      Welcome to{' '}
-      <span className="text-transparent bg-clip-text bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))]">
-        HR Streamline AI
-      </span>
-    </>
-  );
-
   return (
     <>
       <PageHeader
-        title={pageTitle}
-        titleClassName="text-3xl sm:text-4xl md:text-5xl lg:text-6xl"
+        title={animatedPageTitle}
+        titleClassName="text-3xl sm:text-4xl md:text-5xl lg:text-6xl min-h-[1.2em]" // Added min-h to reduce layout shift
         description="Your intelligent assistant for efficient HR operations."
       />
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
