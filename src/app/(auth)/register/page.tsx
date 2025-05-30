@@ -12,15 +12,15 @@ import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Logo from '@/components/icons/logo';
 
-const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9002';
+const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export default function RegisterPage() {
-  const [orgName, setOrgName] = useState('Admin Org'); // Pre-filled
-  const [orgDomain, setOrgDomain] = useState('admin.com'); // Pre-filled
-  const [adminName, setAdminName] = useState('Default Admin'); // Pre-filled
-  const [adminEmail, setAdminEmail] = useState('admin@admin.com'); // Pre-filled
-  const [password, setPassword] = useState('admin@123'); // Pre-filled
-  const [confirmPassword, setConfirmPassword] = useState('admin@123'); // Pre-filled
+  const [orgName, setOrgName] = useState(''); // Reverted
+  const [orgDomain, setOrgDomain] = useState(''); // Reverted
+  const [adminName, setAdminName] = useState(''); // Reverted
+  const [adminEmail, setAdminEmail] = useState(''); // Reverted
+  const [password, setPassword] = useState(''); // Reverted
+  const [confirmPassword, setConfirmPassword] = useState(''); // Reverted
   
   const [isSubmitting, setIsSubmitting] = useState(false); // Local loading state for register button
   const { toast } = useToast();
