@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, UserCircle, Clock, LogIn, LogOut, Briefcase, CalendarDays, Send, FileText, BarChartHorizontalBig, Edit } from 'lucide-react';
+import { Download, UserCircle, Clock, LogIn, LogOut, Briefcase, CalendarDays, Send, FileText, BarChartHorizontalBig, Edit, Filter, UserSearch } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from "@/hooks/use-toast";
 import { Input } from '@/components/ui/input';
@@ -16,15 +16,28 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { format, differenceInMinutes } from 'date-fns';
 
-const attendanceData = [
-  { id: '1', employee: 'John Doe', date: '2024-07-01', status: 'Present', clockIn: '09:00 AM', clockOut: '05:30 PM', department: 'Engineering' },
-  { id: '2', employee: 'John Doe', date: '2024-07-02', status: 'Present', clockIn: '09:05 AM', clockOut: '05:35 PM', department: 'Engineering' },
-  { id: '3', employee: 'John Doe', date: '2024-07-03', status: 'Absent', clockIn: '-', clockOut: '-', department: 'Engineering' },
-  { id: '4', employee: 'Jane Smith', date: '2024-07-03', status: 'Present', clockIn: '09:00 AM', clockOut: '05:00 PM', department: 'Marketing' },
-  { id: '5', employee: 'John Doe', date: '2024-07-04', status: 'Late', clockIn: '09:45 AM', clockOut: '06:00 PM', department: 'Engineering' },
-  { id: '6', employee: 'John Doe', date: '2024-07-05', status: 'Present', clockIn: '08:55 AM', clockOut: '05:25 PM', department: 'Engineering' },
+interface AttendanceEntry {
+  id: string;
+  employee: string;
+  date: string;
+  status: 'Present' | 'Absent' | 'Late' | 'On Leave' | 'No Check-in';
+  clockIn?: string;
+  clockOut?: string;
+  hoursWorked?: string;
+  department: string;
+}
+
+const initialAttendanceData: AttendanceEntry[] = [
+  { id: '1', employee: 'John Doe', date: '2024-07-01', status: 'Present', clockIn: '09:00 AM', clockOut: '05:30 PM', hoursWorked: '8h 30m', department: 'Engineering' },
+  { id: '2', employee: 'John Doe', date: '2024-07-02', status: 'Present', clockIn: '09:05 AM', clockOut: '05:35 PM', hoursWorked: '8h 30m', department: 'Engineering' },
+  { id: '3', employee: 'John Doe', date: '2024-07-03', status: 'Absent', hoursWorked: '0h 0m', department: 'Engineering' },
+  { id: '4', employee: 'Jane Smith', date: '2024-07-03', status: 'Present', clockIn: '09:00 AM', clockOut: '05:00 PM', hoursWorked: '8h 0m', department: 'Marketing' },
+  { id: '5', employee: 'John Doe', date: '2024-07-04', status: 'Late', clockIn: '09:45 AM', clockOut: '06:00 PM', hoursWorked: '8h 15m', department: 'Engineering' },
+  { id: '6', employee: 'John Doe', date: '2024-07-05', status: 'Present', clockIn: '08:55 AM', clockOut: '05:25 PM', hoursWorked: '8h 30m', department: 'Engineering' },
+  { id: '7', employee: 'Alice Brown', date: '2024-07-05', status: 'On Leave', hoursWorked: 'N/A', department: 'Sales' },
+  { id: '8', employee: 'Bob Green', date: '2024-07-05', status: 'No Check-in', hoursWorked: '0h 0m', department: 'Support' },
 ];
 
 const productivityData = [
@@ -44,7 +57,12 @@ export default function AttendanceReportingPage() {
   const [currentTime, setCurrentTime] = useState<string | null>(null);
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [clockInTime, setClockInTime] = useState<Date | null>(null);
+  const [lastClockInTimeDisplay, setLastClockInTimeDisplay] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const [filterEmployeeName, setFilterEmployeeName] = useState('');
+  const [filterStartDate, setFilterStartDate] = useState<Date | undefined>();
+  const [filterEndDate, setFilterEndDate] = useState<Date | undefined>();
 
   const [leaveRequest, setLeaveRequest] = useState<LeaveRequest>({
     employeeName: 'John Doe', // Mock prefill
@@ -55,26 +73,28 @@ export default function AttendanceReportingPage() {
   });
 
   useEffect(() => {
-    setCurrentTime(new Date().toLocaleTimeString());
-    const timer = setInterval(() => {
+    const timerId = setInterval(() => {
       setCurrentTime(new Date().toLocaleTimeString());
     }, 1000);
 
-    const storedClockInStatus = localStorage.getItem('clockInStatus');
-    const storedClockInTime = localStorage.getItem('clockInTime');
+    const storedClockInStatus = localStorage.getItem('hrStreamlineClockInStatus');
+    const storedClockInTime = localStorage.getItem('hrStreamlineClockInTime');
     if (storedClockInStatus === 'true' && storedClockInTime) {
+      const time = new Date(storedClockInTime);
       setIsClockedIn(true);
-      setClockInTime(new Date(storedClockInTime));
+      setClockInTime(time);
+      setLastClockInTimeDisplay(time.toLocaleTimeString());
     }
-    return () => clearInterval(timer);
+    return () => clearInterval(timerId);
   }, []);
 
   const handleClockIn = () => {
     const now = new Date();
     setIsClockedIn(true);
     setClockInTime(now);
-    localStorage.setItem('clockInStatus', 'true');
-    localStorage.setItem('clockInTime', now.toISOString());
+    setLastClockInTimeDisplay(now.toLocaleTimeString());
+    localStorage.setItem('hrStreamlineClockInStatus', 'true');
+    localStorage.setItem('hrStreamlineClockInTime', now.toISOString());
     toast({
       title: "Clocked In",
       description: `You clocked in at ${now.toLocaleTimeString()}.`,
@@ -83,35 +103,43 @@ export default function AttendanceReportingPage() {
 
   const handleClockOut = () => {
     setIsClockedIn(false);
-    localStorage.removeItem('clockInStatus');
-    localStorage.removeItem('clockInTime');
+    const clockOutTime = new Date();
+    let durationMessage = '';
+    if (clockInTime) {
+      const minutes = differenceInMinutes(clockOutTime, clockInTime);
+      const hours = Math.floor(minutes / 60);
+      const remainingMinutes = minutes % 60;
+      durationMessage = ` Session duration: ${hours}h ${remainingMinutes}m.`;
+    }
+    
+    localStorage.removeItem('hrStreamlineClockInStatus');
+    localStorage.removeItem('hrStreamlineClockInTime');
+    setClockInTime(null); // Clear the clockInTime state
+    // lastClockInTimeDisplay remains to show the last session's clock in time until next clock in
     toast({
       title: "Clocked Out",
-      description: `You clocked out at ${new Date().toLocaleTimeString()}.`,
+      description: `You clocked out at ${clockOutTime.toLocaleTimeString()}.${durationMessage}`,
     });
   };
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status: AttendanceEntry['status']) => {
     switch (status.toLowerCase()) {
-      case 'present':
-        return 'default';
-      case 'absent':
-        return 'destructive';
-      case 'late':
-        return 'secondary';
-      default:
-        return 'outline';
+      case 'present': return 'default';
+      case 'absent': return 'destructive';
+      case 'late': return 'secondary';
+      case 'on leave': return 'outline';
+      case 'no check-in': return 'outline';
+      default: return 'outline';
     }
   };
   
-  const getStatusBadgeClassName = (status: string) => {
+  const getStatusBadgeClassName = (status: AttendanceEntry['status']) => {
     switch (status.toLowerCase()) {
-      case 'present':
-        return 'bg-green-500 hover:bg-green-600 text-white'; 
-      case 'late':
-        return 'bg-yellow-500 hover:bg-yellow-600 text-black';
-      default:
-        return '';
+      case 'present': return 'bg-green-500 hover:bg-green-600 text-white';
+      case 'late': return 'bg-yellow-500 hover:bg-yellow-600 text-black';
+      case 'on leave': return 'bg-blue-500 hover:bg-blue-600 text-white';
+      case 'no check-in': return 'bg-orange-500 hover:bg-orange-600 text-white';
+      default: return '';
     }
   };
 
@@ -132,7 +160,7 @@ export default function AttendanceReportingPage() {
     console.log("Leave Request Submitted:", leaveRequest);
     toast({
       title: "Leave Request Submitted (Mock)",
-      description: `Request for ${leaveRequest.leaveType} leave from ${format(leaveRequest.startDate, 'PPP')} to ${format(leaveRequest.endDate, 'PPP')} has been submitted.`,
+      description: `Request for ${leaveRequest.leaveType} leave from ${format(leaveRequest.startDate as Date, 'PPP')} to ${format(leaveRequest.endDate as Date, 'PPP')} has been submitted.`,
     });
     setLeaveRequest({
       employeeName: 'John Doe',
@@ -140,6 +168,13 @@ export default function AttendanceReportingPage() {
       startDate: undefined,
       endDate: undefined,
       reason: '',
+    });
+  };
+
+  const handleApplyFilters = () => {
+    toast({
+      title: "Filters Applied (Mock)",
+      description: `Filtering by: Employee "${filterEmployeeName}", Start Date: ${filterStartDate ? format(filterStartDate, 'PPP') : 'N/A'}, End Date: ${filterEndDate ? format(filterEndDate, 'PPP') : 'N/A'}. Actual data filtering not implemented.`
     });
   };
 
@@ -174,11 +209,12 @@ export default function AttendanceReportingPage() {
             {isClockedIn ? (
               <div className="text-center p-4 bg-green-100 dark:bg-green-900/30 rounded-md">
                 <p className="font-semibold text-green-700 dark:text-green-400">You are Clocked In</p>
-                {clockInTime && <p className="text-sm text-muted-foreground">Since: {clockInTime.toLocaleTimeString()}</p>}
+                {lastClockInTimeDisplay && <p className="text-sm text-muted-foreground">Since: {lastClockInTimeDisplay}</p>}
               </div>
             ) : (
               <div className="text-center p-4 bg-yellow-100 dark:bg-yellow-900/30 rounded-md">
                 <p className="font-semibold text-yellow-700 dark:text-yellow-400">You are Clocked Out</p>
+                 {lastClockInTimeDisplay && !isClockedIn && <p className="text-sm text-muted-foreground">Last clocked in: {lastClockInTimeDisplay}</p>}
               </div>
             )}
             {!isClockedIn ? (
@@ -311,7 +347,7 @@ export default function AttendanceReportingPage() {
             </div>
             <div className="flex justify-between items-center p-3 bg-secondary/30 rounded-md">
               <span className="font-medium">Leaves Taken</span>
-              <Badge variant="outline">1 Day (Sick)</Badge>
+              <Badge variant="outline" className="bg-blue-500 text-white">1 Day (Sick)</Badge>
             </div>
           </CardContent>
         </Card>
@@ -335,11 +371,59 @@ export default function AttendanceReportingPage() {
       
       <Card className="mt-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader>
-           <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3">
-              <UserCircle className="h-10 w-10 text-primary mb-2 sm:mb-0" />
-              <div>
-                <CardTitle className="text-xl">Employee Attendance Overview</CardTitle>
-                <CardDescription>Monthly attendance summary for all employees.</CardDescription>
+           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center mb-4 sm:mb-0">
+                <UserCircle className="h-10 w-10 text-primary mr-3" />
+                <div>
+                  <CardTitle className="text-xl">Employee Attendance Overview</CardTitle>
+                  <CardDescription>Monthly attendance summary for all employees (Mock Data).</CardDescription>
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t">
+              <CardTitle className="text-lg mb-2 flex items-center"><Filter className="mr-2 h-5 w-5" /> Filter Records (Mock)</CardTitle>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                <div className="lg:col-span-2">
+                  <Label htmlFor="filterEmployeeName">Employee Name</Label>
+                  <Input 
+                    id="filterEmployeeName"
+                    value={filterEmployeeName}
+                    onChange={(e) => setFilterEmployeeName(e.target.value)}
+                    placeholder="Search by name..."
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="filterStartDate">Start Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button id="filterStartDate" variant={"outline"} className="w-full justify-start text-left font-normal mt-1">
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {filterStartDate ? format(filterStartDate, "PPP") : <span>Pick a start date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar mode="single" selected={filterStartDate} onSelect={setFilterStartDate} initialFocus />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div>
+                  <Label htmlFor="filterEndDate">End Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button id="filterEndDate" variant={"outline"} className="w-full justify-start text-left font-normal mt-1">
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {filterEndDate ? format(filterEndDate, "PPP") : <span>Pick an end date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar mode="single" selected={filterEndDate} onSelect={setFilterEndDate} disabled={(date) => filterStartDate ? date < filterStartDate : false} initialFocus />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                 <Button onClick={handleApplyFilters} className="w-full lg:w-auto lg:self-end">
+                  <UserSearch className="mr-2 h-4 w-4" /> Apply Filters
+                </Button>
               </div>
             </div>
         </CardHeader>
@@ -353,10 +437,11 @@ export default function AttendanceReportingPage() {
                   <TableHead>Status</TableHead>
                   <TableHead>Clock In</TableHead>
                   <TableHead>Clock Out</TableHead>
+                  <TableHead>Hours Worked</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {attendanceData.slice(0, 5).map((entry) => ( 
+                {initialAttendanceData.map((entry) => ( 
                   <TableRow key={entry.id}>
                     <TableCell className="font-medium">{entry.employee}</TableCell>
                     <TableCell>{entry.date}</TableCell>
@@ -368,13 +453,17 @@ export default function AttendanceReportingPage() {
                         {entry.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{entry.clockIn}</TableCell>
-                    <TableCell>{entry.clockOut}</TableCell>
+                    <TableCell>{entry.clockIn || '-'}</TableCell>
+                    <TableCell>{entry.clockOut || '-'}</TableCell>
+                    <TableCell>{entry.hoursWorked || '-'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </div>
+           <p className="text-xs text-muted-foreground mt-4 text-center">
+            Note: Data filtering is a UI mockup. Actual data manipulation requires backend integration.
+          </p>
         </CardContent>
       </Card>
       
