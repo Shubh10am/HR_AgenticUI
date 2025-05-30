@@ -136,7 +136,7 @@ const initialTasks: Task[] = [
     status: 'Todo',
     tags: ['Meeting', 'Admin'],
   },
-    {
+  {
     id: 'task-20',
     name: 'Tenth Todo Task - More Content',
     description: 'This is another task to ensure vertical scrolling is triggered in the "Todo" column. Review last quarter\'s performance reports.',
@@ -304,30 +304,30 @@ const TaskDialogContent = ({
     <div className="flex-grow overflow-y-auto px-6">
       <form onSubmit={onSubmit} id={`${formId}-form`} className="grid gap-4 py-4">
         <div>
-          <Label htmlFor={`${formId}-taskName`}>Task Name</Label>
-          <Input id={`${formId}-taskName`} value={taskName} onChange={(e) => setTaskName(e.target.value)} className="mt-1" required />
+          <Label htmlFor={`${formId}-taskNameInput`}>Task Name</Label>
+          <Input id={`${formId}-taskNameInput`} value={taskName} onChange={(e) => setTaskName(e.target.value)} className="mt-1" required />
         </div>
         <div>
-          <Label htmlFor={`${formId}-taskDescription`}>Description (Optional)</Label>
-          <Textarea id={`${formId}-taskDescription`} value={taskDescription} onChange={(e) => setTaskDescription(e.target.value)} className="mt-1" placeholder="Brief description of the task..." />
+          <Label htmlFor={`${formId}-taskDescriptionInput`}>Description (Optional)</Label>
+          <Textarea id={`${formId}-taskDescriptionInput`} value={taskDescription} onChange={(e) => setTaskDescription(e.target.value)} className="mt-1" placeholder="Brief description of the task..." />
         </div>
         <div>
-          <Label htmlFor={`${formId}-taskAssignee`}>Assignee (Optional)</Label>
-          <Input id={`${formId}-taskAssignee`} value={taskAssignee} onChange={(e) => setTaskAssignee(e.target.value)} className="mt-1" placeholder="e.g., Jane Doe / Engineering Lead" />
+          <Label htmlFor={`${formId}-taskAssigneeInput`}>Assignee (Optional)</Label>
+          <Input id={`${formId}-taskAssigneeInput`} value={taskAssignee} onChange={(e) => setTaskAssignee(e.target.value)} className="mt-1" placeholder="e.g., Jane Doe / Engineering Lead" />
         </div>
         <div>
-          <Label htmlFor={`${formId}-taskDueDate`}>Due Date (Optional)</Label>
-          <Input id={`${formId}-taskDueDate`} type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)} className="mt-1" />
+          <Label htmlFor={`${formId}-taskDueDateInput`}>Due Date (Optional)</Label>
+          <Input id={`${formId}-taskDueDateInput`} type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)} className="mt-1" />
         </div>
         <div>
-          <Label htmlFor={`${formId}-taskTags`}>Tags (Optional, comma-separated)</Label>
-          <Input id={`${formId}-taskTags`} value={taskTags} onChange={(e) => setTaskTags(e.target.value)} className="mt-1" placeholder="e.g., UX, Backend, Urgent" />
+          <Label htmlFor={`${formId}-taskTagsInput`}>Tags (Optional, comma-separated)</Label>
+          <Input id={`${formId}-taskTagsInput`} value={taskTags} onChange={(e) => setTaskTags(e.target.value)} className="mt-1" placeholder="e.g., UX, Backend, Urgent" />
         </div>
         {currentStatusList.length > 0 ? (
           <div>
-              <Label htmlFor={`${formId}-taskStatus`}>Status</Label>
+              <Label htmlFor={`${formId}-taskStatusSelect`}>Status</Label>
               <Select value={taskStatus} onValueChange={(value: TaskStatus) => setTaskStatus(value)}>
-              <SelectTrigger id={`${formId}-taskStatus`} className="mt-1">
+              <SelectTrigger id={`${formId}-taskStatusSelect`} className="mt-1">
                   <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
@@ -401,8 +401,8 @@ export default function TasksPage() {
   const getStatusIcon = useCallback((status: TaskStatus) => {
     const lowerStatus = status.toLowerCase();
     if (lowerStatus === 'done') return <CheckCircle className="h-5 w-5 text-green-500" />;
-    if (lowerStatus.includes('progress')) return <RefreshCw className="h-5 w-5 text-blue-500" />;
-    if (lowerStatus.includes('review')) return <Edit className="h-5 w-5 text-yellow-600" />; 
+    if (lowerStatus.includes('progress')) return <RefreshCw className="h-5 w-5 text-blue-500" />; // Changed to blue
+    if (lowerStatus.includes('review')) return <Edit className="h-5 w-5 text-yellow-500" />; // Changed to yellow-500 for better visibility
     return <Circle className="h-5 w-5 text-muted-foreground" />;
   }, []);
   
@@ -631,7 +631,7 @@ export default function TasksPage() {
             <Github className="mr-2 h-4 w-4" /> Connect to GitHub (Mock)
           </Button>
           <Dialog open={isAddColumnDialogOpen} onOpenChange={(open) => { if(!open) setNewColumnName(''); setIsAddColumnDialogOpen(open);}}>
-             <DialogTrigger asChild>
+            <DialogTrigger asChild>
                 <Button variant="outline">
                   <Columns className="mr-2 h-4 w-4" /> Add Column
                 </Button>
@@ -707,14 +707,15 @@ export default function TasksPage() {
         </DialogContent>
       </Dialog>
       
-      <div className="flex overflow-x-auto gap-6 pb-4 items-stretch flex-grow">
+      {/* Container for Kanban columns - scrolls horizontally */}
+      <div className="flex overflow-x-auto gap-6 pb-4 items-stretch flex-1">
         {boardColumns.length === 0 && (
           <div className="w-full text-center py-10 flex-grow flex items-center justify-center">
             <p className="text-muted-foreground">No columns yet. Click "Add Column" to get started!</p>
           </div>
         )}
         {boardColumns.map(columnName => (
-          <Card key={columnName} className="shadow-lg flex flex-col w-[320px] flex-shrink-0">
+          <Card key={columnName} className="shadow-lg flex flex-col w-[320px] flex-shrink-0"> {/* Column Card */}
             <CardHeader className="border-b">
               <div className="flex justify-between items-center">
                 <CardTitle className="flex items-center text-lg">
@@ -727,8 +728,8 @@ export default function TasksPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-0 flex-1 min-h-0">
-              <ScrollArea className="h-full w-full p-4">
+            <CardContent className="p-0 flex-1 min-h-0 overflow-hidden"> {/* Content area for tasks - takes remaining height, clips overflow */}
+              <ScrollArea className="h-full w-full p-4"> {/* ScrollArea for vertical task scrolling */}
                 {tasks.filter(t => t.status === columnName).length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">No tasks in {columnName}.</p>
                 ) : (
@@ -742,6 +743,4 @@ export default function TasksPage() {
     </div>
   );
 }
-    
-
     
