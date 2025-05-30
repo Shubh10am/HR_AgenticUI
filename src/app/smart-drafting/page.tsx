@@ -15,6 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const NONE_TEAM_VALUE = "--none--";
 
+interface EmailDraft {
+  subject: string;
+  body: string;
+}
+
 export default function SmartDraftingPage() {
   const [prompt, setPrompt] = useState('');
   const [composerOriginalBody, setComposerOriginalBody] = useState('');
@@ -27,20 +32,22 @@ export default function SmartDraftingPage() {
   const [subject, setSubject] = useState('');
   const [selectedTeam, setSelectedTeam] = useState('');
   
-  const [promptGeneratedDrafts, setPromptGeneratedDrafts] = useState<string[]>([]);
+  const [promptGeneratedDrafts, setPromptGeneratedDrafts] = useState<EmailDraft[]>([]);
 
 
   useEffect(() => {
-    const draftFromAssistance = localStorage.getItem('selectedEmailDraftForSmartDrafting');
-    if (draftFromAssistance) {
-      setComposerOriginalBody(draftFromAssistance);
-      setComposerEditableBody(draftFromAssistance);
-      setIsEditingComposerBody(false); // Start in read-only mode for the composer
-      setPromptGeneratedDrafts([]); // Clear any drafts generated on this page
+    const draftBodyFromAssistance = localStorage.getItem('selectedEmailDraftForSmartDrafting');
+    if (draftBodyFromAssistance) {
+      setComposerOriginalBody(draftBodyFromAssistance);
+      setComposerEditableBody(draftBodyFromAssistance);
+      // Subject is not passed from email assistance, so user needs to fill it
+      setSubject(''); 
+      setIsEditingComposerBody(false); 
+      setPromptGeneratedDrafts([]); 
       localStorage.removeItem('selectedEmailDraftForSmartDrafting');
       toast({
-        title: "Draft Loaded",
-        description: "Email body populated from Email Assistance. You can now edit and add recipients/subject.",
+        title: "Draft Body Loaded",
+        description: "Email body populated from Email Assistance. Please add recipients and a subject.",
       });
     }
   }, []);
@@ -56,18 +63,18 @@ export default function SmartDraftingPage() {
       return;
     }
     setIsGeneratingFromPrompt(true);
-    setPromptGeneratedDrafts([]); // Clear previous prompt-generated drafts
-    // Clear the main composer if generating new drafts from this page's prompt
+    setPromptGeneratedDrafts([]); 
     setComposerOriginalBody(''); 
     setComposerEditableBody('');
+    setSubject(''); // Clear subject as well when generating new options
     setIsEditingComposerBody(false);
     
     try {
       const input: GenerateDraftEmailResponsesInput = { query: `Draft an email based on the following prompt: ${prompt}` };
       const result: GenerateDraftEmailResponsesOutput = await generateDraftEmailResponses(input);
       
-      if (result.draftResponses && result.draftResponses.length > 0) {
-        setPromptGeneratedDrafts(result.draftResponses);
+      if (result.drafts && result.drafts.length > 0) {
+        setPromptGeneratedDrafts(result.drafts);
       } else {
         toast({
           title: "No Drafts Generated",
@@ -86,14 +93,15 @@ export default function SmartDraftingPage() {
     }
   }
 
-  const handleUsePromptGeneratedDraft = (draftContent: string) => {
-    setComposerOriginalBody(draftContent);
-    setComposerEditableBody(draftContent);
-    setIsEditingComposerBody(false); // Start in read-only mode for the composer
-    setPromptGeneratedDrafts([]); // Clear the list of prompt-generated drafts as one is chosen
+  const handleUsePromptGeneratedDraft = (draft: EmailDraft) => {
+    setSubject(draft.subject);
+    setComposerOriginalBody(draft.body);
+    setComposerEditableBody(draft.body);
+    setIsEditingComposerBody(false); 
+    setPromptGeneratedDrafts([]); 
     toast({
       title: "Draft Loaded into Composer",
-      description: "Selected draft is now in the email body.",
+      description: "Selected draft subject and body are now populated.",
     });
   };
 
@@ -145,7 +153,7 @@ export default function SmartDraftingPage() {
       });
       return;
     }
-    if (!composerEditableBody.trim()) {
+    if (!composerEditableBody.trim() && !composerOriginalBody.trim()) { // Check both for safety
         toast({
         title: "Email Body Empty",
         description: "Please ensure the email body is not empty.",
@@ -158,7 +166,7 @@ export default function SmartDraftingPage() {
     console.log("Mock Send:", {
       to: finalRecipients,
       subject,
-      body: composerEditableBody,
+      body: isEditingComposerBody ? composerEditableBody : composerOriginalBody,
     });
     toast({
       title: "Email Sent (Mock)",
@@ -181,13 +189,13 @@ export default function SmartDraftingPage() {
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle>Email Prompt</CardTitle>
-              <CardDescription>Generate multiple email body options based on your keywords.</CardDescription>
+              <CardDescription>Generate multiple email body options with subjects based on your keywords.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmitPrompt} className="space-y-4">
                 <div>
                   <Label htmlFor="prompt" className="text-sm font-medium">
-                    Keywords/Prompt for New Email Body
+                    Keywords/Prompt for New Email
                   </Label>
                   <Textarea
                     id="prompt"
@@ -231,10 +239,10 @@ export default function SmartDraftingPage() {
                 {promptGeneratedDrafts.map((draft, index) => (
                   <Card key={index} className="bg-secondary/50">
                     <CardHeader className="pb-2 pt-4">
-                      <CardTitle className="text-base">Option {index + 1}</CardTitle>
+                      <CardTitle className="text-base truncate" title={draft.subject}>Option {index + 1}: {draft.subject}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-xs whitespace-pre-wrap max-h-40 overflow-y-auto p-2 border rounded bg-background">{draft}</p>
+                      <p className="text-xs whitespace-pre-wrap max-h-40 overflow-y-auto p-2 border rounded bg-background">{draft.body}</p>
                       <Button size="sm" variant="outline" onClick={() => handleUsePromptGeneratedDraft(draft)} className="w-full mt-3">
                         <FileText className="mr-2 h-4 w-4" /> Use this Option
                       </Button>
@@ -345,7 +353,7 @@ export default function SmartDraftingPage() {
                 )}
               </div>
             )}
-            <Button onClick={handleMockSend} className="w-full mt-4" disabled={(!composerOriginalBody && !composerEditableBody) || isGeneratingFromPrompt}>
+            <Button onClick={handleMockSend} className="w-full mt-4" disabled={(!composerOriginalBody && !composerEditableBody && !subject.trim()) || isGeneratingFromPrompt}>
                 <Send className="mr-2 h-4 w-4" /> Send Email (Mock)
             </Button>
           </CardContent>
@@ -354,4 +362,3 @@ export default function SmartDraftingPage() {
     </>
   );
 }
-
