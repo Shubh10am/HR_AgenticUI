@@ -261,7 +261,7 @@ export default function IntegrationsPage() {
             </CardContent>
             <CardContent className="border-t pt-4 mt-auto">
               <div className="flex items-center justify-between gap-2">
-                <div className="flex min-w-0 items-center space-x-2">
+                <div className="flex min-w-0 items-center space-x-2 overflow-hidden"> {/* Added overflow-hidden */}
                   <Switch
                     id={`switch-${integration.id}`}
                     checked={integration.isConnected}
@@ -272,7 +272,7 @@ export default function IntegrationsPage() {
                   />
                   <Label
                     htmlFor={`switch-${integration.id}`}
-                    className={`truncate ${integration.isConnected ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                    className={`inline-block truncate ${integration.isConnected ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
                   >
                     {integration.oauthConnecting ? 'Connecting...' : (integration.isConnected ? 'Connected' : 'Disconnected')}
                   </Label>
@@ -376,3 +376,4 @@ export default function IntegrationsPage() {
     </>
   );
 }
+
