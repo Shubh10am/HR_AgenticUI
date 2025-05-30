@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter as DialogModalFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Github, PlusCircle, Trash2, ChevronLeft, ChevronRight, Circle, RefreshCw, CheckCircle, CalendarDays, Edit3, Columns } from 'lucide-react';
+import { Github, PlusCircle, Trash2, ChevronLeft, ChevronRight, Circle, RefreshCw, CheckCircle, CalendarDays, Edit3, Columns, Edit } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -97,7 +97,7 @@ const initialTasks: Task[] = [
   { 
     id: 'task-16',
     name: 'Sixth Todo Task - Long content check',
-    description: 'This is a sixth task for the Todo column to ensure vertical scrolling appears. This description needs to be long enough to make the card itself a bit taller, and combined with other cards, it should exceed the container height. We are adding more details here: review project scope, define deliverables, allocate resources, set timeline, schedule kick-off meeting. Ensure all stakeholders are aligned with the project goals. This is a test task for vertical scrolling in the Todo column. This task involves multiple steps and requires careful planning. The goal is to check if the vertical scrollbar appears when the content overflows the available height. This text is intentionally made very long to ensure the task card content pushes the limits of its container if the container height is constrained and scroll is enabled. If this text does not make the card scroll, the problem might be with the parent container heights rather than the content itself. Still adding more text to be absolutely sure. The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.',
+    description: 'This is a sixth task for the Todo column to ensure vertical scrolling appears. This description needs to be long enough to make the card itself a bit taller, and combined with other cards, it should exceed the container height. We are adding more details here: review project scope, define deliverables, allocate resources, set timeline, schedule kick-off meeting. Ensure all stakeholders are aligned with the project goals. This is a test task for vertical scrolling in the Todo column. This task involves multiple steps and requires careful planning. The goal is to check if the vertical scrollbar appears when the content overflows the available height. This text is intentionally made very long to ensure the task card content pushes the limits of its container if the container height is constrained and scroll is enabled. If this text does not make the card scroll, the problem might be with the parent container heights rather than the content itself. Still adding more text to be absolutely sure. The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. This is a sixth task for the Todo column to ensure vertical scrolling appears. This description needs to be long enough to make the card itself a bit taller, and combined with other cards, it should exceed the container height. We are adding more details here: review project scope, define deliverables, allocate resources, set timeline, schedule kick-off meeting. Ensure all stakeholders are aligned with the project goals. This is a test task for vertical scrolling in the Todo column. This task involves multiple steps and requires careful planning. The goal is to check if the vertical scrollbar appears when the content overflows the available height. This text is intentionally made very long to ensure the task card content pushes the limits of its container if the container height is constrained and scroll is enabled. If this text does not make the card scroll, the problem might be with the parent container heights rather than the content itself. Still adding more text to be absolutely sure. The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.',
     assignee: 'Alice Wonderland',
     assigneeAvatar: 'https://placehold.co/40x40.png',
     dataAiHint: 'woman avatar',
@@ -135,6 +135,27 @@ const initialTasks: Task[] = [
     dataAiHint: 'manager avatar',
     status: 'Todo',
     tags: ['Meeting', 'Admin'],
+  },
+    {
+    id: 'task-20',
+    name: 'Tenth Todo Task - More Content',
+    description: 'This is another task to ensure vertical scrolling is triggered in the "Todo" column. Review last quarter\'s performance reports.',
+    assignee: 'Analytics Team',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'analytics team',
+    status: 'Todo',
+    tags: ['Analytics', 'Report'],
+  },
+  {
+    id: 'task-21',
+    name: 'Eleventh Todo Task - Even More Content',
+    description: 'This task involves brainstorming new feature ideas for the next product iteration based on user feedback.',
+    assignee: 'Product Team',
+    assigneeAvatar: 'https://placehold.co/40x40.png',
+    dataAiHint: 'product team',
+    dueDate: formatDate(nextWeek),
+    status: 'Todo',
+    tags: ['Product', 'Feature'],
   },
   // In Progress
   {
@@ -381,12 +402,12 @@ export default function TasksPage() {
     const lowerStatus = status.toLowerCase();
     if (lowerStatus === 'done') return <CheckCircle className="h-5 w-5 text-green-500" />;
     if (lowerStatus.includes('progress')) return <RefreshCw className="h-5 w-5 text-blue-500" />;
-    if (lowerStatus.includes('review')) return <Edit3 className="h-5 w-5 text-yellow-500" />; 
+    if (lowerStatus.includes('review')) return <Edit className="h-5 w-5 text-yellow-600" />; 
     return <Circle className="h-5 w-5 text-muted-foreground" />;
   }, []);
   
   const handleOpenAddTaskDialog = useCallback((defaultStatus?: TaskStatus) => {
-    onDialogCancel(); 
+    resetFormFields(); 
     if (defaultStatus && boardColumns.includes(defaultStatus)) {
       setTaskStatus(defaultStatus);
     } else if (boardColumns.length > 0) {
@@ -398,8 +419,9 @@ export default function TasksPage() {
         return; 
       }
     }
+    setEditingTask(null);
     setIsAddDialogOpen(true);
-  }, [boardColumns, onDialogCancel, toast, setTaskStatus]);
+  }, [boardColumns, resetFormFields, toast, setTaskStatus]);
 
   const handleAddTask = useCallback((event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -433,7 +455,7 @@ export default function TasksPage() {
   }, [taskName, taskDescription, taskAssignee, taskDueDate, taskStatus, taskTags, boardColumns, toast, onDialogCancel]);
 
   const handleOpenEditDialog = useCallback((task: Task) => {
-    onDialogCancel(); 
+    resetFormFields(); 
     setEditingTask(task);
     setTaskName(task.name);
     setTaskDescription(task.description || '');
@@ -442,7 +464,7 @@ export default function TasksPage() {
     setTaskStatus(task.status);
     setTaskTags(task.tags?.join(', ') || '');
     setIsEditDialogOpen(true);
-  }, [onDialogCancel]);
+  }, [resetFormFields]);
 
   const handleEditTask = useCallback((event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -602,7 +624,7 @@ export default function TasksPage() {
   ), [getStatusIcon, boardColumns, handleOpenEditDialog, handleDeleteTask, moveTask]);
   
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-full">
       <PageHeader title="Task Management Board" description="Organize, track, and manage your project tasks.">
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           <Button variant="outline" onClick={() => toast({ title: "GitHub Sync (Mock)", description: "This would initiate GitHub project sync."})}>
@@ -610,7 +632,7 @@ export default function TasksPage() {
           </Button>
           <Dialog open={isAddColumnDialogOpen} onOpenChange={(open) => { if(!open) setNewColumnName(''); setIsAddColumnDialogOpen(open);}}>
              <DialogTrigger asChild>
-                <Button variant="outline" onClick={() => { setNewColumnName(''); setIsAddColumnDialogOpen(true); }}>
+                <Button variant="outline">
                   <Columns className="mr-2 h-4 w-4" /> Add Column
                 </Button>
             </DialogTrigger>
@@ -686,6 +708,11 @@ export default function TasksPage() {
       </Dialog>
       
       <div className="flex overflow-x-auto gap-6 pb-4 items-stretch flex-grow">
+        {boardColumns.length === 0 && (
+          <div className="w-full text-center py-10 flex-grow flex items-center justify-center">
+            <p className="text-muted-foreground">No columns yet. Click "Add Column" to get started!</p>
+          </div>
+        )}
         {boardColumns.map(columnName => (
           <Card key={columnName} className="shadow-lg flex flex-col w-[320px] flex-shrink-0">
             <CardHeader className="border-b">
@@ -700,7 +727,7 @@ export default function TasksPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-0 flex-1 min-h-0"> {/* Ensures CardContent takes remaining height and allows ScrollArea to work */}
+            <CardContent className="p-0 flex-1 min-h-0">
               <ScrollArea className="h-full w-full p-4">
                 {tasks.filter(t => t.status === columnName).length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">No tasks in {columnName}.</p>
@@ -711,13 +738,10 @@ export default function TasksPage() {
             </CardContent>
           </Card>
         ))}
-         {boardColumns.length === 0 && (
-          <div className="w-full text-center py-10 flex-grow flex items-center justify-center">
-            <p className="text-muted-foreground">No columns yet. Click "Add Column" to get started!</p>
-          </div>
-        )}
       </div>
     </div>
   );
 }
+    
+
     
