@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Github, Link, CheckCircle, Settings, ExternalLink, MessageSquare, CalendarDays, Webcam, Users, LayoutGrid, FileSignature, KanbanSquare, Video, Inbox, Loader2, Send } from 'lucide-react';
+import { Github, Link as LinkIcon, CheckCircle, Settings, MessageSquare, CalendarDays, Webcam, Users, LayoutGrid, FileSignature, KanbanSquare, Video, Inbox, Loader2, Send } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
@@ -228,9 +228,12 @@ export default function IntegrationsPage() {
         title="Manage Integrations"
         description="Connect and configure third-party services to enhance your HR workflow."
       />
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {integrations.map(integration => (
-          <Card key={integration.id} className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
+          <Card 
+            key={integration.id} 
+            className="shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 flex flex-col"
+          >
             <CardHeader>
               <div className="flex items-center justify-between mb-2">
                  <div className="flex items-center">
@@ -284,7 +287,7 @@ export default function IntegrationsPage() {
                       {integration.oauthConnecting ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
-                        <Link className="mr-2 h-4 w-4" />
+                        <LinkIcon className="mr-2 h-4 w-4" />
                       )}
                        {integration.oauthConnecting ? 'Please wait' : 'Connect'}
                     </Button>
