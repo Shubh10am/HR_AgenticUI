@@ -166,6 +166,9 @@ export default function SmartDraftingPage() {
     });
   };
 
+  const mainGridClasses = promptGeneratedDrafts.length > 0 ? "grid gap-6 lg:grid-cols-2" : "grid gap-6 lg:grid-cols-3";
+  const composerColSpanClasses = promptGeneratedDrafts.length > 0 ? "lg:col-span-1 shadow-lg" : "lg:col-span-2 shadow-lg";
+
 
   return (
     <>
@@ -173,7 +176,7 @@ export default function SmartDraftingPage() {
         title="Smart Email Drafting & Composer"
         description="Generate, compose, and (mock) send professional emails. Load drafts from Email Assistance or generate new ones below."
       />
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className={mainGridClasses}>
         <div className="lg:col-span-1 space-y-6">
           <Card className="shadow-lg">
             <CardHeader>
@@ -231,7 +234,7 @@ export default function SmartDraftingPage() {
                       <CardTitle className="text-base">Option {index + 1}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-xs whitespace-pre-wrap max-h-40 overflow-y-auto p-2 border rounded-md bg-background">{draft}</p>
+                      <p className="text-xs whitespace-pre-wrap max-h-40 overflow-y-auto p-2 border rounded bg-background">{draft}</p>
                       <Button size="sm" variant="outline" onClick={() => handleUsePromptGeneratedDraft(draft)} className="w-full mt-3">
                         <FileText className="mr-2 h-4 w-4" /> Use this Option
                       </Button>
@@ -243,7 +246,7 @@ export default function SmartDraftingPage() {
           )}
         </div>
 
-        <Card className="lg:col-span-2 shadow-lg">
+        <Card className={composerColSpanClasses}>
           <CardHeader>
             <CardTitle>Compose Email</CardTitle>
             <CardDescription>Review, edit, and prepare your email for sending.</CardDescription>
