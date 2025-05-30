@@ -7,9 +7,8 @@ import type { ReactNode} from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-// Use an empty string as default. If NEXT_PUBLIC_API_URL is not set in the environment,
-// fetch will use relative paths (e.g., /api/auth/login), which is correct for same-origin deployments.
-const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+// This will be undefined if not set in the environment, which is handled by the logic below.
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export interface User {
   id: string;
@@ -68,7 +67,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkAuth();
   }, [checkAuth]);
   
-  // Handle redirection after auth state is determined
   useEffect(() => {
     if (!isLoading) {
       const isAuthenticated = !!user && !!token;
@@ -76,9 +74,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const isAuthRoute = authRoutes.includes(pathname);
 
       if (isAuthenticated && isAuthRoute) {
-        router.push('/'); // Redirect to dashboard if logged in and on an auth page
+        router.push('/'); 
       } else if (!isAuthenticated && !isAuthRoute) {
-        router.push('/login'); // Redirect to login if not logged in and not on an auth page
+        router.push('/login'); 
       }
     }
   }, [user, token, isLoading, pathname, router]);
@@ -87,7 +85,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (values: Record<string, string>): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/auth/login`, {
+      const endpoint = '/api/auth/login';
+      const requestUrl = API_BASE_URL ? `${API_BASE_URL.replace(/\/$/, '')}${endpoint}` : endpoint;
+
+      const response = await fetch(requestUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
@@ -105,12 +106,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setToken(data.token);
       setUser(data.user);
       toast({ title: 'Login Successful', description: 'Welcome back!' });
-      router.push('/'); // Redirect to dashboard
+      router.push('/'); 
       setIsLoading(false);
       return true;
     } catch (error) {
       console.error('Login error:', error);
-      toast({ title: 'Login Error', description: 'An unexpected error occurred.', variant: 'destructive' });
+      toast({ title: 'Login Error', description: 'An unexpected error occurred during login.', variant: 'destructive' });
       setIsLoading(false);
       return false;
     }
@@ -119,7 +120,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register = async (values: Record<string, string>): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/auth/register`, {
+      const endpoint = '/api/auth/register';
+      const requestUrl = API_BASE_URL ? `${API_BASE_URL.replace(/\/$/, '')}${endpoint}` : endpoint;
+      
+      const response = await fetch(requestUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
@@ -133,12 +137,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       toast({ title: 'Registration Successful', description: 'Please log in with your new credentials.' });
-      router.push('/login'); // Redirect to login page
+      router.push('/login'); 
       setIsLoading(false);
       return true;
     } catch (error) {
       console.error('Registration error:', error);
-      toast({ title: 'Registration Error', description: 'An unexpected error occurred.', variant: 'destructive' });
+      toast({ title: 'Registration Error', description: 'An unexpected error occurred during registration.', variant: 'destructive' });
       setIsLoading(false);
       return false;
     }
@@ -150,7 +154,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(null);
     setUser(null);
     toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
-    router.push('/login'); // Redirect to login page
+    router.push('/login'); 
   };
   
   const isAuthenticated = !!user && !!token;
@@ -169,4 +173,3 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
-
