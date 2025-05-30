@@ -7,7 +7,9 @@ import type { ReactNode} from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9002';
+// Use an empty string as default. If NEXT_PUBLIC_API_URL is not set in the environment,
+// fetch will use relative paths (e.g., /api/auth/login), which is correct for same-origin deployments.
+const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export interface User {
   id: string;
