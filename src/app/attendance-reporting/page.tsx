@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, UserCircle, Clock, LogIn, LogOut, Briefcase, CalendarDays, Send, FileText, BarChartHorizontalBig, Edit, Filter, UserSearch, XCircle } from 'lucide-react';
+import { Download, UserCircle, Clock, LogIn, LogOut, Briefcase, CalendarDays, Send, FileText, BarChartHorizontalBig, Edit, Filter, UserSearch, XCircle, Wand2, Loader2 as LoaderIcon } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from "@/hooks/use-toast";
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format, differenceInMinutes, parse, isAfter, isBefore, isEqual, startOfDay } from 'date-fns';
+import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, type GenerateDraftEmailResponsesOutput } from '@/ai/flows/draft-email-response';
+
 
 interface AttendanceEntry {
   id: string;
@@ -68,12 +70,17 @@ export default function AttendanceReportingPage() {
   const [displayedAttendanceData, setDisplayedAttendanceData] = useState<AttendanceEntry[]>(initialAttendanceData);
 
   const [leaveRequest, setLeaveRequest] = useState<LeaveRequest>({
-    employeeName: 'John Doe', // Mock prefill
+    employeeName: 'John Doe', 
     leaveType: '',
     startDate: undefined,
     endDate: undefined,
     reason: '',
   });
+
+  const [isLeaveReasonPopoverOpen, setIsLeaveReasonPopoverOpen] = useState(false);
+  const [leaveReasonPrompt, setLeaveReasonPrompt] = useState('');
+  const [isGeneratingLeaveReason, setIsGeneratingLeaveReason] = useState(false);
+
 
   useEffect(() => {
     const timerId = setInterval(() => {
@@ -172,7 +179,36 @@ export default function AttendanceReportingPage() {
       endDate: undefined,
       reason: '',
     });
+    setLeaveReasonPrompt('');
   };
+
+  const handleGenerateLeaveReason = async () => {
+    if (!leaveReasonPrompt.trim()) {
+      toast({ title: "Prompt Required", description: "Please enter a prompt for the leave reason.", variant: "destructive" });
+      return;
+    }
+    setIsGeneratingLeaveReason(true);
+    try {
+      const aiInput: GenerateDraftEmailResponsesInput = { 
+        query: `Generate a concise and professional reason for a leave request based on the following information: "${leaveReasonPrompt}". The reason should be suitable for an official leave application. Do not include a subject line or any greetings/closings, just the reason text itself.` 
+      };
+      const result = await generateDraftEmailResponses(aiInput);
+      if (result.drafts && result.drafts.length > 0) {
+        handleLeaveRequestChange('reason', result.drafts[0].body);
+        toast({ title: "Leave Reason Generated", description: "The reason field has been populated." });
+        setIsLeaveReasonPopoverOpen(false);
+        setLeaveReasonPrompt(''); 
+      } else {
+        toast({ title: "Generation Failed", description: "Could not generate a leave reason. Please try again or write manually.", variant: "destructive" });
+      }
+    } catch (error) {
+      console.error("Error generating leave reason:", error);
+      toast({ title: "Error", description: "An error occurred while generating the leave reason.", variant: "destructive" });
+    } finally {
+      setIsGeneratingLeaveReason(false);
+    }
+  };
+
 
   const handleApplyFilters = () => {
     let filteredData = [...initialAttendanceData];
@@ -245,7 +281,7 @@ export default function AttendanceReportingPage() {
     toast({ title: "CSV Downloaded", description: "Attendance report CSV has been downloaded." });
   };
 
-  const handleDownloadPdfMock = () => { // Renamed to avoid confusion
+  const handleDownloadPdfMock = () => { 
     if (displayedAttendanceData.length === 0) {
       toast({ title: "No Data", description: "No data to download for text report.", variant: "destructive" });
       return;
@@ -400,10 +436,41 @@ export default function AttendanceReportingPage() {
                   </Popover>
                 </div>
               </div>
-              <div>
-                <Label htmlFor="reason">Reason</Label>
+              
+              <div className="relative">
+                <div className="flex items-center justify-between mb-1">
+                  <Label htmlFor="reason">Reason</Label>
+                  <Popover open={isLeaveReasonPopoverOpen} onOpenChange={setIsLeaveReasonPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="sm" className="px-2 py-1 h-auto">
+                        <Wand2 className="h-4 w-4 text-primary" />
+                        <span className="sr-only">Generate reason with AI</span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-4 space-y-2">
+                        <Label htmlFor="leaveReasonPrompt" className="text-sm font-medium">AI Prompt for Leave Reason</Label>
+                        <Textarea 
+                          id="leaveReasonPrompt"
+                          value={leaveReasonPrompt}
+                          onChange={(e) => setLeaveReasonPrompt(e.target.value)}
+                          placeholder="e.g., family event, doctor visit"
+                          className="min-h-[60px] text-xs"
+                        />
+                        <Button 
+                          onClick={handleGenerateLeaveReason} 
+                          disabled={isGeneratingLeaveReason || !leaveReasonPrompt.trim()} 
+                          className="w-full"
+                          size="sm"
+                        >
+                          {isGeneratingLeaveReason ? <LoaderIcon className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                          Generate
+                        </Button>
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 <Textarea id="reason" value={leaveRequest.reason} onChange={(e) => handleLeaveRequestChange('reason', e.target.value)} placeholder="Briefly state the reason for your leave" required />
               </div>
+
               <Button type="submit" className="w-full">
                 <Send className="mr-2 h-4 w-4" /> Submit Leave Request
               </Button>
@@ -604,3 +671,4 @@ export default function AttendanceReportingPage() {
     </>
   );
 }
+
