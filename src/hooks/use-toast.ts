@@ -78,15 +78,31 @@ const addToRemoveQueue = (toastId: string) => {
 // Helper function to play sound
 const playSound = (soundFile: string) => {
   try {
-    // Sounds must be in the /public directory
-    const audio = new Audio(`/sounds/${soundFile}`);
+    // IMPORTANT: Audio files (e.g., notification_default.mp3, notification_error.mp3)
+    // MUST be placed in the `public/sounds/` directory of your project
+    // for the browser to be able to access them via the path `/sounds/FILENAME.mp3`.
+    // Example: `public/sounds/notification_default.mp3` is accessed via `/sounds/notification_default.mp3`.
+    const audioSrc = `/sounds/${soundFile}`;
+    const audio = new Audio(audioSrc);
+
     audio.play().catch(error => {
-      // Autoplay policies might prevent playback before user interaction.
-      // This is a common issue, especially on first load or if the toast is not directly triggered by a user click.
-      console.warn(`Error playing sound ${soundFile}:`, error.message);
+      console.warn(`Could not play sound ${audioSrc}. Error: ${error.message}. This can happen due to browser autoplay policies or if the sound file is missing from 'public${audioSrc}'.`);
     });
-  } catch (error) {
-    console.error(`Could not play sound ${soundFile}:`, error);
+
+    // More detailed error logging for loading issues (like 404)
+    audio.addEventListener('error', (e) => {
+      let errorDetails = `Error loading audio source: ${audioSrc}.`;
+      if (audio.error) {
+        errorDetails += ` Code: ${audio.error.code}, Message: ${audio.error.message}.`;
+      } else {
+        errorDetails += ` Unknown error.`;
+      }
+      errorDetails += ` Please ensure the file exists at 'public${audioSrc}' (i.e., in the 'public/sounds/' directory).`;
+      console.error(errorDetails, e);
+    });
+
+  } catch (error: any) {
+    console.error(`Could not initialize Audio object for ${soundFile}. Error: ${error.message}`);
   }
 };
 
@@ -171,9 +187,9 @@ function toast({ ...props }: Toast) {
 
   // Play sound based on variant
   if (props.variant === "destructive") {
-    playSound("notification_error.mp3"); // Ensure this file exists in public/sounds/
+    playSound("notification_error.mp3");
   } else {
-    playSound("notification_default.mp3"); // Ensure this file exists in public/sounds/
+    playSound("notification_default.mp3");
   }
 
   dispatch({
@@ -216,3 +232,4 @@ function useToast() {
 }
 
 export { useToast, toast }
+
