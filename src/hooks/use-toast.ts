@@ -1,3 +1,4 @@
+
 "use client"
 
 // Inspired by react-hot-toast library
@@ -73,6 +74,22 @@ const addToRemoveQueue = (toastId: string) => {
 
   toastTimeouts.set(toastId, timeout)
 }
+
+// Helper function to play sound
+const playSound = (soundFile: string) => {
+  try {
+    // Sounds must be in the /public directory
+    const audio = new Audio(`/sounds/${soundFile}`);
+    audio.play().catch(error => {
+      // Autoplay policies might prevent playback before user interaction.
+      // This is a common issue, especially on first load or if the toast is not directly triggered by a user click.
+      console.warn(`Error playing sound ${soundFile}:`, error.message);
+    });
+  } catch (error) {
+    console.error(`Could not play sound ${soundFile}:`, error);
+  }
+};
+
 
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
@@ -151,6 +168,13 @@ function toast({ ...props }: Toast) {
       toast: { ...props, id },
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
+
+  // Play sound based on variant
+  if (props.variant === "destructive") {
+    playSound("notification_error.mp3"); // Ensure this file exists in public/sounds/
+  } else {
+    playSound("notification_default.mp3"); // Ensure this file exists in public/sounds/
+  }
 
   dispatch({
     type: "ADD_TOAST",
