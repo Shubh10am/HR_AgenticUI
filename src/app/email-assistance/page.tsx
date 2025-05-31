@@ -12,9 +12,14 @@ import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, typ
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation'; // Import useRouter
 
+interface EmailDraft {
+  subject: string;
+  body: string;
+}
+
 export default function EmailAssistancePage() {
   const [query, setQuery] = useState('');
-  const [drafts, setDrafts] = useState<string[]>([]);
+  const [drafts, setDrafts] = useState<EmailDraft[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter(); // Initialize useRouter
@@ -36,8 +41,8 @@ export default function EmailAssistancePage() {
     try {
       const input: GenerateDraftEmailResponsesInput = { query };
       const result: GenerateDraftEmailResponsesOutput = await generateDraftEmailResponses(input);
-      setDrafts(result.draftResponses || []);
-      if (!result.draftResponses || result.draftResponses.length === 0) {
+      setDrafts(result.drafts || []); // Corrected: draftResponses -> drafts
+      if (!result.drafts || result.drafts.length === 0) { // Corrected: draftResponses -> drafts
         toast({
           title: "No Drafts Generated",
           description: "The AI couldn't generate drafts for this query. Try rephrasing.",
@@ -55,11 +60,14 @@ export default function EmailAssistancePage() {
     }
   }
 
-  const handleUseDraft = (draftContent: string) => {
-    localStorage.setItem('selectedEmailDraftForSmartDrafting', draftContent);
+  const handleUseDraft = (draft: EmailDraft) => { // Updated to accept EmailDraft
+    localStorage.setItem('selectedEmailDraftForSmartDrafting', draft.body); // Still sending only body for now
+    // If you want to send subject too, you might stringify an object:
+    // localStorage.setItem('selectedEmailDraftForSmartDrafting', JSON.stringify(draft));
+    // And then parse it in smart-drafting page. For now, keeping it simple.
     toast({
       title: "Draft Selected",
-      description: "Redirecting to Smart Drafting page with the selected draft...",
+      description: "Redirecting to Smart Drafting page with the selected draft body...",
     });
     router.push('/smart-drafting');
   };
@@ -129,11 +137,11 @@ export default function EmailAssistancePage() {
               <div className="space-y-4">
                 {drafts.map((draft, index) => (
                   <Card key={index} className="bg-secondary/50">
-                    <CardHeader>
-                      <CardTitle className="text-base">Draft {index + 1}</CardTitle>
+                    <CardHeader className="pb-2 pt-4">
+                      <CardTitle className="text-base truncate" title={draft.subject}>Draft {index + 1}: {draft.subject}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm whitespace-pre-wrap max-h-60 overflow-y-auto p-2 border rounded-md bg-background">{draft}</p>
+                      <p className="text-sm whitespace-pre-wrap max-h-60 overflow-y-auto p-2 border rounded-md bg-background">{draft.body}</p>
                       <div className="mt-4 flex justify-end space-x-2">
                         <Button size="sm" variant="outline" onClick={() => handleUseDraft(draft)}>
                           <Send className="mr-2 h-4 w-4" />

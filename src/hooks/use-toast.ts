@@ -189,7 +189,7 @@ function toast({ ...props }: Toast) {
   if (props.variant === "destructive") {
     playSound("message.wav"); // Using message.wav for destructive toasts
   } else {
-    playSound("notification.wav"); // Using notification.wav for default toasts
+    playSound("notification.mp3"); // Using notification.wav for default toasts
   }
 
   dispatch({
