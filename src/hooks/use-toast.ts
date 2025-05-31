@@ -78,11 +78,11 @@ const addToRemoveQueue = (toastId: string) => {
 // Helper function to play sound
 const playSound = (soundFile: string) => {
   try {
-    // IMPORTANT: Audio files (e.g., notification_default.mp3, notification_error.mp3)
-    // MUST be placed in the `public/sounds/` directory of your project
-    // for the browser to be able to access them via the path `/sounds/FILENAME.mp3`.
-    // Example: `public/sounds/notification_default.mp3` is accessed via `/sounds/notification_default.mp3`.
-    const audioSrc = `/sounds/${soundFile}`;
+    // IMPORTANT: Audio files (e.g., notification.wav, message.wav)
+    // MUST be placed in the `public/sound/` directory of your project
+    // for the browser to be able to access them via the path `/sound/FILENAME.wav`.
+    // Example: `public/sound/notification.wav` is accessed via `/sound/notification.wav`.
+    const audioSrc = `/sound/${soundFile}`; // Changed from /sounds/ to /sound/
     const audio = new Audio(audioSrc);
 
     audio.play().catch(error => {
@@ -97,7 +97,7 @@ const playSound = (soundFile: string) => {
       } else {
         errorDetails += ` Unknown error.`;
       }
-      errorDetails += ` Please ensure the file exists at 'public${audioSrc}' (i.e., in the 'public/sounds/' directory).`;
+      errorDetails += ` Please ensure the file exists at 'public${audioSrc}' (i.e., in the 'public/sound/' directory).`;
       console.error(errorDetails, e);
     });
 
@@ -187,9 +187,9 @@ function toast({ ...props }: Toast) {
 
   // Play sound based on variant
   if (props.variant === "destructive") {
-    playSound("notification_error.mp3");
+    playSound("message.wav"); // Using message.wav for destructive toasts
   } else {
-    playSound("notification_default.mp3");
+    playSound("notification.wav"); // Using notification.wav for default toasts
   }
 
   dispatch({
@@ -232,4 +232,3 @@ function useToast() {
 }
 
 export { useToast, toast }
-
