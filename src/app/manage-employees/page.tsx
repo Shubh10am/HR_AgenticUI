@@ -134,7 +134,7 @@ export default function ManageEmployeesPage() {
       setPassword('');
       setConfirmPassword('');
       fetchEmployees();
-    } catch (error: any) {
+    } catch (error: any)
       toast({ title: 'Registration Error', description: error.message, variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
@@ -165,8 +165,8 @@ export default function ManageEmployeesPage() {
     } catch (error: any) {
       toast({ title: 'Deletion Error', description: error.message, variant: 'destructive' });
     } finally {
-      setIsDeleteAlertOpen(false); // This will trigger onOpenChange
-      // setEmployeeToDelete(null); // Handled by onOpenChange now
+      setIsDeleteAlertOpen(false); 
+      // setEmployeeToDelete(null); // This is handled by onOpenChange on AlertDialog
     }
   };
   
@@ -190,186 +190,189 @@ export default function ManageEmployeesPage() {
     );
   }
 
-
   return (
+    // AlertDialog now wraps the entire section that might contain triggers and the content
     <AlertDialog open={isDeleteAlertOpen} onOpenChange={(open) => {
       setIsDeleteAlertOpen(open);
       if (!open) {
-        setEmployeeToDelete(null); // Clear employee to delete when dialog closes
+        setEmployeeToDelete(null); // Reset employee to delete when dialog is closed
       }
     }}>
-        <PageHeader
-          title="Manage Employees"
-          description={`Oversee and add employees for ${adminUser?.name}'s organization.`}
-        />
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="lg:col-span-1 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <UserPlus className="mr-2 h-6 w-6 text-primary" />
-                Register New Employee
-              </CardTitle>
-              <CardDescription>Add a new member to your organization.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleRegisterEmployee} className="space-y-4">
-                <div>
-                  <Label htmlFor="employeeName">Full Name</Label>
-                  <Input
-                    id="employeeName"
-                    value={employeeName}
-                    onChange={(e) => setEmployeeName(e.target.value)}
-                    placeholder="e.g., Jane Doe"
-                    required
-                    disabled={isSubmitting}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="employeeEmail">Email Address</Label>
-                  <Input
-                    id="employeeEmail"
-                    type="email"
-                    value={employeeEmail}
-                    onChange={(e) => setEmployeeEmail(e.target.value)}
-                    placeholder={`e.g., jane.doe@${orgDomain || 'yourdomain.com'}`}
-                    required
-                    disabled={isSubmitting}
-                  />
-                  {orgDomain && <p className="text-xs text-muted-foreground mt-1">Must use @{orgDomain} domain.</p>}
-                </div>
-                <div>
-                  <Label htmlFor="employeeRole">Role</Label>
-                  <Select
-                    value={employeeRole}
-                    onValueChange={(value: EmployeeRole) => setEmployeeRole(value)}
-                    disabled={isSubmitting}
-                  >
-                    <SelectTrigger id="employeeRole">
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Employee">Employee</SelectItem>
-                      <SelectItem value="HR">HR</SelectItem>
-                      <SelectItem value="Admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="********"
-                    required
-                    minLength={6}
-                    disabled={isSubmitting}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="********"
-                    required
-                    minLength={6}
-                    disabled={isSubmitting}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Register Employee
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+      <PageHeader
+        title="Manage Employees"
+        description={`Oversee and add employees for ${adminUser?.name}'s organization.`}
+      />
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="lg:col-span-1 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <UserPlus className="mr-2 h-6 w-6 text-primary" />
+              Register New Employee
+            </CardTitle>
+            <CardDescription>Add a new member to your organization.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleRegisterEmployee} className="space-y-4">
+              <div>
+                <Label htmlFor="employeeName">Full Name</Label>
+                <Input
+                  id="employeeName"
+                  value={employeeName}
+                  onChange={(e) => setEmployeeName(e.target.value)}
+                  placeholder="e.g., Jane Doe"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div>
+                <Label htmlFor="employeeEmail">Email Address</Label>
+                <Input
+                  id="employeeEmail"
+                  type="email"
+                  value={employeeEmail}
+                  onChange={(e) => setEmployeeEmail(e.target.value)}
+                  placeholder={`e.g., jane.doe@${orgDomain || 'yourdomain.com'}`}
+                  required
+                  disabled={isSubmitting}
+                />
+                {orgDomain && <p className="text-xs text-muted-foreground mt-1">Must use @{orgDomain} domain.</p>}
+              </div>
+              <div>
+                <Label htmlFor="employeeRole">Role</Label>
+                <Select
+                  value={employeeRole}
+                  onValueChange={(value: EmployeeRole) => setEmployeeRole(value)}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger id="employeeRole">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Employee">Employee</SelectItem>
+                    <SelectItem value="HR">HR</SelectItem>
+                    <SelectItem value="Admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="********"
+                  required
+                  minLength={6}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="********"
+                  required
+                  minLength={6}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Register Employee
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
-          <Card className="lg:col-span-2 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Users className="mr-2 h-6 w-6 text-primary" />
-                Current Employees
-              </CardTitle>
-              <CardDescription>List of employees in your organization.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoadingEmployees ? (
-                <div className="flex justify-center items-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <p className="ml-2">Loading employees...</p>
-                </div>
-              ) : currentEmployees.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">No employees registered yet.</p>
-              ) : (
-                <div className="rounded-md border overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+        <Card className="lg:col-span-2 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Users className="mr-2 h-6 w-6 text-primary" />
+              Current Employees
+            </CardTitle>
+            <CardDescription>List of employees in your organization.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoadingEmployees ? (
+              <div className="flex justify-center items-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="ml-2">Loading employees...</p>
+              </div>
+            ) : currentEmployees.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">No employees registered yet.</p>
+            ) : (
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {currentEmployees.map((employee) => (
+                      <TableRow key={employee._id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={employee.avatarUrl} alt={employee.name} data-ai-hint={employee.dataAiHint} />
+                              <AvatarFallback>{employee.name.charAt(0).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            {employee.name}
+                          </div>
+                        </TableCell>
+                        <TableCell>{employee.email}</TableCell>
+                        <TableCell>
+                          <Badge variant={employee.role === 'Admin' ? 'default' : employee.role === 'HR' ? 'secondary' : 'outline'}>
+                            {employee.role}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right space-x-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({title: `Edit ${employee.name} (Mock)`})}>
+                            <Edit3 className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                          {/* Ensure this AlertDialogTrigger is a child of the main AlertDialog */}
+                          {adminUser?._id !== employee._id && adminUser?.id !== employee._id && (
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/80 h-8 w-8" onClick={() => openDeleteConfirmation(employee)}>
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only">Delete</span>
+                              </Button>
+                            </AlertDialogTrigger>
+                          )}
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {currentEmployees.map((employee) => (
-                        <TableRow key={employee._id}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={employee.avatarUrl} alt={employee.name} data-ai-hint={employee.dataAiHint} />
-                                <AvatarFallback>{employee.name.charAt(0).toUpperCase()}</AvatarFallback>
-                              </Avatar>
-                              {employee.name}
-                            </div>
-                          </TableCell>
-                          <TableCell>{employee.email}</TableCell>
-                          <TableCell>
-                            <Badge variant={employee.role === 'Admin' ? 'default' : employee.role === 'HR' ? 'secondary' : 'outline'}>
-                              {employee.role}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right space-x-1">
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({title: `Edit ${employee.name} (Mock)`})}>
-                              <Edit3 className="h-4 w-4" />
-                              <span className="sr-only">Edit</span>
-                            </Button>
-                            {adminUser?._id !== employee._id && adminUser?.id !== employee._id && (
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/80 h-8 w-8" onClick={() => openDeleteConfirmation(employee)}>
-                                  <Trash2 className="h-4 w-4" />
-                                  <span className="sr-only">Delete</span>
-                                </Button>
-                              </AlertDialogTrigger>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the employee account for {employeeToDelete?.name}.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteEmployee} className={buttonVariants({ variant: "destructive" })}>
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* AlertDialogContent is a sibling to the main grid, but still a child of the root AlertDialog */}
+      <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the employee account for {employeeToDelete?.name}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteEmployee} className={buttonVariants({ variant: "destructive" })}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+      </AlertDialogContent>
     </AlertDialog>
   );
 }
