@@ -134,7 +134,7 @@ export default function ManageEmployeesPage() {
       setPassword('');
       setConfirmPassword('');
       fetchEmployees();
-    } catch (error: any)
+    } catch (error: any) {
       toast({ title: 'Registration Error', description: error.message, variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
@@ -376,3 +376,5 @@ export default function ManageEmployeesPage() {
     </AlertDialog>
   );
 }
+
+    
