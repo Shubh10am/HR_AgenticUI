@@ -8,17 +8,34 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
-import { Lock, Bell, Palette, Plug, ChevronRight, Settings } from 'lucide-react';
+import { Lock, Bell, Palette, Plug, ChevronRight, Settings, Volume2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from 'react';
 
 export default function SettingsPage() {
   const { toast } = useToast();
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  useEffect(() => {
+    const storedSoundPreference = localStorage.getItem('notificationSoundEnabled');
+    if (storedSoundPreference !== null) {
+      setSoundEnabled(storedSoundPreference === 'true');
+    }
+  }, []);
 
   const handleMockAction = (action: string) => {
     toast({
       title: `${action} (Mock)`,
       description: `This action is for demonstration purposes.`,
+    });
+  };
+
+  const handleSoundToggle = (checked: boolean) => {
+    setSoundEnabled(checked);
+    localStorage.setItem('notificationSoundEnabled', String(checked));
+    toast({
+      title: `Notification Sounds ${checked ? 'Enabled' : 'Disabled'}`,
     });
   };
 
@@ -74,6 +91,20 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between rounded-lg border p-3">
               <Label htmlFor="digestEmail">Weekly Digest Email</Label>
               <Switch id="digestEmail" onCheckedChange={(checked) => handleMockAction(`Weekly Digest ${checked ? 'Enabled' : 'Disabled'}`)} />
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <Label htmlFor="soundNotifications" className="flex flex-col space-y-1">
+                <span>Enable Notification Sounds</span>
+                <span className="font-normal leading-snug text-muted-foreground">
+                  Play sounds for toast notifications.
+                </span>
+              </Label>
+              <Switch
+                id="soundNotifications"
+                checked={soundEnabled}
+                onCheckedChange={handleSoundToggle}
+              />
             </div>
           </CardContent>
         </Card>

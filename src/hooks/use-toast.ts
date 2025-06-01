@@ -78,11 +78,21 @@ const addToRemoveQueue = (toastId: string) => {
 // Helper function to play sound
 const playSound = (soundFile: string) => {
   try {
+    // Check user preference from localStorage
+    const soundPreference = typeof window !== 'undefined' ? localStorage.getItem('notificationSoundEnabled') : 'true';
+    // Default to true (sounds enabled) if preference is not set or is not 'false'
+    const soundsAreEnabled = soundPreference === null || soundPreference === 'true';
+
+    if (!soundsAreEnabled) {
+      // console.log('Notification sounds are disabled by user preference.');
+      return;
+    }
+
     // IMPORTANT: Audio files (e.g., notification.wav, message.wav)
     // MUST be placed in the `public/sound/` directory of your project
     // for the browser to be able to access them via the path `/sound/FILENAME.wav`.
     // Example: `public/sound/notification.wav` is accessed via `/sound/notification.wav`.
-    const audioSrc = `/sound/${soundFile}`; // Changed from /sounds/ to /sound/
+    const audioSrc = `/sound/${soundFile}`; 
     const audio = new Audio(audioSrc);
 
     audio.play().catch(error => {
@@ -187,9 +197,9 @@ function toast({ ...props }: Toast) {
 
   // Play sound based on variant
   if (props.variant === "destructive") {
-    playSound("message.wav"); // Using message.wav for destructive toasts
+    playSound("message.wav"); 
   } else {
-    playSound("notification.mp3"); // Using notification.wav for default toasts
+    playSound("notification.wav"); 
   }
 
   dispatch({
