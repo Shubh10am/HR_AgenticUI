@@ -1,3 +1,4 @@
+
 // src/ai/flows/generate-job-description.ts
 'use server';
 /**
@@ -10,16 +11,10 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { GenerateJobDescriptionInputSchemaDef, GenerateJobDescriptionOutputSchemaDef } from '@/ai/schemas/generate-job-description-definitions';
 
-const GenerateJobDescriptionInputSchema = z.object({
-  prompt: z.string().describe('A prompt describing the job requirements.'),
-});
-export type GenerateJobDescriptionInput = z.infer<typeof GenerateJobDescriptionInputSchema>;
-
-const GenerateJobDescriptionOutputSchema = z.object({
-  jobDescription: z.string().describe('The generated job description.'),
-});
-export type GenerateJobDescriptionOutput = z.infer<typeof GenerateJobDescriptionOutputSchema>;
+export type GenerateJobDescriptionInput = z.infer<typeof GenerateJobDescriptionInputSchemaDef>;
+export type GenerateJobDescriptionOutput = z.infer<typeof GenerateJobDescriptionOutputSchemaDef>;
 
 export async function generateJobDescription(input: GenerateJobDescriptionInput): Promise<GenerateJobDescriptionOutput> {
   return generateJobDescriptionFlow(input);
@@ -27,8 +22,8 @@ export async function generateJobDescription(input: GenerateJobDescriptionInput)
 
 const prompt = ai.definePrompt({
   name: 'generateJobDescriptionPrompt',
-  input: {schema: GenerateJobDescriptionInputSchema},
-  output: {schema: GenerateJobDescriptionOutputSchema},
+  input: {schema: GenerateJobDescriptionInputSchemaDef},
+  output: {schema: GenerateJobDescriptionOutputSchemaDef},
   prompt: `You are an expert HR assistant specializing in creating job descriptions.
 
   Based on the prompt provided, generate a detailed and professional job description.
@@ -39,8 +34,8 @@ const prompt = ai.definePrompt({
 const generateJobDescriptionFlow = ai.defineFlow(
   {
     name: 'generateJobDescriptionFlow',
-    inputSchema: GenerateJobDescriptionInputSchema,
-    outputSchema: GenerateJobDescriptionOutputSchema,
+    inputSchema: GenerateJobDescriptionInputSchemaDef,
+    outputSchema: GenerateJobDescriptionOutputSchemaDef,
   },
   async input => {
     const {output} = await prompt(input);

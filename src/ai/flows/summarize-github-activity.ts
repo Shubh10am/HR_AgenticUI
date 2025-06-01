@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Summarizes recent GitHub activity for a specific employee or team.
@@ -9,17 +10,10 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { SummarizeGithubActivityInputSchemaDef, SummarizeGithubActivityOutputSchemaDef } from '@/ai/schemas/summarize-github-activity-definitions';
 
-const SummarizeGithubActivityInputSchema = z.object({
-  githubUsername: z.string().describe('The GitHub username of the employee or team.'),
-  timePeriod: z.string().describe('The time period to summarize (e.g., last week, last month).'),
-});
-export type SummarizeGithubActivityInput = z.infer<typeof SummarizeGithubActivityInputSchema>;
-
-const SummarizeGithubActivityOutputSchema = z.object({
-  summary: z.string().describe('A summary of the recent GitHub activity.'),
-});
-export type SummarizeGithubActivityOutput = z.infer<typeof SummarizeGithubActivityOutputSchema>;
+export type SummarizeGithubActivityInput = z.infer<typeof SummarizeGithubActivityInputSchemaDef>;
+export type SummarizeGithubActivityOutput = z.infer<typeof SummarizeGithubActivityOutputSchemaDef>;
 
 export async function summarizeGithubActivity(input: SummarizeGithubActivityInput): Promise<SummarizeGithubActivityOutput> {
   return summarizeGithubActivityFlow(input);
@@ -27,8 +21,8 @@ export async function summarizeGithubActivity(input: SummarizeGithubActivityInpu
 
 const prompt = ai.definePrompt({
   name: 'summarizeGithubActivityPrompt',
-  input: {schema: SummarizeGithubActivityInputSchema},
-  output: {schema: SummarizeGithubActivityOutputSchema},
+  input: {schema: SummarizeGithubActivityInputSchemaDef},
+  output: {schema: SummarizeGithubActivityOutputSchemaDef},
   prompt: `You are an HR assistant tasked with providing summaries of employee github activity.
 
   Summarize the recent GitHub activity for {{githubUsername}} for the past {{timePeriod}}.
@@ -39,8 +33,8 @@ const prompt = ai.definePrompt({
 const summarizeGithubActivityFlow = ai.defineFlow(
   {
     name: 'summarizeGithubActivityFlow',
-    inputSchema: SummarizeGithubActivityInputSchema,
-    outputSchema: SummarizeGithubActivityOutputSchema,
+    inputSchema: SummarizeGithubActivityInputSchemaDef,
+    outputSchema: SummarizeGithubActivityOutputSchemaDef,
   },
   async input => {
     const {output} = await prompt(input);

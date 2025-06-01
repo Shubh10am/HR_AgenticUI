@@ -17,7 +17,10 @@ import SidebarNav from './sidebar-nav';
 import UserNav from './user-nav';
 import Logo from '@/components/icons/logo';
 import Link from 'next/link';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MessageSquare } from 'lucide-react'; // Added MessageSquare
+import CopilotSidebar from './copilot-sidebar'; // Added import
+import { useState } from 'react'; // Added import for useState
+import { Button } from '@/components/ui/button'; // Added Button import
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -26,6 +29,7 @@ interface AppLayoutProps {
 export default function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const { isLoading, isAuthenticated } = useAuth();
+  const [isCopilotOpen, setIsCopilotOpen] = useState(false); // Added state for copilot
 
   // Define routes that don't use this AppLayout (e.g., login, register)
   const noAppLayoutRoutes = ['/login', '/register'];
@@ -34,8 +38,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
     return <>{children}</>; // Render children directly for auth pages
   }
   
-  // Show a loading spinner for the entire page if auth state is still loading
-  // and we are not on an auth page (which has its own loading state)
   if (isLoading && !noAppLayoutRoutes.includes(pathname)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -44,21 +46,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     );
   }
 
-
-  // If not authenticated and not on an auth route, this typically means
-  // AuthContext's useEffect is handling redirect to /login.
-  // So, if we reach here and not authenticated, children might be login page,
-  // or we are about to be redirected.
-  // If we want to strictly show nothing but login for unauth users:
   if (!isAuthenticated && !isLoading) {
-     // AuthContext useEffect should handle redirecting to /login if not on an auth route.
-     // So, rendering children here is fine as it might be the login page itself,
-     // or the redirect will happen shortly.
-     // However, for clarity, if definitely not authenticated and not loading,
-     // and not an auth route (which is handled by the above check),
-     // this state means user is trying to access a protected area without auth.
-     // The AuthContext should redirect.
-     // To prevent flash of content, we can also show a loader here.
      return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -66,7 +54,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
       </div>
     );
   }
-
 
   return (
     <SidebarProvider defaultOpen>
@@ -92,9 +79,22 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <SidebarTrigger className="md:hidden" />
             {/* Breadcrumbs or page title could go here */}
           </div>
-          <UserNav />
+          <div className="flex items-center gap-2"> {/* Wrapper for UserNav and Copilot trigger */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsCopilotOpen(true)}
+              aria-label="Open Copilot Chat"
+              title="Open Copilot Chat"
+              className="h-9 w-9"
+            >
+              <MessageSquare className="h-5 w-5" />
+            </Button>
+            <UserNav />
+          </div>
         </header>
         <main className="flex-1 p-6 overflow-x-hidden">{children}</main>
+        <CopilotSidebar isOpen={isCopilotOpen} onOpenChange={setIsCopilotOpen} /> {/* Added CopilotSidebar */}
       </SidebarInset>
     </SidebarProvider>
   );
