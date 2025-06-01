@@ -8,14 +8,16 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
-import { Lock, Bell, Palette, Plug, ChevronRight, Settings, Volume2 } from 'lucide-react';
+import { Lock, Bell, Palette, Plug, ChevronRight, Settings, Volume2, Sun, Moon, Laptop } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
 
 export default function SettingsPage() {
   const { toast } = useToast();
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const storedSoundPreference = localStorage.getItem('notificationSoundEnabled');
@@ -36,6 +38,14 @@ export default function SettingsPage() {
     localStorage.setItem('notificationSoundEnabled', String(checked));
     toast({
       title: `Notification Sounds ${checked ? 'Enabled' : 'Disabled'}`,
+    });
+  };
+
+  const handleThemeChange = (value: string) => {
+    setTheme(value);
+    toast({
+      title: `Theme Changed`,
+      description: `Switched to ${value.charAt(0).toUpperCase() + value.slice(1)} theme.`,
     });
   };
 
@@ -118,18 +128,24 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <Label>Theme Preference</Label>
-            <RadioGroup defaultValue="system" onValueChange={(value) => handleMockAction(`Theme Changed to ${value}`)}>
+            <RadioGroup value={theme} onValueChange={handleThemeChange}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="light" id="theme-light" />
-                <Label htmlFor="theme-light">Light</Label>
+                <Label htmlFor="theme-light" className="flex items-center">
+                  <Sun className="mr-2 h-4 w-4" /> Light
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="dark" id="theme-dark" />
-                <Label htmlFor="theme-dark">Dark</Label>
+                <Label htmlFor="theme-dark" className="flex items-center">
+                  <Moon className="mr-2 h-4 w-4" /> Dark
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="system" id="theme-system" />
-                <Label htmlFor="theme-system">System Default</Label>
+                <Label htmlFor="theme-system" className="flex items-center">
+                  <Laptop className="mr-2 h-4 w-4" /> System Default
+                </Label>
               </div>
             </RadioGroup>
             <Separator />
