@@ -17,8 +17,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format, differenceInMinutes, parse, isAfter, isBefore, isEqual, startOfDay, startOfMonth } from 'date-fns';
-import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, type GenerateDraftEmailResponsesOutput } from '@/ai/flows/draft-email-response';
+import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput } from '@/ai/flows/draft-email-response';
+import { useAuth } from '@/contexts/auth-context'; // Added useAuth
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 interface AttendanceEntry {
   id: string;
@@ -63,6 +65,7 @@ export default function AttendanceReportingPage() {
   const [clockInTime, setClockInTime] = useState<Date | null>(null);
   const [lastClockInTimeDisplay, setLastClockInTimeDisplay] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user, token } = useAuth(); // Added token
 
   const [filterEmployeeName, setFilterEmployeeName] = useState('');
   const [filterStartDate, setFilterStartDate] = useState<Date | undefined>();
@@ -70,7 +73,7 @@ export default function AttendanceReportingPage() {
   const [displayedAttendanceData, setDisplayedAttendanceData] = useState<AttendanceEntry[]>(initialAttendanceData);
 
   const [leaveRequest, setLeaveRequest] = useState<LeaveRequest>({
-    employeeName: 'John Doe', 
+    employeeName: user?.name || '', 
     leaveType: '',
     startDate: undefined,
     endDate: undefined,
@@ -80,6 +83,9 @@ export default function AttendanceReportingPage() {
   const [isLeaveReasonPopoverOpen, setIsLeaveReasonPopoverOpen] = useState(false);
   const [leaveReasonPrompt, setLeaveReasonPrompt] = useState('');
   const [isGeneratingLeaveReason, setIsGeneratingLeaveReason] = useState(false);
+  const [isSubmittingLeave, setIsSubmittingLeave] = useState(false);
+  const [isClocking, setIsClocking] = useState(false);
+
 
   const [currentCalendarMonth, setCurrentCalendarMonth] = useState<Date>(startOfMonth(new Date()));
   const [dayModifiers, setDayModifiers] = useState<Record<string, Date[]>>({});
@@ -91,6 +97,7 @@ export default function AttendanceReportingPage() {
       setCurrentTime(new Date().toLocaleTimeString());
     }, 1000);
 
+    // TODO: Fetch current day's clock-in status from backend to initialize accurately
     const storedClockInStatus = localStorage.getItem('hrStreamlineClockInStatus');
     const storedClockInTime = localStorage.getItem('hrStreamlineClockInTime');
     if (storedClockInStatus === 'true' && storedClockInTime) {
@@ -98,6 +105,9 @@ export default function AttendanceReportingPage() {
       setIsClockedIn(true);
       setClockInTime(time);
       setLastClockInTimeDisplay(time.toLocaleTimeString());
+    }
+    if (user?.name && !leaveRequest.employeeName) {
+        setLeaveRequest(prev => ({...prev, employeeName: user.name}));
     }
     setDisplayedAttendanceData(initialAttendanceData);
 
@@ -135,39 +145,83 @@ export default function AttendanceReportingPage() {
     });
 
     return () => clearInterval(timerId);
-  }, []); // Empty dependency array, so this runs once on mount with initial data
+  }, [user]); // Added user to dependency array
 
-  const handleClockIn = () => {
-    const now = new Date();
-    setIsClockedIn(true);
-    setClockInTime(now);
-    setLastClockInTimeDisplay(now.toLocaleTimeString());
-    localStorage.setItem('hrStreamlineClockInStatus', 'true');
-    localStorage.setItem('hrStreamlineClockInTime', now.toISOString());
-    toast({
-      title: "Clocked In",
-      description: `You clocked in at ${now.toLocaleTimeString()}.`,
-    });
+  const handleClockIn = async () => {
+    if (!token) {
+      toast({ title: "Authentication Error", description: "Please log in.", variant: "destructive" });
+      return;
+    }
+    setIsClocking(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/attendance/clock-in`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to clock in.');
+      }
+      
+      const now = new Date(data.record.clockInTime); // Use server time if possible
+      setIsClockedIn(true);
+      setClockInTime(now);
+      setLastClockInTimeDisplay(now.toLocaleTimeString());
+      localStorage.setItem('hrStreamlineClockInStatus', 'true');
+      localStorage.setItem('hrStreamlineClockInTime', now.toISOString());
+      toast({
+        title: "Clocked In",
+        description: `You clocked in at ${now.toLocaleTimeString()}.`,
+      });
+
+    } catch (error: any) {
+      toast({ title: "Clock-In Error", description: error.message, variant: "destructive" });
+    } finally {
+      setIsClocking(false);
+    }
   };
 
-  const handleClockOut = () => {
-    setIsClockedIn(false);
-    const clockOutTime = new Date();
-    let durationMessage = '';
-    if (clockInTime) {
-      const minutes = differenceInMinutes(clockOutTime, clockInTime);
-      const hours = Math.floor(minutes / 60);
-      const remainingMinutes = minutes % 60;
-      durationMessage = ` Session duration: ${hours}h ${remainingMinutes}m.`;
+  const handleClockOut = async () => {
+     if (!token) {
+      toast({ title: "Authentication Error", description: "Please log in.", variant: "destructive" });
+      return;
     }
-    
-    localStorage.removeItem('hrStreamlineClockInStatus');
-    localStorage.removeItem('hrStreamlineClockInTime');
-    setClockInTime(null); 
-    toast({
-      title: "Clocked Out",
-      description: `You clocked out at ${clockOutTime.toLocaleTimeString()}.${durationMessage}`,
-    });
+    setIsClocking(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/attendance/clock-out`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to clock out.');
+      }
+
+      setIsClockedIn(false);
+      const clockOutTime = new Date(data.record.clockOutTime); // Use server time
+      let durationMessage = '';
+      if (data.record.hoursWorked !== undefined) {
+        const minutes = data.record.hoursWorked;
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+        durationMessage = ` Session duration: ${hours}h ${remainingMinutes}m.`;
+      }
+      
+      localStorage.removeItem('hrStreamlineClockInStatus');
+      localStorage.removeItem('hrStreamlineClockInTime');
+      // setClockInTime(null); // Already handled by setIsClockedIn(false) and subsequent UI updates
+      toast({
+        title: "Clocked Out",
+        description: `You clocked out at ${clockOutTime.toLocaleTimeString()}.${durationMessage}`,
+      });
+
+    } catch (error: any) {
+      toast({ title: "Clock-Out Error", description: error.message, variant: "destructive" });
+    } finally {
+      setIsClocking(false);
+    }
   };
 
   const getStatusBadgeVariant = (status: AttendanceEntry['status']) => {
@@ -195,8 +249,12 @@ export default function AttendanceReportingPage() {
     setLeaveRequest(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleLeaveSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleLeaveSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!token) {
+      toast({ title: "Authentication Error", description: "Please log in.", variant: "destructive" });
+      return;
+    }
     if (!leaveRequest.employeeName || !leaveRequest.leaveType || !leaveRequest.startDate || !leaveRequest.endDate || !leaveRequest.reason) {
       toast({
         title: "Incomplete Form",
@@ -205,19 +263,45 @@ export default function AttendanceReportingPage() {
       });
       return;
     }
-    console.log("Leave Request Submitted:", leaveRequest);
-    toast({
-      title: "Leave Request Submitted (Mock)",
-      description: `Request for ${leaveRequest.leaveType} leave from ${format(leaveRequest.startDate as Date, 'PPP')} to ${format(leaveRequest.endDate as Date, 'PPP')} has been submitted.`,
-    });
-    setLeaveRequest({
-      employeeName: 'John Doe',
-      leaveType: '',
-      startDate: undefined,
-      endDate: undefined,
-      reason: '',
-    });
-    setLeaveReasonPrompt('');
+    setIsSubmittingLeave(true);
+    try {
+      const payload = {
+        ...leaveRequest,
+        startDate: leaveRequest.startDate?.toISOString(),
+        endDate: leaveRequest.endDate?.toISOString(),
+      };
+
+      const response = await fetch(`${API_BASE_URL}/api/leave-requests`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit leave request.');
+      }
+      
+      toast({
+        title: "Leave Request Submitted",
+        description: `Request for ${leaveRequest.leaveType} leave from ${format(leaveRequest.startDate as Date, 'PPP')} to ${format(leaveRequest.endDate as Date, 'PPP')} has been submitted.`,
+      });
+      setLeaveRequest({
+        employeeName: user?.name || '',
+        leaveType: '',
+        startDate: undefined,
+        endDate: undefined,
+        reason: '',
+      });
+      setLeaveReasonPrompt('');
+    } catch (error: any) {
+      toast({ title: "Leave Request Error", description: error.message, variant: "destructive" });
+    } finally {
+      setIsSubmittingLeave(false);
+    }
   };
 
   const handleGenerateLeaveReason = async () => {
@@ -381,12 +465,14 @@ export default function AttendanceReportingPage() {
               </div>
             )}
             {!isClockedIn ? (
-              <Button onClick={handleClockIn} className="w-full" size="lg">
-                <LogIn className="mr-2 h-5 w-5" /> Clock In
+              <Button onClick={handleClockIn} className="w-full" size="lg" disabled={isClocking}>
+                {isClocking ? <LoaderIcon className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
+                Clock In
               </Button>
             ) : (
-              <Button onClick={handleClockOut} variant="destructive" className="w-full" size="lg">
-                <LogOut className="mr-2 h-5 w-5" /> Clock Out
+              <Button onClick={handleClockOut} variant="destructive" className="w-full" size="lg" disabled={isClocking}>
+                {isClocking ? <LoaderIcon className="mr-2 h-5 w-5 animate-spin" /> : <LogOut className="mr-2 h-5 w-5" />}
+                Clock Out
               </Button>
             )}
              <p className="text-xs text-muted-foreground text-center">
@@ -407,11 +493,11 @@ export default function AttendanceReportingPage() {
             <form onSubmit={handleLeaveSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="employeeName">Employee Name</Label>
-                <Input id="employeeName" value={leaveRequest.employeeName} onChange={(e) => handleLeaveRequestChange('employeeName', e.target.value)} placeholder="Your Name" required />
+                <Input id="employeeName" value={leaveRequest.employeeName} onChange={(e) => handleLeaveRequestChange('employeeName', e.target.value)} placeholder="Your Name" required disabled={isSubmittingLeave}/>
               </div>
               <div>
                 <Label htmlFor="leaveType">Leave Type</Label>
-                <Select value={leaveRequest.leaveType} onValueChange={(value) => handleLeaveRequestChange('leaveType', value)}>
+                <Select value={leaveRequest.leaveType} onValueChange={(value) => handleLeaveRequestChange('leaveType', value)} disabled={isSubmittingLeave}>
                   <SelectTrigger id="leaveType">
                     <SelectValue placeholder="Select leave type" />
                   </SelectTrigger>
@@ -432,6 +518,7 @@ export default function AttendanceReportingPage() {
                         id="startDate"
                         variant={"outline"}
                         className="w-full justify-start text-left font-normal"
+                        disabled={isSubmittingLeave}
                       >
                         <CalendarDays className="mr-2 h-4 w-4" />
                         {leaveRequest.startDate ? format(leaveRequest.startDate, "PPP") : <span>Pick a date</span>}
@@ -443,6 +530,7 @@ export default function AttendanceReportingPage() {
                         selected={leaveRequest.startDate}
                         onSelect={(date) => handleLeaveRequestChange('startDate', date)}
                         initialFocus
+                        disabled={isSubmittingLeave}
                       />
                     </PopoverContent>
                   </Popover>
@@ -455,6 +543,7 @@ export default function AttendanceReportingPage() {
                         id="endDate"
                         variant={"outline"}
                         className="w-full justify-start text-left font-normal"
+                        disabled={isSubmittingLeave}
                       >
                         <CalendarDays className="mr-2 h-4 w-4" />
                         {leaveRequest.endDate ? format(leaveRequest.endDate, "PPP") : <span>Pick a date</span>}
@@ -466,7 +555,7 @@ export default function AttendanceReportingPage() {
                         selected={leaveRequest.endDate}
                         onSelect={(date) => handleLeaveRequestChange('endDate', date)}
                         disabled={(date) =>
-                          leaveRequest.startDate ? date < leaveRequest.startDate : false
+                          isSubmittingLeave || (leaveRequest.startDate ? date < leaveRequest.startDate : false)
                         }
                         initialFocus
                       />
@@ -480,7 +569,7 @@ export default function AttendanceReportingPage() {
                   <Label htmlFor="reason">Reason</Label>
                   <Popover open={isLeaveReasonPopoverOpen} onOpenChange={setIsLeaveReasonPopoverOpen}>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="sm" className="px-2 py-1 h-auto">
+                      <Button variant="ghost" size="sm" className="px-2 py-1 h-auto" disabled={isSubmittingLeave}>
                         <Wand2 className="h-4 w-4 text-primary" />
                         <span className="sr-only">Generate reason with AI</span>
                       </Button>
@@ -506,11 +595,12 @@ export default function AttendanceReportingPage() {
                     </PopoverContent>
                   </Popover>
                 </div>
-                <Textarea id="reason" value={leaveRequest.reason} onChange={(e) => handleLeaveRequestChange('reason', e.target.value)} placeholder="Briefly state the reason for your leave" required />
+                <Textarea id="reason" value={leaveRequest.reason} onChange={(e) => handleLeaveRequestChange('reason', e.target.value)} placeholder="Briefly state the reason for your leave" required disabled={isSubmittingLeave}/>
               </div>
 
-              <Button type="submit" className="w-full">
-                <Send className="mr-2 h-4 w-4" /> Submit Leave Request
+              <Button type="submit" className="w-full" disabled={isSubmittingLeave}>
+                 {isSubmittingLeave ? <LoaderIcon className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                 Submit Leave Request
               </Button>
             </form>
           </CardContent>
@@ -522,7 +612,7 @@ export default function AttendanceReportingPage() {
            <CardHeader>
             <CardTitle className="flex items-center text-xl">
               <BarChartHorizontalBig className="mr-2 h-6 w-6 text-primary" />
-              John Doe's Monthly Snapshot
+              {user?.name || 'My'}'s Monthly Snapshot
             </CardTitle>
             <CardDescription>Your attendance summary for July 2024 (Mock).</CardDescription>
           </CardHeader>
