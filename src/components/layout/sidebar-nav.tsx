@@ -17,16 +17,19 @@ import {
   GitFork,
   Inbox,
   FileSignature,
-  ListChecks, // Added ListChecks icon
+  ListChecks, 
+  Users, // Added Users icon
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { useSidebar } from '@/components/ui/sidebar'; // Import useSidebar
+import { useSidebar } from '@/components/ui/sidebar'; 
+import { useAuth } from '@/contexts/auth-context'; // Import useAuth
 
 interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
   tooltip: string;
+  adminOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -37,26 +40,35 @@ const navItems: NavItem[] = [
   { href: '/unified-communications', label: 'Communications', icon: MessagesSquare, tooltip: 'Unified Communications' },
   { href: '/recruitment', label: 'Recruitment', icon: GitFork, tooltip: 'AI Recruitment' },
   { href: '/smart-drafting', label: 'Smart Drafting', icon: FileSignature, tooltip: 'Smart Email Drafting' },
-  { href: '/tasks', label: 'Tasks', icon: ListChecks, tooltip: 'Task Management' }, // New Tasks link
+  { href: '/tasks', label: 'Tasks', icon: ListChecks, tooltip: 'Task Management' },
+  { href: '/manage-employees', label: 'Manage Employees', icon: Users, tooltip: 'Manage Employees', adminOnly: true }, // New Manage Employees link
   { href: '/integrations', label: 'Integrations', icon: Plug, tooltip: 'Manage Integrations' },
 ];
 
 export default function SidebarNav() {
   const pathname = usePathname();
-  const { isMobile, setOpenMobile } = useSidebar(); // Get sidebar context
+  const { isMobile, setOpenMobile } = useSidebar(); 
+  const { user } = useAuth(); // Get user from AuthContext
 
   const handleLinkClick = () => {
     if (isMobile) {
-      setOpenMobile(false); // Close sidebar on mobile after click
+      setOpenMobile(false); 
     }
   };
 
+  const filteredNavItems = navItems.filter(item => {
+    if (item.adminOnly) {
+      return user?.role === 'Admin';
+    }
+    return true;
+  });
+
   return (
     <SidebarMenu>
-      {navItems.map((item) => (
+      {filteredNavItems.map((item) => (
         <SidebarMenuItem key={item.href}>
           <Link href={item.href} passHref legacyBehavior>
-            <a onClick={handleLinkClick} className="block w-full"> {/* Added <a> tag and onClick */}
+            <a onClick={handleLinkClick} className="block w-full"> 
               <SidebarMenuButton
                 isActive={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))}
                 tooltip={item.tooltip}
@@ -72,3 +84,5 @@ export default function SidebarNav() {
     </SidebarMenu>
   );
 }
+
+    
