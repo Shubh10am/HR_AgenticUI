@@ -2,12 +2,13 @@
 'use client';
 
 import { useState, useEffect, type FormEvent, useCallback } from 'react';
+import Link from 'next/link'; // Added Link
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, UserCircle, Clock, LogIn, LogOut, Briefcase, CalendarDays, Send, FileText, BarChartHorizontalBig, Edit, Filter, UserSearch, XCircle, Wand2, Loader2 as LoaderIcon, AlertTriangle } from 'lucide-react';
+import { Download, UserCircle, Clock, LogIn, LogOut, Briefcase, CalendarDays, Send, FileText, BarChartHorizontalBig, Edit, Filter, UserSearch, XCircle, Wand2, Loader2 as LoaderIcon, AlertTriangle, UserPlus, ShieldQuestion } from 'lucide-react'; // Added UserPlus, ShieldQuestion
 import { Progress } from '@/components/ui/progress';
 import { useToast } from "@/hooks/use-toast";
 import { Input } from '@/components/ui/input';
@@ -19,7 +20,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { format, parse, isAfter, isBefore, isEqual, startOfDay, startOfMonth } from 'date-fns';
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput } from '@/ai/flows/draft-email-response';
 import { useAuth } from '@/contexts/auth-context';
-import type { TransformedAttendanceRecord } from '@/pages/api/attendance/records'; // Import the type
+import type { TransformedAttendanceRecord } from '@/pages/api/attendance/records';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -27,14 +30,13 @@ interface AttendanceEntry {
   id: string;
   employee: string;
   date: string; // YYYY-MM-DD
-  status: 'Present' | 'Absent' | 'Late' | 'On Leave' | 'No Check-in' | 'EarlyDeparture' | 'Unknown'; // Expanded status
+  status: 'Present' | 'Absent' | 'Late' | 'On Leave' | 'No Check-in' | 'EarlyDeparture' | 'Unknown';
   clockIn?: string;
   clockOut?: string;
   hoursWorked?: string;
   department?: string;
 }
 
-// Mock data for calendar will remain
 const mockCalendarAttendanceData: AttendanceEntry[] = [
   { id: 'cal-1', employee: 'John Doe', date: '2024-07-01', status: 'Present', clockIn: '09:00 AM', clockOut: '05:30 PM', hoursWorked: '8h 30m', department: 'Engineering' },
   { id: 'cal-2', employee: 'John Doe', date: '2024-07-02', status: 'Present', clockIn: '09:05 AM', clockOut: '05:35 PM', hoursWorked: '8h 30m', department: 'Engineering' },
@@ -68,11 +70,12 @@ export default function AttendanceReportingPage() {
   const { toast } = useToast();
   const { user, token } = useAuth();
 
+  const isGuest = user?.organizationId === 'guest-org-id' || (token && token.startsWith('guest-'));
+
   const [filterEmployeeName, setFilterEmployeeName] = useState('');
   const [filterStartDate, setFilterStartDate] = useState<Date | undefined>();
   const [filterEndDate, setFilterEndDate] = useState<Date | undefined>();
   
-  // State for live data from API
   const [allFetchedAttendanceRecords, setAllFetchedAttendanceRecords] = useState<AttendanceEntry[]>([]);
   const [displayedAttendanceData, setDisplayedAttendanceData] = useState<AttendanceEntry[]>([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
@@ -99,7 +102,7 @@ export default function AttendanceReportingPage() {
   const [dayModifiersClassNames, setDayModifiersClassNames] = useState<Record<string, string>>({});
 
   const fetchAttendanceRecords = useCallback(async () => {
-    if (!token) return;
+    if (!token || isGuest) return; // Do not fetch for guests
     setIsLoadingRecords(true);
     setFetchError(null);
     try {
@@ -116,14 +119,14 @@ export default function AttendanceReportingPage() {
         id: record.id,
         employee: record.employeeName,
         date: record.date,
-        status: record.status, // Using status from backend
+        status: record.status, 
         clockIn: record.clockIn,
         clockOut: record.clockOut,
         hoursWorked: record.hoursWorked,
         department: record.department,
       }));
       setAllFetchedAttendanceRecords(mappedData);
-      setDisplayedAttendanceData(mappedData); // Initially display all fetched data
+      setDisplayedAttendanceData(mappedData); 
 
     } catch (error: any) {
       console.error("Error fetching attendance records:", error);
@@ -134,11 +137,18 @@ export default function AttendanceReportingPage() {
     } finally {
       setIsLoadingRecords(false);
     }
-  }, [token, toast]);
+  }, [token, toast, isGuest]);
 
   useEffect(() => {
-    fetchAttendanceRecords();
-  }, [fetchAttendanceRecords]);
+    if (isGuest) {
+      setIsLoadingRecords(false);
+      setFetchError(null);
+      setAllFetchedAttendanceRecords([]);
+      setDisplayedAttendanceData([]);
+    } else {
+      fetchAttendanceRecords();
+    }
+  }, [fetchAttendanceRecords, isGuest]);
 
 
   useEffect(() => {
@@ -146,19 +156,25 @@ export default function AttendanceReportingPage() {
       setCurrentTime(new Date().toLocaleTimeString());
     }, 1000);
 
-    const storedClockInStatus = localStorage.getItem('hrStreamlineClockInStatus');
-    const storedClockInTime = localStorage.getItem('hrStreamlineClockInTime');
-    if (storedClockInStatus === 'true' && storedClockInTime) {
-      const time = new Date(storedClockInTime);
-      setIsClockedIn(true);
-      setClockInTime(time);
-      setLastClockInTimeDisplay(time.toLocaleTimeString());
+    if (!isGuest) {
+        const storedClockInStatus = localStorage.getItem('hrStreamlineClockInStatus');
+        const storedClockInTime = localStorage.getItem('hrStreamlineClockInTime');
+        if (storedClockInStatus === 'true' && storedClockInTime) {
+          const time = new Date(storedClockInTime);
+          setIsClockedIn(true);
+          setClockInTime(time);
+          setLastClockInTimeDisplay(time.toLocaleTimeString());
+        }
+    } else {
+        setIsClockedIn(false);
+        setClockInTime(null);
+        setLastClockInTimeDisplay(null);
     }
+
     if (user?.name && !leaveRequest.employeeName) {
         setLeaveRequest(prev => ({...prev, employeeName: user.name}));
     }
 
-    // Process mockCalendarAttendanceData for calendar highlighting
     const presentDays = mockCalendarAttendanceData
       .filter(d => d.status === 'Present')
       .map(d => parse(d.date, 'yyyy-MM-dd', new Date()));
@@ -192,9 +208,13 @@ export default function AttendanceReportingPage() {
     });
 
     return () => clearInterval(timerId);
-  }, [user]);
+  }, [user, isGuest]);
 
   const handleClockIn = async () => {
+    if (isGuest) {
+        toast({ title: "Guest Mode", description: "Please log in or register to use clock-in.", variant: "default" });
+        return;
+    }
     if (!token) {
       toast({ title: "Authentication Error", description: "Please log in.", variant: "destructive" });
       return;
@@ -221,7 +241,7 @@ export default function AttendanceReportingPage() {
         title: "Clocked In",
         description: `You clocked in at ${now.toLocaleTimeString()}.`,
       });
-      fetchAttendanceRecords(); // Refresh table data
+      fetchAttendanceRecords(); 
     } catch (error: any) {
       toast({ title: "Clock-In Error", description: error.message, variant: "destructive" });
     } finally {
@@ -230,6 +250,10 @@ export default function AttendanceReportingPage() {
   };
 
   const handleClockOut = async () => {
+    if (isGuest) {
+        toast({ title: "Guest Mode", description: "Please log in or register to use clock-out.", variant: "default" });
+        return;
+    }
      if (!token) {
       toast({ title: "Authentication Error", description: "Please log in.", variant: "destructive" });
       return;
@@ -262,7 +286,7 @@ export default function AttendanceReportingPage() {
         title: "Clocked Out",
         description: `You clocked out at ${clockOutTime.toLocaleTimeString()}.${durationMessage}`,
       });
-      fetchAttendanceRecords(); // Refresh table data
+      fetchAttendanceRecords(); 
     } catch (error: any) {
       toast({ title: "Clock-Out Error", description: error.message, variant: "destructive" });
     } finally {
@@ -301,6 +325,10 @@ export default function AttendanceReportingPage() {
 
   const handleLeaveSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isGuest) {
+        toast({ title: "Guest Mode", description: "Please log in or register to submit leave requests.", variant: "default" });
+        return;
+    }
     if (!token) {
       toast({ title: "Authentication Error", description: "Please log in.", variant: "destructive" });
       return;
@@ -347,7 +375,6 @@ export default function AttendanceReportingPage() {
         reason: '',
       });
       setLeaveReasonPrompt('');
-      // Potentially refresh leave-related data here if displayed on this page
     } catch (error: any) {
       toast({ title: "Leave Request Error", description: error.message, variant: "destructive" });
     } finally {
@@ -356,6 +383,10 @@ export default function AttendanceReportingPage() {
   };
 
   const handleGenerateLeaveReason = async () => {
+    if (isGuest) {
+        toast({ title: "Guest Mode", description: "AI features are limited for guests. Please log in.", variant: "default" });
+        return;
+    }
     if (!leaveReasonPrompt.trim()) {
       toast({ title: "Prompt Required", description: "Please enter a prompt for the leave reason.", variant: "destructive" });
       return;
@@ -384,6 +415,7 @@ export default function AttendanceReportingPage() {
 
 
   const handleApplyFilters = () => {
+    if (isGuest) return;
     let filteredData = [...allFetchedAttendanceRecords];
 
     if (filterEmployeeName.trim() !== '') {
@@ -419,10 +451,11 @@ export default function AttendanceReportingPage() {
   };
 
   const handleClearFilters = () => {
+    if (isGuest) return;
     setFilterEmployeeName('');
     setFilterStartDate(undefined);
     setFilterEndDate(undefined);
-    setDisplayedAttendanceData(allFetchedAttendanceRecords); // Reset to all fetched records
+    setDisplayedAttendanceData(allFetchedAttendanceRecords);
     toast({
         title: "Filters Cleared",
         description: "Showing all attendance records."
@@ -441,8 +474,8 @@ export default function AttendanceReportingPage() {
   };
 
   const handleDownloadCsv = () => {
-    if (displayedAttendanceData.length === 0) {
-      toast({ title: "No Data", description: "No data to download.", variant: "destructive" });
+    if (isGuest || displayedAttendanceData.length === 0) {
+      toast({ title: "No Data", description: isGuest ? "Login to download reports." : "No data to download.", variant: "destructive" });
       return;
     }
     const header = "Employee,Date,Status,Clock In,Clock Out,Hours Worked,Department\n";
@@ -455,8 +488,8 @@ export default function AttendanceReportingPage() {
   };
 
   const handleDownloadPdfMock = () => { 
-    if (displayedAttendanceData.length === 0) {
-      toast({ title: "No Data", description: "No data to download for text report.", variant: "destructive" });
+    if (isGuest || displayedAttendanceData.length === 0) {
+      toast({ title: "No Data", description: isGuest ? "Login to download reports." : "No data to download for text report.", variant: "destructive" });
       return;
     }
     let textContent = "Attendance Report (Mock PDF - Text Version)\n";
@@ -477,20 +510,30 @@ export default function AttendanceReportingPage() {
 
 
   return (
-    <>
+    <TooltipProvider>
       <PageHeader
         title="Attendance & Reporting"
         description="Manage attendance, view reports, request leave, and track productivity."
       >
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-          <Button variant="outline" onClick={handleDownloadPdfMock}>
-            <Download className="mr-2 h-4 w-4" />
-            Download PDF (Mock)
-          </Button>
-          <Button variant="outline" onClick={handleDownloadCsv}>
-            <Download className="mr-2 h-4 w-4" />
-            Download CSV
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" onClick={handleDownloadPdfMock} disabled={isGuest}>
+                <Download className="mr-2 h-4 w-4" />
+                Download PDF (Mock)
+              </Button>
+            </TooltipTrigger>
+            {isGuest && <TooltipContent><p>Login to download reports.</p></TooltipContent>}
+          </Tooltip>
+           <Tooltip>
+            <TooltipTrigger asChild>
+                <Button variant="outline" onClick={handleDownloadCsv} disabled={isGuest}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download CSV
+                </Button>
+            </TooltipTrigger>
+            {isGuest && <TooltipContent><p>Login to download reports.</p></TooltipContent>}
+           </Tooltip>
         </div>
       </PageHeader>
 
@@ -504,30 +547,43 @@ export default function AttendanceReportingPage() {
             <CardDescription>Your current time: {currentTime !== null ? currentTime : 'Loading...'}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {isClockedIn ? (
+            {isClockedIn && !isGuest ? (
               <div className="text-center p-4 bg-green-100 dark:bg-green-900/30 rounded-md">
                 <p className="font-semibold text-green-700 dark:text-green-400">You are Clocked In</p>
                 {lastClockInTimeDisplay && <p className="text-sm text-muted-foreground">Since: {lastClockInTimeDisplay}</p>}
               </div>
             ) : (
-              <div className="text-center p-4 bg-yellow-100 dark:bg-yellow-900/30 rounded-md">
-                <p className="font-semibold text-yellow-700 dark:text-yellow-400">You are Clocked Out</p>
-                 {lastClockInTimeDisplay && !isClockedIn && <p className="text-sm text-muted-foreground">Last clocked in: {lastClockInTimeDisplay}</p>}
+              <div className={`text-center p-4 rounded-md ${isGuest ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30'}`}>
+                <p className={`font-semibold ${isGuest ? 'text-blue-700 dark:text-blue-400' : 'text-yellow-700 dark:text-yellow-400'}`}>
+                  {isGuest ? "Guest Mode" : "You are Clocked Out"}
+                </p>
+                 {lastClockInTimeDisplay && !isClockedIn && !isGuest && <p className="text-sm text-muted-foreground">Last clocked in: {lastClockInTimeDisplay}</p>}
+                 {isGuest && <p className="text-sm text-muted-foreground">Clock-in/out disabled.</p>}
               </div>
             )}
-            {!isClockedIn ? (
-              <Button onClick={handleClockIn} className="w-full" size="lg" disabled={isClocking}>
-                {isClocking ? <LoaderIcon className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
-                Clock In
-              </Button>
+            {!isClockedIn || isGuest ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button onClick={handleClockIn} className="w-full" size="lg" disabled={isClocking || isGuest}>
+                    {isClocking ? <LoaderIcon className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
+                    Clock In
+                  </Button>
+                </TooltipTrigger>
+                {isGuest && <TooltipContent><p>Login to use this feature.</p></TooltipContent>}
+              </Tooltip>
             ) : (
-              <Button onClick={handleClockOut} variant="destructive" className="w-full" size="lg" disabled={isClocking}>
-                {isClocking ? <LoaderIcon className="mr-2 h-5 w-5 animate-spin" /> : <LogOut className="mr-2 h-5 w-5" />}
-                Clock Out
-              </Button>
+               <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button onClick={handleClockOut} variant="destructive" className="w-full" size="lg" disabled={isClocking || isGuest}>
+                        {isClocking ? <LoaderIcon className="mr-2 h-5 w-5 animate-spin" /> : <LogOut className="mr-2 h-5 w-5" />}
+                        Clock Out
+                    </Button>
+                </TooltipTrigger>
+                {isGuest && <TooltipContent><p>Login to use this feature.</p></TooltipContent>}
+              </Tooltip>
             )}
              <p className="text-xs text-muted-foreground text-center">
-              Remember to clock in when you start and clock out when you finish your workday.
+              {isGuest ? "Login to manage your work hours." : "Remember to clock in when you start and clock out when you finish your workday."}
             </p>
           </CardContent>
         </Card>
@@ -544,11 +600,11 @@ export default function AttendanceReportingPage() {
             <form onSubmit={handleLeaveSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="employeeName">Employee Name</Label>
-                <Input id="employeeName" value={leaveRequest.employeeName} onChange={(e) => handleLeaveRequestChange('employeeName', e.target.value)} placeholder="Your Name" required disabled={isSubmittingLeave}/>
+                <Input id="employeeName" value={leaveRequest.employeeName} onChange={(e) => handleLeaveRequestChange('employeeName', e.target.value)} placeholder="Your Name" required disabled={isSubmittingLeave || isGuest}/>
               </div>
               <div>
                 <Label htmlFor="leaveType">Leave Type</Label>
-                <Select value={leaveRequest.leaveType} onValueChange={(value) => handleLeaveRequestChange('leaveType', value)} disabled={isSubmittingLeave}>
+                <Select value={leaveRequest.leaveType} onValueChange={(value) => handleLeaveRequestChange('leaveType', value)} disabled={isSubmittingLeave || isGuest}>
                   <SelectTrigger id="leaveType">
                     <SelectValue placeholder="Select leave type" />
                   </SelectTrigger>
@@ -569,7 +625,7 @@ export default function AttendanceReportingPage() {
                         id="startDate"
                         variant={"outline"}
                         className="w-full justify-start text-left font-normal"
-                        disabled={isSubmittingLeave}
+                        disabled={isSubmittingLeave || isGuest}
                       >
                         <CalendarDays className="mr-2 h-4 w-4" />
                         {leaveRequest.startDate ? format(leaveRequest.startDate, "PPP") : <span>Pick a date</span>}
@@ -581,7 +637,7 @@ export default function AttendanceReportingPage() {
                         selected={leaveRequest.startDate}
                         onSelect={(date) => handleLeaveRequestChange('startDate', date)}
                         initialFocus
-                        disabled={isSubmittingLeave}
+                        disabled={isSubmittingLeave || isGuest}
                       />
                     </PopoverContent>
                   </Popover>
@@ -594,7 +650,7 @@ export default function AttendanceReportingPage() {
                         id="endDate"
                         variant={"outline"}
                         className="w-full justify-start text-left font-normal"
-                        disabled={isSubmittingLeave}
+                        disabled={isSubmittingLeave || isGuest}
                       >
                         <CalendarDays className="mr-2 h-4 w-4" />
                         {leaveRequest.endDate ? format(leaveRequest.endDate, "PPP") : <span>Pick a date</span>}
@@ -606,7 +662,7 @@ export default function AttendanceReportingPage() {
                         selected={leaveRequest.endDate}
                         onSelect={(date) => handleLeaveRequestChange('endDate', date)}
                         disabled={(date) =>
-                          isSubmittingLeave || (leaveRequest.startDate ? date < leaveRequest.startDate : false)
+                          isSubmittingLeave || isGuest || (leaveRequest.startDate ? date < leaveRequest.startDate : false)
                         }
                         initialFocus
                       />
@@ -620,10 +676,15 @@ export default function AttendanceReportingPage() {
                   <Label htmlFor="reason">Reason</Label>
                   <Popover open={isLeaveReasonPopoverOpen} onOpenChange={setIsLeaveReasonPopoverOpen}>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="sm" className="px-2 py-1 h-auto" disabled={isSubmittingLeave}>
-                        <Wand2 className="h-4 w-4 text-primary" />
-                        <span className="sr-only">Generate reason with AI</span>
-                      </Button>
+                       <Tooltip>
+                        <TooltipTrigger asChild>
+                           <Button variant="ghost" size="sm" className="px-2 py-1 h-auto" disabled={isSubmittingLeave || isGuest}>
+                            <Wand2 className="h-4 w-4 text-primary" />
+                            <span className="sr-only">Generate reason with AI</span>
+                          </Button>
+                        </TooltipTrigger>
+                        {isGuest && <TooltipContent><p>Login for AI assistance.</p></TooltipContent>}
+                      </Tooltip>
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-4 space-y-2">
                         <Label htmlFor="leaveReasonPrompt" className="text-sm font-medium">AI Prompt for Leave Reason</Label>
@@ -646,13 +707,17 @@ export default function AttendanceReportingPage() {
                     </PopoverContent>
                   </Popover>
                 </div>
-                <Textarea id="reason" value={leaveRequest.reason} onChange={(e) => handleLeaveRequestChange('reason', e.target.value)} placeholder="Briefly state the reason for your leave" required disabled={isSubmittingLeave}/>
+                <Textarea id="reason" value={leaveRequest.reason} onChange={(e) => handleLeaveRequestChange('reason', e.target.value)} placeholder="Briefly state the reason for your leave" required disabled={isSubmittingLeave || isGuest}/>
               </div>
-
-              <Button type="submit" className="w-full" disabled={isSubmittingLeave}>
-                 {isSubmittingLeave ? <LoaderIcon className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                 Submit Leave Request
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button type="submit" className="w-full" disabled={isSubmittingLeave || isGuest}>
+                        {isSubmittingLeave ? <LoaderIcon className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                        Submit Leave Request
+                    </Button>
+                </TooltipTrigger>
+                {isGuest && <TooltipContent><p>Login to submit leave requests.</p></TooltipContent>}
+              </Tooltip>
             </form>
           </CardContent>
         </Card>
@@ -718,7 +783,7 @@ export default function AttendanceReportingPage() {
           <Calendar
             month={currentCalendarMonth}
             onMonthChange={setCurrentCalendarMonth}
-            modifiers={dayModifiers} // Still uses mock data for calendar highlighting
+            modifiers={dayModifiers} 
             modifiersClassNames={dayModifiersClassNames}
             className="rounded-md border shadow-sm"
             numberOfMonths={1}
@@ -737,66 +802,83 @@ export default function AttendanceReportingPage() {
                 </div>
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t">
-              <CardTitle className="text-lg mb-2 flex items-center"><Filter className="mr-2 h-5 w-5" /> Filter Records</CardTitle>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-                <div className="lg:col-span-2">
-                  <Label htmlFor="filterEmployeeName">Employee Name</Label>
-                  <Input 
-                    id="filterEmployeeName"
-                    value={filterEmployeeName}
-                    onChange={(e) => setFilterEmployeeName(e.target.value)}
-                    placeholder="Search by name..."
-                    className="mt-1"
-                  />
+            {!isGuest && (
+                <div className="mt-4 pt-4 border-t">
+                <CardTitle className="text-lg mb-2 flex items-center"><Filter className="mr-2 h-5 w-5" /> Filter Records</CardTitle>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                    <div className="lg:col-span-2">
+                    <Label htmlFor="filterEmployeeName">Employee Name</Label>
+                    <Input 
+                        id="filterEmployeeName"
+                        value={filterEmployeeName}
+                        onChange={(e) => setFilterEmployeeName(e.target.value)}
+                        placeholder="Search by name..."
+                        className="mt-1"
+                    />
+                    </div>
+                    <div>
+                    <Label htmlFor="filterStartDate">Start Date</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                        <Button id="filterStartDate" variant={"outline"} className="w-full justify-start text-left font-normal mt-1">
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            {filterStartDate ? format(filterStartDate, "PPP") : <span>Pick a start date</span>}
+                        </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                        <Calendar mode="single" selected={filterStartDate} onSelect={setFilterStartDate} initialFocus />
+                        </PopoverContent>
+                    </Popover>
+                    </div>
+                    <div>
+                    <Label htmlFor="filterEndDate">End Date</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                        <Button id="filterEndDate" variant={"outline"} className="w-full justify-start text-left font-normal mt-1">
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            {filterEndDate ? format(filterEndDate, "PPP") : <span>Pick an end date</span>}
+                        </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                        <Calendar mode="single" selected={filterEndDate} onSelect={setFilterEndDate} disabled={(date) => filterStartDate ? date < filterStartDate : false} initialFocus />
+                        </PopoverContent>
+                    </Popover>
+                    </div>
+                    <div className="flex space-x-2">
+                        <Button onClick={handleApplyFilters} className="flex-1">
+                        <UserSearch className="mr-2 h-4 w-4" /> Apply
+                        </Button>
+                        <Button onClick={handleClearFilters} variant="outline" className="flex-1">
+                        <XCircle className="mr-2 h-4 w-4" /> Clear
+                        </Button>
+                    </div>
                 </div>
-                <div>
-                  <Label htmlFor="filterStartDate">Start Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button id="filterStartDate" variant={"outline"} className="w-full justify-start text-left font-normal mt-1">
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        {filterStartDate ? format(filterStartDate, "PPP") : <span>Pick a start date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar mode="single" selected={filterStartDate} onSelect={setFilterStartDate} initialFocus />
-                    </PopoverContent>
-                  </Popover>
                 </div>
-                <div>
-                  <Label htmlFor="filterEndDate">End Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button id="filterEndDate" variant={"outline"} className="w-full justify-start text-left font-normal mt-1">
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        {filterEndDate ? format(filterEndDate, "PPP") : <span>Pick an end date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar mode="single" selected={filterEndDate} onSelect={setFilterEndDate} disabled={(date) => filterStartDate ? date < filterStartDate : false} initialFocus />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="flex space-x-2">
-                    <Button onClick={handleApplyFilters} className="flex-1">
-                    <UserSearch className="mr-2 h-4 w-4" /> Apply
-                    </Button>
-                    <Button onClick={handleClearFilters} variant="outline" className="flex-1">
-                    <XCircle className="mr-2 h-4 w-4" /> Clear
-                    </Button>
-                </div>
-              </div>
-            </div>
+            )}
         </CardHeader>
         <CardContent>
-          {isLoadingRecords && (
+          {isGuest ? (
+             <div className="flex flex-col items-center justify-center py-10 text-center">
+                <ShieldQuestion className="h-12 w-12 text-primary mb-4" />
+                <p className="text-lg font-semibold mb-2">Full Features Await!</p>
+                <p className="text-muted-foreground mb-6 max-w-md">
+                  To access detailed attendance records, personalized reports, and manage your team's attendance, please log in or create an account.
+                </p>
+                <div className="flex gap-4">
+                  <Button asChild>
+                    <Link href="/login"><LogIn className="mr-2 h-4 w-4" /> Log In</Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href="/register"><UserPlus className="mr-2 h-4 w-4" /> Register</Link>
+                  </Button>
+                </div>
+              </div>
+          ) : isLoadingRecords ? (
             <div className="flex items-center justify-center py-10">
               <LoaderIcon className="mr-2 h-8 w-8 animate-spin" />
               <p>Loading attendance records...</p>
             </div>
-          )}
-          {!isLoadingRecords && fetchError && (
+          ) : fetchError ? (
              <div className="flex flex-col items-center justify-center py-10 text-center">
               <AlertTriangle className="mr-2 h-8 w-8 text-destructive mb-2" />
               <p className="text-destructive font-semibold">Failed to load records</p>
@@ -805,8 +887,7 @@ export default function AttendanceReportingPage() {
                 Try Again
               </Button>
             </div>
-          )}
-          {!isLoadingRecords && !fetchError && (
+          ) : (
             <div className="rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -889,7 +970,7 @@ export default function AttendanceReportingPage() {
           </div>
         </CardContent>
       </Card>
-    </>
+    </TooltipProvider>
   );
 }
 
