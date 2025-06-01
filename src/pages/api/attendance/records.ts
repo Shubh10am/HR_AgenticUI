@@ -63,6 +63,7 @@ export default async function handler(
     const records: PopulatedAttendanceRecord[] = await AttendanceRecord.find(query)
       .populate<{ employeeId: IEmployee }>({
         path: 'employeeId',
+        model: Employee, // Explicitly providing model can also help
         select: 'name department', // Select name and department from Employee
       })
       .sort({ date: -1, clockInTime: -1 }) // Sort by date desc, then clockInTime desc
