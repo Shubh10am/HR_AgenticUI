@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState, type FormEvent, useEffect } from 'react';
+import { useState, type FormEvent, useEffect, useCallback } from 'react';
 import PageHeader from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,29 +13,36 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import type { EmployeeRole, IEmployee } from '@/models/Employee'; // Assuming IEmployee is exported or use a client-side type
-import { Loader2, UserPlus, Users } from 'lucide-react';
+import type { EmployeeRole } from '@/models/Employee';
+import { Loader2, UserPlus, Users, Trash2, Edit3 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
-// Client-side mock employee type (subset of IEmployee)
-interface MockEmployee {
-  id: string;
+// Client-side employee type (should not include passwordHash)
+interface ClientEmployee {
+  _id: string; // MongoDB uses _id
   name: string;
   email: string;
   role: EmployeeRole;
-  avatarUrl?: string;
+  organizationId: string;
+  avatarUrl?: string; // Keep for consistency, can be generated client-side
   dataAiHint?: string;
 }
 
-const initialMockEmployees: MockEmployee[] = [
-  { id: 'emp1', name: 'Alice Wonderland', email: 'alice@example.com', role: 'Employee', avatarUrl: 'https://placehold.co/40x40.png', dataAiHint: 'woman avatar' },
-  { id: 'emp2', name: 'Bob The Builder', email: 'bob@example.com', role: 'HR', avatarUrl: 'https://placehold.co/40x40.png', dataAiHint: 'man avatar' },
-  { id: 'emp3', name: 'Charlie Chaplin', email: 'charlie@example.com', role: 'Employee', avatarUrl: 'https://placehold.co/40x40.png', dataAiHint: 'person avatar' },
-];
-
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export default function ManageEmployeesPage() {
   const { toast } = useToast();
-  const { user: adminUser, isLoading: authLoading } = useAuth();
+  const { user: adminUser, token, isLoading: authLoading } = useAuth();
 
   const [employeeName, setEmployeeName] = useState('');
   const [employeeEmail, setEmployeeEmail] = useState('');
@@ -44,23 +51,52 @@ export default function ManageEmployeesPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [currentEmployees, setCurrentEmployees] = useState<MockEmployee[]>([]);
+  const [currentEmployees, setCurrentEmployees] = useState<ClientEmployee[]>([]);
+  const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
   const [orgDomain, setOrgDomain] = useState<string | null>(null);
+
+  const [employeeToDelete, setEmployeeToDelete] = useState<ClientEmployee | null>(null);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+
+
+  const fetchEmployees = useCallback(async () => {
+    if (!adminUser || !token || adminUser.role !== 'Admin') return;
+    setIsLoadingEmployees(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/employees`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch employees');
+      }
+      const data: ClientEmployee[] = await response.json();
+      setCurrentEmployees(data.map(emp => ({
+        ...emp,
+        avatarUrl: `https://placehold.co/40x40.png?text=${emp.name.charAt(0).toUpperCase()}`,
+        dataAiHint: `${emp.role.toLowerCase()} avatar`
+      })));
+    } catch (error: any) {
+      toast({ title: 'Error Fetching Employees', description: error.message, variant: 'destructive' });
+      setCurrentEmployees([]); // Clear on error or set to previously fetched
+    } finally {
+      setIsLoadingEmployees(false);
+    }
+  }, [adminUser, token, toast]);
 
   useEffect(() => {
     if (adminUser && adminUser.email) {
       const domain = adminUser.email.substring(adminUser.email.lastIndexOf('@') + 1);
       setOrgDomain(domain);
-      // Filter mock employees to show only those matching the admin's domain for realism
-      setCurrentEmployees(initialMockEmployees.map(emp => ({...emp, email: `${emp.email.split('@')[0]}@${domain}`})));
     }
-  }, [adminUser]);
+    fetchEmployees();
+  }, [adminUser, fetchEmployees]);
 
 
   const handleRegisterEmployee = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!adminUser || !orgDomain) {
-      toast({ title: 'Error', description: 'Admin details not found. Cannot register employee.', variant: 'destructive' });
+    if (!adminUser || !orgDomain || !token) {
+      toast({ title: 'Error', description: 'Admin details not found or not authenticated.', variant: 'destructive' });
       return;
     }
     if (password !== confirmPassword) {
@@ -73,36 +109,70 @@ export default function ManageEmployeesPage() {
     }
 
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/employees`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ name: employeeName, email: employeeEmail, password, role: employeeRole }),
+      });
+      const data = await response.json();
 
-    const newEmployeeData: MockEmployee = {
-      id: `emp-${Date.now()}`,
-      name: employeeName,
-      email: employeeEmail,
-      role: employeeRole,
-      avatarUrl: 'https://placehold.co/40x40.png', // Generic placeholder
-      dataAiHint: 'new employee avatar',
-    };
-    
-    // Add to mock list for UI update
-    setCurrentEmployees(prev => [...prev, newEmployeeData]);
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to register employee');
+      }
+      
+      toast({
+        title: 'Employee Registered',
+        description: `${data.name} (${data.email}) has been added as an ${data.role}.`,
+      });
+      
+      // Reset form and refresh list
+      setEmployeeName('');
+      setEmployeeEmail('');
+      setEmployeeRole('Employee');
+      setPassword('');
+      setConfirmPassword('');
+      fetchEmployees(); // Refresh the list
+    } catch (error: any) {
+      toast({ title: 'Registration Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-    toast({
-      title: 'Employee Registered (Mock)',
-      description: `${employeeName} (${employeeEmail}) has been added as an ${employeeRole}.`,
-    });
-
-    // Reset form
-    setEmployeeName('');
-    setEmployeeEmail('');
-    setEmployeeRole('Employee');
-    setPassword('');
-    setConfirmPassword('');
-    setIsSubmitting(false);
+  const openDeleteConfirmation = (employee: ClientEmployee) => {
+    setEmployeeToDelete(employee);
+    setIsDeleteAlertOpen(true);
   };
   
-  if (authLoading || !adminUser) {
+  const handleDeleteEmployee = async () => {
+    if (!employeeToDelete || !token) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/employees/${employeeToDelete._id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete employee');
+      }
+
+      toast({ title: 'Employee Deleted', description: `${employeeToDelete.name} has been removed.` });
+      fetchEmployees(); // Refresh list
+    } catch (error: any) {
+      toast({ title: 'Deletion Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsDeleteAlertOpen(false);
+      setEmployeeToDelete(null);
+    }
+  };
+  
+  if (authLoading) {
     return (
       <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -110,7 +180,7 @@ export default function ManageEmployeesPage() {
     );
   }
 
-  if (adminUser.role !== 'Admin') {
+  if (!adminUser || adminUser.role !== 'Admin') {
     return (
       <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center">
         <Card className="text-center p-8">
@@ -221,11 +291,16 @@ export default function ManageEmployeesPage() {
               <Users className="mr-2 h-6 w-6 text-primary" />
               Current Employees
             </CardTitle>
-            <CardDescription>List of employees in your organization (Mock Data).</CardDescription>
+            <CardDescription>List of employees in your organization.</CardDescription>
           </CardHeader>
           <CardContent>
-            {currentEmployees.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">No employees registered yet, or data is loading.</p>
+            {isLoadingEmployees ? (
+              <div className="flex justify-center items-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="ml-2">Loading employees...</p>
+              </div>
+            ) : currentEmployees.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">No employees registered yet.</p>
             ) : (
               <div className="rounded-md border overflow-x-auto">
                 <Table>
@@ -239,12 +314,12 @@ export default function ManageEmployeesPage() {
                   </TableHeader>
                   <TableBody>
                     {currentEmployees.map((employee) => (
-                      <TableRow key={employee.id}>
+                      <TableRow key={employee._id}>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
                             <Avatar className="h-8 w-8">
                               <AvatarImage src={employee.avatarUrl} alt={employee.name} data-ai-hint={employee.dataAiHint} />
-                              <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
+                              <AvatarFallback>{employee.name.charAt(0).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             {employee.name}
                           </div>
@@ -255,9 +330,19 @@ export default function ManageEmployeesPage() {
                             {employee.role}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" onClick={() => toast({title: `Edit ${employee.name} (Mock)`})}>Edit</Button>
-                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive/80" onClick={() => toast({title: `Delete ${employee.name} (Mock)`, variant: 'destructive'})}>Delete</Button>
+                        <TableCell className="text-right space-x-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({title: `Edit ${employee.name} (Mock)`})}>
+                            <Edit3 className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                          {adminUser?._id !== employee._id && adminUser?.id !== employee._id && ( // Ensure adminUser._id exists for comparison
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/80 h-8 w-8" onClick={() => openDeleteConfirmation(employee)}>
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only">Delete</span>
+                              </Button>
+                            </AlertDialogTrigger>
+                           )}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -268,8 +353,22 @@ export default function ManageEmployeesPage() {
           </CardContent>
         </Card>
       </div>
+      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the employee account for {employeeToDelete?.name}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setEmployeeToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteEmployee} className={buttonVariants({ variant: "destructive" })}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
-
-    
