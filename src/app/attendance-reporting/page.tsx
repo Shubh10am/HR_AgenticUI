@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, differenceInMinutes, parse, isAfter, isBefore, isEqual, startOfDay } from 'date-fns';
+import { format, differenceInMinutes, parse, isAfter, isBefore, isEqual, startOfDay, startOfMonth } from 'date-fns';
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, type GenerateDraftEmailResponsesOutput } from '@/ai/flows/draft-email-response';
 
 
@@ -81,6 +81,10 @@ export default function AttendanceReportingPage() {
   const [leaveReasonPrompt, setLeaveReasonPrompt] = useState('');
   const [isGeneratingLeaveReason, setIsGeneratingLeaveReason] = useState(false);
 
+  const [currentCalendarMonth, setCurrentCalendarMonth] = useState<Date>(startOfMonth(new Date()));
+  const [dayModifiers, setDayModifiers] = useState<Record<string, Date[]>>({});
+  const [dayModifiersClassNames, setDayModifiersClassNames] = useState<Record<string, string>>({});
+
 
   useEffect(() => {
     const timerId = setInterval(() => {
@@ -96,8 +100,42 @@ export default function AttendanceReportingPage() {
       setLastClockInTimeDisplay(time.toLocaleTimeString());
     }
     setDisplayedAttendanceData(initialAttendanceData);
+
+    // Process initialAttendanceData for calendar highlighting
+    const presentDays = initialAttendanceData
+      .filter(d => d.status === 'Present')
+      .map(d => parse(d.date, 'yyyy-MM-dd', new Date()));
+    const absentDays = initialAttendanceData
+      .filter(d => d.status === 'Absent')
+      .map(d => parse(d.date, 'yyyy-MM-dd', new Date()));
+    const lateDays = initialAttendanceData
+      .filter(d => d.status === 'Late')
+      .map(d => parse(d.date, 'yyyy-MM-dd', new Date()));
+    const onLeaveDays = initialAttendanceData
+      .filter(d => d.status === 'On Leave')
+      .map(d => parse(d.date, 'yyyy-MM-dd', new Date()));
+    const noCheckInDays = initialAttendanceData
+      .filter(d => d.status === 'No Check-in')
+      .map(d => parse(d.date, 'yyyy-MM-dd', new Date()));
+      
+    setDayModifiers({
+      present: presentDays,
+      absent: absentDays,
+      late: lateDays,
+      onLeave: onLeaveDays,
+      noCheckIn: noCheckInDays,
+    });
+
+    setDayModifiersClassNames({
+      present: 'bg-green-100 dark:bg-green-800/50 text-green-700 dark:text-green-300 rounded-md',
+      absent: 'bg-red-100 dark:bg-red-800/50 text-red-700 dark:text-red-300 rounded-md',
+      late: 'bg-yellow-100 dark:bg-yellow-800/50 text-yellow-700 dark:text-yellow-300 rounded-md',
+      onLeave: 'bg-blue-100 dark:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-md',
+      noCheckIn: 'bg-orange-100 dark:bg-orange-800/50 text-orange-700 dark:text-orange-300 rounded-md',
+    });
+
     return () => clearInterval(timerId);
-  }, []);
+  }, []); // Empty dependency array, so this runs once on mount with initial data
 
   const handleClockIn = () => {
     const now = new Date();
@@ -524,6 +562,30 @@ export default function AttendanceReportingPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="mt-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <CardHeader>
+          <CardTitle className="flex items-center text-xl">
+            <CalendarDays className="mr-2 h-6 w-6 text-primary" />
+            Attendance Calendar
+          </CardTitle>
+          <CardDescription>
+            Visual overview of attendance for {format(currentCalendarMonth, 'MMMM yyyy')}. (Mock Data)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center p-4">
+          <Calendar
+            month={currentCalendarMonth}
+            onMonthChange={setCurrentCalendarMonth}
+            modifiers={dayModifiers}
+            modifiersClassNames={dayModifiersClassNames}
+            className="rounded-md border shadow-sm"
+            numberOfMonths={1}
+            // Example to disable future dates, customize as needed
+            // disabled={(date) => date > new Date() || date < new Date("1900-01-01")} 
+          />
+        </CardContent>
+      </Card>
       
       <Card className="mt-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader>
