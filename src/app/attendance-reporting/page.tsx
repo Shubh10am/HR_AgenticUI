@@ -1,13 +1,13 @@
 
 'use client';
 
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent, useCallback } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, UserCircle, Clock, LogIn, LogOut, Briefcase, CalendarDays, Send, FileText, BarChartHorizontalBig, Edit, Filter, UserSearch, XCircle, Wand2, Loader2 as LoaderIcon } from 'lucide-react';
+import { Download, UserCircle, Clock, LogIn, LogOut, Briefcase, CalendarDays, Send, FileText, BarChartHorizontalBig, Edit, Filter, UserSearch, XCircle, Wand2, Loader2 as LoaderIcon, AlertTriangle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from "@/hooks/use-toast";
 import { Input } from '@/components/ui/input';
@@ -16,9 +16,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, differenceInMinutes, parse, isAfter, isBefore, isEqual, startOfDay, startOfMonth } from 'date-fns';
+import { format, parse, isAfter, isBefore, isEqual, startOfDay, startOfMonth } from 'date-fns';
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput } from '@/ai/flows/draft-email-response';
-import { useAuth } from '@/contexts/auth-context'; // Added useAuth
+import { useAuth } from '@/contexts/auth-context';
+import type { TransformedAttendanceRecord } from '@/pages/api/attendance/records'; // Import the type
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -26,25 +27,25 @@ interface AttendanceEntry {
   id: string;
   employee: string;
   date: string; // YYYY-MM-DD
-  status: 'Present' | 'Absent' | 'Late' | 'On Leave' | 'No Check-in';
+  status: 'Present' | 'Absent' | 'Late' | 'On Leave' | 'No Check-in' | 'EarlyDeparture' | 'Unknown'; // Expanded status
   clockIn?: string;
   clockOut?: string;
   hoursWorked?: string;
-  department: string;
+  department?: string;
 }
 
-const initialAttendanceData: AttendanceEntry[] = [
-  { id: '1', employee: 'John Doe', date: '2024-07-01', status: 'Present', clockIn: '09:00 AM', clockOut: '05:30 PM', hoursWorked: '8h 30m', department: 'Engineering' },
-  { id: '2', employee: 'John Doe', date: '2024-07-02', status: 'Present', clockIn: '09:05 AM', clockOut: '05:35 PM', hoursWorked: '8h 30m', department: 'Engineering' },
-  { id: '3', employee: 'John Doe', date: '2024-07-03', status: 'Absent', hoursWorked: '0h 0m', department: 'Engineering' },
-  { id: '4', employee: 'Jane Smith', date: '2024-07-03', status: 'Present', clockIn: '09:00 AM', clockOut: '05:00 PM', hoursWorked: '8h 0m', department: 'Marketing' },
-  { id: '5', employee: 'John Doe', date: '2024-07-04', status: 'Late', clockIn: '09:45 AM', clockOut: '06:00 PM', hoursWorked: '8h 15m', department: 'Engineering' },
-  { id: '6', employee: 'John Doe', date: '2024-07-05', status: 'Present', clockIn: '08:55 AM', clockOut: '05:25 PM', hoursWorked: '8h 30m', department: 'Engineering' },
-  { id: '7', employee: 'Alice Brown', date: '2024-07-05', status: 'On Leave', hoursWorked: 'N/A', department: 'Sales' },
-  { id: '8', employee: 'Bob Green', date: '2024-07-05', status: 'No Check-in', hoursWorked: '0h 0m', department: 'Support' },
-  { id: '9', employee: 'Jane Smith', date: '2024-07-01', status: 'Present', clockIn: '09:00 AM', clockOut: '05:00 PM', hoursWorked: '8h 0m', department: 'Marketing' },
-  { id: '10', employee: 'Alice Brown', date: '2024-07-02', status: 'Late', clockIn: '09:30 AM', clockOut: '05:30 PM', hoursWorked: '8h 0m', department: 'Sales' },
+// Mock data for calendar will remain
+const mockCalendarAttendanceData: AttendanceEntry[] = [
+  { id: 'cal-1', employee: 'John Doe', date: '2024-07-01', status: 'Present', clockIn: '09:00 AM', clockOut: '05:30 PM', hoursWorked: '8h 30m', department: 'Engineering' },
+  { id: 'cal-2', employee: 'John Doe', date: '2024-07-02', status: 'Present', clockIn: '09:05 AM', clockOut: '05:35 PM', hoursWorked: '8h 30m', department: 'Engineering' },
+  { id: 'cal-3', employee: 'John Doe', date: '2024-07-03', status: 'Absent', hoursWorked: '0h 0m', department: 'Engineering' },
+  { id: 'cal-4', employee: 'Jane Smith', date: '2024-07-03', status: 'Present', clockIn: '09:00 AM', clockOut: '05:00 PM', hoursWorked: '8h 0m', department: 'Marketing' },
+  { id: 'cal-5', employee: 'John Doe', date: '2024-07-04', status: 'Late', clockIn: '09:45 AM', clockOut: '06:00 PM', hoursWorked: '8h 15m', department: 'Engineering' },
+  { id: 'cal-6', employee: 'John Doe', date: '2024-07-05', status: 'Present', clockIn: '08:55 AM', clockOut: '05:25 PM', hoursWorked: '8h 30m', department: 'Engineering' },
+  { id: 'cal-7', employee: 'Alice Brown', date: '2024-07-05', status: 'On Leave', hoursWorked: 'N/A', department: 'Sales' },
+  { id: 'cal-8', employee: 'Bob Green', date: '2024-07-05', status: 'No Check-in', hoursWorked: '0h 0m', department: 'Support' },
 ];
+
 
 const productivityData = [
     { employee: 'John Doe', tasksCompleted: 15, targetTasks: 12, project: 'Project Phoenix', rating: 'High' },
@@ -65,12 +66,18 @@ export default function AttendanceReportingPage() {
   const [clockInTime, setClockInTime] = useState<Date | null>(null);
   const [lastClockInTimeDisplay, setLastClockInTimeDisplay] = useState<string | null>(null);
   const { toast } = useToast();
-  const { user, token } = useAuth(); // Added token
+  const { user, token } = useAuth();
 
   const [filterEmployeeName, setFilterEmployeeName] = useState('');
   const [filterStartDate, setFilterStartDate] = useState<Date | undefined>();
   const [filterEndDate, setFilterEndDate] = useState<Date | undefined>();
-  const [displayedAttendanceData, setDisplayedAttendanceData] = useState<AttendanceEntry[]>(initialAttendanceData);
+  
+  // State for live data from API
+  const [allFetchedAttendanceRecords, setAllFetchedAttendanceRecords] = useState<AttendanceEntry[]>([]);
+  const [displayedAttendanceData, setDisplayedAttendanceData] = useState<AttendanceEntry[]>([]);
+  const [isLoadingRecords, setIsLoadingRecords] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
 
   const [leaveRequest, setLeaveRequest] = useState<LeaveRequest>({
     employeeName: user?.name || '', 
@@ -91,13 +98,54 @@ export default function AttendanceReportingPage() {
   const [dayModifiers, setDayModifiers] = useState<Record<string, Date[]>>({});
   const [dayModifiersClassNames, setDayModifiersClassNames] = useState<Record<string, string>>({});
 
+  const fetchAttendanceRecords = useCallback(async () => {
+    if (!token) return;
+    setIsLoadingRecords(true);
+    setFetchError(null);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/attendance/records`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch attendance records');
+      }
+      const data: TransformedAttendanceRecord[] = await response.json();
+      
+      const mappedData: AttendanceEntry[] = data.map(record => ({
+        id: record.id,
+        employee: record.employeeName,
+        date: record.date,
+        status: record.status, // Using status from backend
+        clockIn: record.clockIn,
+        clockOut: record.clockOut,
+        hoursWorked: record.hoursWorked,
+        department: record.department,
+      }));
+      setAllFetchedAttendanceRecords(mappedData);
+      setDisplayedAttendanceData(mappedData); // Initially display all fetched data
+
+    } catch (error: any) {
+      console.error("Error fetching attendance records:", error);
+      toast({ title: "Fetch Error", description: error.message, variant: "destructive" });
+      setFetchError(error.message);
+      setAllFetchedAttendanceRecords([]);
+      setDisplayedAttendanceData([]);
+    } finally {
+      setIsLoadingRecords(false);
+    }
+  }, [token, toast]);
+
+  useEffect(() => {
+    fetchAttendanceRecords();
+  }, [fetchAttendanceRecords]);
+
 
   useEffect(() => {
     const timerId = setInterval(() => {
       setCurrentTime(new Date().toLocaleTimeString());
     }, 1000);
 
-    // TODO: Fetch current day's clock-in status from backend to initialize accurately
     const storedClockInStatus = localStorage.getItem('hrStreamlineClockInStatus');
     const storedClockInTime = localStorage.getItem('hrStreamlineClockInTime');
     if (storedClockInStatus === 'true' && storedClockInTime) {
@@ -109,22 +157,21 @@ export default function AttendanceReportingPage() {
     if (user?.name && !leaveRequest.employeeName) {
         setLeaveRequest(prev => ({...prev, employeeName: user.name}));
     }
-    setDisplayedAttendanceData(initialAttendanceData);
 
-    // Process initialAttendanceData for calendar highlighting
-    const presentDays = initialAttendanceData
+    // Process mockCalendarAttendanceData for calendar highlighting
+    const presentDays = mockCalendarAttendanceData
       .filter(d => d.status === 'Present')
       .map(d => parse(d.date, 'yyyy-MM-dd', new Date()));
-    const absentDays = initialAttendanceData
+    const absentDays = mockCalendarAttendanceData
       .filter(d => d.status === 'Absent')
       .map(d => parse(d.date, 'yyyy-MM-dd', new Date()));
-    const lateDays = initialAttendanceData
+    const lateDays = mockCalendarAttendanceData
       .filter(d => d.status === 'Late')
       .map(d => parse(d.date, 'yyyy-MM-dd', new Date()));
-    const onLeaveDays = initialAttendanceData
+    const onLeaveDays = mockCalendarAttendanceData
       .filter(d => d.status === 'On Leave')
       .map(d => parse(d.date, 'yyyy-MM-dd', new Date()));
-    const noCheckInDays = initialAttendanceData
+    const noCheckInDays = mockCalendarAttendanceData
       .filter(d => d.status === 'No Check-in')
       .map(d => parse(d.date, 'yyyy-MM-dd', new Date()));
       
@@ -145,7 +192,7 @@ export default function AttendanceReportingPage() {
     });
 
     return () => clearInterval(timerId);
-  }, [user]); // Added user to dependency array
+  }, [user]);
 
   const handleClockIn = async () => {
     if (!token) {
@@ -164,7 +211,7 @@ export default function AttendanceReportingPage() {
         throw new Error(data.error || 'Failed to clock in.');
       }
       
-      const now = new Date(data.record.clockInTime); // Use server time if possible
+      const now = new Date(data.record.clockInTime);
       setIsClockedIn(true);
       setClockInTime(now);
       setLastClockInTimeDisplay(now.toLocaleTimeString());
@@ -174,7 +221,7 @@ export default function AttendanceReportingPage() {
         title: "Clocked In",
         description: `You clocked in at ${now.toLocaleTimeString()}.`,
       });
-
+      fetchAttendanceRecords(); // Refresh table data
     } catch (error: any) {
       toast({ title: "Clock-In Error", description: error.message, variant: "destructive" });
     } finally {
@@ -200,7 +247,7 @@ export default function AttendanceReportingPage() {
       }
 
       setIsClockedIn(false);
-      const clockOutTime = new Date(data.record.clockOutTime); // Use server time
+      const clockOutTime = new Date(data.record.clockOutTime);
       let durationMessage = '';
       if (data.record.hoursWorked !== undefined) {
         const minutes = data.record.hoursWorked;
@@ -211,12 +258,11 @@ export default function AttendanceReportingPage() {
       
       localStorage.removeItem('hrStreamlineClockInStatus');
       localStorage.removeItem('hrStreamlineClockInTime');
-      // setClockInTime(null); // Already handled by setIsClockedIn(false) and subsequent UI updates
       toast({
         title: "Clocked Out",
         description: `You clocked out at ${clockOutTime.toLocaleTimeString()}.${durationMessage}`,
       });
-
+      fetchAttendanceRecords(); // Refresh table data
     } catch (error: any) {
       toast({ title: "Clock-Out Error", description: error.message, variant: "destructive" });
     } finally {
@@ -224,23 +270,27 @@ export default function AttendanceReportingPage() {
     }
   };
 
-  const getStatusBadgeVariant = (status: AttendanceEntry['status']) => {
+  const getStatusBadgeVariant = (status?: AttendanceEntry['status']) => {
+    if (!status) return 'outline';
     switch (status.toLowerCase()) {
       case 'present': return 'default';
       case 'absent': return 'destructive';
       case 'late': return 'secondary';
       case 'on leave': return 'outline';
       case 'no check-in': return 'outline';
+      case 'earlydeparture': return 'secondary';
       default: return 'outline';
     }
   };
   
-  const getStatusBadgeClassName = (status: AttendanceEntry['status']) => {
+  const getStatusBadgeClassName = (status?: AttendanceEntry['status']) => {
+     if (!status) return '';
     switch (status.toLowerCase()) {
       case 'present': return 'bg-green-500 hover:bg-green-600 text-white';
       case 'late': return 'bg-yellow-500 hover:bg-yellow-600 text-black';
       case 'on leave': return 'bg-blue-500 hover:bg-blue-600 text-white';
       case 'no check-in': return 'bg-orange-500 hover:bg-orange-600 text-white';
+      case 'earlydeparture': return 'bg-yellow-500 hover:bg-yellow-600 text-black';
       default: return '';
     }
   };
@@ -297,6 +347,7 @@ export default function AttendanceReportingPage() {
         reason: '',
       });
       setLeaveReasonPrompt('');
+      // Potentially refresh leave-related data here if displayed on this page
     } catch (error: any) {
       toast({ title: "Leave Request Error", description: error.message, variant: "destructive" });
     } finally {
@@ -333,7 +384,7 @@ export default function AttendanceReportingPage() {
 
 
   const handleApplyFilters = () => {
-    let filteredData = [...initialAttendanceData];
+    let filteredData = [...allFetchedAttendanceRecords];
 
     if (filterEmployeeName.trim() !== '') {
       filteredData = filteredData.filter(entry =>
@@ -371,7 +422,7 @@ export default function AttendanceReportingPage() {
     setFilterEmployeeName('');
     setFilterStartDate(undefined);
     setFilterEndDate(undefined);
-    setDisplayedAttendanceData(initialAttendanceData);
+    setDisplayedAttendanceData(allFetchedAttendanceRecords); // Reset to all fetched records
     toast({
         title: "Filters Cleared",
         description: "Showing all attendance records."
@@ -396,7 +447,7 @@ export default function AttendanceReportingPage() {
     }
     const header = "Employee,Date,Status,Clock In,Clock Out,Hours Worked,Department\n";
     const rows = displayedAttendanceData.map(entry => 
-      `"${entry.employee}","${entry.date}","${entry.status}","${entry.clockIn || '-'}","${entry.clockOut || '-'}","${entry.hoursWorked || '-'}","${entry.department}"`
+      `"${entry.employee}","${entry.date}","${entry.status}","${entry.clockIn || '-'}","${entry.clockOut || '-'}","${entry.hoursWorked || '-'}","${entry.department || '-'}"`
     ).join("\n");
     const csvContent = header + rows;
     triggerDownload(csvContent, 'attendance_report.csv', 'text/csv;charset=utf-8;');
@@ -417,7 +468,7 @@ export default function AttendanceReportingPage() {
       textContent += `Clock In: ${entry.clockIn || '-'}\n`;
       textContent += `Clock Out: ${entry.clockOut || '-'}\n`;
       textContent += `Hours Worked: ${entry.hoursWorked || '-'}\n`;
-      textContent += `Department: ${entry.department}\n`;
+      textContent += `Department: ${entry.department || '-'}\n`;
       textContent += "-------------------------------------------\n";
     });
     triggerDownload(textContent, 'attendance_report_text_version.txt', 'text/plain;charset=utf-8;');
@@ -660,19 +711,17 @@ export default function AttendanceReportingPage() {
             Attendance Calendar
           </CardTitle>
           <CardDescription>
-            Visual overview of attendance for {format(currentCalendarMonth, 'MMMM yyyy')}. (Mock Data)
+            Visual overview of attendance for {format(currentCalendarMonth, 'MMMM yyyy')}. (Mock Data for Calendar)
           </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center p-4">
           <Calendar
             month={currentCalendarMonth}
             onMonthChange={setCurrentCalendarMonth}
-            modifiers={dayModifiers}
+            modifiers={dayModifiers} // Still uses mock data for calendar highlighting
             modifiersClassNames={dayModifiersClassNames}
             className="rounded-md border shadow-sm"
             numberOfMonths={1}
-            // Example to disable future dates, customize as needed
-            // disabled={(date) => date > new Date() || date < new Date("1900-01-01")} 
           />
         </CardContent>
       </Card>
@@ -684,7 +733,7 @@ export default function AttendanceReportingPage() {
                 <UserCircle className="h-10 w-10 text-primary mr-3" />
                 <div>
                   <CardTitle className="text-xl">Employee Attendance Overview</CardTitle>
-                  <CardDescription>Monthly attendance summary for all employees.</CardDescription>
+                  <CardDescription>Monthly attendance summary for employees in your organization.</CardDescription>
                 </div>
               </div>
             </div>
@@ -741,45 +790,65 @@ export default function AttendanceReportingPage() {
             </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Employee</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Clock In</TableHead>
-                  <TableHead>Clock Out</TableHead>
-                  <TableHead>Hours Worked</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {displayedAttendanceData.length > 0 ? displayedAttendanceData.map((entry) => ( 
-                  <TableRow key={entry.id}>
-                    <TableCell className="font-medium">{entry.employee}</TableCell>
-                    <TableCell>{entry.date}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={getStatusBadgeVariant(entry.status)}
-                        className={getStatusBadgeClassName(entry.status)}
-                      >
-                        {entry.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{entry.clockIn || '-'}</TableCell>
-                    <TableCell>{entry.clockOut || '-'}</TableCell>
-                    <TableCell>{entry.hoursWorked || '-'}</TableCell>
-                  </TableRow>
-                )) : (
+          {isLoadingRecords && (
+            <div className="flex items-center justify-center py-10">
+              <LoaderIcon className="mr-2 h-8 w-8 animate-spin" />
+              <p>Loading attendance records...</p>
+            </div>
+          )}
+          {!isLoadingRecords && fetchError && (
+             <div className="flex flex-col items-center justify-center py-10 text-center">
+              <AlertTriangle className="mr-2 h-8 w-8 text-destructive mb-2" />
+              <p className="text-destructive font-semibold">Failed to load records</p>
+              <p className="text-sm text-muted-foreground">{fetchError}</p>
+              <Button onClick={fetchAttendanceRecords} variant="outline" className="mt-4">
+                Try Again
+              </Button>
+            </div>
+          )}
+          {!isLoadingRecords && !fetchError && (
+            <div className="rounded-md border overflow-x-auto">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
-                      No attendance records match your filters.
-                    </TableCell>
+                    <TableHead>Employee</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Clock In</TableHead>
+                    <TableHead>Clock Out</TableHead>
+                    <TableHead>Hours Worked</TableHead>
+                    <TableHead>Department</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {displayedAttendanceData.length > 0 ? displayedAttendanceData.map((entry) => ( 
+                    <TableRow key={entry.id}>
+                      <TableCell className="font-medium">{entry.employee}</TableCell>
+                      <TableCell>{entry.date}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={getStatusBadgeVariant(entry.status)}
+                          className={getStatusBadgeClassName(entry.status)}
+                        >
+                          {entry.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{entry.clockIn || '-'}</TableCell>
+                      <TableCell>{entry.clockOut || '-'}</TableCell>
+                      <TableCell>{entry.hoursWorked || '-'}</TableCell>
+                      <TableCell>{entry.department || '-'}</TableCell>
+                    </TableRow>
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground">
+                        No attendance records match your filters or no data available.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
       

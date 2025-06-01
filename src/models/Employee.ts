@@ -10,6 +10,7 @@ export interface IEmployee extends Document {
   passwordHash: string;
   role: EmployeeRole;
   organizationId: mongoose.Types.ObjectId | IOrganization;
+  department?: string; // Added department
   createdAt: Date;
   updatedAt: Date;
 }
@@ -45,6 +46,10 @@ const EmployeeSchema: Schema<IEmployee> = new Schema(
       ref: 'Organization',
       required: true,
     },
+    department: { // Added department field
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true, // Adds createdAt and updatedAt automatically
@@ -55,3 +60,4 @@ const EmployeeSchema: Schema<IEmployee> = new Schema(
 const Employee: Model<IEmployee> = models.Employee || mongoose.model<IEmployee>('Employee', EmployeeSchema);
 
 export default Employee;
+
