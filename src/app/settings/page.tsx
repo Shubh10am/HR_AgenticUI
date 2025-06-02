@@ -74,7 +74,9 @@ export default function SettingsPage() {
     if (storedSoundPreference !== null) {
       setSoundEnabled(storedSoundPreference === 'true');
     }
+  }, []);
 
+  useEffect(() => {
     const storedFontStyle = localStorage.getItem(FONT_STYLE_KEY);
     if (storedFontStyle && FONT_STYLE_CLASSES[storedFontStyle]) {
       applyFontStyle(storedFontStyle);
@@ -88,13 +90,16 @@ export default function SettingsPage() {
     } else {
       applyFontSize('default'); // Default
     }
+  }, [applyFontStyle, applyFontSize]);
 
+  useEffect(() => {
     const storedUserApiKey = localStorage.getItem(USER_API_KEY_LOCALSTORAGE_KEY);
     if (storedUserApiKey) {
       setUserApiKey(storedUserApiKey);
       setInputApiKey(storedUserApiKey);
     }
-  }, [applyFontStyle, applyFontSize]);
+  }, []);
+
 
   const handleMockAction = (action: string) => {
     toast({
