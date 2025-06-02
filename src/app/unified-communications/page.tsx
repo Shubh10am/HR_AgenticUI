@@ -9,12 +9,12 @@ import { Mail, MessageSquare, Video, Users as TeamsIcon, Briefcase, Github, Webc
 import { Badge } from '@/components/ui/badge';
 
 const communicationPlatforms = [
-  { name: 'Email', icon: Mail, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'email app logo', description: 'Direct team and client communication.' },
-  { name: 'Slack', icon: MessageSquare, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'slack app logo', description: 'Instant team messaging and channels.' },
-  { name: 'Google Meet', icon: Video, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'google meet logo', description: 'Video conferencing and meetings.' },
-  { name: 'Zoom', icon: Webcam, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'zoom app logo', description: 'Video calls and webinars.' },
-  { name: 'Microsoft Teams', icon: TeamsIcon, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'microsoft teams logo', description: 'Collaboration and chat within Microsoft ecosystem.' },
-  { name: 'GitHub', icon: Github, logoUrl: 'https://placehold.co/56x56.png', dataAiHint: 'github logo', description: 'Code collaboration and version control discussions.' },
+  { name: 'Email', icon: Mail, logoUrl: 'https://cdn-icons-png.flaticon.com/512/732/732200.png', dataAiHint: 'email app logo', description: 'Direct team and client communication.' },
+  { name: 'Slack', icon: MessageSquare, logoUrl: 'https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png', dataAiHint: 'slack app logo', description: 'Instant team messaging and channels.' },
+  { name: 'Google Meet', icon: Video, logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg', dataAiHint: 'google meet logo', description: 'Video conferencing and meetings.' },
+  { name: 'Zoom', icon: Webcam, logoUrl: 'https://zoom.us/favicon.ico', dataAiHint: 'zoom app logo', description: 'Video calls and webinars.' },
+  { name: 'Microsoft Teams', icon: TeamsIcon, logoUrl: 'https://www.microsoft.com/favicon.ico', dataAiHint: 'microsoft teams logo', description: 'Collaboration and chat within Microsoft ecosystem.' },
+  { name: 'GitHub', icon: Github, logoUrl: 'https://github.githubassets.com/favicons/favicon.png', dataAiHint: 'github logo', description: 'Code collaboration and version control discussions.' },
 ];
 
 const communicationLogs = [
