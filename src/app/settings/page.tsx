@@ -6,10 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Lock, Bell, Palette, Plug, ChevronRight, Settings, Volume2, Sun, Moon, Laptop, Type,CaseSensitive } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Lock, Bell, Palette, Plug, ChevronRight, Settings, Volume2, Sun, Moon, Laptop, Type, CaseSensitive, KeyRound, Eye, EyeOff, Copy, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect, useCallback } from 'react';
@@ -17,6 +19,7 @@ import { useTheme } from 'next-themes';
 
 const FONT_STYLE_KEY = 'appFontStyle';
 const FONT_SIZE_KEY = 'appFontSize';
+const USER_API_KEY_LOCALSTORAGE_KEY = 'userGoogleApiKey';
 
 const FONT_STYLE_CLASSES: Record<string, string> = {
   sans: 'font-style-sans',
@@ -36,6 +39,11 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const [selectedFontStyle, setSelectedFontStyle] = useState('sans');
   const [selectedFontSize, setSelectedFontSize] = useState('default');
+
+  const [userApiKey, setUserApiKey] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [inputApiKey, setInputApiKey] = useState('');
+
 
   const applyFontStyle = useCallback((style: string) => {
     if (typeof window !== 'undefined') {
@@ -80,6 +88,12 @@ export default function SettingsPage() {
     } else {
       applyFontSize('default'); // Default
     }
+
+    const storedUserApiKey = localStorage.getItem(USER_API_KEY_LOCALSTORAGE_KEY);
+    if (storedUserApiKey) {
+      setUserApiKey(storedUserApiKey);
+      setInputApiKey(storedUserApiKey);
+    }
   }, [applyFontStyle, applyFontSize]);
 
   const handleMockAction = (action: string) => {
@@ -120,6 +134,42 @@ export default function SettingsPage() {
       description: `Switched to ${size.charAt(0).toUpperCase() + size.slice(1)} size.`,
     });
   };
+
+  const handleSaveApiKey = () => {
+    if (!inputApiKey.trim()) {
+      toast({ title: 'API Key Empty', description: 'Please enter an API key to save.', variant: 'destructive' });
+      return;
+    }
+    localStorage.setItem(USER_API_KEY_LOCALSTORAGE_KEY, inputApiKey);
+    setUserApiKey(inputApiKey);
+    toast({
+      title: 'API Key Saved in Browser',
+      description: 'Remember to add it to .env.local and restart your server.',
+      duration: 7000,
+    });
+  };
+
+  const handleRemoveApiKey = () => {
+    localStorage.removeItem(USER_API_KEY_LOCALSTORAGE_KEY);
+    setUserApiKey('');
+    setInputApiKey('');
+    setShowApiKey(false);
+    toast({ title: 'API Key Removed', description: 'User API key cleared from browser storage.' });
+  };
+
+  const handleCopyToClipboard = () => {
+    if (!userApiKey) {
+        toast({ title: 'No API Key', description: 'No API key is stored to copy.', variant: 'destructive' });
+        return;
+    }
+    const instruction = `GOOGLE_API_KEY=${userApiKey}`;
+    navigator.clipboard.writeText(instruction).then(() => {
+        toast({ title: 'Copied to Clipboard', description: 'Instructions copied. Paste into your .env.local file.' });
+    }).catch(err => {
+        toast({ title: 'Copy Failed', description: 'Could not copy to clipboard.', variant: 'destructive' });
+    });
+  };
+
 
   return (
     <>
@@ -250,6 +300,63 @@ export default function SettingsPage() {
                 </SelectContent>
               </Select>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2 lg:col-span-3 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <KeyRound className="mr-2 h-5 w-5 text-primary" /> API Key Management
+            </CardTitle>
+            <CardDescription>Configure the Google AI API Key for generative features.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Enter your Google AI API Key. This key is stored in your browser for convenience.
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="apiKeyInput">Google AI API Key</Label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  id="apiKeyInput"
+                  type={showApiKey ? 'text' : 'password'}
+                  value={inputApiKey}
+                  onChange={(e) => setInputApiKey(e.target.value)}
+                  placeholder="Enter your API Key"
+                  className="flex-grow"
+                />
+                <Button variant="ghost" size="icon" onClick={() => setShowApiKey(!showApiKey)} aria-label={showApiKey ? 'Hide API Key' : 'Show API Key'}>
+                  {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            {userApiKey && (
+              <p className="text-sm">
+                Current stored key: <span className="font-mono bg-muted px-1 py-0.5 rounded">{`${userApiKey.substring(0, 4)}...${userApiKey.slice(-4)}`}</span>
+              </p>
+            )}
+            <div className="flex space-x-2">
+              <Button onClick={handleSaveApiKey}>Save Key to Browser</Button>
+              {userApiKey && <Button variant="destructive" onClick={handleRemoveApiKey}>Remove Stored Key</Button>}
+            </div>
+            <Alert variant="default" className="mt-4 border-blue-500 dark:border-blue-400">
+              <Info className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+              <AlertTitle className="text-blue-700 dark:text-blue-300">Important: Activation Steps</AlertTitle>
+              <AlertDescription className="text-blue-600 dark:text-blue-200">
+                For the AI services to use the saved key:
+                <ol className="list-decimal list-inside mt-2 space-y-1">
+                  <li>Create or open the <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">.env.local</code> file in the root of your project.</li>
+                  <li>Add the following line, replacing <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">YOUR_SAVED_KEY</code> with your actual key:
+                    <pre className="mt-1 p-2 bg-blue-50 dark:bg-blue-900 rounded text-xs overflow-x-auto">GOOGLE_API_KEY={userApiKey || 'YOUR_SAVED_KEY'}</pre>
+                  </li>
+                  <li>Restart your development server (e.g., stop and re-run <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">npm run dev</code>).</li>
+                </ol>
+                If <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">GOOGLE_API_KEY</code> is not set in <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">.env.local</code>, the application may attempt to use default credentials or other configurations.
+                <Button variant="outline" size="sm" onClick={handleCopyToClipboard} className="mt-3 text-blue-700 border-blue-500 hover:bg-blue-100 dark:text-blue-300 dark:border-blue-400 dark:hover:bg-blue-800" disabled={!userApiKey}>
+                  <Copy className="mr-2 h-4 w-4" /> Copy .env.local line
+                </Button>
+              </AlertDescription>
+            </Alert>
           </CardContent>
         </Card>
 
