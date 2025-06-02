@@ -2,16 +2,16 @@
 'use client';
 
 import { useState, useRef, useEffect, type FormEvent } from 'react';
-import Link from 'next/link'; // Added Link import
+import Link from 'next/link';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, MessageSquare, Send, User, Bot, Lock } from 'lucide-react'; // Added Lock
+import { Loader2, MessageSquare, Send, User, Bot, Lock } from 'lucide-react';
 import { chatWithCopilot, type CopilotChatInput, type CopilotChatOutput } from '@/ai/flows/copilot-chat-flow';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/auth-context'; // Added useAuth import
+import { useAuth } from '@/contexts/auth-context';
 
 interface CopilotSidebarProps {
   isOpen: boolean;
@@ -34,15 +34,15 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { user } = useAuth(); // Get user from auth context
-  const isGuest = user?.organizationId === 'guest-org-id'; // Determine if guest
+  const { user } = useAuth();
+  const isGuest = user?.organizationId === 'guest-org-id';
 
   useEffect(() => {
-    if (isOpen && inputRef.current && !isGuest) { // Only focus if not guest
+    if (isOpen && inputRef.current) { // Focus input if sidebar is open and input exists
       const timer = setTimeout(() => inputRef.current?.focus(), 150);
       return () => clearTimeout(timer);
     }
-  }, [isOpen, isGuest]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -59,8 +59,21 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
     if (isGuest) {
       toast({
         title: "Login Required",
-        description: "Please log in or register to use the Copilot chat.",
+        description: (
+          <div>
+            Please{' '}
+            <Link href="/login" className="underline" onClick={() => onOpenChange(false)}>
+              log in
+            </Link> or{' '}
+            <Link href="/register" className="underline" onClick={() => onOpenChange(false)}>
+              register
+            </Link>{' '}
+            to use the Copilot.
+          </div>
+        ),
+        variant: "default", // Or a custom variant if you prefer
       });
+      setUserInput(''); // Clear input for guest after showing toast
       return;
     }
 
@@ -110,8 +123,8 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
       setChatHistory(prev => [...prev, errorAiMessage]);
     } finally {
       setIsLoading(false);
-      if (!isGuest) {
-        inputRef.current?.focus();
+      if (inputRef.current) { // Refocus after sending, if not guest (guest path returns early)
+          inputRef.current.focus();
       }
     }
   };
@@ -134,7 +147,22 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
             {chatHistory.length === 0 && !isLoading && (
               <div className="text-center text-muted-foreground py-10">
                 <MessageSquare className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No messages yet. Start a conversation!</p>
+                <p className="text-sm">
+                  {isGuest
+                    ? "Log in or register to use the Copilot."
+                    : "No messages yet. Start a conversation!"}
+                </p>
+                {isGuest && (
+                  <div className="mt-4 flex flex-col sm:flex-row justify-center items-center gap-2">
+                    <Button size="sm" asChild onClick={() => onOpenChange(false)}>
+                      <Link href="/login">Log In</Link>
+                    </Button>
+                    <span className="text-xs text-muted-foreground hidden sm:inline">or</span>
+                    <Button size="sm" variant="outline" asChild onClick={() => onOpenChange(false)}>
+                      <Link href="/register">Register</Link>
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
             {chatHistory.map(message => (
@@ -187,47 +215,28 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
         </ScrollArea>
         
         <SheetFooter className="p-4 border-t bg-background">
-          {isGuest ? (
-            <div className="flex flex-col items-center text-center p-4 space-y-3">
-              <Lock className="h-8 w-8 text-muted-foreground" />
-              <p className="text-sm font-medium">Chat Unavailable in Guest Mode</p>
-              <p className="text-xs text-muted-foreground">
-                Please{' '}
-                <Link 
-                  href="/login" 
-                  className="underline text-primary hover:text-primary/80" 
-                  onClick={() => onOpenChange(false)} // Close sidebar on click
-                >
-                  log in
-                </Link> or{' '}
-                <Link 
-                  href="/register" 
-                  className="underline text-primary hover:text-primary/80" 
-                  onClick={() => onOpenChange(false)} // Close sidebar on click
-                >
-                  register
-                </Link>{' '}
-                to use the Copilot.
-              </p>
-            </div>
-          ) : (
-            <form onSubmit={handleSendMessage} className="flex w-full items-center space-x-2">
-              <Input
-                ref={inputRef}
-                type="text"
-                placeholder="Ask Copilot..."
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                className="flex-1 h-9"
-                disabled={isLoading}
-                autoComplete="off"
-              />
-              <Button type="submit" size="icon" className="h-9 w-9" disabled={isLoading || !userInput.trim()}>
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                <span className="sr-only">Send</span>
-              </Button>
-            </form>
-          )}
+          <form onSubmit={handleSendMessage} className="flex w-full items-center space-x-2">
+            <Input
+              ref={inputRef}
+              type="text"
+              placeholder={isGuest ? "Log in or register to chat" : "Ask Copilot..."}
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              className="flex-1 h-9"
+              disabled={isLoading} // Only disable if AI is processing
+              autoComplete="off"
+            />
+            <Button 
+              type="submit" 
+              size="icon" 
+              className="h-9 w-9" 
+              disabled={isLoading || (!isGuest && !userInput.trim())}
+            >
+              {/* For guests, button is enabled unless isLoading. For auth users, also check for input. */}
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              <span className="sr-only">Send</span>
+            </Button>
+          </form>
         </SheetFooter>
       </SheetContent>
     </Sheet>
