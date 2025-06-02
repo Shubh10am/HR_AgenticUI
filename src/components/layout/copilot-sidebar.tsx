@@ -1,14 +1,17 @@
+
 'use client';
 
 import { useState, useRef, useEffect, type FormEvent } from 'react';
+import Link from 'next/link'; // Added Link import
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, MessageSquare, Send, User, Bot } from 'lucide-react';
+import { Loader2, MessageSquare, Send, User, Bot, Lock } from 'lucide-react'; // Added Lock
 import { chatWithCopilot, type CopilotChatInput, type CopilotChatOutput } from '@/ai/flows/copilot-chat-flow';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/auth-context'; // Added useAuth import
 
 interface CopilotSidebarProps {
   isOpen: boolean;
@@ -31,14 +34,15 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { user } = useAuth(); // Get user from auth context
+  const isGuest = user?.organizationId === 'guest-org-id'; // Determine if guest
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      // Delay focus to allow sheet transition to complete
+    if (isOpen && inputRef.current && !isGuest) { // Only focus if not guest
       const timer = setTimeout(() => inputRef.current?.focus(), 150);
       return () => clearTimeout(timer);
     }
-  }, [isOpen]);
+  }, [isOpen, isGuest]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -51,6 +55,15 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
 
   const handleSendMessage = async (event?: FormEvent<HTMLFormElement>) => {
     if (event) event.preventDefault();
+
+    if (isGuest) {
+      toast({
+        title: "Login Required",
+        description: "Please log in or register to use the Copilot chat.",
+      });
+      return;
+    }
+
     const trimmedInput = userInput.trim();
     if (!trimmedInput) return;
 
@@ -97,7 +110,9 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
       setChatHistory(prev => [...prev, errorAiMessage]);
     } finally {
       setIsLoading(false);
-      inputRef.current?.focus();
+      if (!isGuest) {
+        inputRef.current?.focus();
+      }
     }
   };
 
@@ -142,7 +157,6 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
                       : 'bg-secondary text-secondary-foreground rounded-bl-none'
                   }`}
                 >
-                  {/* Preserve line breaks from AI response */}
                   {message.text.split('\n').map((line, i, arr) => (
                     <span key={i}>
                       {line}
@@ -173,22 +187,47 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
         </ScrollArea>
         
         <SheetFooter className="p-4 border-t bg-background">
-          <form onSubmit={handleSendMessage} className="flex w-full items-center space-x-2">
-            <Input
-              ref={inputRef}
-              type="text"
-              placeholder="Ask Copilot..."
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              className="flex-1 h-9"
-              disabled={isLoading}
-              autoComplete="off"
-            />
-            <Button type="submit" size="icon" className="h-9 w-9" disabled={isLoading || !userInput.trim()}>
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              <span className="sr-only">Send</span>
-            </Button>
-          </form>
+          {isGuest ? (
+            <div className="flex flex-col items-center text-center p-4 space-y-3">
+              <Lock className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm font-medium">Chat Unavailable in Guest Mode</p>
+              <p className="text-xs text-muted-foreground">
+                Please{' '}
+                <Link 
+                  href="/login" 
+                  className="underline text-primary hover:text-primary/80" 
+                  onClick={() => onOpenChange(false)} // Close sidebar on click
+                >
+                  log in
+                </Link> or{' '}
+                <Link 
+                  href="/register" 
+                  className="underline text-primary hover:text-primary/80" 
+                  onClick={() => onOpenChange(false)} // Close sidebar on click
+                >
+                  register
+                </Link>{' '}
+                to use the Copilot.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleSendMessage} className="flex w-full items-center space-x-2">
+              <Input
+                ref={inputRef}
+                type="text"
+                placeholder="Ask Copilot..."
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                className="flex-1 h-9"
+                disabled={isLoading}
+                autoComplete="off"
+              />
+              <Button type="submit" size="icon" className="h-9 w-9" disabled={isLoading || !userInput.trim()}>
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                <span className="sr-only">Send</span>
+              </Button>
+            </form>
+          )}
         </SheetFooter>
       </SheetContent>
     </Sheet>
