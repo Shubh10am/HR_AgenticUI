@@ -90,9 +90,10 @@ export default function SettingsPage() {
     } else {
       applyFontSize('default'); // Default
     }
-  }, [applyFontStyle, applyFontSize]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // applyFontStyle and applyFontSize are memoized with useCallback
 
-  useEffect(() => {
+ useEffect(() => {
     const storedUserApiKey = localStorage.getItem(USER_API_KEY_LOCALSTORAGE_KEY);
     if (storedUserApiKey) {
       setUserApiKey(storedUserApiKey);
@@ -148,8 +149,8 @@ export default function SettingsPage() {
     localStorage.setItem(USER_API_KEY_LOCALSTORAGE_KEY, inputApiKey);
     setUserApiKey(inputApiKey);
     toast({
-      title: 'API Key Saved in Browser',
-      description: 'Remember to add it to .env.local and restart your server.',
+      title: 'API Key Stored in Browser',
+      description: 'Follow the "Critical Activation Steps" below to enable AI features.',
       duration: 7000,
     });
   };
@@ -311,16 +312,18 @@ export default function SettingsPage() {
         <Card className="md:col-span-2 lg:col-span-3 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center">
-              <KeyRound className="mr-2 h-5 w-5 text-primary" /> API Key Management
+              <KeyRound className="mr-2 h-5 w-5 text-primary" /> API Key Configuration
             </CardTitle>
-            <CardDescription>Configure the Google AI API Key for generative features.</CardDescription>
+            <CardDescription>Set your Google AI API Key for generative AI features in your local development environment.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Enter your Google AI API Key. This key is stored in your browser for convenience.
+              AI features (like email drafting, job description generation) require a Google AI API Key.
+              To enable these, you must set the key in your <code>.env.local</code> file and restart the server.
+              This section helps you store the key in your browser for easy access and provides setup instructions.
             </p>
             <div className="space-y-2">
-              <Label htmlFor="apiKeyInput">Google AI API Key</Label>
+              <Label htmlFor="apiKeyInput">Your Google AI API Key</Label>
               <div className="flex items-center space-x-2">
                 <Input
                   id="apiKeyInput"
@@ -336,27 +339,28 @@ export default function SettingsPage() {
               </div>
             </div>
             {userApiKey && (
-              <p className="text-sm">
-                Current stored key: <span className="font-mono bg-muted px-1 py-0.5 rounded">{`${userApiKey.substring(0, 4)}...${userApiKey.slice(-4)}`}</span>
+              <p className="text-xs text-muted-foreground">
+                Currently stored in browser: <span className="font-mono bg-muted px-1 py-0.5 rounded">{`${userApiKey.substring(0, 4)}...${userApiKey.slice(-4)}`}</span> (This is for your reference only)
               </p>
             )}
             <div className="flex space-x-2">
-              <Button onClick={handleSaveApiKey}>Save Key to Browser</Button>
-              {userApiKey && <Button variant="destructive" onClick={handleRemoveApiKey}>Remove Stored Key</Button>}
+              <Button onClick={handleSaveApiKey}>Store Key in Browser & Get Instructions</Button>
+              {userApiKey && <Button variant="outline" onClick={handleRemoveApiKey}>Remove Key from Browser</Button>}
             </div>
             <Alert variant="default" className="mt-4 border-blue-500 dark:border-blue-400">
               <Info className="h-5 w-5 text-blue-500 dark:text-blue-400" />
-              <AlertTitle className="text-blue-700 dark:text-blue-300">Important: Activation Steps</AlertTitle>
-              <AlertDescription className="text-blue-600 dark:text-blue-200">
-                For the AI services to use the saved key:
-                <ol className="list-decimal list-inside mt-2 space-y-1">
-                  <li>Create or open the <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">.env.local</code> file in the root of your project.</li>
-                  <li>Add the following line, replacing <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">YOUR_SAVED_KEY</code> with your actual key:
-                    <pre className="mt-1 p-2 bg-blue-50 dark:bg-blue-900 rounded text-xs overflow-x-auto">GOOGLE_API_KEY={userApiKey || 'YOUR_SAVED_KEY'}</pre>
+              <AlertTitle className="text-blue-700 dark:text-blue-300 font-semibold">Critical Activation Steps for AI Features</AlertTitle>
+              <AlertDescription className="text-blue-600 dark:text-blue-200 space-y-2">
+                <p>Storing the key in your browser (above) does NOT automatically activate AI features.</p>
+                <p>You MUST perform the following steps for the AI services to use your key:</p>
+                <ol className="list-decimal list-inside mt-2 space-y-1 pl-4">
+                  <li>Create or open the <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">.env.local</code> file in the root directory of this project.</li>
+                  <li>Add the following line to this file, replacing <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">YOUR_API_KEY_HERE</code> with your actual Google AI API Key:
+                    <pre className="mt-1 p-2 bg-blue-50 dark:bg-blue-900 rounded text-xs overflow-x-auto">GOOGLE_API_KEY={userApiKey || 'YOUR_API_KEY_HERE'}</pre>
                   </li>
-                  <li>Restart your development server (e.g., stop and re-run <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">npm run dev</code>).</li>
+                  <li><strong>Important:</strong> Stop your development server completely, and then restart it (e.g., re-run <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">npm run dev</code>).</li>
                 </ol>
-                If <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">GOOGLE_API_KEY</code> is not set in <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">.env.local</code>, the application may attempt to use default credentials or other configurations.
+                <p className="mt-2">If <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">GOOGLE_API_KEY</code> is not correctly set in <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">.env.local</code> and the server restarted, AI features will not work.</p>
                 <Button variant="outline" size="sm" onClick={handleCopyToClipboard} className="mt-3 text-blue-700 border-blue-500 hover:bg-blue-100 dark:text-blue-300 dark:border-blue-400 dark:hover:bg-blue-800" disabled={!userApiKey}>
                   <Copy className="mr-2 h-4 w-4" /> Copy .env.local line
                 </Button>
