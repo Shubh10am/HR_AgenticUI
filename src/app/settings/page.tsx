@@ -11,7 +11,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Lock, Bell, Palette, Plug, ChevronRight, KeyRound, Eye, EyeOff, Copy, Info, Loader2, Volume2, Sun, Moon, Laptop, Type, CaseSensitive } from 'lucide-react'; // Added all missing icons
+import { Lock, Bell, Palette, Plug, ChevronRight, KeyRound, Eye, EyeOff, Copy, Info, Loader2, Volume2, Sun, Moon, Laptop, Type, CaseSensitive } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect, useCallback } from 'react';
@@ -121,7 +121,7 @@ export default function SettingsPage() {
       applyFontSize('default'); 
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Apply on mount
+  }, []); 
 
   useEffect(() => {
     fetchApiKey();
@@ -190,8 +190,8 @@ export default function SettingsPage() {
       if (response.ok) {
         setDbApiKey(inputApiKey.trim());
         toast({
-          title: 'API Key Saved',
-          description: 'API key successfully stored in the database. Follow steps below for local dev server.',
+          title: 'API Key Saved to Database',
+          description: 'Key stored for your organization. Crucially, follow steps below for local dev server.',
           duration: 7000,
         });
       } else {
@@ -380,18 +380,14 @@ export default function SettingsPage() {
         <Card className="md:col-span-2 lg:col-span-3 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center">
-              <KeyRound className="mr-2 h-5 w-5 text-primary" /> API Key Configuration
+              <KeyRound className="mr-2 h-5 w-5 text-primary" /> API Key Configuration (Local Development)
             </CardTitle>
             <CardDescription>
-             Configure the Google AI API Key for your local development environment.
+             Configure the Google AI API Key for your organization. This key is stored encrypted in the database.
+             <strong className="block mt-1">For local development, AI features still require this key in <code>.env.local</code> and a server restart to take effect.</strong>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-             <p className="text-sm text-muted-foreground">
-              This section helps you manage the API key you intend to use for AI features.
-              The key you save here is stored in your browser and can be used to populate the instructions below.
-              However, for the AI services to work in your local development, you MUST place this key in your project's <code>.env.local</code> file and restart your server.
-            </p>
             {isKeyLoading ? (
               <div className="flex items-center space-x-2">
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -440,18 +436,24 @@ export default function SettingsPage() {
             )}
             <Alert variant="default" className="mt-4 border-blue-500 dark:border-blue-400">
               <Info className="h-5 w-5 text-blue-500 dark:text-blue-400" />
-              <AlertTitle className="text-blue-700 dark:text-blue-300 font-semibold">Critical Activation Steps for AI Features</AlertTitle>
+              <AlertTitle className="text-blue-700 dark:text-blue-300 font-semibold">Critical Activation Steps for Local AI Features</AlertTitle>
               <AlertDescription className="text-blue-600 dark:text-blue-200 space-y-2">
-                <p>Saving the key to the database facilitates management but does NOT automatically activate AI features for your local development server.</p>
-                <p>You MUST also perform the following steps for the local AI services to use this key:</p>
+                <p className="font-semibold">
+                  Your local development server's AI features will <strong className="text-blue-700 dark:text-blue-100">ALWAYS</strong> use the API key from the <code>.env.local</code> file found at the root of your project.
+                  The key saved to the database here is for management, for retrieval to populate <code>.env.local</code>, and for potential use in deployed environments (which would require different Genkit initialization).
+                </p>
+                <p>
+                  To make local AI features work with the desired key (even if it's the one you just saved to the database):
+                </p>
                 <ol className="list-decimal list-inside mt-2 space-y-1 pl-4">
-                  <li>Create or open the <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">.env.local</code> file in the root directory of this project.</li>
-                  <li>Add the following line to this file, replacing <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">YOUR_API_KEY_HERE</code> with your actual Google AI API Key:
+                  <li>Ensure the API key is correctly set in your <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">.env.local</code> file:
                     <pre className="mt-1 p-2 bg-blue-50 dark:bg-blue-900 rounded text-xs overflow-x-auto">GOOGLE_API_KEY={inputApiKey || dbApiKey || 'YOUR_API_KEY_HERE'}</pre>
                   </li>
-                  <li><strong>Important:</strong> Stop your development server completely, and then restart it (e.g., re-run <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">npm run dev</code>).</li>
+                  <li><strong>Crucial:</strong> After adding or changing the key in <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">.env.local</code>, you <strong className="text-blue-700 dark:text-blue-100">MUST completely stop your development server and then restart it</strong> (e.g., re-run <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">npm run dev</code>).</li>
                 </ol>
-                <p className="mt-2">If <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">GOOGLE_API_KEY</code> is not correctly set in <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">.env.local</code> and the server restarted, local AI features will not work.</p>
+                <p className="mt-2 font-semibold">
+                  If <code>GOOGLE_API_KEY</code> is incorrect or missing in <code>.env.local</code>, or if the server isn't restarted after a change, local AI features will fail or use the wrong key, <strong className="text-blue-700 dark:text-blue-100">regardless of the key status shown or saved on this settings page.</strong>
+                </p>
                 <Button variant="outline" size="sm" onClick={handleCopyToClipboard} className="mt-3 text-blue-700 border-blue-500 hover:bg-blue-100 dark:text-blue-300 dark:border-blue-400 dark:hover:bg-blue-800" disabled={(!inputApiKey && !dbApiKey) || isKeyLoading}>
                   <Copy className="mr-2 h-4 w-4" /> Copy .env.local line
                 </Button>
