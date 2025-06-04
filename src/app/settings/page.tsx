@@ -11,12 +11,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Lock, Bell, Palette, Plug, ChevronRight, KeyRound, Eye, EyeOff, Copy, Info, Loader2 } from 'lucide-react';
+import { Lock, Bell, Palette, Plug, ChevronRight, KeyRound, Eye, EyeOff, Copy, Info, Loader2, Volume2, Sun, Moon, Laptop, Type, CaseSensitive } from 'lucide-react'; // Added all missing icons
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect, useCallback } from 'react';
 import { useTheme } from 'next-themes';
-import { useAuth } from '@/contexts/auth-context'; // Added useAuth
+import { useAuth } from '@/contexts/auth-context';
 
 const FONT_STYLE_KEY = 'appFontStyle';
 const FONT_SIZE_KEY = 'appFontSize';
@@ -42,10 +42,10 @@ export default function SettingsPage() {
   const [selectedFontStyle, setSelectedFontStyle] = useState('sans');
   const [selectedFontSize, setSelectedFontSize] = useState('default');
   
-  const { token } = useAuth(); // Get token for API calls
+  const { token } = useAuth();
 
-  const [dbApiKey, setDbApiKey] = useState<string | null>(null); // To store the key fetched from DB
-  const [inputApiKey, setInputApiKey] = useState(''); // For the input field
+  const [dbApiKey, setDbApiKey] = useState<string | null>(null);
+  const [inputApiKey, setInputApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
   const [isKeyLoading, setIsKeyLoading] = useState(false);
   const [isKeySaving, setIsKeySaving] = useState(false);
@@ -84,7 +84,7 @@ export default function SettingsPage() {
       const data = await response.json();
       if (response.ok) {
         setDbApiKey(data.apiKey || null);
-        setInputApiKey(data.apiKey || ''); // Populate input if key exists
+        setInputApiKey(data.apiKey || '');
       } else {
         toast({ title: 'Failed to fetch API key', description: data.error || 'Could not retrieve API key.', variant: 'destructive' });
         setDbApiKey(null);
@@ -121,7 +121,7 @@ export default function SettingsPage() {
       applyFontSize('default'); 
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // Apply on mount
 
   useEffect(() => {
     fetchApiKey();
@@ -188,7 +188,7 @@ export default function SettingsPage() {
       });
       const data = await response.json();
       if (response.ok) {
-        setDbApiKey(inputApiKey.trim()); // Assume success means inputApiKey is now the stored key
+        setDbApiKey(inputApiKey.trim());
         toast({
           title: 'API Key Saved',
           description: 'API key successfully stored in the database. Follow steps below for local dev server.',
@@ -209,7 +209,7 @@ export default function SettingsPage() {
       toast({ title: 'Authentication Error', description: 'Please log in again.', variant: 'destructive' });
       return;
     }
-    setIsKeySaving(true); // Use same loading state for simplicity
+    setIsKeySaving(true);
     try {
       const response = await fetch(`${API_BASE_URL}/api/settings/api-key`, {
         method: 'DELETE',
@@ -232,11 +232,11 @@ export default function SettingsPage() {
   };
 
   const handleCopyToClipboard = () => {
-    if (!dbApiKey && !inputApiKey) { // Check inputApiKey as fallback if dbApiKey might not be up-to-date
+    if (!dbApiKey && !inputApiKey) {
         toast({ title: 'No API Key', description: 'No API key is available to copy.', variant: 'destructive' });
         return;
     }
-    const keyToCopy = inputApiKey || dbApiKey; // Prefer current input, fallback to DB key
+    const keyToCopy = inputApiKey || dbApiKey || '';
     const instruction = `GOOGLE_API_KEY=${keyToCopy}`;
     navigator.clipboard.writeText(instruction).then(() => {
         toast({ title: 'Copied to Clipboard', description: 'Instructions copied. Paste into your .env.local file and restart server.' });
@@ -380,17 +380,17 @@ export default function SettingsPage() {
         <Card className="md:col-span-2 lg:col-span-3 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center">
-              <KeyRound className="mr-2 h-5 w-5 text-primary" /> Google AI API Key
+              <KeyRound className="mr-2 h-5 w-5 text-primary" /> API Key Configuration
             </CardTitle>
             <CardDescription>
-              Configure the Google AI API Key for your organization. This key will be stored securely.
+             Configure the Google AI API Key for your local development environment.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
              <p className="text-sm text-muted-foreground">
-              The API key saved here is stored encrypted in the database for your organization.
-              For local development, the AI features (Genkit) still require this key to be present in your <code>.env.local</code> file.
-              Use this section to manage the key, and then ensure it's also set in your local environment.
+              This section helps you manage the API key you intend to use for AI features.
+              The key you save here is stored in your browser and can be used to populate the instructions below.
+              However, for the AI services to work in your local development, you MUST place this key in your project's <code>.env.local</code> file and restart your server.
             </p>
             {isKeyLoading ? (
               <div className="flex items-center space-x-2">
@@ -400,7 +400,7 @@ export default function SettingsPage() {
             ) : (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="apiKeyInput">Organization's Google AI API Key</Label>
+                  <Label htmlFor="apiKeyInput">Google AI API Key for your Organization</Label>
                   <div className="flex items-center space-x-2">
                     <Input
                       id="apiKeyInput"
@@ -418,7 +418,7 @@ export default function SettingsPage() {
                 </div>
                 {dbApiKey && (
                   <p className="text-xs text-muted-foreground">
-                    Currently stored in database: <span className="font-mono bg-muted px-1 py-0.5 rounded">{`${dbApiKey.substring(0, 4)}...${dbApiKey.slice(-4)}`}</span>
+                    Key currently stored in database: <span className="font-mono bg-muted px-1 py-0.5 rounded">{`${dbApiKey.substring(0, 4)}...${dbApiKey.slice(-4)}`}</span>
                   </p>
                 )}
                  {!dbApiKey && !inputApiKey && (
@@ -427,7 +427,7 @@ export default function SettingsPage() {
                   </p>
                 )}
                 <div className="flex flex-wrap gap-2">
-                  <Button onClick={handleSaveApiKeyToDb} disabled={isKeySaving || (!inputApiKey.trim() && !dbApiKey) || inputApiKey.trim() === dbApiKey}>
+                  <Button onClick={handleSaveApiKeyToDb} disabled={isKeySaving || (!inputApiKey.trim() && !dbApiKey) || (dbApiKey !== null && inputApiKey.trim() === dbApiKey)}>
                     {isKeySaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {dbApiKey ? 'Update Stored Key' : 'Save Key to Database'}
                   </Button>
@@ -440,10 +440,10 @@ export default function SettingsPage() {
             )}
             <Alert variant="default" className="mt-4 border-blue-500 dark:border-blue-400">
               <Info className="h-5 w-5 text-blue-500 dark:text-blue-400" />
-              <AlertTitle className="text-blue-700 dark:text-blue-300 font-semibold">Critical Activation Steps for Local Development AI Features</AlertTitle>
+              <AlertTitle className="text-blue-700 dark:text-blue-300 font-semibold">Critical Activation Steps for AI Features</AlertTitle>
               <AlertDescription className="text-blue-600 dark:text-blue-200 space-y-2">
-                <p>Saving the key to the database does NOT automatically activate AI features for your local development server.</p>
-                <p>You MUST also perform the following steps for the local AI services to use your key:</p>
+                <p>Saving the key to the database facilitates management but does NOT automatically activate AI features for your local development server.</p>
+                <p>You MUST also perform the following steps for the local AI services to use this key:</p>
                 <ol className="list-decimal list-inside mt-2 space-y-1 pl-4">
                   <li>Create or open the <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">.env.local</code> file in the root directory of this project.</li>
                   <li>Add the following line to this file, replacing <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">YOUR_API_KEY_HERE</code> with your actual Google AI API Key:
