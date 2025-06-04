@@ -11,15 +11,15 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Lock, Bell, Palette, Plug, ChevronRight, Settings, Volume2, Sun, Moon, Laptop, Type, CaseSensitive, KeyRound, Eye, EyeOff, Copy, Info } from 'lucide-react';
+import { Lock, Bell, Palette, Plug, ChevronRight, KeyRound, Eye, EyeOff, Copy, Info, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect, useCallback } from 'react';
 import { useTheme } from 'next-themes';
+import { useAuth } from '@/contexts/auth-context'; // Added useAuth
 
 const FONT_STYLE_KEY = 'appFontStyle';
 const FONT_SIZE_KEY = 'appFontSize';
-const USER_API_KEY_LOCALSTORAGE_KEY = 'userGoogleApiKey';
 
 const FONT_STYLE_CLASSES: Record<string, string> = {
   sans: 'font-style-sans',
@@ -33,17 +33,22 @@ const FONT_SIZE_CLASSES: Record<string, string> = {
   large: 'font-size-large',
 };
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+
 export default function SettingsPage() {
   const { toast } = useToast();
   const [soundEnabled, setSoundEnabled] = useState(true);
   const { theme, setTheme } = useTheme();
   const [selectedFontStyle, setSelectedFontStyle] = useState('sans');
   const [selectedFontSize, setSelectedFontSize] = useState('default');
+  
+  const { token } = useAuth(); // Get token for API calls
 
-  const [userApiKey, setUserApiKey] = useState('');
+  const [dbApiKey, setDbApiKey] = useState<string | null>(null); // To store the key fetched from DB
+  const [inputApiKey, setInputApiKey] = useState(''); // For the input field
   const [showApiKey, setShowApiKey] = useState(false);
-  const [inputApiKey, setInputApiKey] = useState('');
-
+  const [isKeyLoading, setIsKeyLoading] = useState(false);
+  const [isKeySaving, setIsKeySaving] = useState(false);
 
   const applyFontStyle = useCallback((style: string) => {
     if (typeof window !== 'undefined') {
@@ -68,6 +73,31 @@ export default function SettingsPage() {
       }
     }
   }, []);
+  
+  const fetchApiKey = useCallback(async () => {
+    if (!token) return;
+    setIsKeyLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/settings/api-key`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setDbApiKey(data.apiKey || null);
+        setInputApiKey(data.apiKey || ''); // Populate input if key exists
+      } else {
+        toast({ title: 'Failed to fetch API key', description: data.error || 'Could not retrieve API key.', variant: 'destructive' });
+        setDbApiKey(null);
+        setInputApiKey('');
+      }
+    } catch (error) {
+      toast({ title: 'Error fetching API key', description: 'An unexpected error occurred.', variant: 'destructive' });
+      setDbApiKey(null);
+      setInputApiKey('');
+    } finally {
+      setIsKeyLoading(false);
+    }
+  }, [token, toast]);
 
   useEffect(() => {
     const storedSoundPreference = localStorage.getItem('notificationSoundEnabled');
@@ -81,25 +111,21 @@ export default function SettingsPage() {
     if (storedFontStyle && FONT_STYLE_CLASSES[storedFontStyle]) {
       applyFontStyle(storedFontStyle);
     } else {
-      applyFontStyle('sans'); // Default
+      applyFontStyle('sans'); 
     }
 
     const storedFontSize = localStorage.getItem(FONT_SIZE_KEY);
     if (storedFontSize && FONT_SIZE_CLASSES[storedFontSize]) {
       applyFontSize(storedFontSize);
     } else {
-      applyFontSize('default'); // Default
+      applyFontSize('default'); 
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // applyFontStyle and applyFontSize are memoized with useCallback
-
- useEffect(() => {
-    const storedUserApiKey = localStorage.getItem(USER_API_KEY_LOCALSTORAGE_KEY);
-    if (storedUserApiKey) {
-      setUserApiKey(storedUserApiKey);
-      setInputApiKey(storedUserApiKey);
-    }
   }, []);
+
+  useEffect(() => {
+    fetchApiKey();
+  }, [fetchApiKey]);
 
 
   const handleMockAction = (action: string) => {
@@ -141,41 +167,83 @@ export default function SettingsPage() {
     });
   };
 
-  const handleSaveApiKey = () => {
+  const handleSaveApiKeyToDb = async () => {
+    if (!token) {
+      toast({ title: 'Authentication Error', description: 'Please log in again.', variant: 'destructive' });
+      return;
+    }
     if (!inputApiKey.trim()) {
       toast({ title: 'API Key Empty', description: 'Please enter an API key to save.', variant: 'destructive' });
       return;
     }
-    localStorage.setItem(USER_API_KEY_LOCALSTORAGE_KEY, inputApiKey);
-    setUserApiKey(inputApiKey);
-    toast({
-      title: 'API Key Stored in Browser',
-      description: 'Follow the "Critical Activation Steps" below to enable AI features.',
-      duration: 7000,
-    });
+    setIsKeySaving(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/settings/api-key`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ apiKey: inputApiKey.trim() }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setDbApiKey(inputApiKey.trim()); // Assume success means inputApiKey is now the stored key
+        toast({
+          title: 'API Key Saved',
+          description: 'API key successfully stored in the database. Follow steps below for local dev server.',
+          duration: 7000,
+        });
+      } else {
+        toast({ title: 'Failed to save API key', description: data.error || 'Could not save API key to database.', variant: 'destructive' });
+      }
+    } catch (error) {
+      toast({ title: 'Error saving API key', description: 'An unexpected error occurred.', variant: 'destructive' });
+    } finally {
+      setIsKeySaving(false);
+    }
   };
 
-  const handleRemoveApiKey = () => {
-    localStorage.removeItem(USER_API_KEY_LOCALSTORAGE_KEY);
-    setUserApiKey('');
-    setInputApiKey('');
-    setShowApiKey(false);
-    toast({ title: 'API Key Removed', description: 'User API key cleared from browser storage.' });
+  const handleRemoveApiKeyFromDb = async () => {
+    if (!token) {
+      toast({ title: 'Authentication Error', description: 'Please log in again.', variant: 'destructive' });
+      return;
+    }
+    setIsKeySaving(true); // Use same loading state for simplicity
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/settings/api-key`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setDbApiKey(null);
+        setInputApiKey('');
+        setShowApiKey(false);
+        toast({ title: 'API Key Removed', description: 'API key successfully removed from the database.' });
+      } else {
+        toast({ title: 'Failed to remove API key', description: data.error || 'Could not remove API key from database.', variant: 'destructive' });
+      }
+    } catch (error) {
+      toast({ title: 'Error removing API key', description: 'An unexpected error occurred.', variant: 'destructive' });
+    } finally {
+      setIsKeySaving(false);
+    }
   };
 
   const handleCopyToClipboard = () => {
-    if (!userApiKey) {
-        toast({ title: 'No API Key', description: 'No API key is stored to copy.', variant: 'destructive' });
+    if (!dbApiKey && !inputApiKey) { // Check inputApiKey as fallback if dbApiKey might not be up-to-date
+        toast({ title: 'No API Key', description: 'No API key is available to copy.', variant: 'destructive' });
         return;
     }
-    const instruction = `GOOGLE_API_KEY=${userApiKey}`;
+    const keyToCopy = inputApiKey || dbApiKey; // Prefer current input, fallback to DB key
+    const instruction = `GOOGLE_API_KEY=${keyToCopy}`;
     navigator.clipboard.writeText(instruction).then(() => {
-        toast({ title: 'Copied to Clipboard', description: 'Instructions copied. Paste into your .env.local file.' });
+        toast({ title: 'Copied to Clipboard', description: 'Instructions copied. Paste into your .env.local file and restart server.' });
     }).catch(err => {
         toast({ title: 'Copy Failed', description: 'Could not copy to clipboard.', variant: 'destructive' });
     });
   };
-
 
   return (
     <>
@@ -312,56 +380,79 @@ export default function SettingsPage() {
         <Card className="md:col-span-2 lg:col-span-3 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center">
-              <KeyRound className="mr-2 h-5 w-5 text-primary" /> API Key Configuration
+              <KeyRound className="mr-2 h-5 w-5 text-primary" /> Google AI API Key
             </CardTitle>
-            <CardDescription>Set your Google AI API Key for generative AI features in your local development environment.</CardDescription>
+            <CardDescription>
+              Configure the Google AI API Key for your organization. This key will be stored securely.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              AI features (like email drafting, job description generation) require a Google AI API Key.
-              To enable these, you must set the key in your <code>.env.local</code> file and restart the server.
-              This section helps you store the key in your browser for easy access and provides setup instructions.
+             <p className="text-sm text-muted-foreground">
+              The API key saved here is stored encrypted in the database for your organization.
+              For local development, the AI features (Genkit) still require this key to be present in your <code>.env.local</code> file.
+              Use this section to manage the key, and then ensure it's also set in your local environment.
             </p>
-            <div className="space-y-2">
-              <Label htmlFor="apiKeyInput">Your Google AI API Key</Label>
+            {isKeyLoading ? (
               <div className="flex items-center space-x-2">
-                <Input
-                  id="apiKeyInput"
-                  type={showApiKey ? 'text' : 'password'}
-                  value={inputApiKey}
-                  onChange={(e) => setInputApiKey(e.target.value)}
-                  placeholder="Enter your API Key"
-                  className="flex-grow"
-                />
-                <Button variant="ghost" size="icon" onClick={() => setShowApiKey(!showApiKey)} aria-label={showApiKey ? 'Hide API Key' : 'Show API Key'}>
-                  {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Loading API key status...</span>
               </div>
-            </div>
-            {userApiKey && (
-              <p className="text-xs text-muted-foreground">
-                Currently stored in browser: <span className="font-mono bg-muted px-1 py-0.5 rounded">{`${userApiKey.substring(0, 4)}...${userApiKey.slice(-4)}`}</span> (This is for your reference only)
-              </p>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="apiKeyInput">Organization's Google AI API Key</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      id="apiKeyInput"
+                      type={showApiKey ? 'text' : 'password'}
+                      value={inputApiKey}
+                      onChange={(e) => setInputApiKey(e.target.value)}
+                      placeholder="Enter Google AI API Key"
+                      className="flex-grow"
+                      disabled={isKeySaving}
+                    />
+                    <Button variant="ghost" size="icon" onClick={() => setShowApiKey(!showApiKey)} aria-label={showApiKey ? 'Hide API Key' : 'Show API Key'} disabled={isKeySaving}>
+                      {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+                {dbApiKey && (
+                  <p className="text-xs text-muted-foreground">
+                    Currently stored in database: <span className="font-mono bg-muted px-1 py-0.5 rounded">{`${dbApiKey.substring(0, 4)}...${dbApiKey.slice(-4)}`}</span>
+                  </p>
+                )}
+                 {!dbApiKey && !inputApiKey && (
+                  <p className="text-xs text-muted-foreground">
+                    No API key is currently configured for your organization in the database.
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={handleSaveApiKeyToDb} disabled={isKeySaving || (!inputApiKey.trim() && !dbApiKey) || inputApiKey.trim() === dbApiKey}>
+                    {isKeySaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {dbApiKey ? 'Update Stored Key' : 'Save Key to Database'}
+                  </Button>
+                  {dbApiKey && <Button variant="outline" onClick={handleRemoveApiKeyFromDb} disabled={isKeySaving}>
+                    {isKeySaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Remove Stored Key
+                    </Button>}
+                </div>
+              </>
             )}
-            <div className="flex space-x-2">
-              <Button onClick={handleSaveApiKey}>Store Key in Browser & Get Instructions</Button>
-              {userApiKey && <Button variant="outline" onClick={handleRemoveApiKey}>Remove Key from Browser</Button>}
-            </div>
             <Alert variant="default" className="mt-4 border-blue-500 dark:border-blue-400">
               <Info className="h-5 w-5 text-blue-500 dark:text-blue-400" />
-              <AlertTitle className="text-blue-700 dark:text-blue-300 font-semibold">Critical Activation Steps for AI Features</AlertTitle>
+              <AlertTitle className="text-blue-700 dark:text-blue-300 font-semibold">Critical Activation Steps for Local Development AI Features</AlertTitle>
               <AlertDescription className="text-blue-600 dark:text-blue-200 space-y-2">
-                <p>Storing the key in your browser (above) does NOT automatically activate AI features.</p>
-                <p>You MUST perform the following steps for the AI services to use your key:</p>
+                <p>Saving the key to the database does NOT automatically activate AI features for your local development server.</p>
+                <p>You MUST also perform the following steps for the local AI services to use your key:</p>
                 <ol className="list-decimal list-inside mt-2 space-y-1 pl-4">
                   <li>Create or open the <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">.env.local</code> file in the root directory of this project.</li>
                   <li>Add the following line to this file, replacing <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">YOUR_API_KEY_HERE</code> with your actual Google AI API Key:
-                    <pre className="mt-1 p-2 bg-blue-50 dark:bg-blue-900 rounded text-xs overflow-x-auto">GOOGLE_API_KEY={userApiKey || 'YOUR_API_KEY_HERE'}</pre>
+                    <pre className="mt-1 p-2 bg-blue-50 dark:bg-blue-900 rounded text-xs overflow-x-auto">GOOGLE_API_KEY={inputApiKey || dbApiKey || 'YOUR_API_KEY_HERE'}</pre>
                   </li>
                   <li><strong>Important:</strong> Stop your development server completely, and then restart it (e.g., re-run <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">npm run dev</code>).</li>
                 </ol>
-                <p className="mt-2">If <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">GOOGLE_API_KEY</code> is not correctly set in <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">.env.local</code> and the server restarted, AI features will not work.</p>
-                <Button variant="outline" size="sm" onClick={handleCopyToClipboard} className="mt-3 text-blue-700 border-blue-500 hover:bg-blue-100 dark:text-blue-300 dark:border-blue-400 dark:hover:bg-blue-800" disabled={!userApiKey}>
+                <p className="mt-2">If <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">GOOGLE_API_KEY</code> is not correctly set in <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">.env.local</code> and the server restarted, local AI features will not work.</p>
+                <Button variant="outline" size="sm" onClick={handleCopyToClipboard} className="mt-3 text-blue-700 border-blue-500 hover:bg-blue-100 dark:text-blue-300 dark:border-blue-400 dark:hover:bg-blue-800" disabled={(!inputApiKey && !dbApiKey) || isKeyLoading}>
                   <Copy className="mr-2 h-4 w-4" /> Copy .env.local line
                 </Button>
               </AlertDescription>

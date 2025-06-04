@@ -4,6 +4,7 @@ import mongoose, { Schema, Document, models, Model } from 'mongoose';
 export interface IOrganization extends Document {
   name: string;
   emailDomain: string; // e.g., "example.com"
+  encryptedGoogleApiKey?: string; // Stores iv:authTag:encryptedKey
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,6 +22,10 @@ const OrganizationSchema: Schema<IOrganization> = new Schema(
       trim: true,
       lowercase: true,
       // Consider adding unique: true if you want emailDomain to be unique
+    },
+    encryptedGoogleApiKey: {
+      type: String,
+      required: false, // Optional field
     },
   },
   {
