@@ -101,6 +101,19 @@ export default function GmailInboxPage() {
     setIsRefreshing(true);
     toast({ title: "Refreshing Emails..." });
     setTimeout(() => {
+      // Potentially add new mock emails or re-fetch logic here
+      // For now, just simulate refresh completion
+      const newMockEmail: MockEmail = {
+        id: `mock-${Date.now()}`,
+        sender: 'new.sender@example.com',
+        recipient: 'admin@hrstreamline.ai',
+        subject: 'Freshly Refreshed Email',
+        body: 'This email appeared after a refresh action.\n\nRegards,\nRefresher Bot',
+        date: new Date().toLocaleString(),
+        read: false,
+        snippet: 'This email appeared after a refresh...',
+      };
+      setEmails(prev => [newMockEmail, ...prev.filter(e => e.id !== newMockEmail.id).slice(0,10)]); // Add new, keep some old, limit total
       toast({ title: "Emails Refreshed" });
       setIsRefreshing(false);
     }, 1500);
@@ -123,8 +136,8 @@ Please generate a few professional reply options to this email.`;
       const input: GenerateDraftEmailResponsesInput = { query };
       const result: GenerateDraftEmailResponsesOutput = await generateDraftEmailResponses(input);
       
-      if (result.draftResponses && result.draftResponses.length > 0) {
-        setGeneratedReplyDrafts(result.draftResponses);
+      if (result.drafts && result.drafts.length > 0) { // Updated from draftResponses to drafts
+        setGeneratedReplyDrafts(result.drafts.map(d => d.body)); // Assuming you want an array of body strings
       } else {
         toast({
           title: "No Reply Drafts Generated",
@@ -180,46 +193,20 @@ Please generate a few professional reply options to this email.`;
   };
 
   const handleMockEmailAction = (actionType: 'archive' | 'delete' | 'markUnread', emailId: string, emailSubject: string) => {
-    if (!selectedEmail || selectedEmail.id !== emailId) {
-        // If action is on non-selected email or no email is selected, find it first
-        const targetEmail = emails.find(e => e.id === emailId);
-        if (!targetEmail) return; // Should not happen if UI is correct
-
-         if (actionType === 'delete') {
-            setEmails(prev => prev.filter(e => e.id !== emailId));
-            toast({ title: "Action Performed (Mock)", description: `Email "${targetEmail.subject}" deleted (mock).` });
-            if (selectedEmail && selectedEmail.id === emailId) setSelectedEmail(null);
-            return;
-        }
-        // For other actions, they typically apply to the *selected* email context in this UI
-        // However, to be robust for future changes:
-        if (actionType === 'markUnread') {
-             setEmails(prev => prev.map(e => e.id === emailId ? {...e, read: false} : e));
-             toast({ title: "Action Performed (Mock)", description: `Email "${targetEmail.subject}" marked as unread (mock).` });
-             if (selectedEmail && selectedEmail.id === emailId) setSelectedEmail(prev => prev ? {...prev, read: false} : null);
-             return;
-        }
-         if (actionType === 'archive') {
-            // Mock: Deselect if it was selected, or remove from list if you have an archive view
-            toast({ title: "Action Performed (Mock)", description: `Email "${targetEmail.subject}" archived (mock).` });
-            if (selectedEmail && selectedEmail.id === emailId) setSelectedEmail(null);
-            // else: you might remove it from the `emails` list if not showing archived emails
-            return;
-        }
-        return;
-    }
-
+    const targetEmail = emails.find(e => e.id === emailId);
+    if (!targetEmail) return;
 
     let actionDescription = '';
     switch (actionType) {
       case 'archive':
         actionDescription = `Email "${emailSubject}" archived (mock).`;
-        setSelectedEmail(null); 
+        if (selectedEmail && selectedEmail.id === emailId) setSelectedEmail(null);
+        // Potentially filter out from `emails` list if you have an archive view
         break;
       case 'delete':
         actionDescription = `Email "${emailSubject}" deleted (mock).`;
         setEmails(prev => prev.filter(e => e.id !== emailId));
-        setSelectedEmail(null);
+        if (selectedEmail && selectedEmail.id === emailId) setSelectedEmail(null);
         break;
       case 'markUnread':
         actionDescription = `Email "${emailSubject}" marked as unread (mock).`;
@@ -234,6 +221,15 @@ Please generate a few professional reply options to this email.`;
     toast({ title: "Action Performed (Mock)", description: actionDescription });
   };
 
+  const mainGridClasses = selectedEmail
+    ? "grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-12rem)]" // Adjusted height, -12rem to account for PageHeader
+    : "grid grid-cols-1 md:grid-cols-2 gap-6 h-[calc(100vh-12rem)]";
+
+  const emailDetailCardClasses = selectedEmail
+    ? "md:col-span-2 shadow-lg flex flex-col h-full"
+    : "md:col-span-1 shadow-lg flex flex-col h-full";
+
+
   return (
     <>
       <PageHeader
@@ -246,7 +242,7 @@ Please generate a few professional reply options to this email.`;
         </Button>
       </PageHeader>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-10rem)]">
+      <div className={mainGridClasses}>
         <Card className="md:col-span-1 shadow-lg flex flex-col h-full">
           <CardHeader>
             <CardTitle>Inbox ({emails.filter(e => !e.read).length} unread)</CardTitle>
@@ -282,7 +278,7 @@ Please generate a few professional reply options to this email.`;
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2 shadow-lg flex flex-col h-full">
+        <Card className={emailDetailCardClasses}>
           {!selectedEmail ? (
             <div className="flex-grow flex flex-col items-center justify-center text-center p-6">
               <MailOpen className="h-24 w-24 text-muted-foreground mb-4" />
