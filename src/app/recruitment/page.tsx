@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, ChangeEvent } from 'react'; // Added ChangeEvent
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,13 +9,78 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, UserCheck, FileText, PlayCircle, Briefcase, UploadCloud, BarChart, Lightbulb, CheckSquare, ThumbsUp, SearchCheck } from 'lucide-react'; // Added SearchCheck
+import { Loader2, Wand2, UserCheck, FileText, PlayCircle, Briefcase, UploadCloud, BarChart, Lightbulb, CheckSquare, ThumbsUp, SearchCheck } from 'lucide-react';
 import { generateJobDescription, type GenerateJobDescriptionInput, type GenerateJobDescriptionOutput } from '@/ai/flows/generate-job-description';
 import { aiInterviewer, type AiInterviewerInput, type AiInterviewerOutput } from '@/ai/flows/ai-interviewer';
 import { analyzeResume, type AnalyzeResumeInput, type AnalyzeResumeOutput } from '@/ai/flows/analyze-resume-flow';
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+
+const defaultResumeText = `----
+
+**Shubham Singh**  
+DEVELOPER | COMPETITIVE CODER  
++91-6388842678 | shubham12342019@gmail.com  
+
+**TECHNICAL SKILLS**  
+- Data Structures and Algorithms  
+- HTML, CSS, JavaScript, React JS, FlaskAPI, FastAPI, Django  
+- Languages: C, C++, Python  
+- Git and GitHub  
+- OOPS, DBMS, SQL, Docker, AWS  
+- Database: MySQL, MongoDB, Redis  
+
+**EDUCATION**  
+**Bachelor of Technology, Information Technology**  
+ABES Engineering College | 2020–2024 | CGPA (1–8 Sem): 7.4  
+
+**Class X & XII (ICSE & ISC)**  
+St. Mary's School | 2018–2020 |  
+Percentage: 85% (Class X) | 82% (Class XII)  
+
+**LINKS**  
+- LinkedIn: https://www.linkedin.com/in/shubhamsingh-192379201/  
+- GitHub: https://github.com/shubh10am  
+- CodeChef: https://www.codechef.com/users/shubham10  
+- LeetCode: https://leetcode.com/_shubh_10/  
+
+**CERTIFICATIONS AND ACHIEVEMENTS**  
+- Certified in Python (Coursera and Cisco)  
+- HackerRank: 5-star coder  
+- CodeChef: 2-star coder with a rating of 1430+  
+- LeetCode: 500+ questions solved  
+
+**PROJECTS**  
+- **Charity-Connect Website (Python, Flask Template)**  
+  A charity website aimed at helping beggars through donations.  
+- **Detecting Emotions Using Machine Learning**  
+  Identifies 7 different emotions with an accuracy of 66%.  
+- **Building a Blog App with MERN Stack**  
+  Executes CRUD operations and persists data into a database.  
+- **Creating a Resume Builder with MERN Stack**  
+  Creates a resume and saves it to Firebase with authentication.  
+
+**EXPERIENCE**  
+**Surepass Technology (Backend Developer)**  
+Full-Time Python Developer | 0–6 months  
+- Worked on various live projects, fixed major bugs, and created APIs in Python backend.  
+- Created and tested APIs, wrappers, and implemented internal API calling.  
+- Involved in web scraping, worked with Redis, Docker, Mongo Engine, and pipelines.  
+- Worked on FastAPI, Flask API, and Jinja Template.  
+- Contributed to Gen AI projects.  
+
+**MxAlgoTechnology (Software Engineer)**  
+- Developed microservices-based backends using Azure DevOps, ADLS, and Blob Storage.  
+- Implemented raw SQL queries in SQL Server and ORM in MongoDB for efficient data handling.  
+- Created complete backend solutions from scratch for optimal performance and scalability.  
+
+**Kloudfarm (Software Engineer) (Current)**  
+- Developed backend microservices in FastAPI using MongoDB, PostgreSQL, Docker, and AWS for efficient processing.  
+- Integrated AI agents with FastAPI to enhance functionality and user experience.  
+- Optimized APIs with parallel processing and threading, improving response time for parallel tasks using asyncio.  
+
+---`;
 
 export default function RecruitmentPage() {
   const [jdPrompt, setJdPrompt] = useState('');
@@ -29,9 +94,10 @@ export default function RecruitmentPage() {
   const [interviewResult, setInterviewResult] = useState<AiInterviewerOutput | null>(null);
   const [isInterviewLoading, setIsInterviewLoading] = useState(false);
   
-  const [resumeForAnalysis, setResumeForAnalysis] = useState('');
+  const [resumeForAnalysis, setResumeForAnalysis] = useState(defaultResumeText); // Set default text
   const [analysisResult, setAnalysisResult] = useState<AnalyzeResumeOutput | null>(null);
   const [isAnalysisLoading, setIsAnalysisLoading] = useState(false);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
 
   const { toast } = useToast();
 
@@ -91,7 +157,22 @@ export default function RecruitmentPage() {
     }
   }
 
-  async function handleAnalyzeResumeForATS(event: FormEvent<HTMLFormElement>) { // Renamed to be specific
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFileName(file.name);
+      toast({
+        title: "File Selected",
+        description: `${file.name}. Please copy its content into the text area below for analysis. Direct file processing is a future enhancement.`,
+        duration: 7000,
+      });
+      // Future: Implement text extraction here and setResumeForAnalysis(extractedText)
+    } else {
+      setSelectedFileName(null);
+    }
+  };
+
+  async function handleAnalyzeResumeForATS(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!resumeForAnalysis.trim()) {
       toast({ title: "Input Required", description: "Please paste the resume text for analysis.", variant: "destructive" });
@@ -118,10 +199,10 @@ export default function RecruitmentPage() {
         description="Manage your entire recruitment lifecycle with AI-powered tools."
       />
       <Tabs defaultValue="job-creation" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6"> {/* Updated grid-cols */}
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6">
           <TabsTrigger value="job-creation"><FileText className="mr-2 h-4 w-4" />Job Creation</TabsTrigger>
           <TabsTrigger value="resume-filtering"><UserCheck className="mr-2 h-4 w-4" />Resume Filtering</TabsTrigger>
-          <TabsTrigger value="ats-score-check"><SearchCheck className="mr-2 h-4 w-4" />ATS Score Check</TabsTrigger> {/* New Tab */}
+          <TabsTrigger value="ats-score-check"><SearchCheck className="mr-2 h-4 w-4" />ATS Score Check</TabsTrigger>
           <TabsTrigger value="application-management"><Briefcase className="mr-2 h-4 w-4" />Applications</TabsTrigger>
           <TabsTrigger value="ai-interviewer"><PlayCircle className="mr-2 h-4 w-4" />AI Interviewer</TabsTrigger>
         </TabsList>
@@ -163,19 +244,17 @@ export default function RecruitmentPage() {
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle>Resume Filtering & Screening</CardTitle>
-              <CardDescription>Tools and criteria for screening and shortlisting candidates. (General placeholder - Detailed AI analysis in ATS Score Check tab)</CardDescription>
+              <CardDescription>Tools for defining screening criteria and managing candidate pools. For detailed AI analysis, use "ATS Score Check".</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                This section will house tools for defining screening criteria, managing candidate pools, and initial filtering based on qualifications.
-                For detailed AI-powered resume analysis and ATS scoring, please use the "ATS Score Check" tab.
+                This section can be expanded with features like keyword-based filters, experience level requirements, and batch processing against basic criteria.
               </p>
               <div className="mt-4 p-4 border rounded-md bg-secondary/30">
                 <h4 className="font-semibold mb-2">Future Features (Mock):</h4>
                 <ul className="list-disc pl-5 text-sm space-y-1">
                   <li>Define keyword-based filters</li>
                   <li>Set experience level requirements</li>
-                  <li>Batch process resumes against basic criteria</li>
                   <li>Integrate with job board applications</li>
                 </ul>
               </div>
@@ -183,16 +262,37 @@ export default function RecruitmentPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="ats-score-check"> {/* New Tab Content */}
+        <TabsContent value="ats-score-check">
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle>ATS Score Check & AI Resume Analysis</CardTitle>
-              <CardDescription>Paste resume text to get an AI-powered analysis, ATS score, overview, keywords, and improvement suggestions.</CardDescription>
+              <CardDescription>Upload or paste resume text for an AI-powered analysis, ATS score, overview, keywords, and improvement suggestions.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleAnalyzeResumeForATS} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="resumeFile">Upload Resume (PDF, DOCX, TXT)</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      id="resumeFile"
+                      type="file"
+                      accept=".pdf,.doc,.docx,.txt"
+                      onChange={handleFileChange}
+                      className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                    />
+                    {selectedFileName && (
+                      <Badge variant="secondary" className="truncate max-w-xs">
+                        <UploadCloud className="mr-2 h-4 w-4" />
+                        {selectedFileName}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    After selecting a file, please copy its text content into the textarea below for analysis. Direct file processing is a future enhancement.
+                  </p>
+                </div>
                 <div>
-                  <Label htmlFor="resumeForAtsAnalysisText">Paste Resume Text</Label>
+                  <Label htmlFor="resumeForAtsAnalysisText">Or Paste Resume Text</Label>
                   <Textarea
                     id="resumeForAtsAnalysisText"
                     value={resumeForAnalysis}
@@ -201,9 +301,6 @@ export default function RecruitmentPage() {
                     className="mt-1 min-h-[200px]"
                     required
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    (Note: PDF/Word document upload and parsing is a planned feature. For now, please paste the resume text.)
-                  </p>
                 </div>
                 <Button type="submit" disabled={isAnalysisLoading}>
                   {isAnalysisLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <SearchCheck className="mr-2 h-4 w-4" />}
