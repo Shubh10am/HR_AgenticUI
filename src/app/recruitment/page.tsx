@@ -17,71 +17,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 
-const defaultResumeText = `----
-
-**Shubham Singh**  
-DEVELOPER | COMPETITIVE CODER  
-+91-6388842678 | shubham12342019@gmail.com  
-
-**TECHNICAL SKILLS**  
-- Data Structures and Algorithms  
-- HTML, CSS, JavaScript, React JS, FlaskAPI, FastAPI, Django  
-- Languages: C, C++, Python  
-- Git and GitHub  
-- OOPS, DBMS, SQL, Docker, AWS  
-- Database: MySQL, MongoDB, Redis  
-
-**EDUCATION**  
-**Bachelor of Technology, Information Technology**  
-ABES Engineering College | 2020–2024 | CGPA (1–8 Sem): 7.4  
-
-**Class X & XII (ICSE & ISC)**  
-St. Mary's School | 2018–2020 |  
-Percentage: 85% (Class X) | 82% (Class XII)  
-
-**LINKS**  
-- LinkedIn: https://www.linkedin.com/in/shubhamsingh-192379201/  
-- GitHub: https://github.com/shubh10am  
-- CodeChef: https://www.codechef.com/users/shubham10  
-- LeetCode: https://leetcode.com/_shubh_10/  
-
-**CERTIFICATIONS AND ACHIEVEMENTS**  
-- Certified in Python (Coursera and Cisco)  
-- HackerRank: 5-star coder  
-- CodeChef: 2-star coder with a rating of 1430+  
-- LeetCode: 500+ questions solved  
-
-**PROJECTS**  
-- **Charity-Connect Website (Python, Flask Template)**  
-  A charity website aimed at helping beggars through donations.  
-- **Detecting Emotions Using Machine Learning**  
-  Identifies 7 different emotions with an accuracy of 66%.  
-- **Building a Blog App with MERN Stack**  
-  Executes CRUD operations and persists data into a database.  
-- **Creating a Resume Builder with MERN Stack**  
-  Creates a resume and saves it to Firebase with authentication.  
-
-**EXPERIENCE**  
-**Surepass Technology (Backend Developer)**  
-Full-Time Python Developer | 0–6 months  
-- Worked on various live projects, fixed major bugs, and created APIs in Python backend.  
-- Created and tested APIs, wrappers, and implemented internal API calling.  
-- Involved in web scraping, worked with Redis, Docker, Mongo Engine, and pipelines.  
-- Worked on FastAPI, Flask API, and Jinja Template.  
-- Contributed to Gen AI projects.  
-
-**MxAlgoTechnology (Software Engineer)**  
-- Developed microservices-based backends using Azure DevOps, ADLS, and Blob Storage.  
-- Implemented raw SQL queries in SQL Server and ORM in MongoDB for efficient data handling.  
-- Created complete backend solutions from scratch for optimal performance and scalability.  
-
-**Kloudfarm (Software Engineer) (Current)**  
-- Developed backend microservices in FastAPI using MongoDB, PostgreSQL, Docker, and AWS for efficient processing.  
-- Integrated AI agents with FastAPI to enhance functionality and user experience.  
-- Optimized APIs with parallel processing and threading, improving response time for parallel tasks using asyncio.  
-
----`;
-
 export default function RecruitmentPage() {
   const [jdPrompt, setJdPrompt] = useState('');
   const [generatedJd, setGeneratedJd] = useState('');
@@ -94,7 +29,7 @@ export default function RecruitmentPage() {
   const [interviewResult, setInterviewResult] = useState<AiInterviewerOutput | null>(null);
   const [isInterviewLoading, setIsInterviewLoading] = useState(false);
   
-  const [resumeForAnalysis, setResumeForAnalysis] = useState(defaultResumeText); // Set default text
+  const [resumeForAnalysis, setResumeForAnalysis] = useState(''); // Changed: Initialize with empty string
   const [analysisResult, setAnalysisResult] = useState<AnalyzeResumeOutput | null>(null);
   const [isAnalysisLoading, setIsAnalysisLoading] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
