@@ -9,13 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, UserCheck, FileText, PlayCircle, Briefcase, UploadCloud, BarChart, Lightbulb, CheckSquare, ThumbsUp } from 'lucide-react';
+import { Loader2, Wand2, UserCheck, FileText, PlayCircle, Briefcase, UploadCloud, BarChart, Lightbulb, CheckSquare, ThumbsUp, SearchCheck } from 'lucide-react'; // Added SearchCheck
 import { generateJobDescription, type GenerateJobDescriptionInput, type GenerateJobDescriptionOutput } from '@/ai/flows/generate-job-description';
 import { aiInterviewer, type AiInterviewerInput, type AiInterviewerOutput } from '@/ai/flows/ai-interviewer';
-import { analyzeResume, type AnalyzeResumeInput, type AnalyzeResumeOutput } from '@/ai/flows/analyze-resume-flow'; // New import
+import { analyzeResume, type AnalyzeResumeInput, type AnalyzeResumeOutput } from '@/ai/flows/analyze-resume-flow';
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress'; // New import
+import { Progress } from '@/components/ui/progress';
 
 export default function RecruitmentPage() {
   const [jdPrompt, setJdPrompt] = useState('');
@@ -23,7 +23,7 @@ export default function RecruitmentPage() {
   const [isJdLoading, setIsJdLoading] = useState(false);
 
   const [interviewerJobDesc, setInterviewerJobDesc] = useState('');
-  const [candidateResumeTextForInterview, setCandidateResumeTextForInterview] = useState(''); // Renamed for clarity
+  const [candidateResumeTextForInterview, setCandidateResumeTextForInterview] = useState('');
   const [candidateName, setCandidateName] = useState('');
   const [interviewRounds, setInterviewRounds] = useState('3');
   const [interviewResult, setInterviewResult] = useState<AiInterviewerOutput | null>(null);
@@ -91,7 +91,7 @@ export default function RecruitmentPage() {
     }
   }
 
-  async function handleAnalyzeResume(event: FormEvent<HTMLFormElement>) {
+  async function handleAnalyzeResumeForATS(event: FormEvent<HTMLFormElement>) { // Renamed to be specific
     event.preventDefault();
     if (!resumeForAnalysis.trim()) {
       toast({ title: "Input Required", description: "Please paste the resume text for analysis.", variant: "destructive" });
@@ -118,9 +118,10 @@ export default function RecruitmentPage() {
         description="Manage your entire recruitment lifecycle with AI-powered tools."
       />
       <Tabs defaultValue="job-creation" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6"> {/* Updated grid-cols */}
           <TabsTrigger value="job-creation"><FileText className="mr-2 h-4 w-4" />Job Creation</TabsTrigger>
-          <TabsTrigger value="resume-filtering"><UserCheck className="mr-2 h-4 w-4" />ATS &amp; Resume Analysis</TabsTrigger>
+          <TabsTrigger value="resume-filtering"><UserCheck className="mr-2 h-4 w-4" />Resume Filtering</TabsTrigger>
+          <TabsTrigger value="ats-score-check"><SearchCheck className="mr-2 h-4 w-4" />ATS Score Check</TabsTrigger> {/* New Tab */}
           <TabsTrigger value="application-management"><Briefcase className="mr-2 h-4 w-4" />Applications</TabsTrigger>
           <TabsTrigger value="ai-interviewer"><PlayCircle className="mr-2 h-4 w-4" />AI Interviewer</TabsTrigger>
         </TabsList>
@@ -161,15 +162,39 @@ export default function RecruitmentPage() {
         <TabsContent value="resume-filtering">
           <Card className="shadow-lg">
             <CardHeader>
-              <CardTitle>ATS Score &amp; Resume Analyzer</CardTitle>
-              <CardDescription>Upload or paste resume text to get an AI-powered analysis, ATS score, and improvement suggestions.</CardDescription>
+              <CardTitle>Resume Filtering & Screening</CardTitle>
+              <CardDescription>Tools and criteria for screening and shortlisting candidates. (General placeholder - Detailed AI analysis in ATS Score Check tab)</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleAnalyzeResume} className="space-y-4">
+              <p className="text-muted-foreground">
+                This section will house tools for defining screening criteria, managing candidate pools, and initial filtering based on qualifications.
+                For detailed AI-powered resume analysis and ATS scoring, please use the "ATS Score Check" tab.
+              </p>
+              <div className="mt-4 p-4 border rounded-md bg-secondary/30">
+                <h4 className="font-semibold mb-2">Future Features (Mock):</h4>
+                <ul className="list-disc pl-5 text-sm space-y-1">
+                  <li>Define keyword-based filters</li>
+                  <li>Set experience level requirements</li>
+                  <li>Batch process resumes against basic criteria</li>
+                  <li>Integrate with job board applications</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="ats-score-check"> {/* New Tab Content */}
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle>ATS Score Check & AI Resume Analysis</CardTitle>
+              <CardDescription>Paste resume text to get an AI-powered analysis, ATS score, overview, keywords, and improvement suggestions.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleAnalyzeResumeForATS} className="space-y-4">
                 <div>
-                  <Label htmlFor="resumeForAnalysisText">Paste Resume Text</Label>
+                  <Label htmlFor="resumeForAtsAnalysisText">Paste Resume Text</Label>
                   <Textarea
-                    id="resumeForAnalysisText"
+                    id="resumeForAtsAnalysisText"
                     value={resumeForAnalysis}
                     onChange={(e) => setResumeForAnalysis(e.target.value)}
                     placeholder="Paste the full text of the resume here..."
@@ -177,12 +202,12 @@ export default function RecruitmentPage() {
                     required
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    (File upload for PDF/DOC is a planned feature. For now, please paste the text.)
+                    (Note: PDF/Word document upload and parsing is a planned feature. For now, please paste the resume text.)
                   </p>
                 </div>
                 <Button type="submit" disabled={isAnalysisLoading}>
-                  {isAnalysisLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserCheck className="mr-2 h-4 w-4" />}
-                  Analyze Resume with AI
+                  {isAnalysisLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <SearchCheck className="mr-2 h-4 w-4" />}
+                  Analyze Resume & Get ATS Score
                 </Button>
               </form>
 
