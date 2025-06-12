@@ -9,11 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, UserCheck, FileText, PlayCircle, Briefcase } from 'lucide-react';
+import { Loader2, Wand2, UserCheck, FileText, PlayCircle, Briefcase, UploadCloud, BarChart, Lightbulb, CheckSquare, ThumbsUp } from 'lucide-react';
 import { generateJobDescription, type GenerateJobDescriptionInput, type GenerateJobDescriptionOutput } from '@/ai/flows/generate-job-description';
 import { aiInterviewer, type AiInterviewerInput, type AiInterviewerOutput } from '@/ai/flows/ai-interviewer';
+import { analyzeResume, type AnalyzeResumeInput, type AnalyzeResumeOutput } from '@/ai/flows/analyze-resume-flow'; // New import
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress'; // New import
 
 export default function RecruitmentPage() {
   const [jdPrompt, setJdPrompt] = useState('');
@@ -21,11 +23,16 @@ export default function RecruitmentPage() {
   const [isJdLoading, setIsJdLoading] = useState(false);
 
   const [interviewerJobDesc, setInterviewerJobDesc] = useState('');
-  const [candidateResume, setCandidateResume] = useState('');
+  const [candidateResumeTextForInterview, setCandidateResumeTextForInterview] = useState(''); // Renamed for clarity
   const [candidateName, setCandidateName] = useState('');
-  const [interviewRounds, setInterviewRounds] = useState('3'); // Changed to string, default '3'
+  const [interviewRounds, setInterviewRounds] = useState('3');
   const [interviewResult, setInterviewResult] = useState<AiInterviewerOutput | null>(null);
   const [isInterviewLoading, setIsInterviewLoading] = useState(false);
+  
+  const [resumeForAnalysis, setResumeForAnalysis] = useState('');
+  const [analysisResult, setAnalysisResult] = useState<AnalyzeResumeOutput | null>(null);
+  const [isAnalysisLoading, setIsAnalysisLoading] = useState(false);
+
   const { toast } = useToast();
 
   async function handleGenerateJd(event: FormEvent<HTMLFormElement>) {
@@ -50,7 +57,7 @@ export default function RecruitmentPage() {
 
   async function handleAiInterview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!interviewerJobDesc.trim() || !candidateResume.trim() || !candidateName.trim()) {
+    if (!interviewerJobDesc.trim() || !candidateResumeTextForInterview.trim() || !candidateName.trim()) {
       toast({ title: "Input Required", description: "Please fill all fields for AI Interviewer.", variant: "destructive" });
       return;
     }
@@ -70,9 +77,9 @@ export default function RecruitmentPage() {
     try {
       const input: AiInterviewerInput = {
         jobDescription: interviewerJobDesc,
-        candidateResume,
+        candidateResume: candidateResumeTextForInterview,
         candidateName,
-        interviewRounds: numInterviewRounds // Pass the parsed number
+        interviewRounds: numInterviewRounds
       };
       const result: AiInterviewerOutput = await aiInterviewer(input);
       setInterviewResult(result);
@@ -81,6 +88,26 @@ export default function RecruitmentPage() {
       toast({ title: "Error", description: "Failed to conduct AI interview.", variant: "destructive" });
     } finally {
       setIsInterviewLoading(false);
+    }
+  }
+
+  async function handleAnalyzeResume(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!resumeForAnalysis.trim()) {
+      toast({ title: "Input Required", description: "Please paste the resume text for analysis.", variant: "destructive" });
+      return;
+    }
+    setIsAnalysisLoading(true);
+    setAnalysisResult(null);
+    try {
+      const input: AnalyzeResumeInput = { resumeText: resumeForAnalysis };
+      const result: AnalyzeResumeOutput = await analyzeResume(input);
+      setAnalysisResult(result);
+    } catch (error) {
+      console.error('Error analyzing resume:', error);
+      toast({ title: "Error", description: "Failed to analyze resume.", variant: "destructive" });
+    } finally {
+      setIsAnalysisLoading(false);
     }
   }
 
@@ -93,7 +120,7 @@ export default function RecruitmentPage() {
       <Tabs defaultValue="job-creation" className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6">
           <TabsTrigger value="job-creation"><FileText className="mr-2 h-4 w-4" />Job Creation</TabsTrigger>
-          <TabsTrigger value="resume-filtering"><UserCheck className="mr-2 h-4 w-4" />Resume Filtering</TabsTrigger>
+          <TabsTrigger value="resume-filtering"><UserCheck className="mr-2 h-4 w-4" />ATS &amp; Resume Analysis</TabsTrigger>
           <TabsTrigger value="application-management"><Briefcase className="mr-2 h-4 w-4" />Applications</TabsTrigger>
           <TabsTrigger value="ai-interviewer"><PlayCircle className="mr-2 h-4 w-4" />AI Interviewer</TabsTrigger>
         </TabsList>
@@ -134,21 +161,101 @@ export default function RecruitmentPage() {
         <TabsContent value="resume-filtering">
           <Card className="shadow-lg">
             <CardHeader>
-              <CardTitle>AI Resume Filtering (ATS)</CardTitle>
-              <CardDescription>Screen and shortlist candidates based on relevance and experience. (Mock)</CardDescription>
+              <CardTitle>ATS Score &amp; Resume Analyzer</CardTitle>
+              <CardDescription>Upload or paste resume text to get an AI-powered analysis, ATS score, and improvement suggestions.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                This section will feature AI-powered resume screening. Upload resumes or connect your applicant pool, and the AI will analyze and rank candidates based on job requirements.
-              </p>
-              <div className="mt-4 p-4 border rounded-md bg-secondary/30">
-                <h4 className="font-semibold mb-2">Mock Candidate List:</h4>
-                <ul className="list-disc pl-5 text-sm space-y-1">
-                  <li>Jane Doe - Software Engineer - Score: 92% - Status: Shortlisted</li>
-                  <li>John Smith - Product Manager - Score: 78% - Status: Reviewing</li>
-                  <li>Alice Brown - UX Designer - Score: 85% - Status: Shortlisted</li>
-                </ul>
-              </div>
+              <form onSubmit={handleAnalyzeResume} className="space-y-4">
+                <div>
+                  <Label htmlFor="resumeForAnalysisText">Paste Resume Text</Label>
+                  <Textarea
+                    id="resumeForAnalysisText"
+                    value={resumeForAnalysis}
+                    onChange={(e) => setResumeForAnalysis(e.target.value)}
+                    placeholder="Paste the full text of the resume here..."
+                    className="mt-1 min-h-[200px]"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    (File upload for PDF/DOC is a planned feature. For now, please paste the text.)
+                  </p>
+                </div>
+                <Button type="submit" disabled={isAnalysisLoading}>
+                  {isAnalysisLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserCheck className="mr-2 h-4 w-4" />}
+                  Analyze Resume with AI
+                </Button>
+              </form>
+
+              {isAnalysisLoading && (
+                <div className="flex items-center justify-center py-8 mt-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="ml-2">Analyzing resume...</p>
+                </div>
+              )}
+
+              {analysisResult && !isAnalysisLoading && (
+                <div className="mt-6 space-y-6">
+                  <Card className="bg-secondary/30">
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center"><BarChart className="mr-2 h-5 w-5 text-primary"/>ATS Compatibility Score</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <p className="text-4xl font-bold text-primary">{analysisResult.atsScore} <span className="text-xl text-muted-foreground">/ 100</span></p>
+                      <Progress value={analysisResult.atsScore} className="h-3" />
+                      <p className="text-xs text-muted-foreground">This score estimates compatibility with Applicant Tracking Systems based on common criteria.</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center"><FileText className="mr-2 h-5 w-5 text-primary"/>Resume Overview</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm whitespace-pre-wrap">{analysisResult.overview}</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center"><CheckSquare className="mr-2 h-5 w-5 text-primary"/>Keywords Identified</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {analysisResult.keywords.map((keyword, index) => (
+                          <Badge key={index} variant="secondary">{keyword}</Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg flex items-center"><ThumbsUp className="mr-2 h-5 w-5 text-green-500"/>Key Strengths</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="list-disc pl-5 space-y-1 text-sm">
+                          {analysisResult.strengths.map((strength, index) => (
+                            <li key={index}>{strength}</li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg flex items-center"><Lightbulb className="mr-2 h-5 w-5 text-yellow-500"/>Areas for Improvement</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="list-disc pl-5 space-y-1 text-sm">
+                          {analysisResult.areasForImprovement.map((improvement, index) => (
+                            <li key={index}>{improvement}</li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -188,8 +295,8 @@ export default function RecruitmentPage() {
                   <Textarea id="interviewerJobDesc" value={interviewerJobDesc} onChange={(e) => setInterviewerJobDesc(e.target.value)} placeholder="Paste the full job description here..." className="mt-1 min-h-[100px]" />
                 </div>
                 <div>
-                  <Label htmlFor="candidateResume">Candidate Resume (Text)</Label>
-                  <Textarea id="candidateResume" value={candidateResume} onChange={(e) => setCandidateResume(e.target.value)} placeholder="Paste the candidate's resume text here..." className="mt-1 min-h-[100px]" />
+                  <Label htmlFor="candidateResumeTextForInterview">Candidate Resume (Text)</Label>
+                  <Textarea id="candidateResumeTextForInterview" value={candidateResumeTextForInterview} onChange={(e) => setCandidateResumeTextForInterview(e.target.value)} placeholder="Paste the candidate's resume text here..." className="mt-1 min-h-[100px]" />
                 </div>
                 <div>
                   <Label htmlFor="candidateName">Candidate Name</Label>
@@ -201,7 +308,7 @@ export default function RecruitmentPage() {
                     id="interviewRounds" 
                     type="number" 
                     value={interviewRounds} 
-                    onChange={(e) => setInterviewRounds(e.target.value)} // Directly set the string value
+                    onChange={(e) => setInterviewRounds(e.target.value)}
                     className="mt-1" 
                     min="1" 
                     max="10" 
@@ -237,4 +344,3 @@ export default function RecruitmentPage() {
     </>
   );
 }
-
