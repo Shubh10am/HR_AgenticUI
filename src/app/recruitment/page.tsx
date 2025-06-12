@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, type FormEvent, ChangeEvent } from 'react'; // Added ChangeEvent
+import { useState, type FormEvent, ChangeEvent } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -29,7 +29,7 @@ export default function RecruitmentPage() {
   const [interviewResult, setInterviewResult] = useState<AiInterviewerOutput | null>(null);
   const [isInterviewLoading, setIsInterviewLoading] = useState(false);
   
-  const [resumeForAnalysis, setResumeForAnalysis] = useState(''); // Changed: Initialize with empty string
+  const [resumeForAnalysis, setResumeForAnalysis] = useState('');
   const [analysisResult, setAnalysisResult] = useState<AnalyzeResumeOutput | null>(null);
   const [isAnalysisLoading, setIsAnalysisLoading] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
@@ -96,21 +96,51 @@ export default function RecruitmentPage() {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFileName(file.name);
-      toast({
-        title: "File Selected",
-        description: `${file.name}. Please copy its content into the text area below for analysis. Direct file processing is a future enhancement.`,
-        duration: 7000,
-      });
-      // Future: Implement text extraction here and setResumeForAnalysis(extractedText)
+      if (file.type === "text/plain") {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const text = e.target?.result as string;
+          setResumeForAnalysis(text);
+          toast({
+            title: "Text File Loaded",
+            description: `${file.name} content has been loaded into the text area.`,
+          });
+        };
+        reader.onerror = () => {
+          toast({
+            title: "File Read Error",
+            description: `Could not read the content of ${file.name}.`,
+            variant: "destructive",
+          });
+        };
+        reader.readAsText(file);
+      } else if (file.type === "application/pdf" || file.type.includes("wordprocessingml.document") || file.type.includes("msword")) {
+         toast({
+          title: "PDF/Word File Selected",
+          description: `${file.name} selected. Please manually copy its content into the text area below for analysis. Automatic extraction for PDF/Word is a future enhancement.`,
+          duration: 8000,
+        });
+        setResumeForAnalysis(''); // Clear textarea if a non-txt file is selected, prompting paste
+      } else {
+        toast({
+          title: "Unsupported File Type",
+          description: `Selected file ${file.name} is not a .txt, .pdf, or .doc(x) file. Please select a supported file or paste text.`,
+          variant: "destructive",
+        });
+        setResumeForAnalysis('');
+        setSelectedFileName(null);
+         if (event.target) event.target.value = ''; // Reset file input
+      }
     } else {
       setSelectedFileName(null);
+      setResumeForAnalysis('');
     }
   };
 
   async function handleAnalyzeResumeForATS(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!resumeForAnalysis.trim()) {
-      toast({ title: "Input Required", description: "Please paste the resume text for analysis.", variant: "destructive" });
+      toast({ title: "Input Required", description: "Please paste or load the resume text for analysis.", variant: "destructive" });
       return;
     }
     setIsAnalysisLoading(true);
@@ -179,7 +209,7 @@ export default function RecruitmentPage() {
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle>Resume Filtering & Screening</CardTitle>
-              <CardDescription>Tools for defining screening criteria and managing candidate pools. For detailed AI analysis, use "ATS Score Check".</CardDescription>
+              <CardDescription>Define screening criteria and manage candidate pools. For detailed AI analysis, use "ATS Score Check".</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
@@ -206,33 +236,34 @@ export default function RecruitmentPage() {
             <CardContent>
               <form onSubmit={handleAnalyzeResumeForATS} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="resumeFile">Upload Resume (PDF, DOCX, TXT)</Label>
-                  <div className="flex items-center space-x-2">
+                  <Label htmlFor="resumeFile">Upload Resume (.txt, .pdf, .doc, .docx)</Label>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 space-y-2 sm:space-y-0">
                     <Input
                       id="resumeFile"
                       type="file"
                       accept=".pdf,.doc,.docx,.txt"
                       onChange={handleFileChange}
-                      className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                      className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 sm:flex-grow"
                     />
                     {selectedFileName && (
-                      <Badge variant="secondary" className="truncate max-w-xs">
+                      <Badge variant="secondary" className="truncate max-w-xs sm:max-w-sm flex-shrink-0 py-1.5 px-3">
                         <UploadCloud className="mr-2 h-4 w-4" />
                         {selectedFileName}
                       </Badge>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    After selecting a file, please copy its text content into the textarea below for analysis. Direct file processing is a future enhancement.
+                  <p className="text-xs text-muted-foreground pt-1">
+                    For <strong className="font-medium">.txt files</strong>, content will be loaded automatically.
+                    For <strong className="font-medium">.pdf, .doc, .docx files</strong>, please select the file, then copy its text content and paste it into the textarea below. Automatic extraction for these types is a future enhancement.
                   </p>
                 </div>
                 <div>
-                  <Label htmlFor="resumeForAtsAnalysisText">Or Paste Resume Text</Label>
+                  <Label htmlFor="resumeForAtsAnalysisText">Resume Text for Analysis</Label>
                   <Textarea
                     id="resumeForAtsAnalysisText"
                     value={resumeForAnalysis}
                     onChange={(e) => setResumeForAnalysis(e.target.value)}
-                    placeholder="Paste the full text of the resume here..."
+                    placeholder="Paste the full text of the resume here, or it will be auto-filled for .txt uploads..."
                     className="mt-1 min-h-[200px]"
                     required
                   />
@@ -401,3 +432,5 @@ export default function RecruitmentPage() {
     </>
   );
 }
+
+    
