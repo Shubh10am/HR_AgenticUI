@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Wand2, Send, Reply, ChevronRight, ChevronLeft, MailOpen, RefreshCw, Archive, Trash2, FileWarning } from 'lucide-react';
+import { Loader2, Wand2, Send, Reply, ChevronRight, ChevronLeft, MailOpen, RefreshCw, Archive, Trash2, FileWarning, LinkIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, type GenerateDraftEmailResponsesOutput } from '@/ai/flows/draft-email-response';
 import { Badge } from '@/components/ui/badge';
@@ -117,6 +117,13 @@ export default function GmailInboxPage() {
       toast({ title: "Emails Refreshed" });
       setIsRefreshing(false);
     }, 1500);
+  };
+
+  const handleConnectGoogleAccount = () => {
+    toast({
+      title: "Connect Google Account (Mock)",
+      description: "This would initiate an OAuth flow to connect your Gmail account. This is a mock action for now.",
+    });
   };
 
   const handleGenerateAIReply = async () => {
@@ -236,6 +243,10 @@ Please generate a few professional reply options to this email.`;
         title="Gmail Inbox"
         description="Fetch, read, and reply to your emails with AI assistance (Mock Interface)."
       >
+        <Button variant="outline" onClick={handleConnectGoogleAccount}>
+            <LinkIcon className="mr-2 h-4 w-4" />
+            Connect Google Account
+          </Button>
         <Button variant="outline" onClick={handleRefreshEmails} disabled={isRefreshing}>
           {isRefreshing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
            {isRefreshing ? 'Refreshing...' : 'Refresh'}
