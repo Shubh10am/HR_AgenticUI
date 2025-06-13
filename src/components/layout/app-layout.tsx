@@ -93,7 +93,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <UserNav />
           </div>
         </header>
-        <main className="flex-1 p-6 overflow-x-hidden">{children}</main>
+        <main className="flex-1 p-6 overflow-x-hidden animated-background-gradient">
+          {children}
+        </main>
         <CopilotSidebar isOpen={isCopilotOpen} onOpenChange={setIsCopilotOpen} /> {/* Added CopilotSidebar */}
       </SidebarInset>
     </SidebarProvider>

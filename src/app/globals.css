@@ -135,3 +135,39 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes animated-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@layer utilities {
+  .animated-background-gradient {
+    background: linear-gradient(-45deg, 
+      hsl(var(--background)), 
+      hsl(var(--secondary)), 
+      hsl(var(--primary) / 0.03), /* Adjusted for even more subtlety */
+      hsl(var(--accent) / 0.04)   /* Adjusted for even more subtlety */
+    );
+    background-size: 400% 400%;
+    animation: animated-gradient 30s ease infinite; /* Slowed down animation */
+  }
+
+  .dark .animated-background-gradient {
+     background: linear-gradient(-45deg, 
+      hsl(var(--background)), 
+      hsl(var(--secondary)), 
+      hsl(var(--primary) / 0.05), /* Adjusted for dark mode subtlety */
+      hsl(var(--accent) / 0.06)   /* Adjusted for dark mode subtlety */
+    );
+    background-size: 400% 400%;
+    animation: animated-gradient 30s ease infinite; /* Slowed down animation */
+  }
+}
