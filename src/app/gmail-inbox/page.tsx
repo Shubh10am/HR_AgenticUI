@@ -1,7 +1,7 @@
-
 'use client';
 
-import { useState, type FormEvent, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
+import axios from 'axios';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,73 +10,61 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Wand2, Send, Reply, ChevronRight, ChevronLeft, MailOpen, RefreshCw, Archive, Trash2, FileWarning, LinkIcon } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, Wand2, Send, Reply, ChevronRight, MailOpen, RefreshCw, Trash2, FileWarning, LinkIcon, Calendar, File } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, type GenerateDraftEmailResponsesOutput } from '@/ai/flows/draft-email-response';
-import { Badge } from '@/components/ui/badge';
 
-interface MockEmail {
+interface Email {
   id: string;
-  sender: string;
-  recipient: string;
+  threadId: string;
+  from: string;
   subject: string;
-  body: string;
-  date: string;
-  read: boolean;
   snippet: string;
+  body: string;
+  date?: string;
+  to?: string;
+  category?: string;
+  attachments?: Array<{
+    filename: string;
+    attachmentId: string;
+    size: number;
+    mimeType: string;
+  }>;
 }
 
-const mockEmailsData: MockEmail[] = [
-  {
-    id: '1',
-    sender: 'alice.wonderland.long.email@example.com',
-    recipient: 'admin@hrstreamline.ai',
-    subject: 'Regarding my leave application status request',
-    body: 'Hello HR Admin,\n\nI would like to follow up on my leave application submitted last week for the dates 20th July to 25th July. Could you please let me know the status?\n\nThanks,\nAlice',
-    date: '2024-07-18 10:00 AM',
-    read: false,
-    snippet: 'Follow up on my leave application submitted last week...',
-  },
-  {
-    id: '2',
-    sender: 'bob.marketing@example.com',
-    recipient: 'admin@hrstreamline.ai',
-    subject: 'New Marketing Campaign Proposal',
-    body: 'Hi Team,\n\nPlease find attached the proposal for our new Q4 marketing campaign. Looking forward to your feedback in the meeting next Monday.\n\nBest,\nBob',
-    date: '2024-07-18 09:15 AM',
-    read: true,
-    snippet: 'Please find attached the proposal for our new Q4 marketing campaign...',
-  },
-  {
-    id: '3',
-    sender: 'charlie.dev.ops@example.com',
-    recipient: 'admin@hrstreamline.ai',
-    subject: 'System Maintenance Notification',
-    body: 'Dear All,\n\nThis is to inform you that there will be a scheduled system maintenance on Saturday, July 20th, from 2 AM to 4 AM. Services might be temporarily unavailable during this period.\n\nRegards,\nCharlie (IT Department)',
-    date: '2024-07-17 03:30 PM',
-    read: false,
-    snippet: 'Scheduled system maintenance on Saturday, July 20th...',
-  },
-  {
-    id: '4',
-    sender: 'vendor.services.inc@example.com',
-    recipient: 'admin@hrstreamline.ai',
-    subject: 'Invoice INV-2024-00123 for Services Rendered',
-    body: 'Dear HR Streamline AI,\n\nAttached is invoice INV-2024-00123 for services rendered in June 2024. Please process the payment at your earliest convenience.\n\nThank you,\nVendor Services Team',
-    date: '2024-07-16 11:00 AM',
-    read: true,
-    snippet: 'Attached is invoice INV-2024-00123 for services rendered...',
-  },
-];
+interface CalendarEvent {
+  id: string;
+  summary: string;
+  description: string;
+  start: string;
+  end: string;
+  location: string;
+  status: string;
+  created: string;
+  updated: string;
+  attendees: Array<{ email: string }>;
+  organizer: { email: string };
+  calendar_id: string;
+}
 
-export default function GmailInboxPage() {
-  const [emails, setEmails] = useState<MockEmail[]>(mockEmailsData);
-  const [selectedEmail, setSelectedEmail] = useState<MockEmail | null>(null);
+export default function GmailCalendarPage() {
+  const [emails, setEmails] = useState<Email[]>([]);
+  const [categoryEmails, setCategoryEmails] = useState<Email[]>([]);
+  const [spamEmails, setSpamEmails] = useState<Email[]>([]);
+  const [sentEmails, setSentEmails] = useState<Email[]>([]);
+  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [activeSection, setActiveSection] = useState('inbox');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [generatedReplyDrafts, setGeneratedReplyDrafts] = useState<string[]>([]);
   const [isGeneratingReply, setIsGeneratingReply] = useState(false);
   const [isSendingReply, setIsSendingReply] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   const [replyTo, setReplyTo] = useState('');
   const [replySubject, setReplySubject] = useState('');
   const [replyBody, setReplyBody] = useState('');
@@ -84,46 +72,238 @@ export default function GmailInboxPage() {
 
   const { toast } = useToast();
 
-  const handleSelectEmail = (email: MockEmail) => {
-    setSelectedEmail(email);
-    setGeneratedReplyDrafts([]);
-    setShowReplyComposer(false);
-    setReplyBody(''); 
-    setReplyTo('');
-    setReplySubject('');
-    if (!email.read) {
-      setEmails(prev => prev.map(e => e.id === email.id ? {...e, read: true} : e));
-      toast({ title: "Email Marked as Read", description: `"${email.subject}" is now marked as read.` });
+  const API_BASE_URL = 'http://localhost:8000';
+
+  // Clean up email body for display (remove excessive newlines, style links)
+  const formatEmailBody = (body: string) => {
+    // Remove excessive newlines and trim
+    const cleanedBody = body.replace(/\r\n\s*\r\n/g, '\n\n').trim();
+    
+    // Split the body into lines for processing
+    const lines = cleanedBody.split('\n');
+    const formattedLines: JSX.Element[] = [];
+    let inFooter = false;
+
+    lines.forEach((line, index) => {
+      // Detect footer sections (e.g., "Unsubscribe", "Help", "©")
+      if (line.includes('Unsubscribe') || line.includes('Help') || line.includes('©') || line.includes('This email was intended for')) {
+        inFooter = true;
+      }
+
+      if (inFooter) {
+        // Style footer links (e.g., Unsubscribe, Help)
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const parts = line.split(urlRegex);
+        const formattedLine = parts.map((part, i) => {
+          if (part.match(urlRegex)) {
+            return (
+              <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                {part.includes('unsubscribe') ? 'Unsubscribe' : part.includes('help') ? 'Help' : part}
+              </a>
+            );
+          }
+          return part;
+        });
+
+        formattedLines.push(
+          <p key={index} className="text-xs text-muted-foreground italic">
+            {formattedLine}
+          </p>
+        );
+      } else {
+        // Handle repeated headers (e.g., in Wipro email)
+        if (index === 0 && line === lines[1]) {
+          return; // Skip repeated header
+        }
+        // Normal body content
+        formattedLines.push(
+          <p key={index} className="text-sm leading-relaxed">
+            {line}
+          </p>
+        );
+      }
+    });
+
+    return formattedLines;
+  };
+
+  // Check authentication status and handle OAuth callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('auth_success') === 'true') {
+      setIsAuthenticated(true);
+      toast({ title: "Authentication Successful", description: "Connected to Google account." });
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (isAuthenticated) {
+      fetchEmails();
+      fetchCategoryEmails();
+      fetchSpamEmails();
+      fetchSentEmails();
+      fetchCalendarEvents();
+    }
+  }, [isAuthenticated]);
+
+  const fetchEmails = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/emails`, { params: { limit: 10 } });
+      setEmails(response.data);
+    } catch (error) {
+      toast({
+        title: "Error Fetching Emails",
+        description: "Failed to fetch emails. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleRefreshEmails = () => {
-    setIsRefreshing(true);
-    toast({ title: "Refreshing Emails..." });
-    setTimeout(() => {
-      // Potentially add new mock emails or re-fetch logic here
-      // For now, just simulate refresh completion
-      const newMockEmail: MockEmail = {
-        id: `mock-${Date.now()}`,
-        sender: 'new.sender@example.com',
-        recipient: 'admin@hrstreamline.ai',
-        subject: 'Freshly Refreshed Email',
-        body: 'This email appeared after a refresh action.\n\nRegards,\nRefresher Bot',
-        date: new Date().toLocaleString(),
-        read: false,
-        snippet: 'This email appeared after a refresh...',
-      };
-      setEmails(prev => [newMockEmail, ...prev.filter(e => e.id !== newMockEmail.id).slice(0,10)]); // Add new, keep some old, limit total
-      toast({ title: "Emails Refreshed" });
-      setIsRefreshing(false);
-    }, 1500);
+  const fetchCategoryEmails = async (category?: string) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/emails/categories`, { params: { category, limit: 10 } });
+      setCategoryEmails(response.data);
+    } catch (error) {
+      toast({
+        title: "Error Fetching Category Emails",
+        description: "Failed to fetch category emails. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchSpamEmails = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/emails/spam`, { params: { limit: 10 } });
+      setSpamEmails(response.data);
+    } catch (error) {
+      toast({
+        title: "Error Fetching Spam Emails",
+        description: "Failed to fetch spam emails. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchSentEmails = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/emails/sent`, { params: { limit: 10, days_ago: 5 } });
+      setSentEmails(response.data);
+    } catch (error) {
+      toast({
+        title: "Error Fetching Sent Emails",
+        description: "Failed to fetch sent emails. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchCalendarEvents = async () => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/events`, {
+        calendar_id: 'primary',
+        max_results: 10,
+      });
+      setCalendarEvents(response.data);
+    } catch (error) {
+      toast({
+        title: "Error Fetching Calendar Events",
+        description: "Failed to fetch calendar events. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteEmail = async (messageId: string) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/email/delete/${messageId}`);
+      if (activeSection === 'inbox') {
+        setEmails(emails.filter(email => email.id !== messageId));
+      } else if (activeSection === 'spam') {
+        setSpamEmails(spamEmails.filter(email => email.id !== messageId));
+      } else if (activeSection === 'sent') {
+        setSentEmails(sentEmails.filter(email => email.id !== messageId));
+      } else {
+        setCategoryEmails(categoryEmails.filter(email => email.id !== messageId));
+      }
+      if (selectedEmail?.id === messageId) {
+        setSelectedEmail(null);
+      }
+      toast({ title: "Email Deleted", description: "The email has been deleted." });
+    } catch (error) {
+      toast({
+        title: "Error Deleting Email",
+        description: "Failed to delete email. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleConnectGoogleAccount = () => {
-    toast({
-      title: "Connect Google Account (Mock)",
-      description: "This would initiate an OAuth flow to connect your Gmail account. This is a mock action for now.",
-    });
+    try{
+      // window.location.href = `${API_BASE_URL}/auth/login`;
+      toast({
+        title: "Connecting Google Account",
+        description: "Backend Deployment is Unstable Redirecting to Google authentication...",
+      });
+    } catch (error) {
+      console.error('Error connecting Google account:', error);
+      toast({
+        title: "Error Connecting",
+        description: "Failed to connect Google account Due to Backend Stable Deployment. We are working on it.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSelectEmail = (email: Email) => {
+    setSelectedEmail(email);
+    setShowCalendar(false);
+    setGeneratedReplyDrafts([]);
+    setShowReplyComposer(false);
+    setReplyBody('');
+    setReplyTo('');
+    setReplySubject('');
+  };
+
+  const handleSelectCalendarView = () => {
+    setSelectedEmail(null);
+    setShowCalendar(true);
+    setGeneratedReplyDrafts([]);
+    setShowReplyComposer(false);
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        fetchEmails(),
+        fetchCategoryEmails(),
+        fetchSpamEmails(),
+        fetchSentEmails(),
+        fetchCalendarEvents(),
+      ]);
+      toast({ title: "Refreshed", description: "Emails and calendar events updated." });
+    } catch (error) {
+      toast({
+        title: "Error Refreshing",
+        description: "Failed to refresh data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleGenerateAIReply = async () => {
@@ -133,7 +313,7 @@ export default function GmailInboxPage() {
     setGeneratedReplyDrafts([]);
     try {
       const query = `The following email was received:
-From: ${selectedEmail.sender}
+From: ${selectedEmail.from}
 Subject: ${selectedEmail.subject}
 Body:
 ${selectedEmail.body}
@@ -143,8 +323,8 @@ Please generate a few professional reply options to this email.`;
       const input: GenerateDraftEmailResponsesInput = { query };
       const result: GenerateDraftEmailResponsesOutput = await generateDraftEmailResponses(input);
       
-      if (result.drafts && result.drafts.length > 0) { // Updated from draftResponses to drafts
-        setGeneratedReplyDrafts(result.drafts.map(d => d.body)); // Assuming you want an array of body strings
+      if (result.drafts && result.drafts.length > 0) {
+        setGeneratedReplyDrafts(result.drafts.map(d => d.body));
       } else {
         toast({
           title: "No Reply Drafts Generated",
@@ -165,166 +345,309 @@ Please generate a few professional reply options to this email.`;
 
   const handleUseDraftForReply = (draft: string) => {
     if (!selectedEmail) return;
-    setReplyTo(selectedEmail.sender);
+    setReplyTo(selectedEmail.from);
     setReplySubject(`Re: ${selectedEmail.subject}`);
     setReplyBody(draft);
     setShowReplyComposer(true);
-    setGeneratedReplyDrafts([]); 
+    setGeneratedReplyDrafts([]);
   };
-  
+
   const handleManuallyComposeReply = () => {
     if (!selectedEmail) return;
-    setReplyTo(selectedEmail.sender);
+    setReplyTo(selectedEmail.from);
     setReplySubject(`Re: ${selectedEmail.subject}`);
-    setReplyBody(''); 
+    setReplyBody('');
     setShowReplyComposer(true);
     setGeneratedReplyDrafts([]);
-  }
+  };
 
   const handleSendReply = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!replyTo || !replySubject || !replyBody) {
+    if (!replyTo || !replySubject || !replyBody || !selectedEmail) {
       toast({ title: "Incomplete Reply", description: "Please fill To, Subject, and Body.", variant: "destructive" });
       return;
     }
     setIsSendingReply(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log("Mock Sent Email:", { to: replyTo, subject: replySubject, body: replyBody });
-    toast({
-      title: "Reply Sent (Mock)",
-      description: `Your reply to ${replyTo} has been "sent".`,
-    });
-    setIsSendingReply(false);
-    setShowReplyComposer(false);
-    setReplyBody('');
-  };
-
-  const handleMockEmailAction = (actionType: 'archive' | 'delete' | 'markUnread', emailId: string, emailSubject: string) => {
-    const targetEmail = emails.find(e => e.id === emailId);
-    if (!targetEmail) return;
-
-    let actionDescription = '';
-    switch (actionType) {
-      case 'archive':
-        actionDescription = `Email "${emailSubject}" archived (mock).`;
-        if (selectedEmail && selectedEmail.id === emailId) setSelectedEmail(null);
-        // Potentially filter out from `emails` list if you have an archive view
-        break;
-      case 'delete':
-        actionDescription = `Email "${emailSubject}" deleted (mock).`;
-        setEmails(prev => prev.filter(e => e.id !== emailId));
-        if (selectedEmail && selectedEmail.id === emailId) setSelectedEmail(null);
-        break;
-      case 'markUnread':
-        actionDescription = `Email "${emailSubject}" marked as unread (mock).`;
-        setEmails(prev => prev.map(e => e.id === emailId ? {...e, read: false} : e));
-        if (selectedEmail && selectedEmail.id === emailId) {
-            setSelectedEmail(prev => prev ? {...prev, read: false} : null);
-        }
-        break;
-      default:
-        return;
+    try {
+      await axios.post(`${API_BASE_URL}/email/reply`, {
+        message_id: selectedEmail.id,
+        to: replyTo,
+        subject: replySubject,
+        message: replyBody,
+        thread_id: selectedEmail.threadId,
+      });
+      toast({ title: "Reply Sent", description: `Your reply to ${replyTo} has been sent.` });
+      setShowReplyComposer(false);
+      setReplyBody('');
+      fetchEmails();
+      fetchCategoryEmails();
+      fetchSpamEmails();
+      fetchSentEmails();
+    } catch (error) {
+      toast({
+        title: "Error Sending Reply",
+        description: "Failed to send reply. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingReply(false);
     }
-    toast({ title: "Action Performed (Mock)", description: actionDescription });
   };
 
-  const mainGridClasses = selectedEmail
-    ? "grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-12rem)]" // Adjusted height, -12rem to account for PageHeader
-    : "grid grid-cols-1 md:grid-cols-2 gap-6 h-[calc(100vh-12rem)]";
+  const handleSectionChange = (value: string) => {
+    setActiveSection(value);
+    setSelectedCategory(null);
+    setSelectedEmail(null);
+    if (value === 'inbox') fetchEmails();
+    else if (value === 'spam') fetchSpamEmails();
+    else if (value === 'sent') fetchSentEmails();
+    else if (value === 'categories') fetchCategoryEmails();
+  };
 
-  const emailDetailCardClasses = selectedEmail
-    ? "md:col-span-2 shadow-lg flex flex-col h-full"
-    : "md:col-span-1 shadow-lg flex flex-col h-full";
+  const handleCategoryChange = (value: string) => {
+    setSelectedCategory(value);
+    fetchCategoryEmails(value);
+  };
 
+  const mainGridClasses = "grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-6rem)]";
+  const detailCardClasses = "md:col-span-2 shadow-lg flex flex-col h-full min-h-0";
 
   return (
     <>
       <PageHeader
-        title="Gmail Inbox"
-        description="Fetch, read, and reply to your emails with AI assistance (Mock Interface)."
+        title="Gmail & Calendar"
+        description="Manage your emails and calendar events with AI assistance."
+        className="mb-4"
       >
-        <Button variant="outline" onClick={handleConnectGoogleAccount}>
+        {!isAuthenticated && (
+          <Button variant="outline" onClick={handleConnectGoogleAccount} className="mr-2">
             <LinkIcon className="mr-2 h-4 w-4" />
             Connect Google Account
           </Button>
-        <Button variant="outline" onClick={handleRefreshEmails} disabled={isRefreshing}>
+        )}
+        <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing || !isAuthenticated}>
           {isRefreshing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-           {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          {isRefreshing ? 'Refreshing...' : 'Refresh'}
         </Button>
       </PageHeader>
 
       <div className={mainGridClasses}>
-        <Card className="md:col-span-1 shadow-lg flex flex-col h-full">
-          <CardHeader>
-            <CardTitle>Inbox ({emails.filter(e => !e.read).length} unread)</CardTitle>
-            <CardDescription>Showing {emails.length} mock emails.</CardDescription>
+        <Card className="md:col-span-1 shadow-lg flex flex-col h-full min-h-0">
+          <CardHeader className="p-4">
+            <CardTitle className="text-lg">Inbox & Calendar</CardTitle>
+            <CardDescription>View emails or calendar events.</CardDescription>
           </CardHeader>
           <CardContent className="p-0 flex-grow overflow-hidden">
             <ScrollArea className="h-full">
-              <div className="p-4 space-y-2">
-                {emails.map((email) => (
-                  <Card 
-                    key={email.id} 
-                    className={`p-3 hover:shadow-md transition-shadow cursor-pointer ${selectedEmail?.id === email.id ? 'bg-secondary' : 'bg-card'} ${!email.read ? 'border-primary border-2' : 'border'}`}
-                    onClick={() => handleSelectEmail(email)}
-                  >
-                    <div className="flex justify-between items-start w-full">
-                      <p className={`text-sm font-semibold truncate min-w-0 ${!email.read ? 'text-primary' : 'text-foreground'}`}>{email.sender}</p>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <div className="p-4 space-y-3">
+                <Button
+                  variant={showCalendar ? "secondary" : "outline"}
+                  className="w-full justify-start py-2"
+                  onClick={handleSelectCalendarView}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Calendar Events
+                </Button>
+                <Separator />
+                <div className="space-y-3">
+                  <Select onValueChange={handleSectionChange} defaultValue="inbox">
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a section" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="inbox">Inbox</SelectItem>
+                      <SelectItem value="categories">Categories</SelectItem>
+                      <SelectItem value="spam">Spam</SelectItem>
+                      <SelectItem value="sent">Sent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {activeSection === 'categories' && (
+                    <Select onValueChange={handleCategoryChange} value={selectedCategory || ''}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="social">Social</SelectItem>
+                        <SelectItem value="updates">Updates</SelectItem>
+                        <SelectItem value="forums">Forums</SelectItem>
+                        <SelectItem value="promotions">Promotions</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {isLoading && (
+                    <div className="text-center py-4">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
                     </div>
-                    <p className={`text-sm truncate ${!email.read ? 'font-bold' : ''}`}>{email.subject}</p>
-                    <p className="text-xs text-muted-foreground truncate">{email.snippet}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{email.date}</p>
-                  </Card>
-                ))}
-                 {emails.length === 0 && !isRefreshing && (
+                  )}
+                  {!isAuthenticated && (
                     <div className="text-center text-muted-foreground p-6">
-                        <FileWarning className="h-12 w-12 mx-auto mb-2" />
-                        <p>No emails to display.</p>
-                        <p className="text-xs">Try refreshing or check your connection.</p>
+                      <FileWarning className="h-12 w-12 mx-auto mb-2" />
+                      <p>Please connect your Google account to view emails.</p>
                     </div>
-                 )}
+                  )}
+                  {isAuthenticated && activeSection === 'inbox' && emails.map((email) => (
+                    <Card
+                      key={email.id}
+                      className={`p-3 hover:shadow-md transition-shadow cursor-pointer ${selectedEmail?.id === email.id ? 'bg-secondary' : 'bg-card'} mb-2`}
+                      onClick={() => handleSelectEmail(email)}
+                    >
+                      <div className="flex justify-between items-start w-full gap-2">
+                        <p className="text-sm font-semibold line-clamp-1 min-w-0">{email.from}</p>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      </div>
+                      <p className="text-sm line-clamp-1">{email.subject}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-1">{email.snippet}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{email.date}</p>
+                    </Card>
+                  ))}
+                  {isAuthenticated && activeSection === 'categories' && categoryEmails.map((email) => (
+                    <Card
+                      key={email.id}
+                      className={`p-3 hover:shadow-md transition-shadow cursor-pointer ${selectedEmail?.id === email.id ? 'bg-secondary' : 'bg-card'} mb-2`}
+                      onClick={() => handleSelectEmail(email)}
+                    >
+                      <div className="flex justify-between items-start w-full gap-2">
+                        <p className="text-sm font-semibold line-clamp-1 min-w-0">{email.from}</p>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      </div>
+                      <p className="text-sm line-clamp-1">{email.subject}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-1">{email.snippet}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{email.date}</p>
+                      <p className="text-xs text-muted-foreground">Category: {email.category}</p>
+                    </Card>
+                  ))}
+                  {isAuthenticated && activeSection === 'spam' && spamEmails.map((email) => (
+                    <Card
+                      key={email.id}
+                      className={`p-3 hover:shadow-md transition-shadow cursor-pointer ${selectedEmail?.id === email.id ? 'bg-secondary' : 'bg-card'} mb-2`}
+                      onClick={() => handleSelectEmail(email)}
+                    >
+                      <div className="flex justify-between items-start w-full gap-2">
+                        <p className="text-sm font-semibold line-clamp-1 min-w-0">{email.from}</p>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      </div>
+                      <p className="text-sm line-clamp-1">{email.subject}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-1">{email.snippet}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{email.date}</p>
+                    </Card>
+                  ))}
+                  {isAuthenticated && activeSection === 'sent' && sentEmails.map((email) => (
+                    <Card
+                      key={email.id}
+                      className={`p-3 hover:shadow-md transition-shadow cursor-pointer ${selectedEmail?.id === email.id ? 'bg-secondary' : 'bg-card'} mb-2`}
+                      onClick={() => handleSelectEmail(email)}
+                    >
+                      <div className="flex justify-between items-start w-full gap-2">
+                        <p className="text-sm font-semibold line-clamp-1 min-w-0">To: {email.to}</p>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      </div>
+                      <p className="text-sm line-clamp-1">{email.subject}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-1">{email.snippet}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{email.date}</p>
+                    </Card>
+                  ))}
+                  {isAuthenticated && activeSection === 'inbox' && emails.length === 0 && !isLoading && (
+                    <div className="text-center text-muted-foreground p-6">
+                      <FileWarning className="h-12 w-12 mx-auto mb-2" />
+                      <p>No emails to display.</p>
+                      <p className="text-xs">Try refreshing or check your connection.</p>
+                    </div>
+                  )}
+                  {isAuthenticated && activeSection === 'categories' && categoryEmails.length === 0 && !isLoading && (
+                    <div className="text-center text-muted-foreground p-6">
+                      <FileWarning className="h-12 w-12 mx-auto mb-2" />
+                      <p>No category emails to display.</p>
+                    </div>
+                  )}
+                  {isAuthenticated && activeSection === 'spam' && spamEmails.length === 0 && !isLoading && (
+                    <div className="text-center text-muted-foreground p-6">
+                      <FileWarning className="h-12 w-12 mx-auto mb-2" />
+                      <p>No spam emails to display.</p>
+                    </div>
+                  )}
+                  {isAuthenticated && activeSection === 'sent' && sentEmails.length === 0 && !isLoading && (
+                    <div className="text-center text-muted-foreground p-6">
+                      <FileWarning className="h-12 w-12 mx-auto mb-2" />
+                      <p>No sent emails to display.</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </ScrollArea>
           </CardContent>
         </Card>
 
-        <Card className={emailDetailCardClasses}>
-          {!selectedEmail ? (
+        <Card className={detailCardClasses}>
+          {!selectedEmail && !showCalendar ? (
             <div className="flex-grow flex flex-col items-center justify-center text-center p-6">
               <MailOpen className="h-24 w-24 text-muted-foreground mb-4" />
-              <p className="text-xl font-semibold text-muted-foreground">Select an email to read</p>
-              <p className="text-sm text-muted-foreground">Its content and reply options will appear here.</p>
+              <p className="text-xl font-semibold text-muted-foreground">Select an email or calendar view</p>
+              <p className="text-sm text-muted-foreground">Content will appear here.</p>
             </div>
+          ) : showCalendar ? (
+            <>
+              <CardHeader className="p-4">
+                <CardTitle className="text-lg">Calendar Events</CardTitle>
+                <CardDescription>Upcoming events from your primary calendar.</CardDescription>
+              </CardHeader>
+              <ScrollArea className="flex-grow p-0 min-h-0">
+                <CardContent className="p-4 space-y-4">
+                  {calendarEvents.map((event) => (
+                    <Card key={event.id} className="p-3">
+                      <p className="text-sm font-semibold">{event.summary}</p>
+                      <p className="text-xs text-muted-foreground">Start: {new Date(event.start).toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground">End: {new Date(event.end).toLocaleString()}</p>
+                      {event.location && <p className="text-xs text-muted-foreground">Location: {event.location}</p>}
+                      {event.description && <p className="text-xs whitespace-pre-wrap">{event.description}</p>}
+                      {event.attendees.length > 0 && (
+                        <p className="text-xs text-muted-foreground">Attendees: {event.attendees.map(a => a.email).join(', ')}</p>
+                      )}
+                    </Card>
+                  ))}
+                  {calendarEvents.length === 0 && (
+                    <p className="text-center text-muted-foreground">No upcoming events.</p>
+                  )}
+                </CardContent>
+              </ScrollArea>
+            </>
           ) : (
             <>
-              <CardHeader>
-                <CardTitle className="text-xl">{selectedEmail.subject}</CardTitle>
-                <div className="flex justify-between items-center">
-                    <CardDescription>From: {selectedEmail.sender}</CardDescription>
-                    <CardDescription>To: {selectedEmail.recipient}</CardDescription>
+              <CardHeader className="p-4">
+                <CardTitle className="text-lg">{selectedEmail.subject}</CardTitle>
+                <div className="flex justify-between items-center gap-2">
+                  <CardDescription className="line-clamp-1">From: {selectedEmail.from}</CardDescription>
+                  <CardDescription className="line-clamp-1">To: {selectedEmail.to || 'You'}</CardDescription>
                 </div>
                 <CardDescription>Date: {selectedEmail.date}</CardDescription>
               </CardHeader>
-              
               <CardContent className="border-t border-b p-4 flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={() => handleMockEmailAction('archive', selectedEmail.id, selectedEmail.subject)}>
-                    <Archive className="mr-2 h-4 w-4" /> Archive
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => handleMockEmailAction('markUnread', selectedEmail.id, selectedEmail.subject)}>
-                    <MailOpen className="mr-2 h-4 w-4" /> Mark Unread
-                </Button>
-                 <Button variant="destructive" size="sm" onClick={() => handleMockEmailAction('delete', selectedEmail.id, selectedEmail.subject)}>
-                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDeleteEmail(selectedEmail.id)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete
                 </Button>
               </CardContent>
-
-              <ScrollArea className="flex-grow p-0">
-                <CardContent className="whitespace-pre-wrap text-sm p-6">
-                    {selectedEmail.body}
+              <ScrollArea className="flex-grow p-0 min-h-0">
+                <CardContent className="p-4 space-y-4">
+                  <div className="space-y-2">{formatEmailBody(selectedEmail.body)}</div>
+                  {selectedEmail.attachments && selectedEmail.attachments.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold">Attachments:</p>
+                      {selectedEmail.attachments.map((attachment, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <File className="h-4 w-4" />
+                          <p className="text-sm line-clamp-1">{attachment.filename || 'noname'}</p>
+                          <p className="text-xs text-muted-foreground">({(attachment.size / 1024).toFixed(2)} KB)</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </ScrollArea>
-              
               <div className="p-4 space-y-4 border-t bg-background">
                 {!showReplyComposer && generatedReplyDrafts.length === 0 && (
                   <div className="flex gap-2">
@@ -332,46 +655,43 @@ Please generate a few professional reply options to this email.`;
                       {isGeneratingReply ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
                       Generate AI Reply Options
                     </Button>
-                     <Button onClick={handleManuallyComposeReply} variant="outline" className="flex-1">
-                        <Reply className="mr-2 h-4 w-4" /> Manually Compose Reply
+                    <Button onClick={handleManuallyComposeReply} variant="outline" className="flex-1">
+                      <Reply className="mr-2 h-4 w-4" /> Manually Compose Reply
                     </Button>
                   </div>
                 )}
-
                 {isGeneratingReply && generatedReplyDrafts.length === 0 && (
-                    <div className="text-center py-4">
-                        <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto mb-2" />
-                        <p className="text-sm text-muted-foreground">Generating AI reply drafts...</p>
-                    </div>
+                  <div className="text-center py-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Generating AI reply drafts...</p>
+                  </div>
                 )}
-
                 {!showReplyComposer && generatedReplyDrafts.length > 0 && (
                   <div className="space-y-3">
                     <h4 className="text-md font-semibold">Suggested AI Replies:</h4>
                     {generatedReplyDrafts.map((draft, index) => (
                       <Card key={index} className="bg-secondary/50 p-3">
-                        <p className="text-xs whitespace-pre-wrap max-h-28 overflow-y-auto mb-2 p-2 border rounded bg-card">{draft}</p>
+                        <p className="text-xs break-words max-h-28 overflow-y-auto mb-2 p-2 border rounded bg-card">{draft}</p>
                         <Button size="sm" onClick={() => handleUseDraftForReply(draft)} className="w-full">
                           Use this Draft for Reply
                         </Button>
                       </Card>
                     ))}
                     <Button onClick={handleManuallyComposeReply} variant="outline" className="w-full">
-                        Or Manually Compose Reply
+                      Or Manually Compose Reply
                     </Button>
                   </div>
                 )}
-                
                 {showReplyComposer && (
                   <form onSubmit={handleSendReply} className="space-y-3">
                     <h3 className="text-lg font-semibold">Compose Reply</h3>
                     <div>
                       <Label htmlFor="replyTo">To:</Label>
-                      <Input id="replyTo" value={replyTo} onChange={(e) => setReplyTo(e.target.value)} readOnly className="bg-muted"/>
+                      <Input id="replyTo" value={replyTo} onChange={(e) => setReplyTo(e.target.value)} readOnly className="bg-muted border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-200" />
                     </div>
                     <div>
                       <Label htmlFor="replySubject">Subject:</Label>
-                      <Input id="replySubject" value={replySubject} onChange={(e) => setReplySubject(e.target.value)} className="bg-muted"/>
+                      <Input id="replySubject" value={replySubject} onChange={(e) => setReplySubject(e.target.value)} className="bg-muted border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-200" />
                     </div>
                     <div>
                       <Label htmlFor="replyBody">Body:</Label>
@@ -380,18 +700,18 @@ Please generate a few professional reply options to this email.`;
                         value={replyBody}
                         onChange={(e) => setReplyBody(e.target.value)}
                         placeholder="Write your reply..."
-                        className="min-h-[150px]"
+                        className="min-h-[150px] border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-200"
                         required
                       />
                     </div>
                     <div className="flex gap-2">
-                        <Button type="submit" disabled={isSendingReply} className="flex-1">
-                          {isSendingReply ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                          Send Reply (Mock)
-                        </Button>
-                        <Button variant="outline" onClick={() => setShowReplyComposer(false)} disabled={isSendingReply} className="flex-1">
-                            Cancel
-                        </Button>
+                      <Button type="submit" disabled={isSendingReply} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                        {isSendingReply ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                        Send Reply
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowReplyComposer(false)} disabled={isSendingReply} className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100">
+                        Cancel
+                      </Button>
                     </div>
                   </form>
                 )}
@@ -403,4 +723,3 @@ Please generate a few professional reply options to this email.`;
     </>
   );
 }
-
