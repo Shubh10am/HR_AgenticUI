@@ -56,6 +56,43 @@ export default function ManageEmployeesPage() {
 
   const [employeeToDelete, setEmployeeToDelete] = useState<ClientEmployee | null>(null);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [employeeToEdit, setEmployeeToEdit] = useState<ClientEmployee | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editRole, setEditRole] = useState<EmployeeRole>('Employee');
+  const [isUpdating, setIsUpdating] = useState(false);
+
+
+  const handleEditEmployee = async () => {
+    if (!employeeToEdit || !token) return;
+
+    setIsUpdating(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/employees/${employeeToEdit._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: editName, role: editRole }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update employee');
+      }
+
+      toast({ title: 'Employee Updated', description: `${data.name} is now a ${data.role}.` });
+      setIsEditDialogOpen(false);
+      fetchEmployees(); // Refresh list
+    } catch (error: any) {
+      toast({ title: 'Update Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
 
 
   const fetchEmployees = useCallback(async () => {
@@ -122,12 +159,12 @@ export default function ManageEmployeesPage() {
       if (!response.ok) {
         throw new Error(data.error || 'Failed to register employee');
       }
-      
+
       toast({
         title: 'Employee Registered',
         description: `${data.name} (${data.email}) has been added as an ${data.role}.`,
       });
-      
+
       setEmployeeName('');
       setEmployeeEmail('');
       setEmployeeRole('Employee');
@@ -145,10 +182,10 @@ export default function ManageEmployeesPage() {
     setEmployeeToDelete(employee);
     setIsDeleteAlertOpen(true);
   };
-  
+
   const handleDeleteEmployee = async () => {
     if (!employeeToDelete || !token) return;
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/employees/${employeeToDelete._id}`, {
         method: 'DELETE',
@@ -165,11 +202,11 @@ export default function ManageEmployeesPage() {
     } catch (error: any) {
       toast({ title: 'Deletion Error', description: error.message, variant: 'destructive' });
     } finally {
-      setIsDeleteAlertOpen(false); 
+      setIsDeleteAlertOpen(false);
       // setEmployeeToDelete(null); // This is handled by onOpenChange on AlertDialog
     }
   };
-  
+
   if (authLoading) {
     return (
       <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center">
@@ -182,9 +219,9 @@ export default function ManageEmployeesPage() {
     return (
       <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center">
         <Card className="text-center p-8">
-            <CardTitle>Access Denied</CardTitle>
-            <CardDescription className="mt-2">You do not have permission to view this page.</CardDescription>
-            <Button onClick={() => window.history.back()} className="mt-4">Go Back</Button>
+          <CardTitle>Access Denied</CardTitle>
+          <CardDescription className="mt-2">You do not have permission to view this page.</CardDescription>
+          <Button onClick={() => window.history.back()} className="mt-4">Go Back</Button>
         </Card>
       </div>
     );
@@ -334,7 +371,15 @@ export default function ManageEmployeesPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right space-x-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({title: `Edit ${employee.name} (Mock)`})}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8"
+                            onClick={() => {
+                              setEmployeeToEdit(employee);
+                              setEditName(employee.name);
+                              setEditRole(employee.role);
+                              setIsEditDialogOpen(true);
+                            }}
+                          >
+
                             <Edit3 className="h-4 w-4" />
                             <span className="sr-only">Edit</span>
                           </Button>
@@ -357,24 +402,66 @@ export default function ManageEmployeesPage() {
           </CardContent>
         </Card>
       </div>
+      {employeeToEdit && (
+        <AlertDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Edit Employee</AlertDialogTitle>
+              <AlertDialogDescription>
+                Make changes to {employeeToEdit.name}'s profile.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="space-y-4 py-2">
+              <div>
+                <Label htmlFor="editName">Name</Label>
+                <Input
+                  id="editName"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  disabled={isUpdating}
+                />
+              </div>
+              <div>
+                <Label htmlFor="editRole">Role</Label>
+                <Select value={editRole} onValueChange={(val) => setEditRole(val as EmployeeRole)} disabled={isUpdating}>
+                  <SelectTrigger id="editRole">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Employee">Employee</SelectItem>
+                    <SelectItem value="HR">HR</SelectItem>
+                    <SelectItem value="Admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isUpdating}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleEditEmployee} disabled={isUpdating}>
+                {isUpdating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Save Changes
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
 
       {/* AlertDialogContent is a sibling to the main grid, but still a child of the root AlertDialog */}
       <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the employee account for {employeeToDelete?.name}.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteEmployee} className={buttonVariants({ variant: "destructive" })}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete the employee account for {employeeToDelete?.name}.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDeleteEmployee} className={buttonVariants({ variant: "destructive" })}>
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 }
 
-    

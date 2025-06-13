@@ -1,10 +1,16 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
-import Employee from '@/models/Employee';
+import Employee, { EmployeeRole, IEmployee } from '@/models/Employee';
 import { verifyToken, type JwtPayload } from '@/lib/jwt';
 import mongoose from 'mongoose';
 
+
+// Sanitize employee object to remove passwordHash
+const sanitizeEmployee = (employee: IEmployee) => {
+  const { passwordHash, ...sanitized } = employee.toObject();
+  return sanitized;
+};
 
 export default async function handler(
   req: NextApiRequest,
@@ -57,21 +63,43 @@ export default async function handler(
       return res.status(500).json({ error: 'Internal Server Error' });
     }
   } else if (req.method === 'PUT') {
-    // Placeholder for Update Employee - To be implemented later
-    // For now, ensure only Admins can attempt this.
     if (currentUserRole !== 'Admin') {
       return res.status(403).json({ error: 'Forbidden: Only Admins can update employees.' });
     }
-    // Actual update logic will go here in a future iteration.
-    // Example:
-    // const { name, role } = req.body;
-    // const updateData: Partial<IEmployee> = {};
-    // if (name) updateData.name = name;
-    // if (role && ['Admin', 'HR', 'Employee'].includes(role)) updateData.role = role as EmployeeRole;
-    // ... find employee, check org, update, save, sanitize, return ...
-    return res.status(501).json({ error: 'Update functionality not yet implemented.' });
-    
-  } else {
+
+    try {
+      const employeeToUpdate = await Employee.findById(id);
+      if (!employeeToUpdate) {
+        return res.status(404).json({ error: 'Employee not found.' });
+      }
+
+      if (employeeToUpdate.organizationId.toString() !== currentUserOrgId) {
+        return res.status(403).json({ error: 'Forbidden: Employee does not belong to your organization.' });
+      }
+
+      const { name, role } = req.body;
+
+      if (!name && !role) {
+        return res.status(400).json({ error: 'At least one of name or role must be provided to update.' });
+      }
+
+      if (role && !['Admin', 'HR', 'Employee'].includes(role)) {
+        return res.status(400).json({ error: 'Invalid role specified.' });
+      }
+
+      // Apply updates
+      if (name) employeeToUpdate.name = name;
+      if (role) employeeToUpdate.role = role as EmployeeRole;
+
+      await employeeToUpdate.save();
+
+      return res.status(200).json(sanitizeEmployee(employeeToUpdate));
+    } catch (error) {
+      console.error('Error updating employee:', error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+   else {
     res.setHeader('Allow', ['DELETE', 'PUT']);
     return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
