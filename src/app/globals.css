@@ -153,21 +153,21 @@ body {
     background: linear-gradient(-45deg, 
       hsl(var(--background)), 
       hsl(var(--secondary)), 
-      hsl(var(--primary) / 0.03), /* Adjusted for even more subtlety */
-      hsl(var(--accent) / 0.04)   /* Adjusted for even more subtlety */
+      hsl(var(--primary) / 0.05), /* Increased opacity */
+      hsl(var(--accent) / 0.08)   /* Increased opacity */
     );
     background-size: 400% 400%;
-    animation: animated-gradient 30s ease infinite; /* Slowed down animation */
+    animation: animated-gradient 30s ease infinite;
   }
 
   .dark .animated-background-gradient {
      background: linear-gradient(-45deg, 
       hsl(var(--background)), 
       hsl(var(--secondary)), 
-      hsl(var(--primary) / 0.05), /* Adjusted for dark mode subtlety */
-      hsl(var(--accent) / 0.06)   /* Adjusted for dark mode subtlety */
+      hsl(var(--primary) / 0.08), /* Increased opacity */
+      hsl(var(--accent) / 0.12)   /* Increased opacity */
     );
     background-size: 400% 400%;
-    animation: animated-gradient 30s ease infinite; /* Slowed down animation */
+    animation: animated-gradient 30s ease infinite;
   }
 }
