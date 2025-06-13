@@ -394,11 +394,11 @@ export default function AttendanceReportingPage() {
     setIsGeneratingLeaveReason(true);
     try {
       const aiInput: GenerateDraftEmailResponsesInput = { 
-        query: `Generate a concise and professional reason for a leave request based on the following information: "${leaveReasonPrompt}". The reason should be suitable for an official leave application. Do not include a subject line or any greetings/closings, just the reason text itself.` 
+        query: `Based on the user's input for a leave reason: "${leaveReasonPrompt}", I need you to generate ONE email draft option. The 'body' of this single draft must be ONLY the concise and professional leave reason itself, suitable for an official leave application. Do not add any extra greetings, closings, or boilerplate text to the 'body'. The 'subject' for this draft can be a simple placeholder like 'Leave Reason Draft', as it will not be directly used. Ensure the output strictly adheres to the structure where 'drafts' is an array containing one object with 'subject' and 'body' fields, and the 'body' contains only the refined leave reason.`
       };
       const result = await generateDraftEmailResponses(aiInput);
-      if (result.drafts && result.drafts.length > 0) {
-        handleLeaveRequestChange('reason', result.drafts[0].body);
+      if (result.drafts && result.drafts.length > 0 && result.drafts[0].body && result.drafts[0].body.trim() !== '') {
+        handleLeaveRequestChange('reason', result.drafts[0].body.trim());
         toast({ title: "Leave Reason Generated", description: "The reason field has been populated." });
         setIsLeaveReasonPopoverOpen(false);
         setLeaveReasonPrompt(''); 
