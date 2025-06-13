@@ -674,38 +674,45 @@ export default function AttendanceReportingPage() {
               <div className="relative">
                 <div className="flex items-center justify-between mb-1">
                   <Label htmlFor="reason">Reason</Label>
-                  <Popover open={isLeaveReasonPopoverOpen} onOpenChange={setIsLeaveReasonPopoverOpen}>
-                    <PopoverTrigger asChild>
-                       <Tooltip>
+                  {isGuest ? (
+                     <Tooltip>
                         <TooltipTrigger asChild>
-                           <Button variant="ghost" size="sm" className="px-2 py-1 h-auto" disabled={isSubmittingLeave || isGuest}>
-                            <Wand2 className="h-4 w-4 text-primary" />
+                          <Button variant="ghost" size="sm" className="px-2 py-1 h-auto" disabled>
+                            <Wand2 className="h-4 w-4 text-muted-foreground" />
                             <span className="sr-only">Generate reason with AI</span>
                           </Button>
                         </TooltipTrigger>
-                        {isGuest && <TooltipContent><p>Login for AI assistance.</p></TooltipContent>}
+                        <TooltipContent><p>Login for AI assistance.</p></TooltipContent>
                       </Tooltip>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80 p-4 space-y-2">
-                        <Label htmlFor="leaveReasonPrompt" className="text-sm font-medium">AI Prompt for Leave Reason</Label>
-                        <Textarea 
-                          id="leaveReasonPrompt"
-                          value={leaveReasonPrompt}
-                          onChange={(e) => setLeaveReasonPrompt(e.target.value)}
-                          placeholder="e.g., family event, doctor visit"
-                          className="min-h-[60px] text-xs"
-                        />
-                        <Button 
-                          onClick={handleGenerateLeaveReason} 
-                          disabled={isGeneratingLeaveReason || !leaveReasonPrompt.trim()} 
-                          className="w-full"
-                          size="sm"
-                        >
-                          {isGeneratingLeaveReason ? <LoaderIcon className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                          Generate
+                  ) : (
+                    <Popover open={isLeaveReasonPopoverOpen} onOpenChange={setIsLeaveReasonPopoverOpen}>
+                      <PopoverTrigger asChild>
+                         <Button variant="ghost" size="sm" className="px-2 py-1 h-auto" disabled={isSubmittingLeave}>
+                          <Wand2 className="h-4 w-4 text-primary" />
+                          <span className="sr-only">Generate reason with AI</span>
                         </Button>
-                    </PopoverContent>
-                  </Popover>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 p-4 space-y-2">
+                          <Label htmlFor="leaveReasonPrompt" className="text-sm font-medium">AI Prompt for Leave Reason</Label>
+                          <Textarea 
+                            id="leaveReasonPrompt"
+                            value={leaveReasonPrompt}
+                            onChange={(e) => setLeaveReasonPrompt(e.target.value)}
+                            placeholder="e.g., family event, doctor visit"
+                            className="min-h-[60px] text-xs"
+                          />
+                          <Button 
+                            onClick={handleGenerateLeaveReason} 
+                            disabled={isGeneratingLeaveReason || !leaveReasonPrompt.trim()} 
+                            className="w-full"
+                            size="sm"
+                          >
+                            {isGeneratingLeaveReason ? <LoaderIcon className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                            Generate
+                          </Button>
+                      </PopoverContent>
+                    </Popover>
+                  )}
                 </div>
                 <Textarea id="reason" value={leaveRequest.reason} onChange={(e) => handleLeaveRequestChange('reason', e.target.value)} placeholder="Briefly state the reason for your leave" required disabled={isSubmittingLeave || isGuest}/>
               </div>
@@ -973,4 +980,3 @@ export default function AttendanceReportingPage() {
     </TooltipProvider>
   );
 }
-
