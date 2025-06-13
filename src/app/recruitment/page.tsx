@@ -16,6 +16,9 @@ import { analyzeResume, type AnalyzeResumeInput, type AnalyzeResumeOutput } from
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import * as pdfjsLib from 'pdfjs-dist';
+import * as mammoth from 'mammoth';
+
 
 export default function RecruitmentPage() {
   const [jdPrompt, setJdPrompt] = useState('');
@@ -114,14 +117,72 @@ export default function RecruitmentPage() {
           });
         };
         reader.readAsText(file);
-      } else if (file.type === "application/pdf" || file.type.includes("wordprocessingml.document") || file.type.includes("msword")) {
-         toast({
-          title: "PDF/Word File Selected",
-          description: `${file.name} selected. Please manually copy its content into the text area below for analysis. Automatic extraction for PDF/Word is a future enhancement.`,
-          duration: 8000,
-        });
-        setResumeForAnalysis(''); // Clear textarea if a non-txt file is selected, prompting paste
-      } else {
+      // } else if (file.type === "application/pdf" || file.type.includes("wordprocessingml.document") || file.type.includes("msword")) {
+      //    toast({
+      //     title: "PDF/Word File Selected",
+      //     description: `${file.name} selected. Please manually copy its content into the text area below for analysis. Automatic extraction for PDF/Word is a future enhancement.`,
+      //     duration: 8000,
+      //   });
+      //   setResumeForAnalysis(''); // Clear textarea if a non-txt file is selected, prompting paste
+      } 
+      // Handle PDF files
+      else if (file.type === 'application/pdf') {
+        try {
+          // import * as pdfjsLib from 'https://unpkg.com/pdfjs-dist@5.3.31/build/pdf.min.mjs';
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@5.3.31/build/pdf.worker.mjs';
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            const typedArray = new Uint8Array(e.target?.result as ArrayBuffer);
+            console.log('PDF file loaded, extracting text...', typedArray.length, 'bytes');
+            const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+            let fullText = '';
+
+            for (let i = 0; i < pdf.numPages; i++) {
+              const page = await pdf.getPage(i + 1);
+              const content = await page.getTextContent();
+              const pageText = content.items.map((item: any) => item.str).join(' ');
+              fullText += pageText + '\n';
+            }
+
+            setResumeForAnalysis(fullText.trim());
+            toast({
+              title: 'PDF Loaded',
+              description: `${file.name} has been converted to text and loaded.`,
+            });
+          };
+          reader.readAsArrayBuffer(file);
+        } catch (err) {
+          toast({
+            title: 'PDF Parsing Error',
+            description: `Failed to extract text from ${file.name}.`,
+            variant: 'destructive',
+          });
+        }
+      }
+       // Handle .docx files
+      else if (file.type.includes('wordprocessingml.document') || file.name.endsWith('.docx')) {
+          try {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+              const arrayBuffer = e.target?.result as ArrayBuffer;
+              const result = await mammoth.extractRawText({ arrayBuffer });
+              setResumeForAnalysis(result.value.trim());
+              toast({
+                title: 'DOCX Loaded',
+                description: `${file.name} content has been extracted and loaded.`,
+              });
+            };
+            reader.readAsArrayBuffer(file);
+          } catch (err) {
+            toast({
+              title: 'DOCX Parsing Error',
+              description: `Failed to extract text from ${file.name}.`,
+              variant: 'destructive',
+            });
+          }
+        }
+      
+      else {
         toast({
           title: "Unsupported File Type",
           description: `Selected file ${file.name} is not a .txt, .pdf, or .doc(x) file. Please select a supported file or paste text.`,
@@ -263,7 +324,7 @@ export default function RecruitmentPage() {
                     id="resumeForAtsAnalysisText"
                     value={resumeForAnalysis}
                     onChange={(e) => setResumeForAnalysis(e.target.value)}
-                    placeholder="Paste the full text of the resume here, or it will be auto-filled for .txt uploads..."
+                    placeholder="Paste the full text of the resume here, or it will be auto-filled for uploads..."
                     className="mt-1 min-h-[200px]"
                     required
                   />
