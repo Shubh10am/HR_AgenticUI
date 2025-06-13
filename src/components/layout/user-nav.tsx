@@ -17,17 +17,26 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { User as UserIcon, LogOut, Settings, UserCircle2, Sun, Moon, Laptop } from 'lucide-react';
-import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from 'next-themes';
+import { useRouter } from 'next/navigation'; // Import useRouter
 
 export default function UserNav() {
   const { user, logout, isAuthenticated } = useAuth();
   const { theme, setTheme } = useTheme();
+  const router = useRouter(); // Initialize router
 
   if (!isAuthenticated) {
     return null;
   }
+
+  const handleProfileClick = () => {
+    router.push('/profile');
+  };
+
+  const handleSettingsClick = () => {
+    router.push('/settings');
+  };
 
   return (
     <DropdownMenu>
@@ -54,16 +63,12 @@ export default function UserNav() {
         )}
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <Link href="/profile" passHref legacyBehavior>
-            <DropdownMenuItem asChild>
-              <a><UserCircle2 className="mr-2 h-4 w-4" />Profile</a>
-            </DropdownMenuItem>
-          </Link>
-          <Link href="/settings" passHref legacyBehavior>
-            <DropdownMenuItem asChild>
-              <a><Settings className="mr-2 h-4 w-4" />Settings</a>
-            </DropdownMenuItem>
-          </Link>
+          <DropdownMenuItem onSelect={handleProfileClick} className="cursor-pointer">
+            <UserCircle2 className="mr-2 h-4 w-4" />Profile
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={handleSettingsClick} className="cursor-pointer">
+            <Settings className="mr-2 h-4 w-4" />Settings
+          </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuSub>
@@ -89,7 +94,7 @@ export default function UserNav() {
           </DropdownMenuPortal>
         </DropdownMenuSub>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={logout}>
+        <DropdownMenuItem onClick={logout} className="cursor-pointer">
           <LogOut className="mr-2 h-4 w-4" />
           Log out
         </DropdownMenuItem>
