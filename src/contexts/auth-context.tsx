@@ -40,6 +40,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
   const { toast } = useToast();
 
+  const clearAttendanceLocalStorage = () => {
+    localStorage.removeItem('hrStreamlineClockInStatus');
+    localStorage.removeItem('hrStreamlineClockInTime');
+  };
+
   const checkAuth = useCallback(() => {
     setIsLoading(true);
     const storedToken = localStorage.getItem('authToken');
@@ -54,12 +59,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error("Failed to parse stored user:", e);
         localStorage.removeItem('authToken');
         localStorage.removeItem('authUser');
+        clearAttendanceLocalStorage(); // Also clear attendance on auth parse error
         setUser(null);
         setToken(null);
       }
     } else {
       setUser(null);
       setToken(null);
+      // If no auth token or user, ensure attendance state is also cleared
+      // This handles cases where localStorage might be manually tampered or inconsistent
+      clearAttendanceLocalStorage();
     }
     setIsLoading(false);
   }, []);
@@ -104,7 +113,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
         return false;
       }
-
+      
+      clearAttendanceLocalStorage(); // Clear previous user's attendance state
       localStorage.setItem('authToken', data.token);
       localStorage.setItem('authUser', JSON.stringify(data.user));
       setToken(data.token);
@@ -142,7 +152,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
         return false;
       }
-
+      
+      clearAttendanceLocalStorage(); // Clear any potential attendance state before redirecting to login
       toast({ title: 'Registration Successful', description: 'Please log in with your new credentials.' });
       router.push('/login'); 
       setIsLoading(false);
@@ -157,17 +168,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const loginAsGuest = async (): Promise<boolean> => {
     setIsLoading(true);
-    // Simulate a slight delay for guest login if needed
-    // await new Promise(resolve => setTimeout(resolve, 500)); 
+    
+    clearAttendanceLocalStorage(); // Ensure guest session starts clean
 
     const guestUser: User = {
-      id: 'guest-user-id-' + Date.now(), // Make guest ID somewhat unique for session
+      id: 'guest-user-id-' + Date.now(), 
       name: 'Guest User',
       email: 'guest@hrstreamline.ai',
-      role: 'Employee' as EmployeeRole, // Or define a specific 'Guest' role
+      role: 'Employee' as EmployeeRole, 
       organizationId: 'guest-org-id',
     };
-    const guestToken = 'guest-auth-token-' + Date.now(); // Mock token
+    const guestToken = 'guest-auth-token-' + Date.now(); 
 
     localStorage.setItem('authToken', guestToken);
     localStorage.setItem('authUser', JSON.stringify(guestUser));
@@ -183,6 +194,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
+    clearAttendanceLocalStorage(); // Clear attendance state on logout
     setToken(null);
     setUser(null);
     toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
@@ -205,3 +217,4 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+
