@@ -400,8 +400,10 @@ export default function AttendanceReportingPage() {
       
       console.log("AI Response for leave reason:", JSON.stringify(result, null, 2));
 
-      if (result.drafts && result.drafts.length > 0 && result.drafts[0].body && result.drafts[0].body.trim() !== '') {
-        handleLeaveRequestChange('reason', result.drafts[0].body.trim());
+      if (result.drafts && result.drafts.length > 0 && typeof result.drafts[0].body === 'string' && result.drafts[0].body.trim() !== '') {
+        const trimmedBody = result.drafts[0].body.trim();
+        console.log(`Populating reason field with: "${trimmedBody}"`);
+        handleLeaveRequestChange('reason', trimmedBody);
         toast({ title: "Leave Reason Generated", description: "The reason field has been populated." });
         setIsLeaveReasonPopoverOpen(false);
         setLeaveReasonPrompt(''); 
@@ -988,3 +990,4 @@ export default function AttendanceReportingPage() {
     </TooltipProvider>
   );
 }
+
