@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useEffect } from 'react'
 import { useState, type FormEvent, ChangeEvent } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -197,6 +198,14 @@ export default function RecruitmentPage() {
       setResumeForAnalysis('');
     }
   };
+
+  // Use useEffect to trigger analysis when resumeForAnalysis updates
+  useEffect(() => {
+    if (resumeForAnalysis.trim()) {
+      const fakeEvent = { preventDefault: () => {} } as FormEvent<HTMLFormElement>;
+      handleAnalyzeResumeForATS(fakeEvent);
+    }
+  }, [resumeForAnalysis]);
 
   async function handleAnalyzeResumeForATS(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
