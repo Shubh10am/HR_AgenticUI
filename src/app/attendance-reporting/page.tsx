@@ -394,20 +394,28 @@ export default function AttendanceReportingPage() {
     setIsGeneratingLeaveReason(true);
     try {
       const aiInput: GenerateDraftEmailResponsesInput = { 
-        query: `Based on the user's input for a leave reason: "${leaveReasonPrompt}", I need you to generate ONE email draft option. The 'body' of this single draft must be ONLY the concise and professional leave reason itself, suitable for an official leave application. Do not add any extra greetings, closings, or boilerplate text to the 'body'. The 'subject' for this draft can be a simple placeholder like 'Leave Reason Draft', as it will not be directly used. Ensure the output strictly adheres to the structure where 'drafts' is an array containing one object with 'subject' and 'body' fields, and the 'body' contains only the refined leave reason.`
+        query: `Please write a concise and professional reason for a leave application based on the following input: ${leaveReasonPrompt}. Also provide a suitable subject line for this reason.`
       };
       const result = await generateDraftEmailResponses(aiInput);
+      
+      console.log("AI Response for leave reason:", JSON.stringify(result, null, 2));
+
       if (result.drafts && result.drafts.length > 0 && result.drafts[0].body && result.drafts[0].body.trim() !== '') {
         handleLeaveRequestChange('reason', result.drafts[0].body.trim());
         toast({ title: "Leave Reason Generated", description: "The reason field has been populated." });
         setIsLeaveReasonPopoverOpen(false);
         setLeaveReasonPrompt(''); 
       } else {
-        toast({ title: "Generation Failed", description: "Could not generate a leave reason. Please try again or write manually.", variant: "destructive" });
+        toast({ 
+            title: "Generation Failed", 
+            description: "Could not generate a leave reason. Please try again or write manually. Check console for AI response details.", 
+            variant: "destructive",
+            duration: 7000,
+        });
       }
     } catch (error) {
       console.error("Error generating leave reason:", error);
-      toast({ title: "Error", description: "An error occurred while generating the leave reason.", variant: "destructive" });
+      toast({ title: "AI Error", description: "An error occurred while communicating with the AI. Please check console.", variant: "destructive" });
     } finally {
       setIsGeneratingLeaveReason(false);
     }
@@ -674,7 +682,7 @@ export default function AttendanceReportingPage() {
               <div className="relative">
                 <div className="flex items-center justify-between mb-1">
                   <Label htmlFor="reason">Reason</Label>
-                  {isGuest ? (
+                   {isGuest ? (
                      <Tooltip>
                         <TooltipTrigger asChild>
                           <Button variant="ghost" size="sm" className="px-2 py-1 h-auto" disabled>
