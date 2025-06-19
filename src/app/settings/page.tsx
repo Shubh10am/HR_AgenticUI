@@ -11,15 +11,19 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Lock, Bell, Palette, Plug, ChevronRight, KeyRound, Eye, EyeOff, Copy, Info, Loader2, Volume2, Sun, Moon, Laptop, Type, CaseSensitive } from 'lucide-react';
+import { Lock, Bell, Palette, Plug, ChevronRight, KeyRound, Eye, EyeOff, Copy, Info, Loader2, Volume2, Sun, Moon, Laptop, Type, CaseSensitive, VolumeX, Volume1 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect, useCallback } from 'react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/contexts/auth-context';
+import { Slider } from '@/components/ui/slider'; // Import Slider
 
 const FONT_STYLE_KEY = 'appFontStyle';
 const FONT_SIZE_KEY = 'appFontSize';
+const NOTIFICATION_SOUND_ENABLED_KEY = 'notificationSoundEnabled';
+const NOTIFICATION_SOUND_VOLUME_KEY = 'notificationSoundVolume';
+
 
 const FONT_STYLE_CLASSES: Record<string, string> = {
   sans: 'font-style-sans',
@@ -38,6 +42,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 export default function SettingsPage() {
   const { toast } = useToast();
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [notificationVolume, setNotificationVolume] = useState(50); // Default volume 50%
   const { theme, setTheme } = useTheme();
   const [selectedFontStyle, setSelectedFontStyle] = useState('sans');
   const [selectedFontSize, setSelectedFontSize] = useState('default');
@@ -100,9 +105,15 @@ export default function SettingsPage() {
   }, [token, toast]);
 
   useEffect(() => {
-    const storedSoundPreference = localStorage.getItem('notificationSoundEnabled');
-    if (storedSoundPreference !== null) {
-      setSoundEnabled(storedSoundPreference === 'true');
+    if (typeof window !== 'undefined') {
+      const storedSoundPreference = localStorage.getItem(NOTIFICATION_SOUND_ENABLED_KEY);
+      if (storedSoundPreference !== null) {
+        setSoundEnabled(storedSoundPreference === 'true');
+      }
+      const storedVolume = localStorage.getItem(NOTIFICATION_SOUND_VOLUME_KEY);
+      if (storedVolume !== null) {
+        setNotificationVolume(parseInt(storedVolume, 10));
+      }
     }
   }, []);
 
@@ -137,11 +148,20 @@ export default function SettingsPage() {
 
   const handleSoundToggle = (checked: boolean) => {
     setSoundEnabled(checked);
-    localStorage.setItem('notificationSoundEnabled', String(checked));
+    localStorage.setItem(NOTIFICATION_SOUND_ENABLED_KEY, String(checked));
     toast({
       title: `Notification Sounds ${checked ? 'Enabled' : 'Disabled'}`,
     });
   };
+
+  const handleVolumeChange = (volumeArray: number[]) => {
+    const newVolume = volumeArray[0];
+    setNotificationVolume(newVolume);
+    localStorage.setItem(NOTIFICATION_SOUND_VOLUME_KEY, String(newVolume));
+    // Optional: Provide immediate feedback for volume change, e.g., play a test sound
+    // toast({ title: `Volume set to ${newVolume}%` }); 
+  };
+
 
   const handleThemeChange = (value: string) => {
     setTheme(value);
@@ -299,18 +319,37 @@ export default function SettingsPage() {
               <Switch id="digestEmail" onCheckedChange={(checked) => handleMockAction(`Weekly Digest ${checked ? 'Enabled' : 'Disabled'}`)} />
             </div>
             <Separator />
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <Label htmlFor="soundNotifications" className="flex flex-col space-y-1">
-                <span className="flex items-center"><Volume2 className="mr-2 h-4 w-4" />Enable Notification Sounds</span>
-                <span className="font-normal leading-snug text-muted-foreground">
-                  Play sounds for toast notifications.
-                </span>
-              </Label>
-              <Switch
-                id="soundNotifications"
-                checked={soundEnabled}
-                onCheckedChange={handleSoundToggle}
-              />
+            <div className="rounded-lg border p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="soundNotifications" className="flex flex-col space-y-1">
+                  <span className="flex items-center"><Volume2 className="mr-2 h-4 w-4" />Enable Notification Sounds</span>
+                  <span className="font-normal leading-snug text-muted-foreground">
+                    Play sounds for toast notifications.
+                  </span>
+                </Label>
+                <Switch
+                  id="soundNotifications"
+                  checked={soundEnabled}
+                  onCheckedChange={handleSoundToggle}
+                />
+              </div>
+              {soundEnabled && (
+                <div className="pt-2 space-y-2">
+                  <Label htmlFor="volumeSlider" className="text-sm flex items-center text-muted-foreground">
+                    {notificationVolume === 0 ? <VolumeX className="mr-2 h-4 w-4" /> : <Volume1 className="mr-2 h-4 w-4" />}
+                     Sound Volume: {notificationVolume}%
+                  </Label>
+                  <Slider
+                    id="volumeSlider"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={[notificationVolume]}
+                    onValueChange={handleVolumeChange}
+                    className="w-full"
+                  />
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

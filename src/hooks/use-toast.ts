@@ -78,28 +78,33 @@ const addToRemoveQueue = (toastId: string) => {
 // Helper function to play sound
 const playSound = (soundFile: string) => {
   try {
-    // Check user preference from localStorage
     const soundPreference = typeof window !== 'undefined' ? localStorage.getItem('notificationSoundEnabled') : 'true';
-    // Default to true (sounds enabled) if preference is not set or is not 'false'
     const soundsAreEnabled = soundPreference === null || soundPreference === 'true';
 
     if (!soundsAreEnabled) {
-      // console.log('Notification sounds are disabled by user preference.');
       return;
     }
+    
+    const storedVolume = typeof window !== 'undefined' ? localStorage.getItem('notificationSoundVolume') : '50';
+    let volumeLevel = 0.5; // Default volume 50%
+    if (storedVolume !== null) {
+      const parsedVolume = parseInt(storedVolume, 10);
+      if (!isNaN(parsedVolume) && parsedVolume >= 0 && parsedVolume <= 100) {
+        volumeLevel = parsedVolume / 100;
+      }
+    }
+    if (volumeLevel === 0) return; // Do not play if volume is 0
 
-    // IMPORTANT: Audio files (e.g., notification.wav, message.wav)
-    // MUST be placed in the `public/sound/` directory of your project
-    // for the browser to be able to access them via the path `/sound/FILENAME.wav`.
-    // Example: `public/sound/notification.wav` is accessed via `/sound/notification.wav`.
+
     const audioSrc = `/sound/${soundFile}`; 
     const audio = new Audio(audioSrc);
+    audio.volume = volumeLevel;
+
 
     audio.play().catch(error => {
       console.warn(`Could not play sound ${audioSrc}. Error: ${error.message}. This can happen due to browser autoplay policies or if the sound file is missing from 'public${audioSrc}'.`);
     });
 
-    // More detailed error logging for loading issues (like 404)
     audio.addEventListener('error', (e) => {
       let errorDetails = `Error loading audio source: ${audioSrc}.`;
       if (audio.error) {
