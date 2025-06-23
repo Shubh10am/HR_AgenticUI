@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, UserCheck, FileText, PlayCircle, Briefcase, UploadCloud, BarChart, Lightbulb, CheckSquare, ThumbsUp, SearchCheck } from 'lucide-react';
+import { Loader2, Wand2, UserCheck, FileText, PlayCircle, Briefcase, UploadCloud, BarChart, Lightbulb, CheckSquare, ThumbsUp, SearchCheck, Copy, Link as LinkIcon } from 'lucide-react';
 import { generateJobDescription, type GenerateJobDescriptionInput, type GenerateJobDescriptionOutput } from '@/ai/flows/generate-job-description';
 import { aiInterviewer, type AiInterviewerInput, type AiInterviewerOutput } from '@/ai/flows/ai-interviewer';
 import { analyzeResume, type AnalyzeResumeInput, type AnalyzeResumeOutput } from '@/ai/flows/analyze-resume-flow';
@@ -18,7 +18,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import * as pdfjsLib from 'pdfjs-dist';
-import * as mammoth from 'mammoth';
 
 
 export default function RecruitmentPage() {
@@ -59,6 +58,15 @@ export default function RecruitmentPage() {
       setIsJdLoading(false);
     }
   }
+
+  const handleCopyJd = () => {
+    if (!generatedJd) return;
+    navigator.clipboard.writeText(generatedJd);
+    toast({
+      title: "Copied to Clipboard",
+      description: "The job description has been copied.",
+    });
+  };
 
   async function handleAiInterview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -118,18 +126,10 @@ export default function RecruitmentPage() {
           });
         };
         reader.readAsText(file);
-      // } else if (file.type === "application/pdf" || file.type.includes("wordprocessingml.document") || file.type.includes("msword")) {
-      //    toast({
-      //     title: "PDF/Word File Selected",
-      //     description: `${file.name} selected. Please manually copy its content into the text area below for analysis. Automatic extraction for PDF/Word is a future enhancement.`,
-      //     duration: 8000,
-      //   });
-      //   setResumeForAnalysis(''); // Clear textarea if a non-txt file is selected, prompting paste
       } 
       // Handle PDF files
       else if (file.type === 'application/pdf') {
         try {
-          // import * as pdfjsLib from 'https://unpkg.com/pdfjs-dist@5.3.31/build/pdf.min.mjs';
           pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@5.3.31/build/pdf.worker.mjs';
           const reader = new FileReader();
           reader.onload = async (e) => {
@@ -160,33 +160,10 @@ export default function RecruitmentPage() {
           });
         }
       }
-       // Handle .docx files
-      else if (file.type.includes('wordprocessingml.document') || file.name.endsWith('.docx')) {
-          try {
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-              const arrayBuffer = e.target?.result as ArrayBuffer;
-              const result = await mammoth.extractRawText({ arrayBuffer });
-              setResumeForAnalysis(result.value.trim());
-              toast({
-                title: 'DOCX Loaded',
-                description: `${file.name} content has been extracted and loaded.`,
-              });
-            };
-            reader.readAsArrayBuffer(file);
-          } catch (err) {
-            toast({
-              title: 'DOCX Parsing Error',
-              description: `Failed to extract text from ${file.name}.`,
-              variant: 'destructive',
-            });
-          }
-        }
-      
       else {
         toast({
           title: "Unsupported File Type",
-          description: `Selected file ${file.name} is not a .txt, .pdf, or .doc(x) file. Please select a supported file or paste text.`,
+          description: `Selected file ${file.name} is not a supported file type. Please select a .txt or .pdf file, or paste text.`,
           variant: "destructive",
         });
         setResumeForAnalysis('');
@@ -205,6 +182,7 @@ export default function RecruitmentPage() {
       const fakeEvent = { preventDefault: () => {} } as FormEvent<HTMLFormElement>;
       handleAnalyzeResumeForATS(fakeEvent);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resumeForAnalysis]);
 
   async function handleAnalyzeResumeForATS(event: FormEvent<HTMLFormElement>) {
@@ -267,7 +245,13 @@ export default function RecruitmentPage() {
               </form>
               {generatedJd && (
                 <div className="mt-6 p-4 border rounded-md bg-secondary/30">
-                  <h4 className="font-semibold mb-2">Generated Job Description:</h4>
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-semibold">Generated Job Description:</h4>
+                    <Button variant="ghost" size="sm" onClick={handleCopyJd}>
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copy
+                    </Button>
+                  </div>
                   <pre className="text-sm whitespace-pre-wrap">{generatedJd}</pre>
                 </div>
               )}
@@ -306,12 +290,12 @@ export default function RecruitmentPage() {
             <CardContent>
               <form onSubmit={handleAnalyzeResumeForATS} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="resumeFile">Upload Resume (.txt, .pdf, .doc, .docx)</Label>
+                  <Label htmlFor="resumeFile">Upload Resume (.txt, .pdf)</Label>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 space-y-2 sm:space-y-0">
                     <Input
                       id="resumeFile"
                       type="file"
-                      accept=".pdf,.doc,.docx,.txt"
+                      accept=".pdf,.txt"
                       onChange={handleFileChange}
                       className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 sm:flex-grow"
                     />
@@ -323,8 +307,7 @@ export default function RecruitmentPage() {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground pt-1">
-                    For <strong className="font-medium">.txt files</strong>, content will be loaded automatically.
-                    For <strong className="font-medium">.pdf, .doc, .docx files</strong>, please select the file, then copy its text content and paste it into the textarea below. Automatic extraction for these types is a future enhancement.
+                    Content from uploaded files will be automatically loaded into the textarea below for analysis. You can also paste text directly.
                   </p>
                 </div>
                 <div>
@@ -363,7 +346,7 @@ export default function RecruitmentPage() {
                       <p className="text-xs text-muted-foreground">This score estimates compatibility with Applicant Tracking Systems based on common criteria.</p>
                     </CardContent>
                   </Card>
-
+                  
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center"><FileText className="mr-2 h-5 w-5 text-primary"/>Resume Overview</CardTitle>
@@ -373,6 +356,25 @@ export default function RecruitmentPage() {
                     </CardContent>
                   </Card>
                   
+                  {analysisResult.extractedUrls && analysisResult.extractedUrls.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg flex items-center"><LinkIcon className="mr-2 h-5 w-5 text-primary"/>Extracted Links</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="list-disc pl-5 space-y-1 text-sm">
+                          {analysisResult.extractedUrls.map((url, index) => (
+                            <li key={index}>
+                              <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">
+                                {url}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  )}
+
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center"><CheckSquare className="mr-2 h-5 w-5 text-primary"/>Keywords Identified</CardTitle>
@@ -502,5 +504,3 @@ export default function RecruitmentPage() {
     </>
   );
 }
-
-    
