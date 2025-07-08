@@ -188,16 +188,17 @@ export default function LandingPage() {
           <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:flex" cursorClass="!text-pink-400" />
 
           {/* Main Headline */}
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02] opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-            Your HR workflow just got
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 transition-all duration-300 hover:brightness-110">
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02]">
+            <span className="block opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+              Your HR workflow just got
+            </span>
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 transition-all duration-300 hover:brightness-110 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
               1000x more collaborative
             </span>
           </h1>
 
           {/* Workflow diagram */}
-          <div className="relative my-24 flex w-full max-w-4xl mx-auto items-center justify-between opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+          <div className="relative my-24 flex w-full max-w-4xl mx-auto items-center justify-between opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
             <div className="absolute left-0 right-0 h-px bg-neutral-700 top-3 -z-10" />
 
             <WorkflowStep icon={FileText} label="Plan" />
