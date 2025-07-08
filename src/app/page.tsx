@@ -453,7 +453,7 @@ export default function LandingPage() {
                         { name: 'Slack', hint: 'slack logo' },
                         { name: 'Asana', hint: 'asana logo' },
                     ].map(tool => (
-                        <div key={tool.name} className="flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-lg px-3 py-1.5 md:px-4 md:py-2 shadow-md text-black">
+                        <div key={tool.name} className="flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-lg px-3 py-1.5 md:px-4 md:py-2 shadow-md text-black transition-transform duration-300 hover:scale-105">
                            <Image src={`https://placehold.co/24x24.png`} width={24} height={24} alt={`${tool.name} logo`} data-ai-hint={tool.hint} />
                            <span className="font-semibold text-sm md:text-base">{tool.name}</span>
                         </div>
@@ -640,14 +640,14 @@ export default function LandingPage() {
 
             {/* Feature Cards */}
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              <div className="bg-neutral-50 rounded-2xl p-8">
+              <div className="bg-neutral-50 rounded-2xl p-8 transition-transform duration-300 hover:-translate-y-2">
                 <div className="w-12 h-12 flex items-center justify-center rounded-lg bg-orange-100 mb-4">
                   <SquarePen className="h-6 w-6 text-orange-500" />
                 </div>
                 <h3 className="text-xl font-semibold text-neutral-800 mb-2">Comments in context</h3>
                 <p className="text-neutral-600">Pin comments directly to frames & elements for clearer feedback.</p>
               </div>
-              <div className="bg-neutral-50 rounded-2xl p-8">
+              <div className="bg-neutral-50 rounded-2xl p-8 transition-transform duration-300 hover:-translate-y-2">
                 <div className="w-12 h-12 flex items-center justify-center rounded-lg bg-blue-100 mb-4">
                   <MonitorPlay className="h-6 w-6 text-blue-500" />
                 </div>
