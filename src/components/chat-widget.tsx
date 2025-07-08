@@ -13,14 +13,20 @@ export default function ChatWidget() {
   const [activeTab, setActiveTab] = useState('home');
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className={cn(
+      "fixed bottom-4 right-4 z-50",
+      // When closed, the entire container is non-interactive.
+      !isOpen && "pointer-events-none"
+    )}>
       {/* Chat Widget Window */}
       <div
         className={cn(
           "transition-[opacity,transform] duration-300 ease-in-out origin-bottom-right",
           isOpen
+            // When open, it's visible and interactive.
             ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
-            : "opacity-0 translate-y-4 scale-95 pointer-events-none"
+            // When closed, it's invisible. The parent div handles pointer-events.
+            : "opacity-0 translate-y-4 scale-95"
         )}
       >
         <div className="w-[350px] h-[calc(100vh-100px)] max-h-[700px] bg-neutral-50 dark:bg-neutral-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden mb-2 border border-border">
@@ -110,10 +116,10 @@ export default function ChatWidget() {
         </div>
       </div>
 
-      {/* FAB */}
+      {/* FAB - The button itself is always interactive */}
       <Button
         size="icon"
-        className="rounded-full h-14 w-14 bg-primary hover:bg-primary/90 shadow-lg"
+        className="rounded-full h-14 w-14 bg-primary hover:bg-primary/90 shadow-lg pointer-events-auto"
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? <ChevronDown className="h-7 w-7" /> : <MessageSquare className="h-7 w-7" />}
