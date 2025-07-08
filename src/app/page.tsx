@@ -5,12 +5,64 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import type { SVGProps, ReactNode } from 'react';
-import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor, CheckCircle, ChevronRight, SquarePen, MonitorPlay, Smile, AtSign, Sparkles, KanbanSquare, Bell } from 'lucide-react';
+import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor, MonitorPlay, SquarePen, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 
+// Custom icons to match design
+const CustomPinCommentIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" {...props}>
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </svg>
+);
+const CustomGuestModeIcon = (props: SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <circle cx="12" cy="12" r="10" />
+        <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+        <line x1="9" y1="9" x2="9.01" y2="9" />
+        <line x1="15" y1="9" x2="15.01" y2="9" />
+    </svg>
+);
+const CustomAtSignIcon = (props: SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <circle cx="12"cy="12" r="4" />
+        <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94" />
+    </svg>
+);
+const CustomCheckCircleIcon = (props: SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+);
+const CustomSparklesIcon = (props: SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
+    </svg>
+);
+const CustomKanbanIcon = (props: SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+        <path d="M5 12V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2h-1" />
+        <line x1="9" y1="18" x2="9" y2="12" />
+        <line x1="12" y1="18" x2="12" y2="16" />
+        <line x1="15" y1="18" x2="15" y2="14" />
+    </svg>
+);
+const CustomFlockIcon = (props: SVGProps<SVGSVGElement>) => (
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+    </svg>
+);
+const CustomBellIcon = (props: SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+    </svg>
+);
 
 // A simple cursor icon to match the design
 const CursorIcon = (props: SVGProps<SVGSVGElement>) => (
@@ -40,14 +92,14 @@ const features = [
 ];
 
 const moreFeatures = [
-  { name: 'Pin Comment', icon: MessageSquare, color: 'text-purple-400' },
-  { name: 'Guest Mode', icon: Smile, color: 'text-blue-400' },
-  { name: 'Mentions', icon: AtSign, color: 'text-yellow-500' },
-  { name: 'Approvals', icon: CheckCircle, color: 'text-green-500' },
-  { name: 'AI Copilot', icon: Sparkles, color: 'text-violet-400' },
-  { name: 'In-built\nTask Manager', icon: KanbanSquare, color: 'text-orange-400' },
-  { name: 'Flock Mode', icon: Users, color: 'text-cyan-400' },
-  { name: 'Email & Slack\nNotifications', icon: Bell, color: 'text-sky-400' },
+  { name: 'Pin Comment', icon: CustomPinCommentIcon, color: 'text-purple-400' },
+  { name: 'Guest Mode', icon: CustomGuestModeIcon, color: 'text-blue-400' },
+  { name: 'Mentions', icon: CustomAtSignIcon, color: 'text-yellow-500' },
+  { name: 'Approvals', icon: CustomCheckCircleIcon, color: 'text-green-500' },
+  { name: 'AI Copilot', icon: CustomSparklesIcon, color: 'text-violet-400' },
+  { name: 'In-built\nTask Manager', icon: CustomKanbanIcon, color: 'text-orange-400' },
+  { name: 'Flock Mode', icon: CustomFlockIcon, color: 'text-cyan-400' },
+  { name: 'Email & Slack\nNotifications', icon: CustomBellIcon, color: 'text-sky-400' },
 ];
 
 
