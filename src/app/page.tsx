@@ -110,17 +110,12 @@ export default function LandingPage() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          const index = sectionsRef.current.findIndex(ref => ref === entry.target);
-          if (index === -1) return;
-
           if (entry.isIntersecting) {
-            setVisibleSections(prev => new Set(prev).add(index));
-          } else {
-            setVisibleSections(prev => {
-              const next = new Set(prev);
-              next.delete(index);
-              return next;
-            });
+            const index = sectionsRef.current.findIndex(ref => ref === entry.target);
+            if (index !== -1) {
+              setVisibleSections(prev => new Set(prev).add(index));
+              observer.unobserve(entry.target); // Stop observing once it's visible
+            }
           }
         });
       },
@@ -130,12 +125,14 @@ export default function LandingPage() {
       }
     );
 
-    sectionsRef.current.forEach(section => {
+    const currentSections = sectionsRef.current; // Capture ref value
+
+    currentSections.forEach(section => {
       if (section) observer.observe(section);
     });
 
     return () => {
-      sectionsRef.current.forEach(section => {
+      currentSections.forEach(section => {
         if (section) observer.unobserve(section);
       });
     };
