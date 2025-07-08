@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import type { SVGProps, ReactNode } from 'react';
-import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck } from 'lucide-react';
+import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 // A simple cursor icon to match the design
@@ -87,17 +88,17 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-black text-white antialiased">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full">
+      <header className="sticky top-0 z-50 w-full border-b bg-white text-black">
         <div className="container flex h-20 items-center justify-between mx-auto px-6">
           <Link href="/" className="flex items-center gap-2">
-            <Logo className="h-8 w-8 text-white" />
+            <Logo className="h-8 w-8 text-primary" />
             <span className="font-bold text-lg">HR Streamline AI</span>
           </Link>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" asChild className="hover:bg-neutral-800 hover:text-white">
+            <Button variant="ghost" asChild>
               <Link href="/login">Log In</Link>
             </Button>
-            <Button asChild className="bg-white text-black hover:bg-neutral-200">
+            <Button asChild className="bg-black text-white hover:bg-neutral-800">
               <Link href="/register">Try Now for Free</Link>
             </Button>
           </div>
@@ -328,3 +329,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    
