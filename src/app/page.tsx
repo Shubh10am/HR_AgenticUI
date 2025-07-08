@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import type { SVGProps, ReactNode } from 'react';
-import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor, CheckCircle, ChevronRight } from 'lucide-react';
+import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor, CheckCircle, ChevronRight, SquarePen, MonitorPlay } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -451,6 +451,61 @@ export default function LandingPage() {
                 <p className="text-neutral-600 mt-1">
                   "HR Streamline has enabled fast feedback from stakeholders"
                 </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Collaboration Tools Section */}
+        <section className="bg-white text-black py-20 sm:py-32">
+          <div className="container mx-auto px-6">
+            {/* Testimonial at the top */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-24 max-w-4xl mx-auto">
+              <div className="flex items-center gap-4">
+                <Image
+                  src="https://placehold.co/48x48.png"
+                  alt="Calbie Creative"
+                  width={48}
+                  height={48}
+                  className="rounded-full bg-neutral-800 p-1"
+                  data-ai-hint="company logo"
+                />
+                <div>
+                  <p className="font-semibold text-pink-500">Calbie Creative</p>
+                  <p className="text-sm text-neutral-500">Digital Designer @Calbie Creative</p>
+                </div>
+              </div>
+              <div className="text-left md:text-right">
+                <p className="font-semibold text-neutral-800">No more juggling multiple feedback</p>
+                <p className="text-neutral-600 mt-1">"Highly recommended for an efficient and open-door workflow!"</p>
+              </div>
+            </div>
+
+            {/* Main Headline */}
+            <div className="text-center">
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-neutral-800">
+                Collaboration tools
+              </h2>
+              <p className="text-4xl md:text-5xl font-bold tracking-tight mb-16 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-orange-400">
+                for faster teamwork
+              </p>
+            </div>
+
+            {/* Feature Cards */}
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              <div className="bg-neutral-50 rounded-2xl p-8">
+                <div className="w-12 h-12 flex items-center justify-center rounded-lg bg-orange-100 mb-4">
+                  <SquarePen className="h-6 w-6 text-orange-500" />
+                </div>
+                <h3 className="text-xl font-semibold text-neutral-800 mb-2">Comments in context</h3>
+                <p className="text-neutral-600">Pin comments directly to frames & elements for clearer feedback.</p>
+              </div>
+              <div className="bg-neutral-50 rounded-2xl p-8">
+                <div className="w-12 h-12 flex items-center justify-center rounded-lg bg-blue-100 mb-4">
+                  <MonitorPlay className="h-6 w-6 text-blue-500" />
+                </div>
+                <h3 className="text-xl font-semibold text-neutral-800 mb-2">Record richer feedback</h3>
+                <p className="text-neutral-600">Direct comment with Loom-style recordings without leaving the app.</p>
               </div>
             </div>
           </div>
