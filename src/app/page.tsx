@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import type { SVGProps, ReactNode } from 'react';
-import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check } from 'lucide-react';
+import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 
 
 // A simple cursor icon to match the design
@@ -74,6 +75,21 @@ const CollaboratorTag = ({ name, className, cursorClass }: { name: string; class
             {name}
         </div>
     </div>
+);
+
+const DevCollaboratorTag = ({ name, className, cursorClass, tagColorClass }: { name: string; className?: string; cursorClass?: string; tagColorClass?: string }) => (
+    <div className={cn("absolute flex items-center gap-2 animate-float", className)}>
+        <CursorIcon className={cn("h-6 w-6", cursorClass)} />
+        <div className={cn("border rounded-full px-4 py-1.5 text-sm font-semibold", tagColorClass)}>
+            {name}
+        </div>
+    </div>
+);
+
+const FeatureFlagIcon = (props: SVGProps<SVGSVGElement>) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+        <path d="M6 3V21M6 4H16L13 8L16 12H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
 );
 
 
@@ -194,6 +210,86 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* Manage, Prioritize & Assign Section */}
+        <section className="container mx-auto py-20 sm:py-32">
+            <div className="relative rounded-2xl bg-gradient-to-br from-yellow-200 via-yellow-300 to-amber-300 p-8 md:p-16 text-center overflow-hidden">
+                {/* Floating elements */}
+                <div className="absolute top-8 left-8 w-10 h-10 bg-black/5 rounded-full flex items-center justify-center text-neutral-600">
+                    <FeatureFlagIcon className="h-5 w-5" />
+                </div>
+
+                <DevCollaboratorTag
+                    name="Developer"
+                    className="top-1/2 -translate-y-1/2 left-8 hidden lg:flex"
+                    cursorClass="text-pink-500"
+                    tagColorClass="bg-pink-500 text-white border-pink-500/50"
+                />
+
+                <DevCollaboratorTag
+                    name="Developer"
+                    className="top-1/2 -translate-y-1/2 right-8 hidden lg:flex"
+                    cursorClass="text-yellow-600"
+                    tagColorClass="bg-yellow-500 text-black border-yellow-600/50"
+                />
+
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black">
+                    Manage, prioritize<br />& assign
+                </h2>
+                <p className="text-lg text-neutral-700 mb-16 max-w-2xl mx-auto">
+                    Use our built-in task manager or integrate your own.
+                </p>
+
+                {/* Mock Task Card */}
+                <div className="relative max-w-lg mx-auto bg-white rounded-2xl shadow-2xl p-4 text-left text-black animate-float" style={{ animationDuration: '8s' }}>
+                    <div className="flex items-center justify-between border-b pb-3 mb-3">
+                        <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="border-red-300 bg-red-50 text-red-700">
+                                <Flag className="h-3 w-3 mr-1.5"/> PO
+                            </Badge>
+                             <Badge variant="outline" className="border-yellow-300 bg-yellow-50 text-yellow-800">
+                                <Clock className="h-3 w-3 mr-1.5"/> In Progress
+                            </Badge>
+                            <Badge variant="secondary">#Question</Badge>
+                        </div>
+                        <MoreHorizontal className="h-5 w-5 text-neutral-400" />
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                        <Image
+                            src="https://placehold.co/40x40.png"
+                            alt="Calvin F."
+                            width={32}
+                            height={32}
+                            className="rounded-full"
+                            data-ai-hint="man face"
+                        />
+                        <div className="flex-1">
+                            <div className="flex items-center text-sm">
+                                <span className="font-semibold">Calvin F.</span>
+                                <span className="text-neutral-500 ml-2">3h</span>
+                                <div className="w-1.5 h-1.5 bg-red-500 rounded-full ml-2"></div>
+                            </div>
+                            <p className="text-xs text-neutral-500">
+                                Assigned to <span className="text-blue-600 font-medium">@You</span>
+                            </p>
+                            <p className="my-2 text-neutral-800">
+                                Let's add a sun here, <span className="text-blue-600">@felix</span>
+                            </p>
+
+                            <div className="flex items-center justify-between text-xs text-neutral-500 mt-3">
+                                <button className="flex items-center gap-1 hover:text-blue-600">
+                                    <MessageSquare className="h-4 w-4" /> 2 Replies
+                                </button>
+                                <div className="flex items-center gap-2">
+                                    <Monitor className="h-4 w-4" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
 
 
@@ -329,5 +425,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    
