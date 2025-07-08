@@ -84,12 +84,24 @@ function DevCollaboratorTag({ name, className, cursorClass, tagColorClass, style
 interface HoverPillProps {
   icon: React.ElementType;
   label: string;
+  variant?: 'light' | 'dark';
 }
 
-function HoverPill({ icon: Icon, label }: HoverPillProps) {
+function HoverPill({ icon: Icon, label, variant = 'light' }: HoverPillProps) {
+  const isDark = variant === 'dark';
   return (
-    <div className="absolute top-8 left-8 flex cursor-pointer items-center gap-2 rounded-full bg-black/10 p-2 text-sm font-semibold text-neutral-800 transition-all duration-300 ease-in-out group-hover:gap-3 group-hover:bg-black/20 group-hover:pl-2 group-hover:pr-4">
-      <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-black/10 text-neutral-700">
+    <div className={cn(
+      "absolute top-8 left-8 flex cursor-pointer items-center gap-2 rounded-full p-2 text-sm font-semibold transition-all duration-300 ease-in-out group-hover:gap-3 group-hover:pl-2 group-hover:pr-4",
+      isDark
+        ? "bg-white/10 text-neutral-200 group-hover:bg-white/20"
+        : "bg-black/10 text-neutral-800 group-hover:bg-black/20"
+    )}>
+      <div className={cn(
+        "flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full",
+        isDark
+          ? "bg-white/10 text-neutral-300"
+          : "bg-black/10 text-neutral-700"
+      )}>
         <Icon className="h-4 w-4" />
       </div>
       <span className="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out group-hover:max-w-xs">
@@ -236,7 +248,7 @@ export default function LandingPage() {
           )}
         >
           <div className="group relative rounded-2xl bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 p-8 md:p-16 text-center overflow-hidden">
-             <HoverPill icon={FileSearch} label="Review" />
+             <HoverPill icon={FileSearch} label="Review" variant="dark" />
             
             {/* Floating elements */}
             <CollaboratorTag name="Hiring Manager" className="top-1/4 left-8 hidden lg:flex" cursorClass="transform -rotate-12 !text-cyan-400" />
