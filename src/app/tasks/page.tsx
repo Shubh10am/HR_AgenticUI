@@ -715,7 +715,7 @@ export default function TasksPage() {
           </div>
         )}
         {boardColumns.map(columnName => (
-          <Card key={columnName} className="shadow-lg flex flex-col w-[320px] flex-shrink-0"> {/* Column Card */}
+          <Card key={columnName} className="shadow-lg transition-shadow duration-300 hover:shadow-2xl flex flex-col w-[320px] flex-shrink-0"> {/* Column Card */}
             <CardHeader className="border-b">
               <div className="flex justify-between items-center">
                 <CardTitle className="flex items-center text-lg">

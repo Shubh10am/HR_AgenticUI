@@ -93,7 +93,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </div>
         </header>
         <main className="flex-1 p-6 overflow-x-hidden animated-background-gradient">
-          {children}
+          <div className="animate-fade-in" key={pathname}>
+            {children}
+          </div>
         </main>
         <CopilotSidebar isOpen={isCopilotOpen} onOpenChange={setIsCopilotOpen} /> {/* Added CopilotSidebar */}
       </SidebarInset>

@@ -1,6 +1,6 @@
 
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Poppins, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import AppLayout from '@/components/layout/app-layout';
 import { Toaster } from "@/components/ui/toaster";
@@ -8,9 +8,11 @@ import { AuthProvider } from '@/contexts/auth-context';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ClientStyleApplicator } from '@/components/client-style-applicator'; // Added import
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const poppins = Poppins({
+  variable: '--font-poppins',
+  weight: ['300', '400', '500', '600', '700'],
   subsets: ['latin'],
+  display: 'swap',
 });
 
 const geistMono = Geist_Mono({
@@ -37,7 +39,7 @@ export default function RootLayout({
             The component itself will run its useEffect after mount.
             Adding suppressHydrationWarning to <html> is key if its classList is modified client-side. */}
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${poppins.variable} ${geistMono.variable} antialiased`}>
         <ClientStyleApplicator /> {/* Add this here to run its useEffect */}
         <ThemeProvider
           attribute="class"

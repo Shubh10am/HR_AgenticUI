@@ -79,7 +79,7 @@ export default function EmailAssistancePage() {
         description="Generate draft responses for employee inquiries and requests."
       />
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-1 shadow-lg">
+        <Card className="lg:col-span-1 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
           <CardHeader>
             <CardTitle>Employee Query</CardTitle>
             <CardDescription>Enter the employee's message below.</CardDescription>
@@ -111,7 +111,7 @@ export default function EmailAssistancePage() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2 shadow-lg">
+        <Card className="lg:col-span-2 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
           <CardHeader>
             <CardTitle>Generated Draft Responses</CardTitle>
             <CardDescription>Review and select a draft to use or compose new.</CardDescription>

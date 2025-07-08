@@ -3,14 +3,14 @@
 @tailwind utilities;
 
 body {
-  /* Updated to use --font-primary */
+  /* Updated to use --font-primary which will now point to Poppins */
   font-family: var(--font-primary), Arial, Helvetica, sans-serif;
 }
 
 @layer base {
   :root {
-    /* Define --font-primary, default to geist-sans */
-    --font-primary: var(--font-geist-sans);
+    /* Define --font-primary, now defaults to poppins */
+    --font-primary: var(--font-poppins);
 
     --background: 0 0% 98%; /* Almost White #FAFAFA */
     --foreground: 220 15% 20%; /* Darker, slightly desaturated blue-gray for text */
@@ -106,7 +106,7 @@ body {
 
   /* Font Style Classes */
   .font-style-sans {
-    --font-primary: var(--font-geist-sans);
+    --font-primary: var(--font-poppins);
   }
   .font-style-serif {
     --font-primary: serif; /* Generic serif */
@@ -153,8 +153,8 @@ body {
     background: linear-gradient(-45deg, 
       hsl(var(--background)), 
       hsl(var(--secondary)), 
-      hsl(var(--primary) / 0.05), /* Increased opacity */
-      hsl(var(--accent) / 0.08)   /* Increased opacity */
+      hsl(var(--primary) / 0.08),
+      hsl(var(--accent) / 0.12)
     );
     background-size: 400% 400%;
     animation: animated-gradient 30s ease infinite;
@@ -164,8 +164,8 @@ body {
      background: linear-gradient(-45deg, 
       hsl(var(--background)), 
       hsl(var(--secondary)), 
-      hsl(var(--primary) / 0.08), /* Increased opacity */
-      hsl(var(--accent) / 0.12)   /* Increased opacity */
+      hsl(var(--primary) / 0.1),
+      hsl(var(--accent) / 0.15)
     );
     background-size: 400% 400%;
     animation: animated-gradient 30s ease infinite;

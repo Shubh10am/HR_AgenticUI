@@ -221,7 +221,7 @@ export default function RecruitmentPage() {
         </TabsList>
 
         <TabsContent value="job-creation">
-          <Card className="shadow-lg">
+          <Card className="shadow-lg transition-all duration-300 hover:shadow-xl">
             <CardHeader>
               <CardTitle>AI Job Description Generator</CardTitle>
               <CardDescription>Create detailed, skill-based job descriptions using AI prompts.</CardDescription>
@@ -260,7 +260,7 @@ export default function RecruitmentPage() {
         </TabsContent>
 
         <TabsContent value="resume-filtering">
-          <Card className="shadow-lg">
+          <Card className="shadow-lg transition-all duration-300 hover:shadow-xl">
             <CardHeader>
               <CardTitle>Resume Filtering & Screening</CardTitle>
               <CardDescription>Define screening criteria and manage candidate pools. For detailed AI analysis, use "ATS Score Check".</CardDescription>
@@ -282,7 +282,7 @@ export default function RecruitmentPage() {
         </TabsContent>
 
         <TabsContent value="ats-score-check">
-          <Card className="shadow-lg">
+          <Card className="shadow-lg transition-all duration-300 hover:shadow-xl">
             <CardHeader>
               <CardTitle>ATS Score Check & AI Resume Analysis</CardTitle>
               <CardDescription>Upload or paste resume text for an AI-powered analysis, ATS score, overview, keywords, and improvement suggestions.</CardDescription>
@@ -421,7 +421,7 @@ export default function RecruitmentPage() {
         </TabsContent>
 
         <TabsContent value="application-management">
-          <Card className="shadow-lg">
+          <Card className="shadow-lg transition-all duration-300 hover:shadow-xl">
             <CardHeader>
               <CardTitle>Application Management</CardTitle>
               <CardDescription>Control job post duration and status. (Mock)</CardDescription>
@@ -443,7 +443,7 @@ export default function RecruitmentPage() {
         </TabsContent>
 
         <TabsContent value="ai-interviewer">
-          <Card className="shadow-lg">
+          <Card className="shadow-lg transition-all duration-300 hover:shadow-xl">
             <CardHeader>
               <CardTitle>AI Interviewer</CardTitle>
               <CardDescription>Conduct initial technical and HR rounds via AI.</CardDescription>
