@@ -13,7 +13,6 @@ export default {
   	extend: {
       fontFamily: {
         sans: ["var(--font-sans)", ...fontFamily.sans],
-        mono: ["var(--font-geist-mono)", ...fontFamily.mono],
       },
   		colors: {
   			background: 'hsl(var(--background))',
