@@ -540,12 +540,12 @@ export default function LandingPage() {
                   You are using more than 6 tools to review
                 </div>
                 <div className="flex items-center gap-3 bg-neutral-900/50 backdrop-blur-sm border border-neutral-700 rounded-2xl px-4 py-2 shadow-2xl">
-                  <Image src="https://placehold.co/32x32.png" width={32} height={32} alt="Gmail" data-ai-hint="gmail logo" className="rounded-md" />
-                  <Image src="https://placehold.co/32x32.png" width={32} height={32} alt="Slack" data-ai-hint="slack logo" className="rounded-md" />
-                  <Image src="https://placehold.co/32x32.png" width={32} height={32} alt="Trello" data-ai-hint="trello logo" className="rounded-md" />
-                  <Image src="https://placehold.co/32x32.png" width={32} height={32} alt="Zoom" data-ai-hint="zoom app logo" className="rounded-md" />
-                  <Image src="https://placehold.co/32x32.png" width={32} height={32} alt="Figma" data-ai-hint="figma logo" className="rounded-md" />
-                  <Image src="https://placehold.co/32x32.png" width={32} height={32} alt="Chrome" data-ai-hint="chrome logo" className="rounded-full" />
+                  <Image src="https://cdn-icons-png.flaticon.com/512/732/732200.png" width={32} height={32} alt="Gmail" data-ai-hint="gmail logo" className="rounded-md" />
+                  <Image src="https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png" width={32} height={32} alt="Slack" data-ai-hint="slack logo" className="rounded-md" />
+                  <Image src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg" width={32} height={32} alt="Google Meet" data-ai-hint="google meet logo" className="rounded-md" />
+                  <Image src="https://cdn-icons-png.flaticon.com/512/3670/3670155.png" width={32} height={32} alt="Zoom" data-ai-hint="zoom app logo" className="rounded-md" />
+                  <Image src="https://www.microsoft.com/favicon.ico" width={32} height={32} alt="Microsoft Teams" data-ai-hint="microsoft teams logo" className="rounded-md" />
+                  <Image src="https://github.githubassets.com/favicons/favicon.png" width={32} height={32} alt="GitHub" data-ai-hint="github logo" className="rounded-full" />
                 </div>
               </div>
             </div>
