@@ -68,8 +68,8 @@ const AssetIcon = ({
   </div>
 );
 
-const CollaboratorTag = ({ name, className, cursorClass }: { name: string; className?: string; cursorClass?: string }) => (
-    <div className={cn("absolute flex items-center gap-2 animate-float", className)}>
+const CollaboratorTag = ({ name, className, cursorClass, ...props }: { name: string; className?: string; cursorClass?: string; [key: string]: any }) => (
+    <div className={cn("absolute flex items-center gap-2 animate-float", className)} {...props}>
         <CursorIcon className={cn("h-6 w-6 text-cyan-400", cursorClass)} />
         <div className="bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 rounded-full px-4 py-1.5 text-sm">
             {name}
@@ -77,8 +77,8 @@ const CollaboratorTag = ({ name, className, cursorClass }: { name: string; class
     </div>
 );
 
-const DevCollaboratorTag = ({ name, className, cursorClass, tagColorClass }: { name: string; className?: string; cursorClass?: string; tagColorClass?: string }) => (
-    <div className={cn("absolute flex items-center gap-2 animate-float", className)}>
+const DevCollaboratorTag = ({ name, className, cursorClass, tagColorClass, ...props }: { name: string; className?: string; cursorClass?: string; tagColorClass?: string; [key: string]: any }) => (
+    <div className={cn("absolute flex items-center gap-2 animate-float", className)} {...props}>
         <CursorIcon className={cn("h-6 w-6", cursorClass)} />
         <div className={cn("border rounded-full px-4 py-1.5 text-sm font-semibold", tagColorClass)}>
             {name}
@@ -127,19 +127,8 @@ export default function LandingPage() {
         {/* HERO SECTION */}
         <section className="container text-center py-20 sm:py-32 relative">
           {/* Floating tags */}
-          <div className="absolute top-[calc(50%-12rem)] left-[10%] xl:left-[15%] hidden lg:block animate-fade-in" style={{ animationDelay: '400ms' }}>
-              <CursorIcon className="h-6 w-6 text-cyan-400 transform -rotate-12 translate-x-20 -translate-y-2" />
-              <div className="bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 rounded-full px-4 py-1.5 text-sm">
-                  HR Admin
-              </div>
-          </div>
-          
-          <div className="absolute top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:block animate-fade-in" style={{ animationDelay: '600ms' }}>
-              <div className="bg-pink-400/20 text-pink-300 border border-pink-400/30 rounded-full px-4 py-1.5 text-sm">
-                  Employee
-              </div>
-              <CursorIcon className="h-6 w-6 text-pink-400 transform rotate-[135deg] -translate-x-20 translate-y-2" />
-          </div>
+          <CollaboratorTag name="HR Admin" className="top-[calc(50%-12rem)] left-[10%] xl:left-[15%] hidden lg:flex" style={{ animationDelay: '400ms' }} />
+          <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:flex" cursorClass="!text-pink-400" style={{ animationDelay: '600ms' }} />
 
           {/* Main Headline */}
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6">
@@ -288,6 +277,63 @@ export default function LandingPage() {
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        {/* Get Approvals at Hyper Speed Section */}
+        <section className="container mx-auto py-20 sm:py-32">
+            <div className="relative rounded-2xl bg-gradient-to-br from-violet-200 via-purple-200 to-indigo-200 p-8 md:p-16 text-center overflow-hidden">
+                {/* Top-left icon */}
+                <div className="absolute top-8 left-8 w-10 h-10 bg-black/5 rounded-full flex items-center justify-center text-neutral-600">
+                <Check className="h-5 w-5" />
+                </div>
+
+                {/* Floating Developer Tags */}
+                <DevCollaboratorTag
+                    name="Developer"
+                    className="top-1/4 left-12 hidden lg:flex"
+                    cursorClass="text-lime-500"
+                    tagColorClass="bg-lime-300 text-lime-900 font-bold border-lime-400"
+                    style={{ animationDelay: '0.3s' }}
+                />
+
+                <DevCollaboratorTag
+                    name="Developer"
+                    className="bottom-1/4 right-12 hidden lg:flex"
+                    cursorClass="text-pink-500"
+                    tagColorClass="bg-pink-400 text-white font-bold border-pink-500"
+                    style={{ animationDelay: '0.8s' }}
+                />
+
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black">
+                Get approvals<br />at hyper speed
+                </h2>
+                <p className="text-lg text-neutral-700 mb-16 max-w-2xl mx-auto">
+                Built-in approvals for less back-and-forth-ing
+                </p>
+
+                {/* Mock Approval Card */}
+                <div className="relative max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-8 text-center text-black animate-float" style={{ animationDuration: '10s' }}>
+                <div className="relative inline-block mb-4">
+                    <Image
+                    src="https://placehold.co/80x80.png"
+                    alt="Mike Mulligan"
+                    width={80}
+                    height={80}
+                    className="rounded-full"
+                    data-ai-hint="man face"
+                    />
+                    <div className="absolute -top-1 -right-1 bg-green-500 rounded-full p-1.5 border-2 border-white">
+                    <Check className="h-4 w-4 text-white" />
+                    </div>
+                </div>
+                <p className="text-xl font-semibold">File was approved</p>
+                <p className="text-xl font-semibold">by Mike Mulligan</p>
+                <p className="text-sm text-neutral-500 mt-2">on 24th August 2023</p>
+                <p className="font-serif italic text-2xl text-neutral-600 mt-6">
+                    Mike Mulligan
+                </p>
                 </div>
             </div>
         </section>
