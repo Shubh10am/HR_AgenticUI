@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import type { SVGProps } from 'react';
 import { FileText, Briefcase, Users, BarChart3, PlayCircle, Mail, MessageSquare } from 'lucide-react';
+import Image from 'next/image';
 
 
 // A simple cursor icon to match the design
@@ -32,6 +33,15 @@ const features = [
   { name: 'Reports', icon: BarChart3, color: 'text-rose-400' },
   { name: 'Job Descriptions', icon: Briefcase, color: 'text-indigo-400' },
   { name: 'Emails', icon: Mail, color: 'text-emerald-400' },
+];
+
+const dockIcons = [
+    { name: 'Gmail', src: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg', dataAiHint: 'gmail logo' },
+    { name: 'Slack', src: 'https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png', dataAiHint: 'slack logo' },
+    { name: 'Sheets', src: 'https://upload.wikimedia.org/wikipedia/commons/3/30/Google_Sheets_logo_%282014-2020%29.svg', dataAiHint: 'google sheets logo' },
+    { name: 'Zoom', src: 'https://upload.wikimedia.org/wikipedia/commons/d/d9/Zoom_icon.svg', dataAiHint: 'zoom logo' },
+    { name: 'Teams', src: 'https://upload.wikimedia.org/wikipedia/commons/c/c9/Microsoft_Office_Teams_%282018%E2%80%93present%29.svg', dataAiHint: 'microsoft teams logo' },
+    { name: 'Meet', src: 'https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg', dataAiHint: 'google meet logo' }
 ];
 
 
@@ -93,6 +103,40 @@ export default function LandingPage() {
             <Button size="lg" asChild className="bg-white text-black hover:bg-neutral-200">
               <Link href="/register">Try Now For Free</Link>
             </Button>
+          </div>
+        </section>
+
+        {/* Scattered Tools Section */}
+        <section className="container mx-auto py-20 sm:py-32">
+          <div className="bg-gradient-to-br from-orange-400 to-rose-500 rounded-3xl p-8 md:p-16 relative overflow-hidden text-center">
+            <CursorIcon className="h-10 w-10 text-white absolute top-16 left-1/2 transform -translate-x-12 animate-pulse" />
+            <h2 className="text-4xl md:text-6xl font-bold tracking-tight mb-4 text-neutral-800">
+              Scattered tools put HR in slow motion.
+            </h2>
+            <p className="max-w-xl mx-auto text-lg text-neutral-700 mb-12">
+              Switching between email, Slack, and spreadsheets isn't just inefficient. It's a bottleneck.
+            </p>
+            
+            <div className="relative">
+                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-neutral-800 text-white text-sm px-4 py-2 rounded-lg shadow-lg">
+                    <p>You are using <strong className="font-bold">more than 6 tools</strong> to manage people.</p>
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-neutral-800"></div>
+                </div>
+                <div className="bg-black/20 backdrop-blur-md rounded-2xl p-4 inline-flex gap-4 border border-white/10 shadow-xl">
+                    {dockIcons.map(icon => (
+                        <div key={icon.name} className="bg-white/10 p-2 rounded-lg">
+                            <Image 
+                                src={icon.src} 
+                                alt={`${icon.name} logo`} 
+                                width={40} 
+                                height={40} 
+                                className="object-contain"
+                                data-ai-hint={icon.dataAiHint}
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
           </div>
         </section>
 
