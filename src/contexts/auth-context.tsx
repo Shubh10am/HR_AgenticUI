@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { EmployeeRole } from '@/models/Employee';
@@ -50,23 +51,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const storedUser = localStorage.getItem('authUser');
 
     if (storedToken && storedUser) {
-      setToken(storedToken);
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-      } catch (e) {
-        console.error("Failed to parse stored user:", e);
+      // Check if the token is a guest token.
+      if (storedToken.startsWith('guest-auth-token-')) {
+        // If it is a guest token, we treat the session as expired on a full page reload.
+        // This forces the user to click "Continue as Guest" again.
         localStorage.removeItem('authToken');
         localStorage.removeItem('authUser');
-        clearAttendanceLocalStorage(); // Also clear attendance on auth parse error
+        clearAttendanceLocalStorage();
         setUser(null);
         setToken(null);
+      } else {
+        // It's a real user's token, proceed with authentication.
+        setToken(storedToken);
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+        } catch (e) {
+          console.error("Failed to parse stored user:", e);
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authUser');
+          clearAttendanceLocalStorage();
+          setUser(null);
+          setToken(null);
+        }
       }
     } else {
+      // No token found, ensure user is logged out.
       setUser(null);
       setToken(null);
-      // If no auth token or user, ensure attendance state is also cleared
-      // This handles cases where localStorage might be manually tampered or inconsistent
       clearAttendanceLocalStorage();
     }
     setIsLoading(false);
