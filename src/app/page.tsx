@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -39,7 +40,7 @@ const dockIcons = [
     { name: 'Gmail', src: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg', dataAiHint: 'gmail logo' },
     { name: 'Slack', src: 'https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png', dataAiHint: 'slack logo' },
     { name: 'Sheets', src: 'https://upload.wikimedia.org/wikipedia/commons/3/30/Google_Sheets_logo_%282014-2020%29.svg', dataAiHint: 'google sheets logo' },
-    { name: 'Zoom', src: 'https://upload.wikimedia.org/wikipedia/commons/d/d9/Zoom_icon.svg', dataAiHint: 'zoom logo' },
+    { name: 'Zoom', src: 'https://cdn-icons-png.flaticon.com/512/3670/3670155.png', dataAiHint: 'zoom logo' },
     { name: 'Teams', src: 'https://upload.wikimedia.org/wikipedia/commons/c/c9/Microsoft_Office_Teams_%282018%E2%80%93present%29.svg', dataAiHint: 'microsoft teams logo' },
     { name: 'Meet', src: 'https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg', dataAiHint: 'google meet logo' }
 ];
@@ -122,7 +123,7 @@ export default function LandingPage() {
                     <p>You are using <strong className="font-bold">more than 6 tools</strong> to manage people.</p>
                     <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-neutral-800"></div>
                 </div>
-                <div className="bg-black/20 backdrop-blur-md rounded-2xl p-4 inline-flex gap-4 border border-white/10 shadow-xl">
+                <div className="bg-black/20 backdrop-blur-md rounded-2xl p-4 inline-flex items-center gap-4 border border-white/10 shadow-xl">
                     {dockIcons.map(icon => (
                         <div key={icon.name} className="bg-white/10 p-2 rounded-lg">
                             <Image 
