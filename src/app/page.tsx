@@ -4,9 +4,10 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
-import type { SVGProps } from 'react';
-import { FileText, Briefcase, Users, BarChart3, PlayCircle, Mail, MessageSquare } from 'lucide-react';
+import type { SVGProps, ReactNode } from 'react';
+import { FileText, Briefcase, Users, BarChart3, PlayCircle, Mail, MessageSquare, Play, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe } from 'lucide-react';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 
 // A simple cursor icon to match the design
@@ -45,6 +46,25 @@ const Icon5 = () => <svg width="40" height="40" viewBox="0 0 40 40" fill="none" 
 const Icon6 = () => <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="20" fill="#4ADE80"/><circle cx="15" cy="15" r="4" fill="white"/><circle cx="25" cy="25" r="4" fill="white"/></svg>;
 
 const abstractIcons = [Icon1, Icon2, Icon3, Icon4, Icon5, Icon6];
+
+const AssetIcon = ({
+  icon: Icon,
+  className,
+  iconClassName,
+}: {
+  icon: React.ElementType;
+  className?: string;
+  iconClassName?: string;
+}) => (
+  <div
+    className={cn(
+      'relative flex h-24 w-20 items-center justify-center rounded-2xl border bg-white shadow-lg',
+      className
+    )}
+  >
+    <Icon className={cn('h-9 w-9', iconClassName)} />
+  </div>
+);
 
 export default function LandingPage() {
   return (
@@ -169,6 +189,59 @@ export default function LandingPage() {
             ))}
             </div>
         </div>
+
+        {/* Consistent Collaboration Section */}
+        <section className="bg-white text-black py-20 sm:py-32 overflow-hidden">
+          <div className="container mx-auto text-center relative">
+            {/* Floating Icons */}
+            <div className="hidden lg:block absolute -top-8 left-[15%] animate-float">
+              <AssetIcon
+                icon={Play}
+                className="border-cyan-500/20 bg-cyan-500/10"
+                iconClassName="text-cyan-500"
+              />
+            </div>
+            <div className="hidden lg:block absolute -bottom-8 left-[25%] animate-float" style={{ animationDelay: '1s' }}>
+              <AssetIcon
+                icon={FileJson}
+                className="border-red-500/20 bg-red-500/10"
+                iconClassName="text-red-500"
+              />
+            </div>
+            <div className="hidden lg:block absolute -bottom-8 right-[25%] animate-float" style={{ animationDelay: '2s' }}>
+              <AssetIcon
+                icon={FileImage}
+                className="border-purple-500/20 bg-purple-500/10"
+                iconClassName="text-purple-500"
+              />
+            </div>
+            <div className="hidden lg:block absolute top-1/2 right-[20%] -translate-y-1/2 animate-float" style={{ animationDelay: '1.5s' }}>
+              <AssetIcon
+                icon={FileSignatureIcon}
+                className="border-green-500/20 bg-green-500/10"
+                iconClassName="text-green-500"
+              />
+            </div>
+            <div className="hidden lg:block absolute -top-8 right-[15%] animate-float" style={{ animationDelay: '0.5s' }}>
+              <AssetIcon
+                icon={Globe}
+                className="border-indigo-500/20 bg-indigo-500/10"
+                iconClassName="text-indigo-500"
+              />
+            </div>
+
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 text-neutral-800">
+              Consistent collaboration
+              <br />
+              experience across <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">all assets in one place</span>
+            </h2>
+            <div className="flex justify-center my-10">
+              <Button size="lg" asChild className="bg-black text-white hover:bg-neutral-800 rounded-full px-8 py-3 h-auto">
+                <Link href="/register">Try Now For Free</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="border-t border-neutral-800">
@@ -179,8 +252,8 @@ export default function LandingPage() {
 
       {/* Floating Chat Button */}
       <div className="fixed bottom-6 right-6">
-          <Button size="icon" className="rounded-full h-14 w-14 bg-blue-600 hover:bg-blue-500 shadow-lg">
-            <MessageSquare className="h-7 w-7 text-white" />
+          <Button size="icon" className="rounded-full h-14 w-14 bg-accent hover:bg-accent/90 shadow-lg">
+            <MessageSquare className="h-7 w-7 text-accent-foreground" />
           </Button>
       </div>
     </div>
