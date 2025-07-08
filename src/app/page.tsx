@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -10,6 +9,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
+import ChatWidget from '@/components/chat-widget'; // Added ChatWidget import
 
 // Custom icons to match design
 const CustomPinCommentIcon = (props: SVGProps<SVGSVGElement>) => (
@@ -852,11 +852,7 @@ export default function LandingPage() {
       </footer>
 
       {/* Floating Chat Button */}
-      <div className="fixed bottom-6 right-6">
-          <Button size="icon" className="rounded-full h-14 w-14 bg-accent hover:bg-accent/90 shadow-lg">
-            <MessageSquare className="h-7 w-7 text-accent-foreground" />
-          </Button>
-      </div>
+      <ChatWidget />
     </div>
   );
 }
