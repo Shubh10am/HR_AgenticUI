@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import type { SVGProps, ReactNode } from 'react';
-import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor, MonitorPlay, SquarePen, ChevronRight, Asterisk } from 'lucide-react';
+import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor, MonitorPlay, SquarePen, ChevronRight, Asterisk, Heart } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -719,6 +719,96 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* Why Customers Love Us Section */}
+        <section className="bg-neutral-50 text-black py-20 sm:py-32">
+          <div className="container mx-auto text-center">
+            <div className="flex justify-center items-center gap-4 mb-4">
+              <Heart className="h-10 w-10 text-pink-500 fill-pink-500" />
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-neutral-800">
+                Why Customers Love Us
+              </h2>
+            </div>
+            <p className="text-sm font-semibold tracking-widest text-neutral-500 mb-16">
+              LOVED BY 150+ HR TEAMS & AGENCIES
+            </p>
+
+            <div className="grid md:grid-cols-3 gap-8 text-left">
+              {/* Testimonial Card 1 */}
+              <div className="bg-white p-8 rounded-2xl shadow-lg flex flex-col">
+                <div className="flex-grow">
+                  <h3 className="text-xl font-bold mb-4 text-neutral-800">It's everything I've wanted</h3>
+                  <p className="text-neutral-600">
+                    "HR Streamline is the fastest, easiest way to iterate on our HR processes and internal documentation. The UX is easy, the tech is brilliant, the team is like lightning-it's everything I've wanted and tried to build into our HR tools myself for 15 years. Finally!"
+                  </p>
+                </div>
+                <div className="mt-8 flex items-center gap-3">
+                    <Image 
+                        src="https://placehold.co/40x40.png" 
+                        alt="User testimonial avatar 1" 
+                        width={40} 
+                        height={40} 
+                        className="rounded-full"
+                        data-ai-hint="woman face"
+                    />
+                    <div>
+                        <p className="font-semibold text-neutral-800">Sarah Jones</p>
+                        <p className="text-sm text-neutral-500">HR Director, Innovate Inc.</p>
+                    </div>
+                </div>
+              </div>
+
+              {/* Testimonial Card 2 */}
+              <div className="bg-white p-8 rounded-2xl shadow-lg flex flex-col">
+                <div className="flex-grow">
+                  <h3 className="text-xl font-bold mb-4 text-neutral-800">This is an investment that I'm so grateful for!</h3>
+                  <p className="text-neutral-600">
+                    "I'm incredibly grateful for this investment! HR Streamline has made employee feedback and communication seamless. No more back and forth calls or messages. It's a great time-saver!"
+                  </p>
+                </div>
+                <div className="mt-8 flex items-center gap-3">
+                    <Image 
+                        src="https://placehold.co/40x40.png" 
+                        alt="User testimonial avatar 2" 
+                        width={40} 
+                        height={40} 
+                        className="rounded-full"
+                        data-ai-hint="man face"
+                    />
+                    <div>
+                        <p className="font-semibold text-neutral-800">Mark Chen</p>
+                        <p className="text-sm text-neutral-500">CEO, Solutions Co.</p>
+                    </div>
+                </div>
+              </div>
+
+              {/* Testimonial Card 3 */}
+              <div className="bg-white p-8 rounded-2xl shadow-lg flex flex-col">
+                <div className="flex-grow">
+                  <h3 className="text-xl font-bold mb-4 text-neutral-800">Saves our team a ton of time!</h3>
+                  <p className="text-neutral-600">
+                    "Thanks for creating a tool that helps us streamline communication with new hires and managers. It's great to have everything in one place and saves our team a ton of time when collaborating on onboarding."
+                  </p>
+                </div>
+                 <div className="mt-8 flex items-center gap-3">
+                    <Image 
+                        src="https://placehold.co/40x40.png" 
+                        alt="User testimonial avatar 3" 
+                        width={40} 
+                        height={40} 
+                        className="rounded-full"
+                        data-ai-hint="woman smiling"
+                    />
+                    <div>
+                        <p className="font-semibold text-neutral-800">Emily Rodriguez</p>
+                        <p className="text-sm text-neutral-500">Recruitment Lead, Global Growth</p>
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </main>
 
       <footer className="border-t border-neutral-800">
