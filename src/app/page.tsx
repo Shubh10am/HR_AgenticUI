@@ -123,7 +123,7 @@ const AssetIcon = ({
 }) => (
   <div
     className={cn(
-      'relative flex h-24 w-20 items-center justify-center rounded-2xl border bg-white shadow-lg',
+      'relative flex h-24 w-20 items-center justify-center rounded-2xl border bg-white shadow-lg transition-transform hover:scale-110',
       className
     )}
   >
@@ -131,8 +131,8 @@ const AssetIcon = ({
   </div>
 );
 
-const CollaboratorTag = ({ name, className, cursorClass, ...props }: { name: string; className?: string; cursorClass?: string; [key: string]: any }) => (
-    <div className={cn("absolute flex items-center gap-2 animate-float", className)} {...props}>
+const CollaboratorTag = ({ name, className, cursorClass, style, ...props }: { name: string; className?: string; cursorClass?: string; style?: React.CSSProperties, [key: string]: any }) => (
+    <div className={cn("absolute flex items-center gap-2 animate-float", className)} style={style} {...props}>
         <CursorIcon className={cn("h-6 w-6 text-cyan-400", cursorClass)} />
         <div className="bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 rounded-full px-4 py-1.5 text-sm">
             {name}
@@ -140,8 +140,8 @@ const CollaboratorTag = ({ name, className, cursorClass, ...props }: { name: str
     </div>
 );
 
-const DevCollaboratorTag = ({ name, className, cursorClass, tagColorClass, ...props }: { name: string; className?: string; cursorClass?: string; tagColorClass?: string; [key: string]: any }) => (
-    <div className={cn("absolute flex items-center gap-2 animate-float", className)} {...props}>
+const DevCollaboratorTag = ({ name, className, cursorClass, tagColorClass, style, ...props }: { name: string; className?: string; cursorClass?: string; tagColorClass?: string; style?: React.CSSProperties, [key: string]: any }) => (
+    <div className={cn("absolute flex items-center gap-2 animate-float", className)} style={style} {...props}>
         <CursorIcon className={cn("h-6 w-6", cursorClass)} />
         <div className={cn("border rounded-full px-4 py-1.5 text-sm font-semibold", tagColorClass)}>
             {name}
@@ -191,16 +191,16 @@ export default function LandingPage() {
       <main className="flex-1 flex flex-col justify-center">
         
         {/* HERO SECTION */}
-        <section className="container text-center py-20 sm:py-32 relative">
+        <section className="container text-center py-20 sm:py-32 relative animate-fade-in">
           {/* Floating tags */}
           <CollaboratorTag name="HR Admin" className="top-[calc(50%-12rem)] left-[10%] xl:left-[15%] hidden lg:flex" style={{ animationDelay: '400ms' }} />
           <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:flex" cursorClass="!text-pink-400" style={{ animationDelay: '600ms' }} />
 
           {/* Main Headline */}
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6">
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02]">
             Your HR workflow just got
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 transition-all duration-300 hover:brightness-110">
               1000x more collaborative
             </span>
           </h1>
@@ -236,7 +236,7 @@ export default function LandingPage() {
         </section>
 
         {/* Precision Review Section */}
-        <section className="container mx-auto py-20 sm:py-32">
+        <section className="container mx-auto py-20 sm:py-32 animate-fade-in" style={{ animationDelay: '200ms' }}>
           <div className="relative rounded-2xl bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 p-8 md:p-16 text-center overflow-hidden">
             <div className="absolute top-8 left-8 w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
               <Logo className="h-5 w-5 text-white/70" />
@@ -246,10 +246,10 @@ export default function LandingPage() {
             <CollaboratorTag name="Hiring Manager" className="top-1/4 left-8 hidden lg:flex" cursorClass="transform -rotate-12" />
             <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden lg:flex" cursorClass="transform rotate-[120deg] !text-pink-400" />
 
-            <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white">
+            <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02]">
               Review candidate profiles with precision
             </h2>
-            <p className="text-lg text-blue-200 mb-16 max-w-2xl mx-auto">
+            <p className="text-lg text-blue-200 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-blue-100">
               Collaborate directly on profiles and resumes for clearer feedback and faster decisions.
             </p>
 
@@ -268,7 +268,7 @@ export default function LandingPage() {
         </section>
 
         {/* Manage, Prioritize & Assign Section */}
-        <section className="container mx-auto py-20 sm:py-32">
+        <section className="container mx-auto py-20 sm:py-32 animate-fade-in" style={{ animationDelay: '300ms' }}>
             <div className="relative rounded-2xl bg-gradient-to-br from-yellow-200 via-yellow-300 to-amber-300 p-8 md:p-16 text-center overflow-hidden">
                 {/* Floating elements */}
                 <div className="absolute top-8 left-8 w-10 h-10 bg-black/5 rounded-full flex items-center justify-center text-neutral-600">
@@ -289,10 +289,10 @@ export default function LandingPage() {
                     tagColorClass="bg-yellow-500 text-black border-yellow-600/50"
                 />
 
-                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black">
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02]">
                     Manage, prioritize<br />& assign
                 </h2>
-                <p className="text-lg text-neutral-700 mb-16 max-w-2xl mx-auto">
+                <p className="text-lg text-neutral-700 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600">
                     Use our built-in task manager or integrate your own.
                 </p>
 
@@ -348,7 +348,7 @@ export default function LandingPage() {
         </section>
         
         {/* Get Approvals at Hyper Speed Section */}
-        <section className="container mx-auto py-20 sm:py-32">
+        <section className="container mx-auto py-20 sm:py-32 animate-fade-in" style={{ animationDelay: '400ms' }}>
             <div className="relative rounded-2xl bg-gradient-to-br from-violet-200 via-purple-200 to-indigo-200 p-8 md:p-16 text-center overflow-hidden">
                 {/* Top-left icon */}
                 <div className="absolute top-8 left-8 w-10 h-10 bg-black/5 rounded-full flex items-center justify-center text-neutral-600">
@@ -372,10 +372,10 @@ export default function LandingPage() {
                     style={{ animationDelay: '0.8s' }}
                 />
 
-                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black">
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02]">
                 Get approvals<br />at hyper speed
                 </h2>
-                <p className="text-lg text-neutral-700 mb-16 max-w-2xl mx-auto">
+                <p className="text-lg text-neutral-700 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600">
                 Built-in approvals for less back-and-forth-ing
                 </p>
 
@@ -405,7 +405,7 @@ export default function LandingPage() {
         </section>
 
         {/* Sync With Your Tools Section */}
-        <section className="container mx-auto py-20 sm:py-32">
+        <section className="container mx-auto py-20 sm:py-32 animate-fade-in" style={{ animationDelay: '500ms' }}>
             <div className="relative rounded-2xl bg-gradient-to-br from-rose-100 via-pink-100 to-red-100 p-8 md:p-16 text-center overflow-hidden">
                 <DevCollaboratorTag
                     name="Developer"
@@ -422,10 +422,10 @@ export default function LandingPage() {
                     style={{ animationDelay: '0.7s' }}
                 />
 
-                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black">
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02]">
                     Sync with<br />your tools
                 </h2>
-                <p className="text-lg text-neutral-700 mb-12 max-w-2xl mx-auto">
+                <p className="text-lg text-neutral-700 mb-12 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600">
                     Seamlessly integrate your Slack or favorite task manager
                 </p>
 
@@ -468,7 +468,7 @@ export default function LandingPage() {
         </section>
 
         {/* Super Secure Section */}
-        <section className="bg-white text-black py-20 sm:py-32">
+        <section className="bg-white text-black py-20 sm:py-32 animate-fade-in" style={{ animationDelay: '600ms' }}>
           <div className="container mx-auto px-6">
             <div className="p-1.5 rounded-[40px] bg-gradient-to-br from-blue-300 to-purple-400">
               <div className="p-1.5 rounded-[35px] bg-white">
@@ -491,23 +491,23 @@ export default function LandingPage() {
                       ))}
                     </div>
 
-                    <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-neutral-800">
+                    <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-neutral-800 transition-transform duration-300 hover:scale-[1.02]">
                       Super secure with
                     </h2>
-                    <p className="text-4xl md:text-5xl font-bold tracking-tight mb-16 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">
+                    <p className="text-4xl md:text-5xl font-bold tracking-tight mb-16 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300 hover:brightness-110">
                       SOCII Type I Compliance
                     </p>
                     
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-x-12 gap-y-4 text-neutral-600">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 transition-transform hover:scale-105">
                         <Check className="h-5 w-5 text-green-500" />
                         <span>End-to-End data encryption</span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 transition-transform hover:scale-105">
                         <Check className="h-5 w-5 text-green-500" />
                         <span>Dedicated Storage</span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 transition-transform hover:scale-105">
                         <Check className="h-5 w-5 text-green-500" />
                         <span>SOC2 Compliant</span>
                       </div>
@@ -521,16 +521,16 @@ export default function LandingPage() {
         </section>
 
         {/* Slow Motion Review Section */}
-        <section className="bg-black py-20 sm:py-32">
+        <section className="bg-black py-20 sm:py-32 animate-fade-in" style={{ animationDelay: '700ms' }}>
           <div className="container mx-auto px-6">
             <div className="relative rounded-3xl bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-orange-400 via-amber-500 to-red-500 p-8 md:p-16 text-center overflow-hidden min-h-[600px] flex flex-col justify-center">
               
               <CursorIcon className="absolute top-1/3 left-1/3 h-8 w-8 text-white transform -rotate-12 animate-float" style={{ animationDuration: '8s' }} />
 
-              <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black">
+              <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02]">
                 Reviews can move<br />in slow motionnn
               </h2>
-              <p className="text-lg text-neutral-800 mb-24 max-w-lg mx-auto">
+              <p className="text-lg text-neutral-800 mb-24 max-w-lg mx-auto transition-colors duration-300 hover:text-neutral-900">
                 Screenshots are for memes. Not a precise and efficient review process
               </p>
 
@@ -540,12 +540,12 @@ export default function LandingPage() {
                   You are using more than 6 tools to review
                 </div>
                 <div className="flex items-center gap-3 bg-neutral-900/50 backdrop-blur-sm border border-neutral-700 rounded-2xl px-4 py-2 shadow-2xl">
-                  <Image src="https://cdn-icons-png.flaticon.com/512/732/732200.png" width={32} height={32} alt="Gmail" data-ai-hint="gmail logo" className="rounded-md" />
-                  <Image src="https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png" width={32} height={32} alt="Slack" data-ai-hint="slack logo" className="rounded-md" />
-                  <Image src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg" width={32} height={32} alt="Google Meet" data-ai-hint="google meet logo" className="rounded-md" />
-                  <Image src="https://cdn-icons-png.flaticon.com/512/3670/3670155.png" width={32} height={32} alt="Zoom" data-ai-hint="zoom app logo" className="rounded-md" />
-                  <Image src="https://www.microsoft.com/favicon.ico" width={32} height={32} alt="Microsoft Teams" data-ai-hint="microsoft teams logo" className="rounded-md" />
-                  <Image src="https://github.githubassets.com/favicons/favicon.png" width={32} height={32} alt="GitHub" data-ai-hint="github logo" className="rounded-full" />
+                  <Image src="https://cdn-icons-png.flaticon.com/512/732/732200.png" width={32} height={32} alt="Gmail" data-ai-hint="gmail logo" className="rounded-md transition-transform hover:scale-110" />
+                  <Image src="https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png" width={32} height={32} alt="Slack" data-ai-hint="slack logo" className="rounded-md transition-transform hover:scale-110" />
+                  <Image src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg" width={32} height={32} alt="Google Meet" data-ai-hint="google meet logo" className="rounded-md transition-transform hover:scale-110" />
+                  <Image src="https://cdn-icons-png.flaticon.com/512/3670/3670155.png" width={32} height={32} alt="Zoom" data-ai-hint="zoom app logo" className="rounded-md transition-transform hover:scale-110" />
+                  <Image src="https://www.microsoft.com/favicon.ico" width={32} height={32} alt="Microsoft Teams" data-ai-hint="microsoft teams logo" className="rounded-md transition-transform hover:scale-110" />
+                  <Image src="https://github.githubassets.com/favicons/favicon.png" width={32} height={32} alt="GitHub" data-ai-hint="github logo" className="rounded-full transition-transform hover:scale-110" />
                 </div>
               </div>
             </div>
@@ -554,12 +554,12 @@ export default function LandingPage() {
 
 
         {/* Eliminate Redundant Tools Section */}
-        <section className="bg-white text-black py-20 sm:py-32">
+        <section className="bg-white text-black py-20 sm:py-32 animate-fade-in" style={{ animationDelay: '800ms' }}>
           <div className="container mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-3 text-neutral-800">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-3 text-neutral-800 transition-transform duration-300 hover:scale-[1.02]">
               Eliminate Redundant Tools.
             </h2>
-            <p className="text-4xl md:text-5xl font-bold tracking-tight mb-16 bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-400">
+            <p className="text-4xl md:text-5xl font-bold tracking-tight mb-16 bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-400 transition-all duration-300 hover:brightness-110">
               No more "busy" work
             </p>
 
@@ -568,7 +568,7 @@ export default function LandingPage() {
               <div className="absolute w-10/12 sm:w-2/3 md:w-1/2 h-0.5 bg-rose-300"></div>
               <div className="relative flex justify-between items-center w-10/12 sm:w-2/3 md:w-1/2">
                 {abstractIcons.map((Icon, index) => (
-                  <div key={index} className="bg-white p-1 rounded-full">
+                  <div key={index} className="bg-white p-1 rounded-full transition-transform hover:scale-125">
                     <Icon />
                   </div>
                 ))}
@@ -576,7 +576,7 @@ export default function LandingPage() {
             </div>
 
             {/* Testimonial */}
-            <div className="mt-28 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
+            <div className="mt-28 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 transition-shadow hover:shadow-xl rounded-xl p-4">
               <div className="flex items-center gap-4">
                 <Image 
                   src="https://randomuser.me/api/portraits/men/32.jpg" 
@@ -592,10 +592,10 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="max-w-md text-left">
-                <p className="text-lg font-semibold text-neutral-800">
+                <p className="text-lg font-semibold text-neutral-800 transition-colors hover:text-neutral-900">
                   Everybody has loved how easy it is to get started
                 </p>
-                <p className="text-neutral-600 mt-1">
+                <p className="text-neutral-600 mt-1 transition-colors hover:text-neutral-700">
                   "HR Streamline has enabled fast feedback from stakeholders"
                 </p>
               </div>
@@ -604,7 +604,7 @@ export default function LandingPage() {
         </section>
 
         {/* Collaboration Tools Section */}
-        <section className="bg-white text-black py-20 sm:py-32">
+        <section className="bg-white text-black py-20 sm:py-32 animate-fade-in" style={{ animationDelay: '900ms' }}>
           <div className="container mx-auto px-6">
             {/* Testimonial at the top */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-24 max-w-4xl mx-auto">
@@ -630,10 +630,10 @@ export default function LandingPage() {
 
             {/* Main Headline */}
             <div className="text-center">
-              <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-neutral-800">
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-neutral-800 transition-transform duration-300 hover:scale-[1.02]">
                 Collaboration tools
               </h2>
-              <p className="text-4xl md:text-5xl font-bold tracking-tight mb-16 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-orange-400">
+              <p className="text-4xl md:text-5xl font-bold tracking-tight mb-16 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-orange-400 transition-all duration-300 hover:brightness-110">
                 for faster teamwork
               </p>
             </div>
@@ -644,33 +644,33 @@ export default function LandingPage() {
                 <div className="w-12 h-12 flex items-center justify-center rounded-lg bg-orange-100 mb-4">
                   <SquarePen className="h-6 w-6 text-orange-500" />
                 </div>
-                <h3 className="text-xl font-semibold text-neutral-800 mb-2">Comments in context</h3>
-                <p className="text-neutral-600">Pin comments directly to frames & elements for clearer feedback.</p>
+                <h3 className="text-xl font-semibold text-neutral-800 mb-2 transition-colors hover:text-black">Comments in context</h3>
+                <p className="text-neutral-600 transition-colors hover:text-neutral-700">Pin comments directly to frames & elements for clearer feedback.</p>
               </div>
               <div className="bg-neutral-50 rounded-2xl p-8 transition-transform duration-300 hover:-translate-y-2">
                 <div className="w-12 h-12 flex items-center justify-center rounded-lg bg-blue-100 mb-4">
                   <MonitorPlay className="h-6 w-6 text-blue-500" />
                 </div>
-                <h3 className="text-xl font-semibold text-neutral-800 mb-2">Record richer feedback</h3>
-                <p className="text-neutral-600">Direct comment with Loom-style recordings without leaving the app.</p>
+                <h3 className="text-xl font-semibold text-neutral-800 mb-2 transition-colors hover:text-black">Record richer feedback</h3>
+                <p className="text-neutral-600 transition-colors hover:text-neutral-700">Direct comment with Loom-style recordings without leaving the app.</p>
               </div>
             </div>
           </div>
         </section>
         
         {/* What else can Agentic-HR do? Section */}
-        <section className="bg-white text-black py-20 sm:py-32">
+        <section className="bg-white text-black py-20 sm:py-32 animate-fade-in" style={{ animationDelay: '1000ms' }}>
           <div className="container mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-20 transition-transform duration-300 hover:scale-[1.02]">
               What else can{' '}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-400">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-400 transition-all duration-300 hover:brightness-110">
                 Agentic-HR
               </span>{' '}
               do?
             </h2>
             <div className="flex flex-wrap items-start justify-center gap-x-12 gap-y-16 md:gap-x-20">
               {moreFeatures.map((feature, index) => (
-                <div key={index} className="flex flex-col items-center gap-3 w-28 text-center">
+                <div key={index} className="flex flex-col items-center gap-3 w-28 text-center transition-transform hover:scale-110">
                   <div className="w-16 h-16 flex items-center justify-center">
                     <feature.icon className={cn('w-10 h-10', feature.color)} strokeWidth={1.5} />
                   </div>
@@ -682,7 +682,7 @@ export default function LandingPage() {
         </section>
 
         {/* Feature Marquee Section */}
-        <div className="relative w-full overflow-hidden py-12">
+        <div className="relative w-full overflow-hidden py-12 animate-fade-in" style={{ animationDelay: '1100ms' }}>
             <div className="flex animate-marquee w-max">
             {[...features, ...features].map((feature, index) => (
               <div key={index} className="flex items-center gap-2 bg-neutral-800/80 border border-neutral-700 rounded-full px-5 py-2 mx-3 text-sm text-neutral-300">
@@ -694,7 +694,7 @@ export default function LandingPage() {
         </div>
 
         {/* Consistent Collaboration Section */}
-        <section className="bg-white text-black py-20 sm:py-32 overflow-hidden">
+        <section className="bg-white text-black py-20 sm:py-32 overflow-hidden animate-fade-in" style={{ animationDelay: '1200ms' }}>
           <div className="container mx-auto text-center relative">
             {/* Floating Icons */}
             <div className="hidden lg:block absolute -top-8 left-[15%] animate-float">
@@ -733,10 +733,10 @@ export default function LandingPage() {
               />
             </div>
 
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 text-neutral-800">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 text-neutral-800 transition-transform duration-300 hover:scale-[1.02]">
               Consistent collaboration
               <br />
-              experience across <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">all assets in one place</span>
+              experience across <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300 hover:brightness-110">all assets in one place</span>
             </h2>
             <div className="flex justify-center my-10">
               <Button size="lg" asChild className="bg-black text-white hover:bg-neutral-800 rounded-full px-8 py-3 h-auto">
@@ -747,15 +747,15 @@ export default function LandingPage() {
         </section>
 
         {/* Why Customers Love Us Section */}
-        <section className="bg-neutral-50 text-black py-20 sm:py-32">
+        <section className="bg-neutral-50 text-black py-20 sm:py-32 animate-fade-in" style={{ animationDelay: '1300ms' }}>
           <div className="container mx-auto text-center">
             <div className="flex justify-center items-center gap-4 mb-4">
               <Heart className="h-10 w-10 text-pink-500 fill-pink-500" />
-              <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-neutral-800">
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-neutral-800 transition-transform duration-300 hover:scale-[1.02]">
                 Why Customers Love Us
               </h2>
             </div>
-            <p className="text-sm font-semibold tracking-widest text-neutral-500 mb-16">
+            <p className="text-sm font-semibold tracking-widest text-neutral-500 mb-16 transition-colors hover:text-neutral-600">
               LOVED BY 150+ HR TEAMS & AGENCIES
             </p>
 
@@ -763,8 +763,8 @@ export default function LandingPage() {
               {/* Testimonial Card 1 */}
               <div className="bg-white p-8 rounded-2xl shadow-lg flex flex-col transition-transform duration-300 hover:-translate-y-2">
                 <div className="flex-grow">
-                  <h3 className="text-xl font-bold mb-4 text-neutral-800">It's everything I've wanted</h3>
-                  <p className="text-neutral-600">
+                  <h3 className="text-xl font-bold mb-4 text-neutral-800 transition-colors hover:text-black">It's everything I've wanted</h3>
+                  <p className="text-neutral-600 transition-colors hover:text-neutral-700">
                     "HR Streamline is the fastest, easiest way to iterate on our HR processes and internal documentation. The UX is easy, the tech is brilliant, the team is like lightning-it's everything I've wanted and tried to build into our HR tools myself for 15 years. Finally!"
                   </p>
                 </div>
@@ -787,8 +787,8 @@ export default function LandingPage() {
               {/* Testimonial Card 2 */}
               <div className="bg-white p-8 rounded-2xl shadow-lg flex flex-col transition-transform duration-300 hover:-translate-y-2">
                 <div className="flex-grow">
-                  <h3 className="text-xl font-bold mb-4 text-neutral-800">This is an investment that I'm so grateful for!</h3>
-                  <p className="text-neutral-600">
+                  <h3 className="text-xl font-bold mb-4 text-neutral-800 transition-colors hover:text-black">This is an investment that I'm so grateful for!</h3>
+                  <p className="text-neutral-600 transition-colors hover:text-neutral-700">
                     "I'm incredibly grateful for this investment! HR Streamline has made employee feedback and communication seamless. No more back and forth calls or messages. It's a great time-saver!"
                   </p>
                 </div>
@@ -811,8 +811,8 @@ export default function LandingPage() {
               {/* Testimonial Card 3 */}
               <div className="bg-white p-8 rounded-2xl shadow-lg flex flex-col transition-transform duration-300 hover:-translate-y-2">
                 <div className="flex-grow">
-                  <h3 className="text-xl font-bold mb-4 text-neutral-800">Saves our team a ton of time!</h3>
-                  <p className="text-neutral-600">
+                  <h3 className="text-xl font-bold mb-4 text-neutral-800 transition-colors hover:text-black">Saves our team a ton of time!</h3>
+                  <p className="text-neutral-600 transition-colors hover:text-neutral-700">
                     "Thanks for creating a tool that helps us streamline communication with new hires and managers. It's great to have everything in one place and saves our team a ton of time when collaborating on onboarding."
                   </p>
                 </div>
