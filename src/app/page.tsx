@@ -1,17 +1,16 @@
+
 'use client';
 
+import { useState, useEffect, useRef, type SVGProps, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
-import type { SVGProps, ReactNode } from 'react';
 import {
   FileText,
   Users,
   BarChart3,
   MessageSquare,
-  PlayCircle,
   Briefcase,
-  Mail,
   Check,
   Flag,
   Clock,
@@ -25,7 +24,6 @@ import {
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { useState } from 'react';
 import ChatWidget from '@/components/chat-widget';
 
 interface CustomIconProps extends SVGProps<SVGSVGElement> {}
@@ -105,6 +103,44 @@ export default function LandingPage() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const secureText = "SECURE";
 
+  const sectionsRef = useRef<(HTMLElement | null)[]>([]);
+  const [visibleSections, setVisibleSections] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const index = sectionsRef.current.findIndex(ref => ref === entry.target);
+          if (index === -1) return;
+
+          if (entry.isIntersecting) {
+            setVisibleSections(prev => new Set(prev).add(index));
+          } else {
+            setVisibleSections(prev => {
+              const next = new Set(prev);
+              next.delete(index);
+              return next;
+            });
+          }
+        });
+      },
+      {
+        threshold: 0.1, // Trigger when 10% of the element is visible
+        rootMargin: "0px 0px -10% 0px" // Start animation a bit before it's fully in view
+      }
+    );
+
+    sectionsRef.current.forEach(section => {
+      if (section) observer.observe(section);
+    });
+
+    return () => {
+      sectionsRef.current.forEach(section => {
+        if (section) observer.unobserve(section);
+      });
+    };
+  }, []);
+
   const WorkflowStep = ({ icon: Icon, label }: { icon: React.ElementType; label: string }) => (
     <div className="flex flex-col items-center gap-3 z-10 bg-black px-2">
       <Icon className="h-6 w-6 text-neutral-600" />
@@ -136,13 +172,19 @@ export default function LandingPage() {
       <main className="flex-1 flex flex-col justify-center">
 
         {/* HERO SECTION */}
-        <section className="container text-center py-20 sm:py-32 relative animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+        <section 
+          ref={(el) => (sectionsRef.current[0] = el)}
+          className={cn(
+            "container text-center py-20 sm:py-32 relative group",
+            visibleSections.has(0) ? "is-visible" : ""
+          )}
+        >
           {/* Floating tags */}
-          <CollaboratorTag name="HR Admin" className="top-[calc(50%-12rem)] left-[10%] xl:left-[15%] hidden lg:flex" cursorClass="!text-cyan-400" style={{ animationDelay: '400ms' }} />
-          <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:flex" cursorClass="!text-pink-400" style={{ animationDelay: '600ms' }} />
+          <CollaboratorTag name="HR Admin" className="top-[calc(50%-12rem)] left-[10%] xl:left-[15%] hidden lg:flex" cursorClass="!text-cyan-400" />
+          <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:flex" cursorClass="!text-pink-400" />
 
           {/* Main Headline */}
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02] animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02] opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
             Your HR workflow just got
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 transition-all duration-300 hover:brightness-110">
@@ -151,7 +193,7 @@ export default function LandingPage() {
           </h1>
 
           {/* Workflow diagram */}
-          <div className="relative my-24 flex w-full max-w-4xl mx-auto items-center justify-between animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+          <div className="relative my-24 flex w-full max-w-4xl mx-auto items-center justify-between opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
             <div className="absolute left-0 right-0 h-px bg-neutral-700 top-3 -z-10" />
 
             <WorkflowStep icon={FileText} label="Plan" />
@@ -173,7 +215,7 @@ export default function LandingPage() {
           </div>
 
           {/* CTA Button */}
-          <div className="flex justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.7s' }}>
+          <div className="flex justify-center gap-4 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
               <Button size="lg" asChild className="bg-white text-black hover:bg-neutral-200 rounded-full px-8 py-3 h-auto">
                 <Link href="/register">Try Now For Free</Link>
               </Button>
@@ -181,7 +223,13 @@ export default function LandingPage() {
         </section>
 
         {/* Precision Review Section */}
-        <section className="container mx-auto py-20 sm:py-32 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+        <section
+          ref={(el) => (sectionsRef.current[1] = el)}
+          className={cn(
+            "container mx-auto py-20 sm:py-32 group",
+            visibleSections.has(1) ? "is-visible" : ""
+          )}
+        >
           <div className="group relative rounded-2xl bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 p-8 md:p-16 text-center overflow-hidden">
              <HoverPill icon={FileSearch} label="Review" />
             
@@ -189,17 +237,17 @@ export default function LandingPage() {
             <CollaboratorTag name="Hiring Manager" className="top-1/4 left-8 hidden lg:flex" cursorClass="transform -rotate-12 !text-cyan-400" />
             <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden lg:flex" cursorClass="transform rotate-[120deg] !text-pink-400" />
 
-            <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02] relative animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+            <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
               Review candidate profiles with precision
             </h2>
-            <p className="text-lg text-blue-200 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-blue-100 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            <p className="text-lg text-blue-200 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-blue-100 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
               Collaborate directly on profiles and resumes for clearer feedback and faster decisions.
             </p>
 
-            <div className="relative max-w-2xl mx-auto border-2 border-dashed border-blue-400/50 rounded-2xl p-8 min-h-[250px] flex items-center justify-center animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
-              <div className="relative" style={{ animationDelay: '0.2s' }}>
+            <div className="relative max-w-2xl mx-auto border-2 border-dashed border-blue-400/50 rounded-2xl p-8 min-h-[250px] flex items-center justify-center opacity-0 group-[.is-visible]:animate-fade-in-up transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.3s' }}>
+              <div className="relative">
                 <FileText className="h-24 w-24 text-pink-400/80" />
-                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2" style={{ animationDelay: '0.7s'}}>
+                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2">
                     <CursorIcon className="h-8 w-8 text-yellow-300 transform -rotate-45" />
                     <div className="bg-yellow-300 text-black text-sm font-semibold rounded-full px-3 py-1 shadow-md whitespace-nowrap">
                         Jane Doe (You)
@@ -211,7 +259,13 @@ export default function LandingPage() {
         </section>
 
         {/* Manage, Prioritize & Assign Section */}
-        <section className="container mx-auto py-20 sm:py-32 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+        <section
+          ref={(el) => (sectionsRef.current[2] = el)}
+          className={cn(
+            "container mx-auto py-20 sm:py-32 group",
+            visibleSections.has(2) ? "is-visible" : ""
+          )}
+        >
             <div className="group relative rounded-2xl bg-gradient-to-br from-yellow-200 via-yellow-300 to-amber-300 p-8 md:p-16 text-center overflow-hidden">
                 <HoverPill icon={FeatureFlagIcon} label="Prioritize" />
 
@@ -229,15 +283,15 @@ export default function LandingPage() {
                     tagColorClass="bg-yellow-500 text-black border-yellow-600/50"
                 />
 
-                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
                     Manage, prioritize<br />& assign
                 </h2>
-                <p className="text-lg text-neutral-700 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                <p className="text-lg text-neutral-700 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                     Use our built-in task manager or integrate your own.
                 </p>
 
                 {/* Mock Task Card */}
-                <div className="relative max-w-lg mx-auto bg-white rounded-2xl shadow-2xl p-4 text-left text-black animate-fade-in-up transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.5s' }}>
+                <div className="relative max-w-lg mx-auto bg-white rounded-2xl shadow-2xl p-4 text-left text-black opacity-0 group-[.is-visible]:animate-fade-in-up transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.3s' }}>
                     <div className="flex items-center justify-between border-b pb-3 mb-3">
                         <div className="flex items-center gap-2">
                             <Badge variant="outline" className="border-red-300 bg-red-50 text-red-700">
@@ -288,7 +342,13 @@ export default function LandingPage() {
         </section>
         
         {/* Get Approvals at Hyper Speed Section */}
-        <section className="container mx-auto py-20 sm:py-32 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+        <section 
+          ref={(el) => (sectionsRef.current[3] = el)}
+          className={cn(
+            "container mx-auto py-20 sm:py-32 group",
+            visibleSections.has(3) ? "is-visible" : ""
+          )}
+        >
             <div className="group relative rounded-2xl bg-gradient-to-br from-violet-200 via-purple-200 to-indigo-200 p-8 md:p-16 text-center overflow-hidden">
                 <HoverPill icon={Check} label="Approve" />
 
@@ -298,7 +358,6 @@ export default function LandingPage() {
                     className="top-1/4 left-12 hidden lg:flex"
                     cursorClass="text-lime-500"
                     tagColorClass="bg-lime-300 text-lime-900 font-bold border-lime-400"
-                    style={{ animationDelay: '0.3s' }}
                 />
 
                 <DevCollaboratorTag
@@ -306,18 +365,17 @@ export default function LandingPage() {
                     className="bottom-1/4 right-12 hidden lg:flex"
                     cursorClass="text-pink-500"
                     tagColorClass="bg-pink-400 text-white font-bold border-pink-500"
-                    style={{ animationDelay: '0.8s' }}
                 />
 
-                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
                 Get approvals<br />at hyper speed
                 </h2>
-                <p className="text-lg text-neutral-700 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                <p className="text-lg text-neutral-700 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                 Built-in approvals for less back-and-forth-ing
                 </p>
 
                 {/* Mock Approval Card */}
-                <div className="relative max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-8 text-center text-black animate-fade-in-up transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.5s' }}>
+                <div className="relative max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-8 text-center text-black opacity-0 group-[.is-visible]:animate-fade-in-up transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.3s' }}>
                 <div className="relative inline-block mb-4">
                     <Image
                     src="https://randomuser.me/api/portraits/men/78.jpg"
@@ -342,7 +400,13 @@ export default function LandingPage() {
         </section>
 
         {/* Sync With Your Tools Section */}
-        <section className="container mx-auto py-20 sm:py-32 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+        <section
+          ref={(el) => (sectionsRef.current[4] = el)}
+          className={cn(
+            "container mx-auto py-20 sm:py-32 group",
+            visibleSections.has(4) ? "is-visible" : ""
+          )}
+        >
             <div className="group relative rounded-2xl bg-gradient-to-br from-rose-100 via-pink-100 to-red-100 p-8 md:p-16 text-center overflow-hidden">
                 <HoverPill icon={RefreshCw} label="Sync" />
 
@@ -351,24 +415,22 @@ export default function LandingPage() {
                     className="top-1/4 left-12 hidden lg:flex"
                     cursorClass="text-orange-500"
                     tagColorClass="bg-orange-300 text-orange-900 font-bold border-orange-400"
-                    style={{ animationDelay: '0.2s' }}
                 />
                 <DevCollaboratorTag
                     name="Developer"
                     className="bottom-1/4 right-12 hidden lg:flex"
                     cursorClass="text-yellow-500"
                     tagColorClass="bg-yellow-300 text-yellow-900 font-bold border-yellow-400"
-                    style={{ animationDelay: '0.7s' }}
                 />
 
-                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
                     Sync with<br />your tools
                 </h2>
-                <p className="text-lg text-neutral-700 mb-12 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                <p className="text-lg text-neutral-700 mb-12 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                     Seamlessly integrate your Slack or favorite task manager
                 </p>
 
-                <div className="relative max-w-sm mx-auto bg-white rounded-full shadow-lg p-2 pr-4 text-left text-black animate-fade-in-up flex items-center gap-3 transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.5s' }}>
+                <div className="relative max-w-sm mx-auto bg-white rounded-full shadow-lg p-2 pr-4 text-left text-black opacity-0 group-[.is-visible]:animate-fade-in-up flex items-center gap-3 transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.3s' }}>
                     <div className="bg-green-500 rounded-full h-6 w-6 flex items-center justify-center flex-shrink-0">
                         <Check className="h-4 w-4 text-white" />
                     </div>
@@ -385,7 +447,7 @@ export default function LandingPage() {
                     />
                 </div>
 
-                <div className="flex justify-center items-center gap-3 md:gap-4 mt-12 flex-wrap animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+                <div className="flex justify-center items-center gap-3 md:gap-4 mt-12 flex-wrap opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                     {[
                         { name: 'Monday.com', hint: 'monday com logo' },
                         { name: 'ClickUp', hint: 'clickup logo' },
@@ -399,7 +461,7 @@ export default function LandingPage() {
                     ))}
                 </div>
                 
-                <Link href="/integrations" className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-800 hover:text-black mt-16 group animate-fade-in-up" style={{ animationDelay: '0.7s' }}>
+                <Link href="/integrations" className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-800 hover:text-black mt-16 group opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
                     VIEW INTEGRATIONS
                     <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
@@ -407,7 +469,13 @@ export default function LandingPage() {
         </section>
 
         {/* Super Secure Section */}
-        <section className="bg-white text-black py-20 sm:py-32 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+        <section 
+          ref={(el) => (sectionsRef.current[5] = el)}
+          className={cn(
+            "bg-white text-black py-20 sm:py-32 group",
+            visibleSections.has(5) ? "is-visible" : ""
+          )}
+        >
           <div className="container mx-auto px-6">
             <div className="p-1.5 rounded-[40px] bg-gradient-to-br from-blue-300 to-purple-400">
               <div className="p-1.5 rounded-[35px] bg-white">
@@ -422,7 +490,7 @@ export default function LandingPage() {
                           className="bg-purple-100 border border-purple-200 rounded-lg p-2 cursor-default transition-all duration-300 flex items-center justify-center h-8 w-8"
                         >
                           {hoveredIndex === index ? (
-                            <span className="font-bold text-purple-600 text-lg animate-fade-in-up">{letter}</span>
+                            <span className="font-bold text-purple-600 text-lg opacity-0 group-[.is-visible]:animate-fade-in-up">{letter}</span>
                           ) : (
                             <Asterisk className="h-4 w-4 text-purple-500" />
                           )}
@@ -430,7 +498,7 @@ export default function LandingPage() {
                       ))}
                     </div>
 
-                    <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                    <div className="opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
                       <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-neutral-800 transition-transform duration-300 hover:scale-[1.02]">
                         Super secure with
                       </h2>
@@ -439,7 +507,7 @@ export default function LandingPage() {
                       </p>
                     </div>
                     
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-x-12 gap-y-4 text-neutral-600 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-x-12 gap-y-4 text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                       <div className="flex items-center gap-2 transition-transform hover:scale-105">
                         <Check className="h-5 w-5 text-green-500" />
                         <span>End-to-End data encryption</span>
