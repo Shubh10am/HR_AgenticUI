@@ -19,23 +19,8 @@ import { useTheme } from 'next-themes';
 import { useAuth } from '@/contexts/auth-context';
 import { Slider } from '@/components/ui/slider'; // Import Slider
 
-const FONT_STYLE_KEY = 'appFontStyle';
-const FONT_SIZE_KEY = 'appFontSize';
 const NOTIFICATION_SOUND_ENABLED_KEY = 'notificationSoundEnabled';
 const NOTIFICATION_SOUND_VOLUME_KEY = 'notificationSoundVolume';
-
-
-const FONT_STYLE_CLASSES: Record<string, string> = {
-  sans: 'font-style-sans',
-  serif: 'font-style-serif',
-  mono: 'font-style-mono',
-};
-
-const FONT_SIZE_CLASSES: Record<string, string> = {
-  small: 'font-size-small',
-  default: 'font-size-default',
-  large: 'font-size-large',
-};
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -44,8 +29,6 @@ export default function SettingsPage() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [notificationVolume, setNotificationVolume] = useState(50); // Default volume 50%
   const { theme, setTheme } = useTheme();
-  const [selectedFontStyle, setSelectedFontStyle] = useState('sans');
-  const [selectedFontSize, setSelectedFontSize] = useState('default');
   
   const { token } = useAuth();
 
@@ -54,30 +37,6 @@ export default function SettingsPage() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [isKeyLoading, setIsKeyLoading] = useState(false);
   const [isKeySaving, setIsKeySaving] = useState(false);
-
-  const applyFontStyle = useCallback((style: string) => {
-    if (typeof window !== 'undefined') {
-      Object.values(FONT_STYLE_CLASSES).forEach(cls => document.documentElement.classList.remove(cls));
-      const styleClass = FONT_STYLE_CLASSES[style];
-      if (styleClass) {
-        document.documentElement.classList.add(styleClass);
-        localStorage.setItem(FONT_STYLE_KEY, style);
-        setSelectedFontStyle(style);
-      }
-    }
-  }, []);
-
-  const applyFontSize = useCallback((size: string) => {
-    if (typeof window !== 'undefined') {
-      Object.values(FONT_SIZE_CLASSES).forEach(cls => document.documentElement.classList.remove(cls));
-      const sizeClass = FONT_SIZE_CLASSES[size];
-      if (sizeClass) {
-        document.documentElement.classList.add(sizeClass);
-        localStorage.setItem(FONT_SIZE_KEY, size);
-        setSelectedFontSize(size);
-      }
-    }
-  }, []);
   
   const fetchApiKey = useCallback(async () => {
     if (!token) return;
@@ -118,23 +77,6 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
-    const storedFontStyle = localStorage.getItem(FONT_STYLE_KEY);
-    if (storedFontStyle && FONT_STYLE_CLASSES[storedFontStyle]) {
-      applyFontStyle(storedFontStyle);
-    } else {
-      applyFontStyle('sans'); 
-    }
-
-    const storedFontSize = localStorage.getItem(FONT_SIZE_KEY);
-    if (storedFontSize && FONT_SIZE_CLASSES[storedFontSize]) {
-      applyFontSize(storedFontSize);
-    } else {
-      applyFontSize('default'); 
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
-
-  useEffect(() => {
     fetchApiKey();
   }, [fetchApiKey]);
 
@@ -168,22 +110,6 @@ export default function SettingsPage() {
     toast({
       title: `Theme Changed`,
       description: `Switched to ${value.charAt(0).toUpperCase() + value.slice(1)} theme.`,
-    });
-  };
-
-  const handleFontStyleChange = (style: string) => {
-    applyFontStyle(style);
-    toast({
-      title: `Font Style Changed`,
-      description: `Switched to ${style.charAt(0).toUpperCase() + style.slice(1)} font.`,
-    });
-  };
-
-  const handleFontSizeChange = (size: string) => {
-    applyFontSize(size);
-    toast({
-      title: `Font Size Changed`,
-      description: `Switched to ${size.charAt(0).toUpperCase() + size.slice(1)} size.`,
     });
   };
 
@@ -384,34 +310,6 @@ export default function SettingsPage() {
                   </Label>
                 </div>
               </RadioGroup>
-            </div>
-            <Separator />
-            <div>
-              <Label htmlFor="fontStyleSelect" className="text-base flex items-center mb-1"><Type className="mr-2 h-4 w-4" /> Font Style</Label>
-              <Select value={selectedFontStyle} onValueChange={handleFontStyleChange}>
-                <SelectTrigger id="fontStyleSelect">
-                  <SelectValue placeholder="Select font style" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sans">Sans-Serif (Default)</SelectItem>
-                  <SelectItem value="serif">Serif</SelectItem>
-                  <SelectItem value="mono">Monospace</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Separator />
-            <div>
-              <Label htmlFor="fontSizeSelect" className="text-base flex items-center mb-1"><CaseSensitive className="mr-2 h-4 w-4" /> Font Size</Label>
-              <Select value={selectedFontSize} onValueChange={handleFontSizeChange}>
-                <SelectTrigger id="fontSizeSelect">
-                  <SelectValue placeholder="Select font size" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="small">Small</SelectItem>
-                  <SelectItem value="default">Default</SelectItem>
-                  <SelectItem value="large">Large</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </CardContent>
         </Card>

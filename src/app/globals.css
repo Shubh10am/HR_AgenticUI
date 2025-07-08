@@ -2,16 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  /* Updated to use --font-primary which will now point to Poppins */
-  font-family: var(--font-primary), Arial, Helvetica, sans-serif;
-}
-
 @layer base {
   :root {
-    /* Define --font-primary, now defaults to poppins */
-    --font-primary: var(--font-poppins);
-
     --background: 0 0% 98%; /* Almost White #FAFAFA */
     --foreground: 220 15% 20%; /* Darker, slightly desaturated blue-gray for text */
     
@@ -102,28 +94,6 @@ body {
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 220 15% 20%; 
     --sidebar-ring: hsl(var(--accent)); 
-  }
-
-  /* Font Style Classes */
-  .font-style-sans {
-    --font-primary: var(--font-poppins);
-  }
-  .font-style-serif {
-    --font-primary: serif; /* Generic serif */
-  }
-  .font-style-mono {
-    --font-primary: var(--font-geist-mono);
-  }
-
-  /* Font Size Classes for HTML element */
-  html.font-size-small {
-    font-size: 87.5%; /* Equivalent to 14px if base is 16px */
-  }
-  html.font-size-default {
-    font-size: 100%; /* Equivalent to 16px */
-  }
-  html.font-size-large {
-    font-size: 112.5%; /* Equivalent to 18px if base is 16px */
   }
 }
 
