@@ -66,6 +66,16 @@ const AssetIcon = ({
   </div>
 );
 
+const CollaboratorTag = ({ name, className, cursorClass }: { name: string; className?: string; cursorClass?: string }) => (
+    <div className={cn("absolute flex items-center gap-2 animate-float", className)}>
+        <CursorIcon className={cn("h-6 w-6 text-cyan-400", cursorClass)} />
+        <div className="bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 rounded-full px-4 py-1.5 text-sm">
+            {name}
+        </div>
+    </div>
+);
+
+
 export default function LandingPage() {
     const WorkflowStep = ({ icon: Icon, label }: { icon: React.ElementType; label: string }) => (
         <div className="flex flex-col items-center gap-3 z-10 bg-black px-2">
@@ -97,7 +107,7 @@ export default function LandingPage() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col justify-center">
         
-        {/* NEW HERO SECTION */}
+        {/* HERO SECTION */}
         <section className="container text-center py-20 sm:py-32 relative">
           {/* Floating tags */}
           <div className="absolute top-[calc(50%-12rem)] left-[10%] xl:left-[15%] hidden lg:block animate-fade-in" style={{ animationDelay: '400ms' }}>
@@ -150,6 +160,38 @@ export default function LandingPage() {
               <Button size="lg" asChild className="bg-white text-black hover:bg-neutral-200 rounded-full px-8 py-3 h-auto">
                 <Link href="/register">Try Now For Free</Link>
               </Button>
+          </div>
+        </section>
+
+        {/* Precision Review Section */}
+        <section className="container mx-auto py-20 sm:py-32">
+          <div className="relative rounded-2xl bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 p-8 md:p-16 text-center overflow-hidden">
+            <div className="absolute top-8 left-8 w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
+              <Logo className="h-5 w-5 text-white/70" />
+            </div>
+            
+            {/* Floating elements */}
+            <CollaboratorTag name="Hiring Manager" className="top-1/4 left-8 hidden lg:flex" cursorClass="transform -rotate-12" />
+            <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden lg:flex" cursorClass="transform rotate-[120deg] !text-pink-400" />
+
+            <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white">
+              Review candidate profiles with precision
+            </h2>
+            <p className="text-lg text-blue-200 mb-16 max-w-2xl mx-auto">
+              Collaborate directly on profiles and resumes for clearer feedback and faster decisions.
+            </p>
+
+            <div className="relative max-w-2xl mx-auto border-2 border-dashed border-blue-400/50 rounded-2xl p-8 min-h-[250px] flex items-center justify-center">
+              <div className="relative animate-float" style={{ animationDelay: '0.2s' }}>
+                <FileText className="h-24 w-24 text-pink-400/80" />
+                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2 animate-float" style={{ animationDelay: '0.7s'}}>
+                    <CursorIcon className="h-8 w-8 text-yellow-300 transform -rotate-45" />
+                    <div className="bg-yellow-300 text-black text-sm font-semibold rounded-full px-3 py-1 shadow-md whitespace-nowrap">
+                        Jane Doe (You)
+                    </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
