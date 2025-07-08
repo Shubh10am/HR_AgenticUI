@@ -27,13 +27,24 @@ import { Badge } from '@/components/ui/badge';
 import ChatWidget from '@/components/chat-widget';
 
 interface CustomIconProps extends SVGProps<SVGSVGElement> {}
+interface CollaboratorTagProps {
+  name: string;
+  className?: string;
+  cursorClass?: string;
+  style?: React.CSSProperties;
+}
+interface DevCollaboratorTagProps {
+  name: string;
+  className?: string;
+  cursorClass?: string;
+  tagColorClass?: string;
+  style?: React.CSSProperties;
+}
 
-function FeatureFlagIcon(props: CustomIconProps) {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <path d="M6 3V21M6 4H16L13 8L16 12H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
+interface HoverPillProps {
+  icon: React.ElementType;
+  label: string;
+  variant?: 'light' | 'dark';
 }
 
 function CursorIcon(props: CustomIconProps) {
@@ -44,11 +55,12 @@ function CursorIcon(props: CustomIconProps) {
   );
 }
 
-interface CollaboratorTagProps {
-  name: string;
-  className?: string;
-  cursorClass?: string;
-  style?: React.CSSProperties;
+function FeatureFlagIcon(props: CustomIconProps) {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path d="M6 3V21M6 4H16L13 8L16 12H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
 }
 
 function CollaboratorTag({ name, className, cursorClass, style }: CollaboratorTagProps) {
@@ -62,14 +74,6 @@ function CollaboratorTag({ name, className, cursorClass, style }: CollaboratorTa
   );
 }
 
-interface DevCollaboratorTagProps {
-  name: string;
-  className?: string;
-  cursorClass?: string;
-  tagColorClass?: string;
-  style?: React.CSSProperties;
-}
-
 function DevCollaboratorTag({ name, className, cursorClass, tagColorClass, style }: DevCollaboratorTagProps) {
   return (
     <div className={cn("absolute flex items-center gap-2 transition-transform duration-300 hover:scale-105", className)} style={style}>
@@ -79,12 +83,6 @@ function DevCollaboratorTag({ name, className, cursorClass, tagColorClass, style
       </div>
     </div>
   );
-}
-
-interface HoverPillProps {
-  icon: React.ElementType;
-  label: string;
-  variant?: 'light' | 'dark';
 }
 
 function HoverPill({ icon: Icon, label, variant = 'light' }: HoverPillProps) {
@@ -164,6 +162,17 @@ export default function LandingPage() {
     </div>
   );
 
+  const tools = [
+      { name: 'Monday.com', hint: 'monday com logo' },
+      { name: 'ClickUp', hint: 'clickup logo' },
+      { name: 'Slack', hint: 'slack logo' },
+      { name: 'Asana', hint: 'asana logo' },
+      { name: 'Jira', hint: 'jira logo' },
+      { name: 'Trello', hint: 'trello logo' },
+      { name: 'Figma', hint: 'figma logo' },
+      { name: 'Notion', hint: 'notion logo' },
+  ];
+
   return (
     <div className="flex flex-col min-h-screen bg-black text-white antialiased">
       {/* Header */}
@@ -196,8 +205,8 @@ export default function LandingPage() {
           )}
         >
           {/* Floating tags */}
-          <CollaboratorTag name="HR Admin" className="top-[calc(50%-12rem)] left-[10%] xl:left-[15%] hidden lg:flex animate-float" cursorClass="!text-cyan-400" />
-          <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:flex animate-float-slow" cursorClass="!text-pink-400" />
+          <CollaboratorTag name="HR Admin" className="top-[calc(50%-12rem)] left-[10%] xl:left-[15%] hidden lg:flex" cursorClass="!text-cyan-400" />
+          <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:flex" cursorClass="!text-pink-400" />
 
           {/* Main Headline */}
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02]">
@@ -251,8 +260,8 @@ export default function LandingPage() {
              <HoverPill icon={FileSearch} label="Review" variant="dark" />
             
             {/* Floating elements */}
-            <CollaboratorTag name="Hiring Manager" className="top-1/4 left-8 hidden lg:flex animate-float" cursorClass="transform -rotate-12 !text-cyan-400" />
-            <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden lg:flex animate-float-slow" cursorClass="transform rotate-[120deg] !text-pink-400" />
+            <CollaboratorTag name="Hiring Manager" className="top-1/4 left-8 hidden lg:flex" cursorClass="transform -rotate-12 !text-cyan-400" />
+            <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden lg:flex" cursorClass="transform rotate-[120deg] !text-pink-400" />
 
             <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
               Review candidate profiles with precision
@@ -288,14 +297,14 @@ export default function LandingPage() {
 
                 <DevCollaboratorTag
                     name="Developer"
-                    className="top-1/2 -translate-y-1/2 left-8 hidden lg:flex animate-float"
+                    className="top-1/2 -translate-y-1/2 left-8 hidden lg:flex"
                     cursorClass="text-pink-500"
                     tagColorClass="bg-pink-500 text-white border-pink-500/50"
                 />
 
                 <DevCollaboratorTag
                     name="Developer"
-                    className="top-1/2 -translate-y-1/2 right-8 hidden lg:flex animate-float-slow"
+                    className="top-1/2 -translate-y-1/2 right-8 hidden lg:flex"
                     cursorClass="text-yellow-600"
                     tagColorClass="bg-yellow-500 text-black border-yellow-600/50"
                 />
@@ -372,14 +381,14 @@ export default function LandingPage() {
                 {/* Floating Developer Tags */}
                 <DevCollaboratorTag
                     name="Developer"
-                    className="top-1/4 left-12 hidden lg:flex animate-float"
+                    className="top-1/4 left-12 hidden lg:flex"
                     cursorClass="text-lime-500"
                     tagColorClass="bg-lime-300 text-lime-900 font-bold border-lime-400"
                 />
 
                 <DevCollaboratorTag
                     name="Developer"
-                    className="bottom-1/4 right-12 hidden lg:flex animate-float-slow"
+                    className="bottom-1/4 right-12 hidden lg:flex"
                     cursorClass="text-pink-500"
                     tagColorClass="bg-pink-400 text-white font-bold border-pink-500"
                 />
@@ -429,13 +438,13 @@ export default function LandingPage() {
 
                 <DevCollaboratorTag
                     name="Developer"
-                    className="top-1/4 left-12 hidden lg:flex animate-float"
+                    className="top-1/4 left-12 hidden lg:flex"
                     cursorClass="text-orange-500"
                     tagColorClass="bg-orange-300 text-orange-900 font-bold border-orange-400"
                 />
                 <DevCollaboratorTag
                     name="Developer"
-                    className="bottom-1/4 right-12 hidden lg:flex animate-float-slow"
+                    className="bottom-1/4 right-12 hidden lg:flex"
                     cursorClass="text-yellow-500"
                     tagColorClass="bg-yellow-300 text-yellow-900 font-bold border-yellow-400"
                 />
@@ -447,35 +456,15 @@ export default function LandingPage() {
                     Seamlessly integrate your Slack or favorite task manager
                 </p>
 
-                <div className="relative max-w-sm mx-auto bg-white rounded-full shadow-lg p-2 pr-4 text-left text-black opacity-0 group-[.is-visible]:animate-fade-in-up flex items-center gap-3 transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.3s' }}>
-                    <div className="bg-green-500 rounded-full h-6 w-6 flex items-center justify-center flex-shrink-0">
-                        <Check className="h-4 w-4 text-white" />
+                <div className="relative w-full max-w-4xl mx-auto overflow-hidden mt-12 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                    <div className="flex animate-marquee">
+                        {[...tools, ...tools].map((tool, index) => (
+                            <div key={`${tool.name}-${index}`} className="flex-shrink-0 flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-lg px-4 py-2 shadow-md text-black mx-4">
+                                <Image src={`https://placehold.co/24x24.png`} width={24} height={24} alt={`${tool.name} logo`} data-ai-hint={tool.hint} />
+                                <span className="font-semibold text-sm md:text-base">{tool.name}</span>
+                            </div>
+                        ))}
                     </div>
-                    <p className="text-sm text-neutral-700">
-                        Let's change the color <span className="text-pink-500 font-semibold">@designer</span>
-                    </p>
-                    <Image
-                        src="https://randomuser.me/api/portraits/women/44.jpg"
-                        alt="Designer Avatar"
-                        width={28}
-                        height={28}
-                        className="rounded-full ml-auto"
-                        data-ai-hint="woman face"
-                    />
-                </div>
-
-                <div className="flex justify-center items-center gap-3 md:gap-4 mt-12 flex-wrap opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-                    {[
-                        { name: 'Monday.com', hint: 'monday com logo' },
-                        { name: 'ClickUp', hint: 'clickup logo' },
-                        { name: 'Slack', hint: 'slack logo' },
-                        { name: 'Asana', hint: 'asana logo' },
-                    ].map(tool => (
-                        <div key={tool.name} className="flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-lg px-3 py-1.5 md:px-4 md:py-2 shadow-md text-black transition-transform duration-300 hover:scale-105">
-                           <Image src={`https://placehold.co/24x24.png`} width={24} height={24} alt={`${tool.name} logo`} data-ai-hint={tool.hint} />
-                           <span className="font-semibold text-sm md:text-base">{tool.name}</span>
-                        </div>
-                    ))}
                 </div>
                 
                 <Link href="/integrations" className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-800 hover:text-black mt-16 group opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
