@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import type { SVGProps, ReactNode } from 'react';
-import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor, MonitorPlay, SquarePen, ChevronRight, Asterisk, Heart, KanbanSquare } from 'lucide-react';
+import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, Globe, UserCheck, Slack, Check, Flag, Clock, MoreHorizontal, Monitor, MonitorPlay, SquarePen, ChevronRight, Asterisk, Heart, KanbanSquare } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +53,13 @@ const CustomBellIcon = (props: SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
         <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
         <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+    </svg>
+);
+const FileSignatureIcon = (props: SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <path d="M16 18c-2.2 0-4-1.3-4-3.5s1.8-3.5 4-3.5 4 1.3 4 3.5-1.8 3.5-4 3.5z"/>
     </svg>
 );
 
@@ -163,17 +170,17 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-black text-white antialiased">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white text-black">
+      <header className="sticky top-0 z-50 w-full border-b border-neutral-800 bg-black/50 backdrop-blur-lg">
         <div className="container flex h-20 items-center justify-between mx-auto px-6">
           <Link href="/" className="flex items-center gap-2">
             <Logo className="h-8 w-8 text-primary" />
-            <span className="font-bold text-lg">HR Streamline AI</span>
+            <span className="font-bold text-lg text-white">HR Streamline AI</span>
           </Link>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" asChild>
+            <Button variant="ghost" asChild className="text-white hover:bg-neutral-800 hover:text-white">
               <Link href="/login">Log In</Link>
             </Button>
-            <Button asChild className="bg-black text-white hover:bg-neutral-800 rounded-full">
+            <Button asChild className="bg-white text-black hover:bg-neutral-200 rounded-full">
               <Link href="/register">Try Now for Free</Link>
             </Button>
           </div>
@@ -306,7 +313,7 @@ export default function LandingPage() {
                     
                     <div className="flex items-start gap-3">
                         <Image
-                            src="https://placehold.co/40x40.png"
+                            src="https://randomuser.me/api/portraits/men/75.jpg"
                             alt="Calvin F."
                             width={32}
                             height={32}
@@ -376,7 +383,7 @@ export default function LandingPage() {
                 <div className="relative max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-8 text-center text-black animate-float" style={{ animationDuration: '10s' }}>
                 <div className="relative inline-block mb-4">
                     <Image
-                    src="https://placehold.co/80x80.png"
+                    src="https://randomuser.me/api/portraits/men/78.jpg"
                     alt="Mike Mulligan"
                     width={80}
                     height={80}
@@ -430,7 +437,7 @@ export default function LandingPage() {
                         Let's change the color <span className="text-pink-500 font-semibold">@designer</span>
                     </p>
                     <Image
-                        src="https://placehold.co/32x32.png"
+                        src="https://randomuser.me/api/portraits/women/44.jpg"
                         alt="Designer Avatar"
                         width={28}
                         height={28}
@@ -447,11 +454,7 @@ export default function LandingPage() {
                         { name: 'Asana', hint: 'asana logo' },
                     ].map(tool => (
                         <div key={tool.name} className="flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-lg px-3 py-1.5 md:px-4 md:py-2 shadow-md text-black">
-                           {tool.name === 'Slack' ? (
-                               <Slack className="h-5 w-5 md:h-6 md:w-6" />
-                           ) : (
-                                <Image src={`https://placehold.co/24x24.png`} width={24} height={24} alt={`${tool.name} logo`} data-ai-hint={tool.hint} />
-                           )}
+                           <Image src={`https://placehold.co/24x24.png`} width={24} height={24} alt={`${tool.name} logo`} data-ai-hint={tool.hint} />
                            <span className="font-semibold text-sm md:text-base">{tool.name}</span>
                         </div>
                     ))}
@@ -576,7 +579,7 @@ export default function LandingPage() {
             <div className="mt-28 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
               <div className="flex items-center gap-4">
                 <Image 
-                  src="https://placehold.co/64x64.png" 
+                  src="https://randomuser.me/api/portraits/men/32.jpg" 
                   alt="Riley Hennigh" 
                   width={64} 
                   height={64} 
@@ -758,7 +761,7 @@ export default function LandingPage() {
 
             <div className="grid md:grid-cols-3 gap-8 text-left">
               {/* Testimonial Card 1 */}
-              <div className="bg-white p-8 rounded-2xl shadow-lg flex flex-col">
+              <div className="bg-white p-8 rounded-2xl shadow-lg flex flex-col transition-transform duration-300 hover:-translate-y-2">
                 <div className="flex-grow">
                   <h3 className="text-xl font-bold mb-4 text-neutral-800">It's everything I've wanted</h3>
                   <p className="text-neutral-600">
@@ -767,7 +770,7 @@ export default function LandingPage() {
                 </div>
                 <div className="mt-8 flex items-center gap-3">
                     <Image 
-                        src="https://placehold.co/40x40.png" 
+                        src="https://randomuser.me/api/portraits/women/48.jpg" 
                         alt="User testimonial avatar 1" 
                         width={40} 
                         height={40} 
@@ -782,7 +785,7 @@ export default function LandingPage() {
               </div>
 
               {/* Testimonial Card 2 */}
-              <div className="bg-white p-8 rounded-2xl shadow-lg flex flex-col">
+              <div className="bg-white p-8 rounded-2xl shadow-lg flex flex-col transition-transform duration-300 hover:-translate-y-2">
                 <div className="flex-grow">
                   <h3 className="text-xl font-bold mb-4 text-neutral-800">This is an investment that I'm so grateful for!</h3>
                   <p className="text-neutral-600">
@@ -791,7 +794,7 @@ export default function LandingPage() {
                 </div>
                 <div className="mt-8 flex items-center gap-3">
                     <Image 
-                        src="https://placehold.co/40x40.png" 
+                        src="https://randomuser.me/api/portraits/men/32.jpg"
                         alt="User testimonial avatar 2" 
                         width={40} 
                         height={40} 
@@ -806,7 +809,7 @@ export default function LandingPage() {
               </div>
 
               {/* Testimonial Card 3 */}
-              <div className="bg-white p-8 rounded-2xl shadow-lg flex flex-col">
+              <div className="bg-white p-8 rounded-2xl shadow-lg flex flex-col transition-transform duration-300 hover:-translate-y-2">
                 <div className="flex-grow">
                   <h3 className="text-xl font-bold mb-4 text-neutral-800">Saves our team a ton of time!</h3>
                   <p className="text-neutral-600">
@@ -815,7 +818,7 @@ export default function LandingPage() {
                 </div>
                  <div className="mt-8 flex items-center gap-3">
                     <Image 
-                        src="https://placehold.co/40x40.png" 
+                        src="https://randomuser.me/api/portraits/women/68.jpg"
                         alt="User testimonial avatar 3" 
                         width={40} 
                         height={40} 
