@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import type { SVGProps, ReactNode } from 'react';
-import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor, CheckCircle, ChevronRight, SquarePen, MonitorPlay } from 'lucide-react';
+import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor, CheckCircle, ChevronRight, SquarePen, MonitorPlay, Smile, AtSign, Sparkles, ListChecks, Bell } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -38,6 +38,18 @@ const features = [
   { name: 'Job Descriptions', icon: Briefcase, color: 'text-indigo-400' },
   { name: 'Emails', icon: Mail, color: 'text-emerald-400' },
 ];
+
+const moreFeatures = [
+  { name: 'Pin Comment', icon: MessageSquare, color: 'text-purple-400' },
+  { name: 'Guest Mode', icon: Smile, color: 'text-blue-400' },
+  { name: 'Mentions', icon: AtSign, color: 'text-yellow-500' },
+  { name: 'Approvals', icon: CheckCircle, color: 'text-green-500' },
+  { name: 'AI Copilot', icon: Sparkles, color: 'text-violet-400' },
+  { name: 'In-built\nTask Manager', icon: ListChecks, color: 'text-orange-400' },
+  { name: 'Flock Mode', icon: Users, color: 'text-cyan-400' },
+  { name: 'Email & Slack\nNotifications', icon: Bell, color: 'text-sky-400' },
+];
+
 
 // Abstract icons for the "Eliminate Redundant Tools" section
 const Icon1 = () => <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="20" fill="#FCA5A5"/><circle cx="20" cy="20" r="6" fill="#DC2626"/></svg>;
@@ -510,7 +522,29 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
-
+        
+        {/* What else can Agentic-HR do? Section */}
+        <section className="bg-white text-black py-20 sm:py-32">
+          <div className="container mx-auto text-center">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-20">
+              What else can{' '}
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-400">
+                Agentic-HR
+              </span>{' '}
+              do?
+            </h2>
+            <div className="flex flex-wrap items-start justify-center gap-x-12 gap-y-16 md:gap-x-20">
+              {moreFeatures.map((feature, index) => (
+                <div key={index} className="flex flex-col items-center gap-3 w-28 text-center">
+                  <div className="w-16 h-16 flex items-center justify-center">
+                    <feature.icon className={cn('w-10 h-10', feature.color)} strokeWidth={1.5} />
+                  </div>
+                  <p className="text-sm font-semibold text-neutral-700 whitespace-pre-line">{feature.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* Feature Marquee Section */}
         <div className="relative w-full overflow-hidden py-12">
