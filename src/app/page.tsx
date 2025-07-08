@@ -197,7 +197,7 @@ export default function LandingPage() {
           <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:flex" cursorClass="!text-pink-400" style={{ animationDelay: '600ms' }} />
 
           {/* Main Headline */}
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02]">
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02] animate-float" style={{ animationDelay: '200ms' }}>
             Your HR workflow just got
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 transition-all duration-300 hover:brightness-110">
@@ -246,7 +246,7 @@ export default function LandingPage() {
             <CollaboratorTag name="Hiring Manager" className="top-1/4 left-8 hidden lg:flex" cursorClass="transform -rotate-12" />
             <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden lg:flex" cursorClass="transform rotate-[120deg] !text-pink-400" />
 
-            <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02]">
+            <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02] animate-float" style={{ animationDelay: '300ms' }}>
               Review candidate profiles with precision
             </h2>
             <p className="text-lg text-blue-200 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-blue-100">
@@ -289,7 +289,7 @@ export default function LandingPage() {
                     tagColorClass="bg-yellow-500 text-black border-yellow-600/50"
                 />
 
-                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02]">
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] animate-float" style={{ animationDelay: '400ms' }}>
                     Manage, prioritize<br />& assign
                 </h2>
                 <p className="text-lg text-neutral-700 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600">
@@ -372,7 +372,7 @@ export default function LandingPage() {
                     style={{ animationDelay: '0.8s' }}
                 />
 
-                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02]">
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] animate-float" style={{ animationDelay: '500ms' }}>
                 Get approvals<br />at hyper speed
                 </h2>
                 <p className="text-lg text-neutral-700 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600">
@@ -422,7 +422,7 @@ export default function LandingPage() {
                     style={{ animationDelay: '0.7s' }}
                 />
 
-                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02]">
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] animate-float" style={{ animationDelay: '600ms' }}>
                     Sync with<br />your tools
                 </h2>
                 <p className="text-lg text-neutral-700 mb-12 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600">
@@ -491,12 +491,14 @@ export default function LandingPage() {
                       ))}
                     </div>
 
-                    <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-neutral-800 transition-transform duration-300 hover:scale-[1.02]">
-                      Super secure with
-                    </h2>
-                    <p className="text-4xl md:text-5xl font-bold tracking-tight mb-16 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300 hover:brightness-110">
-                      SOCII Type I Compliance
-                    </p>
+                    <div className="animate-float" style={{ animationDelay: '700ms' }}>
+                      <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-neutral-800 transition-transform duration-300 hover:scale-[1.02]">
+                        Super secure with
+                      </h2>
+                      <p className="text-4xl md:text-5xl font-bold tracking-tight mb-16 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300 hover:brightness-110">
+                        SOCII Type I Compliance
+                      </p>
+                    </div>
                     
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-x-12 gap-y-4 text-neutral-600">
                       <div className="flex items-center gap-2 transition-transform hover:scale-105">
@@ -527,12 +529,14 @@ export default function LandingPage() {
               
               <CursorIcon className="absolute top-1/3 left-1/3 h-8 w-8 text-white transform -rotate-12 animate-float" style={{ animationDuration: '8s' }} />
 
-              <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02]">
-                Reviews can move<br />in slow motionnn
-              </h2>
-              <p className="text-lg text-neutral-800 mb-24 max-w-lg mx-auto transition-colors duration-300 hover:text-neutral-900">
-                Screenshots are for memes. Not a precise and efficient review process
-              </p>
+              <div className="animate-float" style={{ animationDelay: '800ms' }}>
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02]">
+                  Reviews can move<br />in slow motionnn
+                </h2>
+                <p className="text-lg text-neutral-800 mb-24 max-w-lg mx-auto transition-colors duration-300 hover:text-neutral-900">
+                  Screenshots are for memes. Not a precise and efficient review process
+                </p>
+              </div>
 
               <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-full flex flex-col items-center gap-2">
                 <div className="bg-neutral-800 text-white text-sm rounded-lg px-4 py-2 mb-1 relative shadow-lg
@@ -556,12 +560,14 @@ export default function LandingPage() {
         {/* Eliminate Redundant Tools Section */}
         <section className="bg-white text-black py-20 sm:py-32 animate-fade-in" style={{ animationDelay: '800ms' }}>
           <div className="container mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-3 text-neutral-800 transition-transform duration-300 hover:scale-[1.02]">
-              Eliminate Redundant Tools.
-            </h2>
-            <p className="text-4xl md:text-5xl font-bold tracking-tight mb-16 bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-400 transition-all duration-300 hover:brightness-110">
-              No more "busy" work
-            </p>
+            <div className="animate-float" style={{ animationDelay: '900ms' }}>
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-3 text-neutral-800 transition-transform duration-300 hover:scale-[1.02]">
+                Eliminate Redundant Tools.
+              </h2>
+              <p className="text-4xl md:text-5xl font-bold tracking-tight mb-16 bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-400 transition-all duration-300 hover:brightness-110">
+                No more "busy" work
+              </p>
+            </div>
 
             {/* Icons with connecting line */}
             <div className="relative flex justify-center items-center my-16">
@@ -629,7 +635,7 @@ export default function LandingPage() {
             </div>
 
             {/* Main Headline */}
-            <div className="text-center">
+            <div className="text-center animate-float" style={{ animationDelay: '1s' }}>
               <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-neutral-800 transition-transform duration-300 hover:scale-[1.02]">
                 Collaboration tools
               </h2>
@@ -661,7 +667,7 @@ export default function LandingPage() {
         {/* What else can Agentic-HR do? Section */}
         <section className="bg-white text-black py-20 sm:py-32 animate-fade-in" style={{ animationDelay: '1000ms' }}>
           <div className="container mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-20 transition-transform duration-300 hover:scale-[1.02]">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-20 transition-transform duration-300 hover:scale-[1.02] animate-float" style={{ animationDelay: '1.1s' }}>
               What else can{' '}
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-400 transition-all duration-300 hover:brightness-110">
                 Agentic-HR
@@ -733,11 +739,13 @@ export default function LandingPage() {
               />
             </div>
 
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 text-neutral-800 transition-transform duration-300 hover:scale-[1.02]">
-              Consistent collaboration
-              <br />
-              experience across <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300 hover:brightness-110">all assets in one place</span>
-            </h2>
+            <div className="animate-float" style={{ animationDelay: '1.2s' }}>
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 text-neutral-800 transition-transform duration-300 hover:scale-[1.02]">
+                Consistent collaboration
+                <br />
+                experience across <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300 hover:brightness-110">all assets in one place</span>
+              </h2>
+            </div>
             <div className="flex justify-center my-10">
               <Button size="lg" asChild className="bg-black text-white hover:bg-neutral-800 rounded-full px-8 py-3 h-auto">
                 <Link href="/register">Try Now For Free</Link>
@@ -749,7 +757,7 @@ export default function LandingPage() {
         {/* Why Customers Love Us Section */}
         <section className="bg-neutral-50 text-black py-20 sm:py-32 animate-fade-in" style={{ animationDelay: '1300ms' }}>
           <div className="container mx-auto text-center">
-            <div className="flex justify-center items-center gap-4 mb-4">
+            <div className="flex justify-center items-center gap-4 mb-4 animate-float" style={{ animationDelay: '1.3s' }}>
               <Heart className="h-10 w-10 text-pink-500 fill-pink-500" />
               <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-neutral-800 transition-transform duration-300 hover:scale-[1.02]">
                 Why Customers Love Us
