@@ -1,4 +1,3 @@
-
 'use client'; // Required for hooks like usePathname, useRouter, useAuth
 
 import type { ReactNode } from 'react';
@@ -76,7 +75,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-md">
           <div className="flex items-center">
-            <SidebarTrigger className="md:hidden" />
+            <SidebarTrigger />
             {/* Breadcrumbs or page title could go here */}
           </div>
           <div className="flex items-center gap-2"> {/* Wrapper for UserNav and Copilot trigger */}
