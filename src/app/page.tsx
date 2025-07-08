@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import type { SVGProps, ReactNode } from 'react';
-import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor, MonitorPlay, SquarePen, ChevronRight, Asterisk, Heart } from 'lucide-react';
+import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor, MonitorPlay, SquarePen, ChevronRight, Asterisk, Heart, KanbanSquare } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -13,10 +13,10 @@ import { useState } from 'react';
 
 // Custom icons to match design
 const CustomPinCommentIcon = (props: SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" {...props}>
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-  </svg>
-);
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" {...props}>
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
 const CustomGuestModeIcon = (props: SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
         <circle cx="12" cy="12" r="10" />
@@ -40,15 +40,6 @@ const CustomCheckCircleIcon = (props: SVGProps<SVGSVGElement>) => (
 const CustomSparklesIcon = (props: SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
-    </svg>
-);
-const CustomKanbanIcon = (props: SVGProps<SVGSVGElement>) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-        <path d="M5 12V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2h-1" />
-        <line x1="9" y1="18" x2="9" y2="12" />
-        <line x1="12" y1="18" x2="12" y2="16" />
-        <line x1="15" y1="18" x2="15" y2="14" />
     </svg>
 );
 const CustomFlockIcon = (props: SVGProps<SVGSVGElement>) => (
@@ -93,15 +84,15 @@ const features = [
 ];
 
 const moreFeatures = [
-  { name: 'Pin Comment', icon: CustomPinCommentIcon, color: 'text-purple-400' },
-  { name: 'Guest Mode', icon: CustomGuestModeIcon, color: 'text-blue-400' },
-  { name: 'Mentions', icon: CustomAtSignIcon, color: 'text-yellow-500' },
-  { name: 'Approvals', icon: CustomCheckCircleIcon, color: 'text-green-500' },
-  { name: 'AI Copilot', icon: CustomSparklesIcon, color: 'text-violet-400' },
-  { name: 'In-built\nTask Manager', icon: CustomKanbanIcon, color: 'text-orange-400' },
-  { name: 'Flock Mode', icon: CustomFlockIcon, color: 'text-cyan-400' },
-  { name: 'Email & Slack\nNotifications', icon: CustomBellIcon, color: 'text-sky-400' },
-];
+    { name: 'Pin Comment', icon: CustomPinCommentIcon, color: 'text-purple-400' },
+    { name: 'Guest Mode', icon: CustomGuestModeIcon, color: 'text-blue-400' },
+    { name: 'Mentions', icon: CustomAtSignIcon, color: 'text-yellow-500' },
+    { name: 'Approvals', icon: CustomCheckCircleIcon, color: 'text-green-500' },
+    { name: 'AI Copilot', icon: CustomSparklesIcon, color: 'text-violet-400' },
+    { name: 'In-built\nTask Manager', icon: KanbanSquare, color: 'text-orange-400' },
+    { name: 'Flock Mode', icon: CustomFlockIcon, color: 'text-cyan-400' },
+    { name: 'Email & Slack\nNotifications', icon: CustomBellIcon, color: 'text-sky-400' },
+  ];
 
 
 // Abstract icons for the "Eliminate Redundant Tools" section
@@ -172,7 +163,7 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-black text-white antialiased">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-white text-black">
+      <header className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white text-black">
         <div className="container flex h-20 items-center justify-between mx-auto px-6">
           <Link href="/" className="flex items-center gap-2">
             <Logo className="h-8 w-8 text-primary" />
@@ -182,7 +173,7 @@ export default function LandingPage() {
             <Button variant="ghost" asChild>
               <Link href="/login">Log In</Link>
             </Button>
-            <Button asChild className="bg-black text-white hover:bg-neutral-800">
+            <Button asChild className="bg-black text-white hover:bg-neutral-800 rounded-full">
               <Link href="/register">Try Now for Free</Link>
             </Button>
           </div>
@@ -520,6 +511,38 @@ export default function LandingPage() {
                     </div>
 
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Slow Motion Review Section */}
+        <section className="bg-black py-20 sm:py-32">
+          <div className="container mx-auto px-6">
+            <div className="relative rounded-3xl bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-orange-400 via-amber-500 to-red-500 p-8 md:p-16 text-center overflow-hidden min-h-[600px] flex flex-col justify-center">
+              
+              <CursorIcon className="absolute top-1/3 left-1/3 h-8 w-8 text-white transform -rotate-12 animate-float" style={{ animationDuration: '8s' }} />
+
+              <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black">
+                Reviews can move<br />in slow motionnn
+              </h2>
+              <p className="text-lg text-neutral-800 mb-24 max-w-lg mx-auto">
+                Screenshots are for memes. Not a precise and efficient review process
+              </p>
+
+              <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-full flex flex-col items-center gap-2">
+                <div className="bg-neutral-800 text-white text-sm rounded-lg px-4 py-2 mb-1 relative shadow-lg
+                              after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-t-neutral-800 after:border-transparent">
+                  You are using more than 6 tools to review
+                </div>
+                <div className="flex items-center gap-3 bg-neutral-900/50 backdrop-blur-sm border border-neutral-700 rounded-2xl px-4 py-2 shadow-2xl">
+                  <Image src="https://placehold.co/32x32.png" width={32} height={32} alt="Gmail" data-ai-hint="gmail logo" className="rounded-md" />
+                  <Image src="https://placehold.co/32x32.png" width={32} height={32} alt="Slack" data-ai-hint="slack logo" className="rounded-md" />
+                  <Image src="https://placehold.co/32x32.png" width={32} height={32} alt="Trello" data-ai-hint="trello logo" className="rounded-md" />
+                  <Image src="https://placehold.co/32x32.png" width={32} height={32} alt="Zoom" data-ai-hint="zoom app logo" className="rounded-md" />
+                  <Image src="https://placehold.co/32x32.png" width={32} height={32} alt="Figma" data-ai-hint="figma logo" className="rounded-md" />
+                  <Image src="https://placehold.co/32x32.png" width={32} height={32} alt="Chrome" data-ai-hint="chrome logo" className="rounded-full" />
                 </div>
               </div>
             </div>
