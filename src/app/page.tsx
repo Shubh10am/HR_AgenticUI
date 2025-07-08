@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import type { SVGProps, ReactNode } from 'react';
-import { FileText, Briefcase, Users, BarChart3, PlayCircle, Mail, MessageSquare, Play, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe } from 'lucide-react';
+import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
@@ -67,6 +67,13 @@ const AssetIcon = ({
 );
 
 export default function LandingPage() {
+    const WorkflowStep = ({ icon: Icon, label }: { icon: React.ElementType; label: string }) => (
+        <div className="flex flex-col items-center gap-3 z-10 bg-black px-2">
+            <Icon className="h-6 w-6 text-neutral-600" />
+            <span className="text-sm text-neutral-500">{label}</span>
+        </div>
+    );
+
   return (
     <div className="flex flex-col min-h-screen bg-black text-white antialiased">
       {/* Header */}
@@ -87,45 +94,65 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Main Hero Section */}
+      {/* Main Content */}
       <main className="flex-1 flex flex-col justify-center">
+        
+        {/* NEW HERO SECTION */}
         <section className="container text-center py-20 sm:py-32 relative">
-          
-          {/* Floating decorative tags */}
-          <div className="absolute top-[calc(50%-10rem)] left-[15%] hidden lg:block animate-fade-in" style={{ animationDelay: '400ms' }}>
-            <CursorIcon className="h-6 w-6 text-cyan-400 transform -rotate-12 translate-x-16 -translate-y-2" />
-            <div className="bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 rounded-full px-4 py-1.5 text-sm">
-              HR Admin
-            </div>
+          {/* Floating tags */}
+          <div className="absolute top-[calc(50%-12rem)] left-[10%] xl:left-[15%] hidden lg:block animate-fade-in" style={{ animationDelay: '400ms' }}>
+              <CursorIcon className="h-6 w-6 text-cyan-400 transform -rotate-12 translate-x-20 -translate-y-2" />
+              <div className="bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 rounded-full px-4 py-1.5 text-sm">
+                  HR Admin
+              </div>
           </div>
           
-          <div className="absolute top-[calc(50%)] right-[15%] hidden lg:block animate-fade-in" style={{ animationDelay: '600ms' }}>
-             <div className="bg-pink-400/20 text-pink-300 border border-pink-400/30 rounded-full px-4 py-1.5 text-sm">
-              Employee
-            </div>
-            <CursorIcon className="h-6 w-6 text-pink-400 transform rotate-[135deg] -translate-x-16 translate-y-2" />
+          <div className="absolute top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:block animate-fade-in" style={{ animationDelay: '600ms' }}>
+              <div className="bg-pink-400/20 text-pink-300 border border-pink-400/30 rounded-full px-4 py-1.5 text-sm">
+                  Employee
+              </div>
+              <CursorIcon className="h-6 w-6 text-pink-400 transform rotate-[135deg] -translate-x-20 translate-y-2" />
           </div>
 
-
+          {/* Main Headline */}
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6">
-            Revolutionize Your HR,
+            Your HR workflow just got
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
-              Impossibly Fast
+              1000x more collaborative
             </span>
           </h1>
-          <p className="max-w-2xl mx-auto text-lg text-neutral-400 mb-10">
-            Get your team aligned with fewer meetings. Get back to focusing on people.
-          </p>
+
+          {/* Workflow diagram */}
+          <div className="relative my-24 flex w-full max-w-4xl mx-auto items-center justify-between">
+            <div className="absolute left-0 right-0 h-px bg-neutral-700 top-3 -z-10" />
+            
+            <WorkflowStep icon={FileText} label="Plan" />
+            <WorkflowStep icon={Users} label="Recruit" />
+            
+            <div className="flex flex-col items-center gap-2 z-10 bg-black px-2">
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse"></div>
+                <div className="h-3 w-3 rounded-full bg-purple-500 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                <div className="h-3 w-3 rounded-full bg-pink-500 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+              </div>
+              <span className="text-sm text-neutral-500 mt-1">Onboard</span>
+              <div className="mt-2 bg-gradient-to-r from-blue-400/30 via-purple-500/30 to-pink-500/30 border border-purple-400/50 rounded-full px-4 py-1.5 text-sm text-purple-200">
+                  HR Streamline AI
+              </div>
+            </div>
+            
+            <WorkflowStep icon={BarChart3} label="Report" />
+          </div>
+
+          {/* CTA Button */}
           <div className="flex justify-center gap-4">
-            <Button size="lg" asChild className="bg-neutral-800 text-white hover:bg-neutral-700 border border-neutral-700">
-              <Link href="/login">Log In</Link>
-            </Button>
-            <Button size="lg" asChild className="bg-white text-black hover:bg-neutral-200">
-              <Link href="/register">Try Now For Free</Link>
-            </Button>
+              <Button size="lg" asChild className="bg-white text-black hover:bg-neutral-200 rounded-full px-8 py-3 h-auto">
+                <Link href="/register">Try Now For Free</Link>
+              </Button>
           </div>
         </section>
+
 
         {/* Eliminate Redundant Tools Section */}
         <section className="bg-white text-black py-20 sm:py-32">
