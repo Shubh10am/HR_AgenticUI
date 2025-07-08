@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
-import ChatWidget from '@/components/chat-widget'; // Added ChatWidget import
+import ChatWidget from '@/components/chat-widget';
 
 // Custom icons to match design
 const CustomPinCommentIcon = (props: SVGProps<SVGSVGElement>) => (
