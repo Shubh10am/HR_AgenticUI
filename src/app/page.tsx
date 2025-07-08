@@ -204,13 +204,13 @@ export default function LandingPage() {
           )}
         >
           {/* Floating tags */}
-          <CollaboratorTag name="HR Admin" className="top-1/4 left-[8%] xl:left-[12%] hidden lg:flex animate-float" cursorClass="!text-cyan-400" />
+          <CollaboratorTag name="HR Admin" className="top-1/4 left-[8%] xl:left-[12%] hidden lg:flex animate-float" cursorClass="!text-cyan-400" style={{ top: '28%', left: '5%' }} />
           <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:flex animate-float-slow" cursorClass="!text-pink-400" />
 
           {/* Main Headline */}
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02]">
+          <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02]">
             <span className="block opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              Your HR workflow just got
+              Your creative workflow just got
             </span>
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 transition-all duration-300 hover:brightness-110 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
               1000x more collaborative
