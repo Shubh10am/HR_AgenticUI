@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import type { SVGProps } from 'react';
+import { FileText, Briefcase, Users, BarChart3, PlayCircle, Mail, MessageSquare } from 'lucide-react';
+
 
 // A simple cursor icon to match the design
 const CursorIcon = (props: SVGProps<SVGSVGElement>) => (
@@ -22,6 +24,15 @@ const CursorIcon = (props: SVGProps<SVGSVGElement>) => (
     <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
   </svg>
 );
+
+const features = [
+  { name: 'Resumes', icon: FileText, color: 'text-sky-400' },
+  { name: 'Interviews', icon: PlayCircle, color: 'text-green-400' },
+  { name: 'Onboarding', icon: Users, color: 'text-amber-400' },
+  { name: 'Reports', icon: BarChart3, color: 'text-rose-400' },
+  { name: 'Job Descriptions', icon: Briefcase, color: 'text-indigo-400' },
+  { name: 'Emails', icon: Mail, color: 'text-emerald-400' },
+];
 
 
 export default function LandingPage() {
@@ -46,7 +57,7 @@ export default function LandingPage() {
       </header>
 
       {/* Main Hero Section */}
-      <main className="flex-1 flex items-center">
+      <main className="flex-1 flex flex-col justify-center">
         <section className="container text-center py-20 sm:py-32 relative">
           
           {/* Floating decorative tags */}
@@ -84,6 +95,18 @@ export default function LandingPage() {
             </Button>
           </div>
         </section>
+
+        {/* Feature Marquee Section */}
+        <div className="relative w-full overflow-hidden py-12">
+            <div className="flex animate-marquee w-max">
+            {[...features, ...features].map((feature, index) => (
+              <div key={index} className="flex items-center gap-2 bg-neutral-800/80 border border-neutral-700 rounded-full px-5 py-2 mx-3 text-sm text-neutral-300">
+                <feature.icon className={`w-5 h-5 ${feature.color}`} />
+                {feature.name}
+              </div>
+            ))}
+            </div>
+        </div>
       </main>
 
       <footer className="border-t border-neutral-800">
@@ -91,6 +114,13 @@ export default function LandingPage() {
           © {new Date().getFullYear()} HR Streamline AI. All Rights Reserved.
         </div>
       </footer>
+
+      {/* Floating Chat Button */}
+      <div className="fixed bottom-6 right-6">
+          <Button size="icon" className="rounded-full h-14 w-14 bg-blue-600 hover:bg-blue-500 shadow-lg">
+            <MessageSquare className="h-7 w-7 text-white" />
+          </Button>
+      </div>
     </div>
   );
 }
