@@ -1,10 +1,11 @@
+
 'use client';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import type { SVGProps, ReactNode } from 'react';
-import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, Globe, UserCheck, Slack, Check, Flag, Clock, MoreHorizontal, Monitor, MonitorPlay, SquarePen, ChevronRight, Asterisk, Heart, KanbanSquare } from 'lucide-react';
+import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, Globe, UserCheck, Slack, Check, Flag, Clock, MoreHorizontal, Monitor, MonitorPlay, SquarePen, ChevronRight, Asterisk, Heart, KanbanSquare, FileSearch, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -155,6 +156,19 @@ const FeatureFlagIcon = (props: SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
+const HoverPill = ({ icon: Icon, text, className }: { icon: React.ElementType, text: string, className?: string }) => (
+  <div
+    className={cn(
+      'group absolute -top-4 -right-4 flex cursor-pointer items-center gap-2 rounded-full p-2 text-sm font-semibold transition-all duration-300 ease-in-out hover:gap-3 hover:p-3 hover:px-4',
+      className
+    )}
+  >
+    <Icon className="h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-90" />
+    <span className="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out group-hover:max-w-xs">
+      {text}
+    </span>
+  </div>
+);
 
 export default function LandingPage() {
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -246,8 +260,13 @@ export default function LandingPage() {
             <CollaboratorTag name="Hiring Manager" className="top-1/4 left-8 hidden lg:flex" cursorClass="transform -rotate-12" />
             <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden lg:flex" cursorClass="transform rotate-[120deg] !text-pink-400" />
 
-            <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02] animate-float" style={{ animationDelay: '300ms' }}>
+            <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02] animate-float relative" style={{ animationDelay: '300ms' }}>
               Review candidate profiles with precision
+              <HoverPill
+                icon={FileSearch}
+                text="Review"
+                className="bg-blue-400/20 text-blue-200"
+              />
             </h2>
             <p className="text-lg text-blue-200 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-blue-100">
               Collaborate directly on profiles and resumes for clearer feedback and faster decisions.
@@ -289,8 +308,13 @@ export default function LandingPage() {
                     tagColorClass="bg-yellow-500 text-black border-yellow-600/50"
                 />
 
-                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] animate-float" style={{ animationDelay: '400ms' }}>
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] animate-float relative" style={{ animationDelay: '400ms' }}>
                     Manage, prioritize<br />& assign
+                    <HoverPill
+                      icon={Flag}
+                      text="Prioritize"
+                      className="bg-yellow-600/20 text-neutral-800"
+                    />
                 </h2>
                 <p className="text-lg text-neutral-700 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600">
                     Use our built-in task manager or integrate your own.
@@ -372,8 +396,13 @@ export default function LandingPage() {
                     style={{ animationDelay: '0.8s' }}
                 />
 
-                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] animate-float" style={{ animationDelay: '500ms' }}>
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] animate-float relative" style={{ animationDelay: '500ms' }}>
                 Get approvals<br />at hyper speed
+                  <HoverPill
+                    icon={Check}
+                    text="Approve"
+                    className="bg-purple-600/20 text-neutral-800"
+                  />
                 </h2>
                 <p className="text-lg text-neutral-700 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600">
                 Built-in approvals for less back-and-forth-ing
@@ -422,8 +451,13 @@ export default function LandingPage() {
                     style={{ animationDelay: '0.7s' }}
                 />
 
-                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] animate-float" style={{ animationDelay: '600ms' }}>
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] animate-float relative" style={{ animationDelay: '600ms' }}>
                     Sync with<br />your tools
+                    <HoverPill
+                      icon={RefreshCw}
+                      text="Sync"
+                      className="bg-red-500/20 text-neutral-800"
+                    />
                 </h2>
                 <p className="text-lg text-neutral-700 mb-12 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600">
                     Seamlessly integrate your Slack or favorite task manager
