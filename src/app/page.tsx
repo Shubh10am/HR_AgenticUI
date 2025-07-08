@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import type { SVGProps, ReactNode } from 'react';
-import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor } from 'lucide-react';
+import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor, CheckCircle, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -280,7 +280,7 @@ export default function LandingPage() {
                 </div>
             </div>
         </section>
-
+        
         {/* Get Approvals at Hyper Speed Section */}
         <section className="container mx-auto py-20 sm:py-32">
             <div className="relative rounded-2xl bg-gradient-to-br from-violet-200 via-purple-200 to-indigo-200 p-8 md:p-16 text-center overflow-hidden">
@@ -335,6 +335,73 @@ export default function LandingPage() {
                     Mike Mulligan
                 </p>
                 </div>
+            </div>
+        </section>
+
+        {/* Sync With Your Tools Section */}
+        <section className="container mx-auto py-20 sm:py-32">
+            <div className="relative rounded-2xl bg-gradient-to-br from-rose-100 via-pink-100 to-red-100 p-8 md:p-16 text-center overflow-hidden">
+                <DevCollaboratorTag
+                    name="Developer"
+                    className="top-1/4 left-12 hidden lg:flex"
+                    cursorClass="text-orange-500"
+                    tagColorClass="bg-orange-300 text-orange-900 font-bold border-orange-400"
+                    style={{ animationDelay: '0.2s' }}
+                />
+                <DevCollaboratorTag
+                    name="Developer"
+                    className="bottom-1/4 right-12 hidden lg:flex"
+                    cursorClass="text-yellow-500"
+                    tagColorClass="bg-yellow-300 text-yellow-900 font-bold border-yellow-400"
+                    style={{ animationDelay: '0.7s' }}
+                />
+
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black">
+                    Sync with<br />your tools
+                </h2>
+                <p className="text-lg text-neutral-700 mb-12 max-w-2xl mx-auto">
+                    Seamlessly integrate your Slack or favorite task manager
+                </p>
+
+                <div className="relative max-w-sm mx-auto bg-white rounded-full shadow-lg p-2 pr-4 text-left text-black animate-float flex items-center gap-3" style={{ animationDuration: '9s' }}>
+                    <div className="bg-green-500 rounded-full h-6 w-6 flex items-center justify-center flex-shrink-0">
+                        <Check className="h-4 w-4 text-white" />
+                    </div>
+                    <p className="text-sm text-neutral-700">
+                        Let's change the color <span className="text-pink-500 font-semibold">@designer</span>
+                    </p>
+                    <Image
+                        src="https://placehold.co/32x32.png"
+                        alt="Designer Avatar"
+                        width={28}
+                        height={28}
+                        className="rounded-full ml-auto"
+                        data-ai-hint="woman face"
+                    />
+                </div>
+
+                <div className="flex justify-center items-center gap-3 md:gap-4 mt-12 flex-wrap">
+                    {[
+                        { name: 'Monday.com', hint: 'monday com logo' },
+                        { name: 'ClickUp', hint: 'clickup logo' },
+                        { name: 'Slack', hint: 'slack logo' },
+                        { name: 'Asana', hint: 'asana logo' },
+                    ].map(tool => (
+                        <div key={tool.name} className="flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-lg px-3 py-1.5 md:px-4 md:py-2 shadow-md text-black">
+                           {tool.name === 'Slack' ? (
+                               <Slack className="h-5 w-5 md:h-6 md:w-6" />
+                           ) : (
+                                <Image src={`https://placehold.co/24x24.png`} width={24} height={24} alt={`${tool.name} logo`} data-ai-hint={tool.hint} />
+                           )}
+                           <span className="font-semibold text-sm md:text-base">{tool.name}</span>
+                        </div>
+                    ))}
+                </div>
+                
+                <Link href="/integrations" className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-800 hover:text-black mt-16 group">
+                    VIEW INTEGRATIONS
+                    <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Link>
             </div>
         </section>
 
