@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import type { SVGProps, ReactNode } from 'react';
-import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor, MonitorPlay, SquarePen, ChevronRight } from 'lucide-react';
+import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor, MonitorPlay, SquarePen, ChevronRight, Asterisk } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { useState } from 'react';
 
 // Custom icons to match design
 const CustomPinCommentIcon = (props: SVGProps<SVGSVGElement>) => (
@@ -158,6 +159,9 @@ const FeatureFlagIcon = (props: SVGProps<SVGSVGElement>) => (
 
 
 export default function LandingPage() {
+    const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+    const secureText = "SECURE";
+
     const WorkflowStep = ({ icon: Icon, label }: { icon: React.ElementType; label: string }) => (
         <div className="flex flex-col items-center gap-3 z-10 bg-black px-2">
             <Icon className="h-6 w-6 text-neutral-600" />
@@ -467,6 +471,59 @@ export default function LandingPage() {
                     <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
             </div>
+        </section>
+
+        {/* Super Secure Section */}
+        <section className="bg-white text-black py-20 sm:py-32">
+          <div className="container mx-auto px-6">
+            <div className="p-1.5 rounded-[40px] bg-gradient-to-br from-blue-300 to-purple-400">
+              <div className="p-1.5 rounded-[35px] bg-white">
+                <div className="p-1.5 rounded-[30px] bg-gradient-to-br from-blue-200/50 to-purple-300/50">
+                  <div className="bg-white rounded-[25px] p-8 md:p-16 text-center">
+                    
+                    <div className="flex justify-center items-center gap-3 mb-8" onMouseLeave={() => setHoveredIndex(null)}>
+                      {secureText.split('').map((letter, index) => (
+                        <div
+                          key={index}
+                          onMouseEnter={() => setHoveredIndex(index)}
+                          className="bg-purple-100 border border-purple-200 rounded-lg p-2 cursor-default transition-all duration-300 flex items-center justify-center h-8 w-8"
+                        >
+                          {hoveredIndex === index ? (
+                            <span className="font-bold text-purple-600 text-lg animate-fade-in">{letter}</span>
+                          ) : (
+                            <Asterisk className="h-4 w-4 text-purple-500" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-neutral-800">
+                      Super secure with
+                    </h2>
+                    <p className="text-4xl md:text-5xl font-bold tracking-tight mb-16 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">
+                      SOCII Type I Compliance
+                    </p>
+                    
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-x-12 gap-y-4 text-neutral-600">
+                      <div className="flex items-center gap-2">
+                        <Check className="h-5 w-5 text-green-500" />
+                        <span>End-to-End data encryption</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="h-5 w-5 text-green-500" />
+                        <span>Dedicated Storage</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="h-5 w-5 text-green-500" />
+                        <span>SOC2 Compliant</span>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
 
