@@ -31,7 +31,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const [isCopilotOpen, setIsCopilotOpen] = useState(false); // Added state for copilot
 
   // Define routes that don't use this AppLayout (e.g., login, register)
-  const noAppLayoutRoutes = ['/login', '/register'];
+  const noAppLayoutRoutes = ['/login', '/register', '/'];
 
   if (noAppLayoutRoutes.includes(pathname)) {
     return <>{children}</>; // Render children directly for auth pages
@@ -58,7 +58,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     <SidebarProvider defaultOpen>
       <Sidebar variant="sidebar" collapsible="icon">
         <SidebarHeader className="p-4">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/dashboard" className="flex items-center gap-2">
             <Logo className="h-8 w-8 text-sidebar-primary" />
             <h1 className="text-xl font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
               HR Streamline AI

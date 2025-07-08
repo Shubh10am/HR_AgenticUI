@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -33,7 +32,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
   { href: '/email-assistance', label: 'Email Assistance', icon: MailPlus, tooltip: 'Email Assistance' },
   { href: '/gmail-inbox', label: 'Gmail Inbox', icon: Inbox, tooltip: 'Gmail Inbox' },
   { href: '/attendance-reporting', label: 'Attendance', icon: CalendarCheck, tooltip: 'Attendance & Reporting' },
@@ -70,7 +69,7 @@ export default function SidebarNav() {
           <Link href={item.href} passHref legacyBehavior>
             <a onClick={handleLinkClick} className="block w-full"> 
               <SidebarMenuButton
-                isActive={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))}
+                isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
                 tooltip={item.tooltip}
                 className="justify-start group-data-[collapsible=icon]:justify-center"
               >
@@ -84,5 +83,3 @@ export default function SidebarNav() {
     </SidebarMenu>
   );
 }
-
-    

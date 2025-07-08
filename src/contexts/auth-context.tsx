@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { EmployeeRole } from '@/models/Employee';
@@ -80,12 +79,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!isLoading) {
       const isAuthenticatedUser = !!user && !!token;
-      const authRoutes = ['/login', '/register'];
-      const isAuthRoute = authRoutes.includes(pathname);
+      
+      const publicOnlyRoutes = ['/login', '/register'];
+      const isPublicOnlyRoute = publicOnlyRoutes.includes(pathname);
+      const isLandingPage = pathname === '/';
 
-      if (isAuthenticatedUser && isAuthRoute) {
-        router.push('/'); 
-      } else if (!isAuthenticatedUser && !isAuthRoute) {
+      if (isAuthenticatedUser && isPublicOnlyRoute) {
+        router.push('/dashboard'); 
+      } else if (!isAuthenticatedUser && !isPublicOnlyRoute && !isLandingPage) {
         router.push('/login'); 
       }
     }
@@ -120,7 +121,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setToken(data.token);
       setUser(data.user);
       toast({ title: 'Login Successful', description: 'Welcome back!' });
-      router.push('/'); 
+      router.push('/dashboard'); 
       setIsLoading(false);
       return true;
     } catch (error) {
@@ -186,7 +187,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(guestUser);
     
     toast({ title: 'Continuing as Guest', description: 'Welcome! Some features may be limited.' });
-    router.push('/');
+    router.push('/dashboard');
     setIsLoading(false);
     return true;
   };
@@ -217,4 +218,3 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
-
