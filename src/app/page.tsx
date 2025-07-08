@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -56,7 +55,7 @@ interface CollaboratorTagProps {
 
 function CollaboratorTag({ name, className, cursorClass, style }: CollaboratorTagProps) {
   return (
-    <div className={cn("absolute flex items-center gap-2 animate-float", className)} style={style}>
+    <div className={cn("absolute flex items-center gap-2 transition-transform duration-300 hover:scale-105", className)} style={style}>
       <CursorIcon className={cn("h-6 w-6", cursorClass)} />
       <div className="bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 rounded-full px-4 py-1.5 text-sm">
         {name}
@@ -75,7 +74,7 @@ interface DevCollaboratorTagProps {
 
 function DevCollaboratorTag({ name, className, cursorClass, tagColorClass, style }: DevCollaboratorTagProps) {
   return (
-    <div className={cn("absolute flex items-center gap-2 animate-float", className)} style={style}>
+    <div className={cn("absolute flex items-center gap-2 transition-transform duration-300 hover:scale-105", className)} style={style}>
       <CursorIcon className={cn("h-6 w-6", cursorClass)} />
       <div className={cn("border rounded-full px-4 py-1.5 text-sm font-semibold", tagColorClass)}>
         {name}
@@ -143,7 +142,7 @@ export default function LandingPage() {
           <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:flex" cursorClass="!text-pink-400" style={{ animationDelay: '600ms' }} />
 
           {/* Main Headline */}
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02] animate-float-slow animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02] animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
             Your HR workflow just got
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 transition-all duration-300 hover:brightness-110">
@@ -190,7 +189,7 @@ export default function LandingPage() {
             <CollaboratorTag name="Hiring Manager" className="top-1/4 left-8 hidden lg:flex" cursorClass="transform -rotate-12 !text-cyan-400" />
             <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden lg:flex" cursorClass="transform rotate-[120deg] !text-pink-400" />
 
-            <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02] animate-float-slow relative animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+            <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02] relative animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
               Review candidate profiles with precision
             </h2>
             <p className="text-lg text-blue-200 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-blue-100 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
@@ -198,9 +197,9 @@ export default function LandingPage() {
             </p>
 
             <div className="relative max-w-2xl mx-auto border-2 border-dashed border-blue-400/50 rounded-2xl p-8 min-h-[250px] flex items-center justify-center animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
-              <div className="relative animate-float-slow" style={{ animationDelay: '0.2s' }}>
+              <div className="relative" style={{ animationDelay: '0.2s' }}>
                 <FileText className="h-24 w-24 text-pink-400/80" />
-                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2 animate-float-slow" style={{ animationDelay: '0.7s'}}>
+                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2" style={{ animationDelay: '0.7s'}}>
                     <CursorIcon className="h-8 w-8 text-yellow-300 transform -rotate-45" />
                     <div className="bg-yellow-300 text-black text-sm font-semibold rounded-full px-3 py-1 shadow-md whitespace-nowrap">
                         Jane Doe (You)
@@ -230,7 +229,7 @@ export default function LandingPage() {
                     tagColorClass="bg-yellow-500 text-black border-yellow-600/50"
                 />
 
-                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] animate-float-slow relative animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
                     Manage, prioritize<br />& assign
                 </h2>
                 <p className="text-lg text-neutral-700 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
@@ -238,7 +237,7 @@ export default function LandingPage() {
                 </p>
 
                 {/* Mock Task Card */}
-                <div className="relative max-w-lg mx-auto bg-white rounded-2xl shadow-2xl p-4 text-left text-black animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+                <div className="relative max-w-lg mx-auto bg-white rounded-2xl shadow-2xl p-4 text-left text-black animate-fade-in-up transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.5s' }}>
                     <div className="flex items-center justify-between border-b pb-3 mb-3">
                         <div className="flex items-center gap-2">
                             <Badge variant="outline" className="border-red-300 bg-red-50 text-red-700">
@@ -310,7 +309,7 @@ export default function LandingPage() {
                     style={{ animationDelay: '0.8s' }}
                 />
 
-                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] animate-float-slow relative animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
                 Get approvals<br />at hyper speed
                 </h2>
                 <p className="text-lg text-neutral-700 mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
@@ -318,7 +317,7 @@ export default function LandingPage() {
                 </p>
 
                 {/* Mock Approval Card */}
-                <div className="relative max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-8 text-center text-black animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+                <div className="relative max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-8 text-center text-black animate-fade-in-up transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.5s' }}>
                 <div className="relative inline-block mb-4">
                     <Image
                     src="https://randomuser.me/api/portraits/men/78.jpg"
@@ -362,14 +361,14 @@ export default function LandingPage() {
                     style={{ animationDelay: '0.7s' }}
                 />
 
-                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] animate-float-slow relative animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
                     Sync with<br />your tools
                 </h2>
                 <p className="text-lg text-neutral-700 mb-12 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                     Seamlessly integrate your Slack or favorite task manager
                 </p>
 
-                <div className="relative max-w-sm mx-auto bg-white rounded-full shadow-lg p-2 pr-4 text-left text-black animate-fade-in-up flex items-center gap-3" style={{ animationDelay: '0.5s' }}>
+                <div className="relative max-w-sm mx-auto bg-white rounded-full shadow-lg p-2 pr-4 text-left text-black animate-fade-in-up flex items-center gap-3 transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.5s' }}>
                     <div className="bg-green-500 rounded-full h-6 w-6 flex items-center justify-center flex-shrink-0">
                         <Check className="h-4 w-4 text-white" />
                     </div>
