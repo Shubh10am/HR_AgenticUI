@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import type { SVGProps, ReactNode } from 'react';
-import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor, CheckCircle, ChevronRight, SquarePen, MonitorPlay, Smile, AtSign, Sparkles, ListChecks, Bell } from 'lucide-react';
+import { FileText, Users, BarChart3, MessageSquare, Play, PlayCircle, Briefcase, Mail, FileJson, FileImage, FileSignature as FileSignatureIcon, Globe, UserCheck, Slack, Zoom, Check, Flag, Clock, MoreHorizontal, Monitor, CheckCircle, ChevronRight, SquarePen, MonitorPlay, Smile, AtSign, Sparkles, KanbanSquare, Bell } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -45,7 +45,7 @@ const moreFeatures = [
   { name: 'Mentions', icon: AtSign, color: 'text-yellow-500' },
   { name: 'Approvals', icon: CheckCircle, color: 'text-green-500' },
   { name: 'AI Copilot', icon: Sparkles, color: 'text-violet-400' },
-  { name: 'In-built\nTask Manager', icon: ListChecks, color: 'text-orange-400' },
+  { name: 'In-built\nTask Manager', icon: KanbanSquare, color: 'text-orange-400' },
   { name: 'Flock Mode', icon: Users, color: 'text-cyan-400' },
   { name: 'Email & Slack\nNotifications', icon: Bell, color: 'text-sky-400' },
 ];
