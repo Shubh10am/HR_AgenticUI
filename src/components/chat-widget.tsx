@@ -14,7 +14,7 @@ export default function ChatWidget() {
 
   return (
     <div className={cn(
-      "fixed bottom-4 right-4 z-50",
+      "fixed bottom-4 right-4 z-50 flex flex-col items-end",
       // When closed, the entire container is non-interactive.
       !isOpen && "pointer-events-none"
     )}>
