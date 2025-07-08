@@ -3,102 +3,91 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
-import { ArrowRight, Bot, Calendar, Mail, Zap } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { SVGProps } from 'react';
 
-interface FeatureCardProps {
-  icon: ReactNode;
-  title: string;
-  description: string;
-}
-
-const FeatureCard = ({ icon, title, description }: FeatureCardProps) => (
-  <div className="bg-card p-6 rounded-lg shadow-lg transition-transform transform hover:-translate-y-2">
-    <div className="flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 text-primary mb-4">
-      {icon}
-    </div>
-    <h3 className="text-xl font-bold mb-2">{title}</h3>
-    <p className="text-muted-foreground">{description}</p>
-  </div>
+// A simple cursor icon to match the design
+const CursorIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    stroke="currentColor"
+    strokeWidth="1"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
+  </svg>
 );
+
 
 export default function LandingPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
+    <div className="flex flex-col min-h-screen bg-black text-white antialiased">
+      {/* Header */}
+      <header className="sticky top-0 z-50 w-full">
+        <div className="container flex h-20 items-center justify-between mx-auto px-6">
           <Link href="/" className="flex items-center gap-2">
-            <Logo className="h-8 w-8 text-primary" />
+            <Logo className="h-8 w-8 text-white" />
             <span className="font-bold text-lg">HR Streamline AI</span>
           </Link>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" asChild>
+            <Button variant="ghost" asChild className="hover:bg-neutral-800 hover:text-white">
               <Link href="/login">Log In</Link>
             </Button>
-            <Button asChild>
-              <Link href="/register">Get Started <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            <Button asChild className="bg-white text-black hover:bg-neutral-200">
+              <Link href="/register">Try Now for Free</Link>
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="flex-1">
-        <section className="container text-center py-20 sm:py-32">
-          <div className="bg-primary/10 rounded-full px-4 py-1.5 text-sm font-medium text-primary inline-block mb-4">
-            Powered by Generative AI
+      {/* Main Hero Section */}
+      <main className="flex-1 flex items-center">
+        <section className="container text-center py-20 sm:py-32 relative">
+          
+          {/* Floating decorative tags */}
+          <div className="absolute top-[calc(50%-10rem)] left-[15%] hidden lg:block animate-fade-in" style={{ animationDelay: '400ms' }}>
+            <CursorIcon className="h-6 w-6 text-cyan-400 transform -rotate-12 translate-x-16 -translate-y-2" />
+            <div className="bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 rounded-full px-4 py-1.5 text-sm">
+              HR Admin
+            </div>
           </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4">
-            Revolutionize Your HR Workflow
+          
+          <div className="absolute top-[calc(50%)] right-[15%] hidden lg:block animate-fade-in" style={{ animationDelay: '600ms' }}>
+             <div className="bg-pink-400/20 text-pink-300 border border-pink-400/30 rounded-full px-4 py-1.5 text-sm">
+              Employee
+            </div>
+            <CursorIcon className="h-6 w-6 text-pink-400 transform rotate-[135deg] -translate-x-16 translate-y-2" />
+          </div>
+
+
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6">
+            Revolutionize Your HR,
+            <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+              Impossibly Fast
+            </span>
           </h1>
-          <p className="max-w-2xl mx-auto text-lg text-muted-foreground mb-8">
-            HR Streamline AI is an all-in-one intelligent assistant for HR operations, designed to automate tasks, enhance communication, and provide data-driven insights.
+          <p className="max-w-2xl mx-auto text-lg text-neutral-400 mb-10">
+            Get your team aligned with fewer meetings. Get back to focusing on people.
           </p>
           <div className="flex justify-center gap-4">
-            <Button size="lg" asChild>
-              <Link href="/register">Start for Free</Link>
+            <Button size="lg" asChild className="bg-neutral-800 text-white hover:bg-neutral-700 border border-neutral-700">
+              <Link href="/login">Log In</Link>
             </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="/login">Sign In</Link>
+            <Button size="lg" asChild className="bg-white text-black hover:bg-neutral-200">
+              <Link href="/register">Try Now For Free</Link>
             </Button>
-          </div>
-        </section>
-
-        <section id="features" className="bg-secondary py-20 sm:py-24">
-          <div className="container">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold">Features Built for Modern HR</h2>
-              <p className="max-w-xl mx-auto mt-4 text-muted-foreground">
-                From recruitment to daily management, our AI-powered tools have you covered.
-              </p>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <FeatureCard
-                icon={<Bot className="h-6 w-6" />}
-                title="AI Recruitment"
-                description="Generate job descriptions, analyze resumes for ATS scores, and conduct initial AI-powered interviews."
-              />
-              <FeatureCard
-                icon={<Mail className="h-6 w-6" />}
-                title="Email Assistance"
-                description="Draft professional email responses for common HR inquiries and announcements in seconds."
-              />
-              <FeatureCard
-                icon={<Calendar className="h-6 w-6" />}
-                title="Attendance & Leave"
-                description="Effortlessly track employee attendance, manage clock-ins/outs, and process leave requests."
-              />
-              <FeatureCard
-                icon={<Zap className="h-6 w-6" />}
-                title="Unified Hub"
-                description="Integrate with tools like Gmail, Slack, and GitHub to manage all your communications in one place."
-              />
-            </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t">
-        <div className="container py-6 text-center text-sm text-muted-foreground">
+      <footer className="border-t border-neutral-800">
+        <div className="container py-6 text-center text-sm text-neutral-500">
           © {new Date().getFullYear()} HR Streamline AI. All Rights Reserved.
         </div>
       </footer>
