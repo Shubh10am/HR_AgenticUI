@@ -110,12 +110,19 @@ export default function LandingPage() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
+          const index = sectionsRef.current.findIndex(ref => ref === entry.target);
+          if (index === -1) return;
+
           if (entry.isIntersecting) {
-            const index = sectionsRef.current.findIndex(ref => ref === entry.target);
-            if (index !== -1) {
-              setVisibleSections(prev => new Set(prev).add(index));
-              observer.unobserve(entry.target); // Stop observing once it's visible
-            }
+            setVisibleSections(prev => new Set(prev).add(index));
+          } else {
+            // When it leaves the viewport, remove it from the visible set
+            // so the animation can re-trigger on the next intersection.
+            setVisibleSections(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(index);
+              return newSet;
+            });
           }
         });
       },
