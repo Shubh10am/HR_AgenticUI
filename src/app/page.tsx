@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef, type SVGProps, type ReactNode } from 'react';
@@ -199,7 +200,7 @@ export default function LandingPage() {
         <section
           ref={(el) => (sectionsRef.current[0] = el)}
           className={cn(
-            "container text-center py-20 sm:py-32 relative group",
+            "container flex flex-col items-center text-center py-20 sm:py-32 relative group",
             visibleSections.has(0) ? "is-visible" : ""
           )}
         >
