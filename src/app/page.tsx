@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef, type SVGProps, type ReactNode } from 'react';
@@ -197,7 +196,7 @@ export default function LandingPage() {
       <main className="flex-1 flex flex-col justify-center">
 
         {/* HERO SECTION */}
-        <section 
+        <section
           ref={(el) => (sectionsRef.current[0] = el)}
           className={cn(
             "container text-center py-20 sm:py-32 relative group",
@@ -205,7 +204,7 @@ export default function LandingPage() {
           )}
         >
           {/* Floating tags */}
-          <CollaboratorTag name="HR Admin" className="top-[calc(50%-12rem)] left-[10%] xl:left-[15%] hidden lg:flex animate-float" cursorClass="!text-cyan-400" />
+          <CollaboratorTag name="HR Admin" className="top-1/4 left-[8%] xl:left-[12%] hidden lg:flex animate-float" cursorClass="!text-cyan-400" />
           <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:flex animate-float-slow" cursorClass="!text-pink-400" />
 
           {/* Main Headline */}
@@ -258,7 +257,7 @@ export default function LandingPage() {
         >
           <div className="group relative rounded-2xl bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 p-8 md:p-16 text-center overflow-hidden">
              <HoverPill icon={FileSearch} label="Review" variant="dark" />
-            
+
             {/* Floating elements */}
             <CollaboratorTag name="Hiring Manager" className="top-1/4 left-8 hidden lg:flex animate-float" cursorClass="transform -rotate-12 !text-cyan-400" />
             <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden lg:flex animate-float-slow" cursorClass="transform rotate-[120deg] !text-pink-400" />
@@ -330,7 +329,7 @@ export default function LandingPage() {
                         </div>
                         <MoreHorizontal className="h-5 w-5 text-neutral-400" />
                     </div>
-                    
+
                     <div className="flex items-start gap-3">
                         <Image
                             src="https://randomuser.me/api/portraits/men/75.jpg"
@@ -366,9 +365,9 @@ export default function LandingPage() {
                 </div>
             </div>
         </section>
-        
+
         {/* Get Approvals at Hyper Speed Section */}
-        <section 
+        <section
           ref={(el) => (sectionsRef.current[3] = el)}
           className={cn(
             "container mx-auto py-20 sm:py-32 group",
@@ -466,7 +465,7 @@ export default function LandingPage() {
                         ))}
                     </div>
                 </div>
-                
+
                 <Link href="/integrations" className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-800 hover:text-black mt-16 group opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
                     VIEW INTEGRATIONS
                     <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -475,7 +474,7 @@ export default function LandingPage() {
         </section>
 
         {/* Super Secure Section */}
-        <section 
+        <section
           ref={(el) => (sectionsRef.current[5] = el)}
           className={cn(
             "bg-white text-black py-20 sm:py-32 group",
@@ -487,7 +486,7 @@ export default function LandingPage() {
               <div className="p-1.5 rounded-[35px] bg-white">
                 <div className="p-1.5 rounded-[30px] bg-gradient-to-br from-blue-200/50 to-purple-300/50">
                   <div className="bg-white rounded-[25px] p-8 md:p-16 text-center">
-                    
+
                     <div className="flex justify-center items-center gap-3 mb-8" onMouseLeave={() => setHoveredIndex(null)}>
                       {secureText.split('').map((letter, index) => (
                         <div
@@ -512,7 +511,7 @@ export default function LandingPage() {
                         SOCII Type I Compliance
                       </p>
                     </div>
-                    
+
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-x-12 gap-y-4 text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                       <div className="flex items-center gap-2 transition-transform hover:scale-105">
                         <Check className="h-5 w-5 text-green-500" />
