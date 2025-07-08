@@ -196,8 +196,8 @@ export default function LandingPage() {
           )}
         >
           {/* Floating tags */}
-          <CollaboratorTag name="HR Admin" className="top-[calc(50%-12rem)] left-[10%] xl:left-[15%] hidden lg:flex" cursorClass="!text-cyan-400" />
-          <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:flex" cursorClass="!text-pink-400" />
+          <CollaboratorTag name="HR Admin" className="top-[calc(50%-12rem)] left-[10%] xl:left-[15%] hidden lg:flex animate-float" cursorClass="!text-cyan-400" />
+          <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:flex animate-float-slow" cursorClass="!text-pink-400" />
 
           {/* Main Headline */}
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02]">
@@ -251,8 +251,8 @@ export default function LandingPage() {
              <HoverPill icon={FileSearch} label="Review" variant="dark" />
             
             {/* Floating elements */}
-            <CollaboratorTag name="Hiring Manager" className="top-1/4 left-8 hidden lg:flex" cursorClass="transform -rotate-12 !text-cyan-400" />
-            <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden lg:flex" cursorClass="transform rotate-[120deg] !text-pink-400" />
+            <CollaboratorTag name="Hiring Manager" className="top-1/4 left-8 hidden lg:flex animate-float" cursorClass="transform -rotate-12 !text-cyan-400" />
+            <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden lg:flex animate-float-slow" cursorClass="transform rotate-[120deg] !text-pink-400" />
 
             <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
               Review candidate profiles with precision
@@ -288,14 +288,14 @@ export default function LandingPage() {
 
                 <DevCollaboratorTag
                     name="Developer"
-                    className="top-1/2 -translate-y-1/2 left-8 hidden lg:flex"
+                    className="top-1/2 -translate-y-1/2 left-8 hidden lg:flex animate-float"
                     cursorClass="text-pink-500"
                     tagColorClass="bg-pink-500 text-white border-pink-500/50"
                 />
 
                 <DevCollaboratorTag
                     name="Developer"
-                    className="top-1/2 -translate-y-1/2 right-8 hidden lg:flex"
+                    className="top-1/2 -translate-y-1/2 right-8 hidden lg:flex animate-float-slow"
                     cursorClass="text-yellow-600"
                     tagColorClass="bg-yellow-500 text-black border-yellow-600/50"
                 />
@@ -372,14 +372,14 @@ export default function LandingPage() {
                 {/* Floating Developer Tags */}
                 <DevCollaboratorTag
                     name="Developer"
-                    className="top-1/4 left-12 hidden lg:flex"
+                    className="top-1/4 left-12 hidden lg:flex animate-float"
                     cursorClass="text-lime-500"
                     tagColorClass="bg-lime-300 text-lime-900 font-bold border-lime-400"
                 />
 
                 <DevCollaboratorTag
                     name="Developer"
-                    className="bottom-1/4 right-12 hidden lg:flex"
+                    className="bottom-1/4 right-12 hidden lg:flex animate-float-slow"
                     cursorClass="text-pink-500"
                     tagColorClass="bg-pink-400 text-white font-bold border-pink-500"
                 />
@@ -429,13 +429,13 @@ export default function LandingPage() {
 
                 <DevCollaboratorTag
                     name="Developer"
-                    className="top-1/4 left-12 hidden lg:flex"
+                    className="top-1/4 left-12 hidden lg:flex animate-float"
                     cursorClass="text-orange-500"
                     tagColorClass="bg-orange-300 text-orange-900 font-bold border-orange-400"
                 />
                 <DevCollaboratorTag
                     name="Developer"
-                    className="bottom-1/4 right-12 hidden lg:flex"
+                    className="bottom-1/4 right-12 hidden lg:flex animate-float-slow"
                     cursorClass="text-yellow-500"
                     tagColorClass="bg-yellow-300 text-yellow-900 font-bold border-yellow-400"
                 />
