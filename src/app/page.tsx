@@ -36,15 +36,15 @@ const features = [
   { name: 'Emails', icon: Mail, color: 'text-emerald-400' },
 ];
 
-const dockIcons = [
-    { name: 'Gmail', src: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg', dataAiHint: 'gmail logo' },
-    { name: 'Slack', src: 'https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png', dataAiHint: 'slack logo' },
-    { name: 'Sheets', src: 'https://upload.wikimedia.org/wikipedia/commons/3/30/Google_Sheets_logo_%282014-2020%29.svg', dataAiHint: 'google sheets logo' },
-    { name: 'Zoom', src: 'https://cdn-icons-png.flaticon.com/512/3670/3670155.png', dataAiHint: 'zoom logo' },
-    { name: 'Teams', src: 'https://upload.wikimedia.org/wikipedia/commons/c/c9/Microsoft_Office_Teams_%282018%E2%80%93present%29.svg', dataAiHint: 'microsoft teams logo' },
-    { name: 'Meet', src: 'https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg', dataAiHint: 'google meet logo' }
-];
+// Abstract icons for the "Eliminate Redundant Tools" section
+const Icon1 = () => <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="20" fill="#FCA5A5"/><circle cx="20" cy="20" r="6" fill="#DC2626"/></svg>;
+const Icon2 = () => <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#818CF8"/><path d="M13 20H27" stroke="white" strokeWidth="3" strokeLinecap="round"/><path d="M20 13L20 27" stroke="white" strokeWidth="3" strokeLinecap="round"/></svg>;
+const Icon3 = () => <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="10" width="20" height="20" rx="10" fill="#60A5FA"/><path d="M16 20L20 24L25 16" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const Icon4 = () => <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 0L27.5 12.5L20 25L12.5 12.5L20 0Z" fill="#FCD34D"/><path d="M20 15L27.5 27.5L20 40L12.5 27.5L20 15Z" fill="#FBBF24"/></svg>;
+const Icon5 = () => <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 5L35 20L20 35L5 20L20 5Z" fill="#A78BFA"/><path d="M20 12L28 20L20 28L12 20L20 12Z" fill="white"/></svg>;
+const Icon6 = () => <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="20" fill="#4ADE80"/><circle cx="15" cy="15" r="4" fill="white"/><circle cx="25" cy="25" r="4" fill="white"/></svg>;
 
+const abstractIcons = [Icon1, Icon2, Icon3, Icon4, Icon5, Icon6];
 
 export default function LandingPage() {
   return (
@@ -107,39 +107,56 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Scattered Tools Section */}
-        <section className="container mx-auto py-20 sm:py-32">
-          <div className="bg-gradient-to-br from-orange-400 to-rose-500 rounded-3xl p-8 md:p-16 relative overflow-hidden text-center">
-            <CursorIcon className="h-10 w-10 text-white absolute top-16 left-1/2 transform -translate-x-12 animate-pulse" />
-            <h2 className="text-4xl md:text-6xl font-bold tracking-tight mb-4 text-neutral-800">
-              Scattered tools put HR in slow motion.
+        {/* Eliminate Redundant Tools Section */}
+        <section className="bg-white text-black py-20 sm:py-32">
+          <div className="container mx-auto text-center">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-3 text-neutral-800">
+              Eliminate Redundant Tools.
             </h2>
-            <p className="max-w-xl mx-auto text-lg text-neutral-700 mb-12">
-              Switching between email, Slack, and spreadsheets isn't just inefficient. It's a bottleneck.
+            <p className="text-4xl md:text-5xl font-bold tracking-tight mb-16 bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-400">
+              No more "busy" work
             </p>
-            
-            <div className="relative">
-                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-neutral-800 text-white text-sm px-4 py-2 rounded-lg shadow-lg">
-                    <p>You are using <strong className="font-bold">more than 6 tools</strong> to manage people.</p>
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-neutral-800"></div>
+
+            {/* Icons with connecting line */}
+            <div className="relative flex justify-center items-center my-16">
+              <div className="absolute w-10/12 sm:w-2/3 md:w-1/2 h-0.5 bg-rose-300"></div>
+              <div className="relative flex justify-between items-center w-10/12 sm:w-2/3 md:w-1/2">
+                {abstractIcons.map((Icon, index) => (
+                  <div key={index} className="bg-white p-1 rounded-full">
+                    <Icon />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Testimonial */}
+            <div className="mt-28 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
+              <div className="flex items-center gap-4">
+                <Image 
+                  src="https://placehold.co/64x64.png" 
+                  alt="Riley Hennigh" 
+                  width={64} 
+                  height={64} 
+                  className="rounded-full" 
+                  data-ai-hint="man face" 
+                />
+                <div>
+                  <p className="font-semibold text-pink-500">Riley Hennigh</p>
+                  <p className="text-sm text-neutral-500">Product Designer @Headway.io</p>
                 </div>
-                <div className="bg-black/20 backdrop-blur-md rounded-2xl p-4 inline-flex items-center gap-4 border border-white/10 shadow-xl">
-                    {dockIcons.map(icon => (
-                        <div key={icon.name} className="bg-white/10 p-2 rounded-lg">
-                            <Image 
-                                src={icon.src} 
-                                alt={`${icon.name} logo`} 
-                                width={40} 
-                                height={40} 
-                                className="object-contain"
-                                data-ai-hint={icon.dataAiHint}
-                            />
-                        </div>
-                    ))}
-                </div>
+              </div>
+              <div className="max-w-md text-left">
+                <p className="text-lg font-semibold text-neutral-800">
+                  Everybody has loved how easy it is to get started
+                </p>
+                <p className="text-neutral-600 mt-1">
+                  "HR Streamline has enabled fast feedback from stakeholders"
+                </p>
+              </div>
             </div>
           </div>
         </section>
+
 
         {/* Feature Marquee Section */}
         <div className="relative w-full overflow-hidden py-12">
