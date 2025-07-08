@@ -19,8 +19,8 @@ export default function ChatWidget() {
         className={cn(
           "transition-[opacity,transform] duration-300 ease-in-out origin-bottom-right",
           isOpen
-            ? "visible opacity-100 translate-y-0 scale-100"
-            : "invisible opacity-0 translate-y-4 scale-95 pointer-events-none"
+            ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
+            : "opacity-0 translate-y-4 scale-95 pointer-events-none"
         )}
       >
         <div className="w-[350px] h-[calc(100vh-100px)] max-h-[700px] bg-neutral-50 dark:bg-neutral-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden mb-2 border border-border">
