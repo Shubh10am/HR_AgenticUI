@@ -1,3 +1,4 @@
+
 'use client';
 
 import PageHeader from '@/components/page-header';
@@ -12,11 +13,21 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Lock, Bell, Palette, Plug, ChevronRight, KeyRound, Eye, EyeOff, Copy, Info, Loader2, Volume2, Sun, Moon, Laptop, VolumeX, Volume1, BarChart } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/contexts/auth-context';
 import { Slider } from '@/components/ui/slider';
 import { Progress } from '@/components/ui/progress';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 
 const NOTIFICATION_SOUND_ENABLED_KEY = 'notificationSoundEnabled';
@@ -30,7 +41,8 @@ export default function SettingsPage() {
   const [notificationVolume, setNotificationVolume] = useState(50);
   const { theme, setTheme } = useTheme();
   
-  const { token, setUserApiKey: setApiKeyInContext } = useAuth();
+  const { token, user, setUserApiKey: setApiKeyInContext } = useAuth();
+  const isGuest = user?.organizationId === 'guest-org-id';
 
   const [dbApiKey, setDbApiKey] = useState<string | null>(null);
   const [inputApiKey, setInputApiKey] = useState('');
@@ -38,11 +50,17 @@ export default function SettingsPage() {
   const [isKeyLoading, setIsKeyLoading] = useState(true);
   const [isKeySaving, setIsKeySaving] = useState(false);
 
-  // State for usage data
   const [tokenUsage, setTokenUsage] = useState(0);
   const [tokenLimit, setTokenLimit] = useState(500000);
   const [isUsageLoading, setIsUsageLoading] = useState(true);
   const [nextResetDate, setNextResetDate] = useState('');
+
+  // State for password change
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [isPasswordChanging, setIsPasswordChanging] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
   
   const fetchApiKey = useCallback(async () => {
@@ -100,7 +118,6 @@ export default function SettingsPage() {
   }, [token, toast]);
 
   useEffect(() => {
-    // Sound preferences from local storage
     if (typeof window !== 'undefined') {
       const storedSoundPreference = localStorage.getItem(NOTIFICATION_SOUND_ENABLED_KEY);
       if (storedSoundPreference !== null) {
@@ -116,7 +133,6 @@ export default function SettingsPage() {
     fetchApiKey();
     
   }, [fetchApiKey, fetchUsageData]);
-
 
   const handleMockAction = (action: string) => {
     toast({
@@ -146,6 +162,43 @@ export default function SettingsPage() {
       description: `Switched to ${value.charAt(0).toUpperCase() + value.slice(1)} theme.`,
     });
   };
+  
+  const handleChangePasswordSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (newPassword !== confirmNewPassword) {
+      toast({ title: 'Passwords do not match', variant: 'destructive' });
+      return;
+    }
+    if (!token) {
+      toast({ title: 'Authentication error', variant: 'destructive' });
+      return;
+    }
+    setIsPasswordChanging(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to change password.');
+      }
+      toast({ title: 'Password Changed Successfully' });
+      setIsPasswordDialogOpen(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsPasswordChanging(false);
+    }
+  };
+
 
   const handleSaveApiKeyToDb = async () => {
     if (!token) {
@@ -243,9 +296,44 @@ export default function SettingsPage() {
             <CardDescription>Manage your account security and details.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button variant="outline" className="w-full justify-start" onClick={() => handleMockAction('Change Password Clicked')}>
-              Change Password
-            </Button>
+             <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+              <DialogTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start" disabled={isGuest}>
+                      Change Password
+                  </Button>
+              </DialogTrigger>
+              <DialogContent>
+                  <DialogHeader>
+                      <DialogTitle>Change Your Password</DialogTitle>
+                      <DialogDescription>Enter your current password and a new one. Click save when you're done.</DialogDescription>
+                  </DialogHeader>
+                  <form id="change-password-form" onSubmit={handleChangePasswordSubmit}>
+                      <div className="grid gap-4 py-4">
+                          <div className="space-y-2">
+                              <Label htmlFor="currentPassword">Current Password</Label>
+                              <Input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required disabled={isPasswordChanging} />
+                          </div>
+                          <div className="space-y-2">
+                              <Label htmlFor="newPassword">New Password</Label>
+                              <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required disabled={isPasswordChanging} minLength={6} />
+                          </div>
+                          <div className="space-y-2">
+                              <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
+                              <Input id="confirmNewPassword" type="password" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} required disabled={isPasswordChanging} />
+                          </div>
+                      </div>
+                  </form>
+                   <DialogFooter>
+                      <DialogClose asChild>
+                          <Button type="button" variant="outline" disabled={isPasswordChanging}>Cancel</Button>
+                      </DialogClose>
+                      <Button type="submit" form="change-password-form" disabled={isPasswordChanging}>
+                          {isPasswordChanging && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Save Changes
+                      </Button>
+                  </DialogFooter>
+              </DialogContent>
+          </Dialog>
             <div className="flex items-center justify-between rounded-lg border p-3">
               <Label htmlFor="twoFactor" className="flex flex-col space-y-1">
                 <span>Two-Factor Authentication</span>
