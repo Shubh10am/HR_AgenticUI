@@ -248,12 +248,12 @@ export default function LandingPage() {
           )}
         >
           {/* Floating tags */}
-          <CollaboratorTag name="HR Admin" className="top-[calc(50%-4rem)] left-[6%] xl:left-[10%] hidden lg:flex animate-float" cursorClass="!text-cyan-400" />
-          <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:flex animate-float-slow" cursorClass="!text-pink-400" />
+          <CollaboratorTag name="HR Admin" className="top-[calc(50%-4rem)] left-[6%] xl:left-[10%] hidden md:flex animate-float" cursorClass="!text-cyan-400" />
+          <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden md:flex animate-float-slow" cursorClass="!text-pink-400" />
 
           {/* Main Headline */}
           <div className="flex flex-col items-center">
-             <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02] text-center">
+             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02] text-center">
                 <span className="block opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
                 Your creative workflow just got
                 </span>
@@ -264,13 +264,13 @@ export default function LandingPage() {
           </div>
 
           {/* Workflow diagram */}
-          <div className="relative my-16 sm:my-24 flex w-full max-w-4xl mx-auto items-center justify-around sm:justify-between opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-            <div className="absolute left-0 right-0 h-px bg-neutral-700 top-3 -z-10" />
+          <div className="relative my-16 sm:my-24 flex w-full max-w-4xl mx-auto items-center justify-around flex-wrap gap-4 sm:gap-0 sm:flex-nowrap sm:justify-between opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            <div className="absolute left-0 right-0 h-px bg-neutral-700 top-3 -z-10 hidden sm:block" />
 
             <WorkflowStep icon={FileText} label="Plan" />
             <WorkflowStep icon={Users} label="Recruit" />
 
-            <div className="flex flex-col items-center gap-2 z-10 bg-black px-2">
+            <div className="flex flex-col items-center gap-2 z-10 bg-black px-2 w-full sm:w-auto order-first sm:order-none">
               <div className="flex items-center gap-2">
                 <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse"></div>
                 <div className="h-3 w-3 rounded-full bg-purple-500 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
@@ -305,10 +305,10 @@ export default function LandingPage() {
              <HoverPill icon={FileSearch} label="Review" variant="dark" />
 
             {/* Floating elements */}
-            <CollaboratorTag name="Hiring Manager" className="top-1/4 left-8 hidden lg:flex animate-float" cursorClass="transform -rotate-12 !text-cyan-400" />
-            <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden lg:flex animate-float-slow" cursorClass="transform rotate-[120deg] !text-pink-400" />
+            <CollaboratorTag name="Hiring Manager" className="top-1/4 left-8 hidden md:flex animate-float" cursorClass="transform -rotate-12 !text-cyan-400" />
+            <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden md:flex animate-float-slow" cursorClass="transform rotate-[120deg] !text-pink-400" />
 
-            <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
+            <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
               Review candidate profiles with precision
             </h2>
             <p className="text-base sm:text-lg text-blue-200 mb-8 sm:mb-12 md:mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-blue-100 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
@@ -342,19 +342,19 @@ export default function LandingPage() {
 
                 <DevCollaboratorTag
                     name="Developer"
-                    className="top-1/2 -translate-y-1/2 left-8 hidden lg:flex animate-float"
+                    className="top-1/2 -translate-y-1/2 left-8 hidden md:flex animate-float"
                     cursorClass="text-pink-500"
                     tagColorClass="bg-pink-500 text-white border-pink-500/50"
                 />
 
                 <DevCollaboratorTag
                     name="Developer"
-                    className="top-1/2 -translate-y-1/2 right-8 hidden lg:flex animate-float-slow"
+                    className="top-1/2 -translate-y-1/2 right-8 hidden md:flex animate-float-slow"
                     cursorClass="text-yellow-600"
                     tagColorClass="bg-yellow-500 text-black border-yellow-600/50"
                 />
 
-                <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
+                <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
                     Manage, prioritize<br />& assign
                 </h2>
                 <p className="text-base sm:text-lg text-neutral-700 mb-8 sm:mb-12 md:mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
@@ -425,19 +425,19 @@ export default function LandingPage() {
 
                 <DevCollaboratorTag
                     name="Manager"
-                    className="top-1/4 left-12 hidden lg:flex animate-float"
+                    className="top-1/4 left-12 hidden md:flex animate-float"
                     cursorClass="text-lime-500"
                     tagColorClass="bg-lime-300 text-lime-900 font-bold border-lime-400"
                 />
 
                 <DevCollaboratorTag
                     name="Team Lead"
-                    className="bottom-1/4 right-12 hidden lg:flex animate-float-slow"
+                    className="bottom-1/4 right-12 hidden md:flex animate-float-slow"
                     cursorClass="text-pink-500"
                     tagColorClass="bg-pink-400 text-white font-bold border-pink-500"
                 />
 
-                <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
+                <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
                 Get approvals<br />at hyper speed
                 </h2>
                 <p className="text-base sm:text-lg text-neutral-700 mb-8 sm:mb-12 md:mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
@@ -481,18 +481,18 @@ export default function LandingPage() {
 
                 <DevCollaboratorTag
                     name="Administrator"
-                    className="top-1/4 left-12 hidden lg:flex animate-float"
+                    className="top-1/4 left-12 hidden md:flex animate-float"
                     cursorClass="text-orange-500"
                     tagColorClass="bg-orange-300 text-orange-900 font-bold border-orange-400"
                 />
                 <DevCollaboratorTag
                     name="Product Manager"
-                    className="bottom-1/2 right-12 hidden lg:flex animate-float-slow"
+                    className="bottom-1/2 right-12 hidden md:flex animate-float-slow"
                     cursorClass="text-yellow-500"
                     tagColorClass="bg-yellow-300 text-yellow-900 font-bold border-yellow-400"
                 />
 
-                <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
+                <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
                     Sync with<br />your tools
                 </h2>
                 <p className="text-base sm:text-lg text-neutral-700 mb-8 sm:mb-12 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
@@ -502,7 +502,7 @@ export default function LandingPage() {
                 <div className="relative w-full max-w-4xl mx-auto overflow-hidden mt-12 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                     <div className="flex animate-marquee">
                         {[...tools, ...tools].map((tool, index) => (
-                            <div key={`${tool.name}-${index}`} className="flex-shrink-0 flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-lg px-4 py-2 shadow-md text-black mx-4">
+                            <div key={`${tool.name}-${index}`} className="flex-shrink-0 flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-lg px-4 py-2 shadow-md text-black mx-2 sm:mx-4">
                                 <Image src={tool.logoUrl} width={24} height={24} alt={`${tool.name} logo`} data-ai-hint={tool.hint} className="object-contain" />
                                 <span className="font-semibold text-sm md:text-base">{tool.name}</span>
                             </div>
