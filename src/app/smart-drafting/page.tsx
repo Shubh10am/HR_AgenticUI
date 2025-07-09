@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Edit3, Save, XCircle, Send, Copy, FileText } from 'lucide-react';
+import { Loader2, Wand2, Send, Copy, FileText } from 'lucide-react';
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, type GenerateDraftEmailResponsesOutput } from '@/ai/flows/draft-email-response';
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -22,28 +22,28 @@ interface EmailDraft {
 
 export default function SmartDraftingPage() {
   const [prompt, setPrompt] = useState('');
-  const [composerOriginalBody, setComposerOriginalBody] = useState('');
-  const [composerEditableBody, setComposerEditableBody] = useState('');
   const [isGeneratingFromPrompt, setIsGeneratingFromPrompt] = useState(false);
-  const [isEditingComposerBody, setIsEditingComposerBody] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // State for the composer
   const [recipients, setRecipients] = useState('');
   const [subject, setSubject] = useState('');
+  const [composerBody, setComposerBody] = useState(''); // Simplified state for the body
   const [selectedTeam, setSelectedTeam] = useState('');
   
+  // State for generated drafts
   const [promptGeneratedDrafts, setPromptGeneratedDrafts] = useState<EmailDraft[]>([]);
 
 
   useEffect(() => {
+    // This effect runs once on mount to check for a draft passed from the Email Assistance page.
     const draftBodyFromAssistance = localStorage.getItem('selectedEmailDraftForSmartDrafting');
     if (draftBodyFromAssistance) {
-      setComposerOriginalBody(draftBodyFromAssistance);
-      setComposerEditableBody(draftBodyFromAssistance);
-      // Subject is not passed from email assistance, so user needs to fill it
+      setComposerBody(draftBodyFromAssistance);
+      // Subject and recipients must be filled manually by the user.
       setSubject(''); 
-      setIsEditingComposerBody(false); 
+      setRecipients('');
       setPromptGeneratedDrafts([]); 
       localStorage.removeItem('selectedEmailDraftForSmartDrafting');
       toast({
@@ -51,7 +51,7 @@ export default function SmartDraftingPage() {
         description: "Email body populated from Email Assistance. Please add recipients and a subject.",
       });
     }
-  }, []);
+  }, [toast]);
 
   async function handleSubmitPrompt(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -65,10 +65,8 @@ export default function SmartDraftingPage() {
     }
     setIsGeneratingFromPrompt(true);
     setPromptGeneratedDrafts([]); 
-    setComposerOriginalBody(''); 
-    setComposerEditableBody('');
-    setSubject(''); // Clear subject as well when generating new options
-    setIsEditingComposerBody(false);
+    setComposerBody(''); 
+    setSubject(''); // Clear subject when generating new options
     
     try {
       const userApiKey = localStorage.getItem('userApiKey');
@@ -102,44 +100,24 @@ export default function SmartDraftingPage() {
 
   const handleUsePromptGeneratedDraft = (draft: EmailDraft) => {
     setSubject(draft.subject);
-    setComposerOriginalBody(draft.body);
-    setComposerEditableBody(draft.body);
-    setIsEditingComposerBody(false); 
-    setPromptGeneratedDrafts([]); 
+    setComposerBody(draft.body);
+    setPromptGeneratedDrafts([]); // Clear options after one is chosen
     toast({
       title: "Draft Loaded into Composer",
-      description: "Selected draft subject and body are now populated.",
+      description: "Selected draft is now ready to be edited and sent.",
     });
-  };
-
-  const handleEditComposerBody = () => {
-    setIsEditingComposerBody(true);
-  };
-
-  const handleSaveComposerBody = () => {
-    setComposerOriginalBody(composerEditableBody); 
-    setIsEditingComposerBody(false);
-    toast({
-      title: "Draft Saved",
-      description: "Your changes to the email body have been saved.",
-    });
-  };
-
-  const handleCancelEditComposerBody = () => {
-    setComposerEditableBody(composerOriginalBody); 
-    setIsEditingComposerBody(false);
   };
 
   const handleCopy = () => {
-    if (!composerEditableBody && !composerOriginalBody) {
-        toast({ title: "Nothing to Copy", description: "Generate or load a draft first.", variant: "destructive" });
+    if (!composerBody.trim()) {
+        toast({ title: "Nothing to Copy", description: "The email body is empty.", variant: "destructive" });
         return;
     }
-    const textToCopy = `Subject: ${subject}\n\nTo: ${selectedTeam && selectedTeam !== NONE_TEAM_VALUE ? selectedTeam : recipients || 'N/A'}\n\nBody:\n${isEditingComposerBody ? composerEditableBody : composerOriginalBody}`;
+    const textToCopy = `Subject: ${subject}\n\nTo: ${selectedTeam && selectedTeam !== NONE_TEAM_VALUE ? selectedTeam : recipients || 'N/A'}\n\nBody:\n${composerBody}`;
     navigator.clipboard.writeText(textToCopy);
     toast({
       title: "Copied to Clipboard",
-      description: "The email content (To, Subject, Body) has been copied.",
+      description: "The email content has been copied.",
     });
   };
 
@@ -160,7 +138,7 @@ export default function SmartDraftingPage() {
       });
       return;
     }
-    if (!composerEditableBody.trim() && !composerOriginalBody.trim()) { // Check both for safety
+    if (!composerBody.trim()) {
         toast({
         title: "Email Body Empty",
         description: "Please ensure the email body is not empty.",
@@ -173,7 +151,7 @@ export default function SmartDraftingPage() {
     console.log("Mock Send:", {
       to: finalRecipients,
       subject,
-      body: isEditingComposerBody ? composerEditableBody : composerOriginalBody,
+      body: composerBody,
     });
     toast({
       title: "Email Sent (Mock)",
@@ -189,14 +167,14 @@ export default function SmartDraftingPage() {
     <>
       <PageHeader
         title="Smart Email Drafting & Composer"
-        description="Generate, compose, and (mock) send professional emails. Load drafts from Email Assistance or generate new ones below."
+        description="Generate, compose, and (mock) send professional emails. Write manually or generate drafts with AI."
       />
       <div className={mainGridClasses}>
         <div className="lg:col-span-1 space-y-6">
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle>Email Prompt</CardTitle>
-              <CardDescription>Generate multiple email body options with subjects based on your keywords.</CardDescription>
+              <CardDescription>Generate multiple email options with subjects based on your keywords.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmitPrompt} className="space-y-4">
@@ -313,56 +291,25 @@ export default function SmartDraftingPage() {
               />
             </div>
             
-            <div>
+            <div className="space-y-2">
                 <Label htmlFor="emailBody">Body</Label>
-                {(!composerOriginalBody && !composerEditableBody && !isGeneratingFromPrompt && promptGeneratedDrafts.length === 0) && (
-                  <div className="mt-1 border rounded-md bg-muted min-h-[200px] flex items-center justify-center">
-                    <p className="text-center text-muted-foreground p-4">
-                        Email body will appear here. Load from Email Assistance, or generate options using the prompt on the left and select one.
-                    </p>
-                  </div>
-                )}
-                {(composerOriginalBody || composerEditableBody) && (
-                    isEditingComposerBody ? (
-                    <Textarea
-                        id="emailBody"
-                        value={composerEditableBody}
-                        onChange={(e) => setComposerEditableBody(e.target.value)}
-                        className="mt-1 min-h-[200px] text-sm bg-background"
-                        placeholder="Your email content..."
-                    />
-                    ) : ( 
-                    <div className="mt-1 min-h-[200px] p-3 text-sm whitespace-pre-wrap border rounded-md bg-secondary/50">
-                        {composerEditableBody || composerOriginalBody}
-                    </div>
-                    )
-                )}
+                <Textarea
+                    id="emailBody"
+                    value={composerBody}
+                    onChange={(e) => setComposerBody(e.target.value)}
+                    className="mt-1 min-h-[200px] text-sm bg-background"
+                    placeholder="Write your email content here, or generate options on the left..."
+                />
             </div>
 
-            {(composerOriginalBody || composerEditableBody) && (
-              <div className="mt-4 flex flex-wrap justify-end gap-2">
-                <Button variant="outline" size="sm" onClick={handleCopy}>
-                  <Copy className="mr-2 h-4 w-4" /> Copy
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+                <Button onClick={handleMockSend} disabled={isGeneratingFromPrompt}>
+                    <Send className="mr-2 h-4 w-4" /> Send Email (Mock)
                 </Button>
-                {isEditingComposerBody ? (
-                  <>
-                    <Button size="sm" onClick={handleSaveComposerBody} variant="default">
-                      <Save className="mr-2 h-4 w-4" /> Save Changes
-                    </Button>
-                    <Button size="sm" onClick={handleCancelEditComposerBody} variant="ghost">
-                      <XCircle className="mr-2 h-4 w-4" /> Cancel
-                    </Button>
-                  </>
-                ) : (
-                  <Button size="sm" onClick={handleEditComposerBody} variant="outline" disabled={!composerOriginalBody && !composerEditableBody}>
-                    <Edit3 className="mr-2 h-4 w-4" /> Edit Body
-                  </Button>
-                )}
-              </div>
-            )}
-            <Button onClick={handleMockSend} className="w-full mt-4" disabled={(!composerOriginalBody && !composerEditableBody && !subject.trim()) || isGeneratingFromPrompt}>
-                <Send className="mr-2 h-4 w-4" /> Send Email (Mock)
-            </Button>
+                <Button variant="outline" size="sm" onClick={handleCopy}>
+                  <Copy className="mr-2 h-4 w-4" /> Copy Content
+                </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
