@@ -499,7 +499,7 @@ export default function LandingPage() {
             </div>
 
             {/* Tooltip and Icon Bar */}
-            <div className="absolute bottom-12 sm:bottom-16 left-1/2 -translate-x-1/2 w-full max-w-xs sm:max-w-sm flex flex-col items-center opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            <div className="absolute bottom-12 sm:bottom-16 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
               <div className="relative bg-neutral-900 text-white rounded-lg px-4 py-2 mb-3 shadow-lg">
                 <p className="text-sm text-center">
                   You are using <span className="font-bold">more than 6 tools</span> to review
