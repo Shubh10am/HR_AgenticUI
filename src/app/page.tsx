@@ -695,7 +695,7 @@ export default function LandingPage() {
         <section
           ref={(el) => (sectionsRef.current[8] = el)}
           className={cn(
-            "container relative mx-auto py-16 sm:py-24 md:py-32 group",
+            "container relative mx-auto px-4 sm:px-6 py-16 sm:py-24 md:py-32 group",
             visibleSections.has(8) ? "is-visible" : ""
           )}
         >
