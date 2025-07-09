@@ -126,6 +126,7 @@ export default function LandingPage() {
           if (entry.isIntersecting) {
             setVisibleSections(prev => new Set(prev).add(index));
           } else {
+            // This ensures animations re-trigger on scroll up/down
             setVisibleSections(prev => {
               const newSet = new Set(prev);
               newSet.delete(index);
@@ -203,7 +204,7 @@ export default function LandingPage() {
           )}
         >
           {/* Floating tags */}
-          <CollaboratorTag name="HR Admin" className="top-1/4 left-[8%] xl:left-[12%] hidden lg:flex animate-float" cursorClass="!text-cyan-400" style={{ top: '28%', left: '5%' }} />
+          <CollaboratorTag name="HR Admin" className="top-1/4 left-[8%] xl:left-[12%] hidden lg:flex animate-float" cursorClass="!text-cyan-400" style={{ top: '35%', left: '3%' }} />
           <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:flex animate-float-slow" cursorClass="!text-pink-400" />
 
           {/* Main Headline */}
@@ -254,7 +255,7 @@ export default function LandingPage() {
             visibleSections.has(1) ? "is-visible" : ""
           )}
         >
-          <div className="group relative rounded-2xl bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 p-6 sm:p-8 md:p-16 text-center overflow-hidden">
+          <div className="group relative rounded-2xl bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 p-6 sm:p-8 md:p-16 text-center overflow-hidden flex flex-col items-center">
              <HoverPill icon={FileSearch} label="Review" variant="dark" />
 
             {/* Floating elements */}
@@ -290,7 +291,7 @@ export default function LandingPage() {
             visibleSections.has(2) ? "is-visible" : ""
           )}
         >
-            <div className="group relative rounded-2xl bg-gradient-to-br from-yellow-200 via-yellow-300 to-amber-300 p-6 sm:p-8 md:p-16 text-center overflow-hidden">
+            <div className="group relative rounded-2xl bg-gradient-to-br from-yellow-200 via-yellow-300 to-amber-300 p-6 sm:p-8 md:p-16 text-center overflow-hidden flex flex-col items-center">
                 <HoverPill icon={FeatureFlagIcon} label="Prioritize" />
 
                 <DevCollaboratorTag
@@ -373,7 +374,7 @@ export default function LandingPage() {
             visibleSections.has(3) ? "is-visible" : ""
           )}
         >
-            <div className="group relative rounded-2xl bg-gradient-to-br from-violet-200 via-purple-200 to-indigo-200 p-6 sm:p-8 md:p-16 text-center overflow-hidden">
+            <div className="group relative rounded-2xl bg-gradient-to-br from-violet-200 via-purple-200 to-indigo-200 p-6 sm:p-8 md:p-16 text-center overflow-hidden flex flex-col items-center">
                 <HoverPill icon={Check} label="Approve" />
 
                 <DevCollaboratorTag
@@ -429,7 +430,7 @@ export default function LandingPage() {
             visibleSections.has(4) ? "is-visible" : ""
           )}
         >
-            <div className="group relative rounded-2xl bg-gradient-to-br from-rose-100 via-pink-100 to-red-100 p-6 sm:p-8 md:p-16 text-center overflow-hidden">
+            <div className="group relative rounded-2xl bg-gradient-to-br from-rose-100 via-pink-100 to-red-100 p-6 sm:p-8 md:p-16 text-center overflow-hidden flex flex-col items-center">
                 <HoverPill icon={RefreshCw} label="Sync" />
 
                 <DevCollaboratorTag
@@ -531,7 +532,7 @@ export default function LandingPage() {
             <div className="p-1.5 rounded-[30px] sm:rounded-[40px] bg-gradient-to-br from-blue-300 to-purple-400">
               <div className="p-1.5 rounded-[25px] sm:rounded-[35px] bg-white">
                 <div className="p-1.5 rounded-[20px] sm:rounded-[30px] bg-gradient-to-br from-blue-200/50 to-purple-300/50">
-                  <div className="bg-white rounded-[15px] sm:rounded-[25px] p-6 sm:p-8 md:p-16 text-center">
+                  <div className="bg-white rounded-[15px] sm:rounded-[25px] p-6 sm:p-8 md:p-16 text-center flex flex-col items-center">
 
                     <div className="flex justify-center items-center flex-wrap gap-1.5 sm:gap-3 mb-8" onMouseLeave={() => setHoveredIndex(null)}>
                       {secureText.split('').map((letter, index) => (
