@@ -479,10 +479,10 @@ export default function LandingPage() {
             visibleSections.has(6) ? "is-visible" : ""
           )}
         >
-          <div className="relative rounded-2xl bg-gradient-to-br from-orange-400 via-red-500 to-rose-600 p-6 sm:p-8 md:p-16 text-center overflow-hidden min-h-[550px] sm:min-h-[600px] flex flex-col justify-center items-center">
+          <div className="relative rounded-2xl bg-gradient-to-br from-orange-400 via-red-500 to-rose-600 p-6 sm:p-8 md:p-16 text-center overflow-hidden min-h-[550px] sm:min-h-[600px] flex flex-col justify-around items-center">
             
             {/* Cursor + Spinning Wheel */}
-            <div className="absolute top-[20%] sm:top-1/4 left-1/2 -translate-x-1/2 flex items-center gap-2 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+            <div className="flex items-center gap-2 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
               <CursorIcon className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
               <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-[conic-gradient(from_90deg_at_50%_50%,#F59E0B_0%,#EF4444_25%,#8B5CF6_50%,#3B82F6_75%,#4ADE80_100%)] animate-slow-spin"></div>
             </div>
@@ -498,9 +498,9 @@ export default function LandingPage() {
                 Screenshots are for memes. Not precise and efficient review process
               </p>
             </div>
-
+          
             {/* Tooltip and Icon Bar */}
-            <div className="absolute bottom-12 sm:bottom-16 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            <div className="flex flex-col items-center opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
               <div className="relative bg-neutral-900 text-white rounded-lg px-4 py-2 mb-3 shadow-lg">
                 <p className="text-sm text-center">
                   You are using <span className="font-bold">more than 6 tools</span> to review
