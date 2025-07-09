@@ -526,7 +526,7 @@ export default function LandingPage() {
           )}
         >
           <div className="relative flex flex-col items-center justify-center text-center max-w-4xl mx-auto">
-            <div className="absolute top-[-5rem] bottom-[-5rem] left-[-10rem] right-[-10rem] -z-10">
+            <div className="absolute top-[-5rem] bottom-[-5rem] left-[-10rem] right-[-10rem] -z-10 hidden lg:block">
                 <AssetIcon
                     icon={Play}
                     className="top-12 left-12"
