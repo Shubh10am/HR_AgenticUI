@@ -100,26 +100,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const storedUser = localStorage.getItem('authUser');
 
     if (storedToken && storedUser) {
-      if (storedToken.startsWith('guest-')) {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('authUser');
-        localStorage.removeItem('userApiKey');
-        clearAttendanceLocalStorage();
-        setUser(null);
-        setToken(null);
-        setUserApiKey(null);
-      } else {
-        setToken(storedToken);
         try {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
-          await fetchAndSetUserApiKey(storedToken);
+            const parsedUser = JSON.parse(storedUser);
+            setUser(parsedUser);
+            setToken(storedToken);
+
+            // Only fetch API key for non-guest users
+            if (!storedToken.startsWith('guest-')) {
+                await fetchAndSetUserApiKey(storedToken);
+            } else {
+                setUserApiKey(null); // Ensure API key is null for guests
+            }
         } catch (e) {
-          console.error("Failed to parse stored user:", e);
-          logout();
+            console.error("Failed to parse stored user:", e);
+            logout(); // If parsing fails, something is wrong, so log out.
         }
-      }
     } else {
+      // No auth info found, clear everything
       setUser(null);
       setToken(null);
       setUserApiKey(null);
@@ -133,21 +130,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [checkAuth]);
   
   useEffect(() => {
-    if (!isLoading) {
-      const isAuthenticatedUser = !!user && !!token;
-      
-      const publicOnlyRoutes = ['/login', '/register'];
-      const publicRoutes = ['/login', '/register', '/', '/contact'];
-      
-      const isPublicOnlyRoute = publicOnlyRoutes.includes(pathname);
-      const isPublicRoute = publicRoutes.includes(pathname);
-
-      if (isAuthenticatedUser && isPublicOnlyRoute) {
-        router.push('/dashboard'); 
-      } else if (!isAuthenticatedUser && !isPublicRoute) {
-        router.push('/login'); 
-      }
+    if (isLoading) {
+      return; // Wait until auth state is determined
     }
+
+    // A "real user" is one who is not a guest.
+    const isRealUser = !!user && !!token && !token.startsWith('guest-');
+    
+    // Auth routes are for non-authenticated users only (login, register)
+    const authRoutes = ['/login', '/register'];
+    const isOnAuthRoute = authRoutes.includes(pathname);
+    
+    // Protected routes require some form of authentication (real or guest)
+    const protectedRoutes = !['/', '/login', '/register', '/contact'].includes(pathname);
+    
+    // If a real user tries to access login/register, redirect to dashboard
+    if (isRealUser && isOnAuthRoute) {
+      router.push('/dashboard');
+      return;
+    }
+
+    // If a completely unauthenticated user (not real, not guest) tries to access a protected route, redirect to login
+    if (!user && !token && protectedRoutes) {
+      router.push('/login');
+      return;
+    }
+
   }, [user, token, isLoading, pathname, router]);
 
 
