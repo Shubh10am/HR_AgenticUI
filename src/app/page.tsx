@@ -166,8 +166,8 @@ export default function LandingPage() {
   );
 
   const tools = [
-      { name: 'Monday.com', hint: 'monday logo', logoUrl: 'https://cdn-icons-png.flaticon.com/512/3536/3536482.png' },
-      { name: 'ClickUp', hint: 'clickup logo', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e1/ClickUp_logo_app.png' },
+      { name: 'Gmail', hint: 'gmail logo', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg' },
+      { name: 'Team', hint: 'msteam logo', logoUrl: 'https://www.microsoft.com/favicon.ico' },
       { name: 'Slack', hint: 'slack logo', logoUrl: 'https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png' },
       { name: 'Asana', hint: 'asana logo', logoUrl: 'https://cdn-icons-png.flaticon.com/512/3536/3536482.png' },
       { name: 'Jira', hint: 'jira logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/atlassian_jira_logo_icon_170511.png' },
