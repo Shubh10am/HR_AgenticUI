@@ -101,14 +101,25 @@ export default {
           '0%': { transform: 'translateX(0%)' },
           '100%': { transform: 'translateX(-50%)' },
         },
-        'float': {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-8px)' },
-        },
-        'float-slow': {
-            '0%, 100%': { transform: 'translateY(0px)' },
-            '50%': { transform: 'translateY(-6px)' },
-        },
+        // 'float': {
+        //   '0%, 100%': { transform: 'translateY(0px)' },
+        //   '50%': { transform: 'translateY(-8px)' },
+        // },
+        // 'float-slow': {
+        //     '0%, 100%': { transform: 'translateY(0px)' },
+        //     '50%': { transform: 'translateY(-6px)' },
+        // },
+		'float': {
+			'0%, 100%': { transform: 'translateY(0px)' },
+			'25%': { transform: 'translateY(-4px)' },
+			'50%': { transform: 'translateY(-8px)' },
+			'75%': { transform: 'translateY(-4px)' },
+			},
+		'float-slow': {
+			'0%, 100%': { transform: 'translateY(0px)' },
+			'50%': { transform: 'translateY(-6px)' },
+			},
+
         'slow-spin': {
             from: { transform: 'rotate(0deg)' },
             to: { transform: 'rotate(360deg)' },

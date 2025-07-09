@@ -206,7 +206,7 @@ export default function LandingPage() {
           )}
         >
           {/* Floating tags */}
-          <CollaboratorTag name="HR Admin" className="top-[calc(50%-10rem)] left-[6%] xl:left-[10%] hidden lg:flex animate-float" cursorClass="!text-cyan-400" />
+          <CollaboratorTag name="HR Admin" className="top-[calc(50%-4rem)] left-[6%] xl:left-[10%] hidden lg:flex animate-float" cursorClass="!text-cyan-400" />
           <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:flex animate-float-slow" cursorClass="!text-pink-400" />
 
           {/* Main Headline */}
@@ -382,14 +382,14 @@ export default function LandingPage() {
                 <HoverPill icon={Check} label="Approve" />
 
                 <DevCollaboratorTag
-                    name="Developer"
+                    name="Manager"
                     className="top-1/4 left-12 hidden lg:flex animate-float"
                     cursorClass="text-lime-500"
                     tagColorClass="bg-lime-300 text-lime-900 font-bold border-lime-400"
                 />
 
                 <DevCollaboratorTag
-                    name="Developer"
+                    name="Team Lead"
                     className="bottom-1/4 right-12 hidden lg:flex animate-float-slow"
                     cursorClass="text-pink-500"
                     tagColorClass="bg-pink-400 text-white font-bold border-pink-500"
@@ -438,14 +438,14 @@ export default function LandingPage() {
                 <HoverPill icon={RefreshCw} label="Sync" />
 
                 <DevCollaboratorTag
-                    name="Developer"
+                    name="Administrator"
                     className="top-1/4 left-12 hidden lg:flex animate-float"
                     cursorClass="text-orange-500"
                     tagColorClass="bg-orange-300 text-orange-900 font-bold border-orange-400"
                 />
                 <DevCollaboratorTag
-                    name="Developer"
-                    className="bottom-1/4 right-12 hidden lg:flex animate-float-slow"
+                    name="Product Manager"
+                    className="bottom-1/2 right-12 hidden lg:flex animate-float-slow"
                     cursorClass="text-yellow-500"
                     tagColorClass="bg-yellow-300 text-yellow-900 font-bold border-yellow-400"
                 />
