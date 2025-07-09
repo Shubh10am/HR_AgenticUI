@@ -607,7 +607,7 @@ export default function LandingPage() {
                 <p>Got more questions?</p>
                 <p>
                   You can{' '}
-                  <Link href="#" className="underline hover:text-white">
+                  <Link href="/contact" className="underline hover:text-white">
                     Contact Us
                   </Link>{' '}
                   or{' '}

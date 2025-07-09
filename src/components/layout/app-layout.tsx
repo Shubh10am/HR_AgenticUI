@@ -31,7 +31,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const [isCopilotOpen, setIsCopilotOpen] = useState(false); // Added state for copilot
 
   // Define routes that don't use this AppLayout (e.g., login, register)
-  const noAppLayoutRoutes = ['/login', '/register', '/'];
+  const noAppLayoutRoutes = ['/login', '/register', '/', '/contact'];
 
   if (noAppLayoutRoutes.includes(pathname)) {
     return <>{children}</>; // Render children directly for auth pages
