@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Phone, MapPin, Send, Loader2 } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, Loader2, Hash, Linkedin, X, Instagram, Youtube } from 'lucide-react';
 import Link from 'next/link';
 import Logo from '@/components/icons/logo';
 
@@ -222,8 +222,17 @@ export default function ContactPage() {
           </div>
         </div>
         <div className="border-t border-neutral-800">
-          <div className="container py-6 text-center text-sm text-neutral-500 px-4 sm:px-6">
-            © {new Date().getFullYear()} HR Streamline AI. All Rights Reserved.
+          <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between py-6 text-sm text-neutral-500 px-4 sm:px-6">
+            <div className="flex items-center gap-6 order-2 sm:order-1 mt-4 sm:mt-0">
+                <Link href="#" className="hover:text-white transition-colors"><Hash className="h-5 w-5" /></Link>
+                <Link href="#" className="hover:text-white transition-colors"><Linkedin className="h-5 w-5" /></Link>
+                <Link href="#" className="hover:text-white transition-colors"><X className="h-5 w-5" /></Link>
+                <Link href="#" className="hover:text-white transition-colors"><Instagram className="h-5 w-5" /></Link>
+                <Link href="#" className="hover:text-white transition-colors"><Youtube className="h-5 w-5" /></Link>
+            </div>
+            <div className="order-1 sm:order-2">
+              © {new Date().getFullYear()} HR Streamline AI. All Rights Reserved.
+            </div>
           </div>
         </div>
       </footer>

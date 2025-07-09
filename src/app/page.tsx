@@ -21,6 +21,11 @@ import {
   RefreshCw,
   FileSearch,
   Plus,
+  Hash,
+  Linkedin,
+  X,
+  Instagram,
+  Youtube,
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -578,7 +583,7 @@ export default function LandingPage() {
               <div className="bg-neutral-800/50 backdrop-blur-sm border border-neutral-700 rounded-2xl px-4 py-3 flex items-center justify-center gap-4 sm:gap-5 shadow-2xl">
                 <Image src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" width={28} height={28} alt="Gmail logo" data-ai-hint="gmail logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
                 <Image src="https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png" width={28} height={28} alt="Slack logo" data-ai-hint="slack logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
-                <Image src="https://cdn.icon-icons.com/icons2/2699/PNG/512/atlassian_jira_logo_icon_170511.png" width={28} height={28} alt="Atlassian logo" data-ai-hint="atlassian jira logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
+                <Image src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Atlassian_Jira_Logo.svg/1280px-Atlassian_Jira_Logo.svg.png" width={28} height={28} alt="Atlassian logo" data-ai-hint="atlassian jira logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
                 <Image src="https://upload.wikimedia.org/wikipedia/commons/c/c9/Microsoft_Office_Teams_%282018%E2%80%93present%29.svg" width={28} height={28} alt="Microsoft Teams logo" data-ai-hint="microsoft teams logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity object-contain" />
                 <Image src="https://upload.wikimedia.org/wikipedia/commons/8/87/Google_Chrome_icon_%282011%29.png" width={28} height={28} alt="Chrome logo" data-ai-hint="chrome browser logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
               </div>
@@ -722,8 +727,17 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="border-t border-neutral-800">
-          <div className="container py-6 text-center text-sm text-neutral-500 px-4 sm:px-6">
-            © {new Date().getFullYear()} HR Streamline AI. All Rights Reserved.
+          <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between py-6 text-sm text-neutral-500 px-4 sm:px-6">
+            <div className="flex items-center gap-6 order-2 sm:order-1 mt-4 sm:mt-0">
+                <Link href="#" className="hover:text-white transition-colors"><Hash className="h-5 w-5" /></Link>
+                <Link href="#" className="hover:text-white transition-colors"><Linkedin className="h-5 w-5" /></Link>
+                <Link href="#" className="hover:text-white transition-colors"><X className="h-5 w-5" /></Link>
+                <Link href="#" className="hover:text-white transition-colors"><Instagram className="h-5 w-5" /></Link>
+                <Link href="#" className="hover:text-white transition-colors"><Youtube className="h-5 w-5" /></Link>
+            </div>
+            <div className="order-1 sm:order-2">
+              © {new Date().getFullYear()} HR Streamline AI. All Rights Reserved.
+            </div>
           </div>
         </div>
       </footer>
