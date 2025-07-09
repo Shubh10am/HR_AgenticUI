@@ -199,8 +199,8 @@ export default function LandingPage() {
 
   const WorkflowStep = ({ icon: Icon, label }: { icon: React.ElementType; label: string }) => (
     <div className="flex flex-col items-center text-center gap-1 sm:gap-3 z-10 bg-black px-1 sm:px-2">
-      <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-neutral-600" />
-      <span className="text-xs text-center sm:text-sm text-neutral-500">{label}</span>
+      <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+      <span className="text-xs text-center sm:text-sm text-neutral-400">{label}</span>
     </div>
   );
 
