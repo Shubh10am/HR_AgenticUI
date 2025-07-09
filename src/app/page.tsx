@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef, type SVGProps, type ReactNode } from 'react';
@@ -662,7 +663,7 @@ export default function LandingPage() {
           <div className="relative p-8 sm:p-16 rounded-2xl bg-gradient-to-br from-yellow-400 via-orange-500 to-red-600 text-center overflow-hidden grainy-texture opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
             <div className="relative z-10 flex flex-col items-center justify-center space-y-8">
               <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 shadow-lg">
-                <CtaLogo className="h-10 w-10" />
+                <CtaLogo className="h-10 w-10 animate-slow-spin" />
               </div>
               <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-black">
                 Streamline operations and build a better workplace.
