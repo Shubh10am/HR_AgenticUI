@@ -109,6 +109,10 @@ export default {
             '0%, 100%': { transform: 'translateY(0px)' },
             '50%': { transform: 'translateY(-6px)' },
         },
+        'slow-spin': {
+            from: { transform: 'rotate(0deg)' },
+            to: { transform: 'rotate(360deg)' },
+        },
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
@@ -117,6 +121,7 @@ export default {
         'marquee': 'marquee 30s linear infinite',
         'float': 'float 12s ease-in-out infinite',
         'float-slow': 'float-slow 18s ease-in-out infinite',
+        'slow-spin': 'slow-spin 3s linear infinite',
   		}
   	}
   },

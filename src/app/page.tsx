@@ -470,6 +470,55 @@ export default function LandingPage() {
             </div>
         </section>
 
+        {/* Reviews in Slow Motion Section */}
+        <section
+          ref={(el) => (sectionsRef.current[6] = el)}
+          className={cn(
+            "container mx-auto py-16 sm:py-24 md:py-32 group",
+            visibleSections.has(6) ? "is-visible" : ""
+          )}
+        >
+          <div className="relative rounded-2xl bg-gradient-to-br from-orange-400 via-red-500 to-rose-600 p-6 sm:p-8 md:p-16 text-center overflow-hidden min-h-[550px] sm:min-h-[600px] flex flex-col justify-center items-center">
+            
+            {/* Cursor + Spinning Wheel */}
+            <div className="absolute top-[20%] sm:top-1/4 left-1/2 -translate-x-1/2 flex items-center gap-2 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+              <CursorIcon className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
+              <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-[conic-gradient(from_90deg_at_50%_50%,#F59E0B_0%,#EF4444_25%,#8B5CF6_50%,#3B82F6_75%,#4ADE80_100%)] animate-slow-spin"></div>
+            </div>
+
+            {/* Text Content */}
+            <div className="relative z-10 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+              <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black">
+                Reviews can move
+                <br />
+                in slow motio<span className="opacity-80">n</span><span className="opacity-60">n</span><span className="opacity-40">n</span>
+              </h2>
+              <p className="text-base sm:text-lg text-neutral-800 max-w-md mx-auto">
+                Screenshots are for memes. Not precise and efficient review process
+              </p>
+            </div>
+
+            {/* Tooltip and Icon Bar */}
+            <div className="absolute bottom-12 sm:bottom-16 left-1/2 -translate-x-1/2 w-full max-w-xs sm:max-w-sm flex flex-col items-center opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+              <div className="relative bg-neutral-900 text-white rounded-lg px-4 py-2 mb-3 shadow-lg">
+                <p className="text-sm text-center">
+                  You are using <span className="font-bold">more than 6 tools</span> to review
+                </p>
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-neutral-900 transform rotate-45" style={{ zIndex: -1 }}></div>
+              </div>
+              <div className="bg-neutral-800/50 backdrop-blur-sm border border-neutral-700 rounded-2xl px-4 py-3 flex items-center justify-center gap-4 sm:gap-5 shadow-2xl">
+                <Image src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" width={28} height={28} alt="Gmail logo" data-ai-hint="gmail logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
+                <Image src="https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png" width={28} height={28} alt="Slack logo" data-ai-hint="slack logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
+                <Image src="https://cdn.icon-icons.com/icons2/2699/PNG/512/atlassian_logo_icon_170544.png" width={28} height={28} alt="Atlassian logo" data-ai-hint="atlassian jira logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
+                <Image src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Microsoft_Office_Teams_%282018%E2%80%93present%29.svg/2203px-Microsoft_Office_Teams_%282018%E2%80%93present%29.svg.png" width={28} height={28} alt="Microsoft Teams logo" data-ai-hint="microsoft teams logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
+                <Image src="https://upload.wikimedia.org/wikipedia/commons/a/a8/Google_Chrome_icon_%28send_to_phone%29.svg" width={28} height={28} alt="Chrome logo" data-ai-hint="chrome browser logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+
         {/* Super Secure Section */}
         <section
           ref={(el) => (sectionsRef.current[5] = el)}
