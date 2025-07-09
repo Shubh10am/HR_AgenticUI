@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import ChatWidget from '@/components/chat-widget';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import CtaLogo from '@/components/icons/cta-logo';
 
 
 interface CustomIconProps extends SVGProps<SVGSVGElement> {}
@@ -575,7 +576,7 @@ export default function LandingPage() {
               <div className="bg-neutral-800/50 backdrop-blur-sm border border-neutral-700 rounded-2xl px-4 py-3 flex items-center justify-center gap-4 sm:gap-5 shadow-2xl">
                 <Image src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" width={28} height={28} alt="Gmail logo" data-ai-hint="gmail logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
                 <Image src="https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png" width={28} height={28} alt="Slack logo" data-ai-hint="slack logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
-                <Image src="https://cdn.icon-icons.com/icons2/2699/PNG/512/atlassian_jira_logo_icon_170511.png" width={28} height={28} alt="Atlassian logo" data-ai-hint="atlassian jira logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
+                <Image src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Atlassian_logo.svg/1280px-Atlassian_logo.svg.png" width={28} height={28} alt="Atlassian logo" data-ai-hint="atlassian jira logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity object-contain" />
                 <Image src="https://upload.wikimedia.org/wikipedia/commons/c/c9/Microsoft_Office_Teams_%282018%E2%80%93present%29.svg" width={28} height={28} alt="Microsoft Teams logo" data-ai-hint="microsoft teams logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity object-contain" />
                 <Image src="https://upload.wikimedia.org/wikipedia/commons/8/87/Google_Chrome_icon_%282011%29.png" width={28} height={28} alt="Chrome logo" data-ai-hint="chrome browser logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
               </div>
@@ -640,6 +641,29 @@ export default function LandingPage() {
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA Section */}
+        <section
+          ref={(el) => (sectionsRef.current[8] = el)}
+          className={cn(
+            "container mx-auto py-16 sm:py-24 md:py-32 group",
+            visibleSections.has(8) ? "is-visible" : ""
+          )}
+        >
+          <div className="relative p-8 sm:p-16 rounded-2xl bg-gradient-to-br from-yellow-400 via-orange-500 to-red-600 text-center overflow-hidden grainy-texture opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+            <div className="relative z-10 flex flex-col items-center justify-center space-y-8">
+              <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 shadow-lg">
+                <CtaLogo className="h-10 w-10" />
+              </div>
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-black">
+                Streamline operations and build a better workplace.
+              </h2>
+              <Button size="lg" asChild className="bg-black text-white hover:bg-neutral-800 rounded-full px-8 py-3 h-auto shadow-lg transition-transform hover:scale-105">
+                <Link href="/register">Try Now For Free</Link>
+              </Button>
             </div>
           </div>
         </section>
