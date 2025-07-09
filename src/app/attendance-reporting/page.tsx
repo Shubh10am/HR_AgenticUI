@@ -62,7 +62,7 @@ interface LeaveRequest {
   reason: string;
 }
 
-const initialPolicyText = `Working Hours: Standard working hours are 9:00 AM to 5:30 PM, Monday to Friday.
+const fallbackPolicyText = `Working Hours: Standard working hours are 9:00 AM to 5:30 PM, Monday to Friday.
 Late Policy: Arrival after 9:15 AM is considered late. More than 3 late marks in a month may affect performance reviews.
 Leave Application: All leaves must be applied for at least 3 days in advance, except for emergencies. Sick leave requires a medical certificate for absences longer than 2 days.
 Breaks: A total of 1 hour break (lunch and tea) is permitted during the workday.
@@ -88,9 +88,11 @@ export default function AttendanceReportingPage() {
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  const [policyText, setPolicyText] = useState(initialPolicyText);
+  const [policyText, setPolicyText] = useState('Loading policy...');
   const [isEditingPolicy, setIsEditingPolicy] = useState(false);
-  const [tempPolicyText, setTempPolicyText] = useState(policyText);
+  const [tempPolicyText, setTempPolicyText] = useState('');
+  const [isLoadingPolicy, setIsLoadingPolicy] = useState(true);
+  const [isSavingPolicy, setIsSavingPolicy] = useState(false);
 
 
   const [leaveRequest, setLeaveRequest] = useState<LeaveRequest>({
@@ -150,6 +152,29 @@ export default function AttendanceReportingPage() {
     }
   }, [token, toast, isGuest]);
 
+  const fetchPolicy = useCallback(async () => {
+    if (!token || isGuest) {
+        setPolicyText(fallbackPolicyText); // Show default for guests
+        setIsLoadingPolicy(false);
+        return;
+    }
+    setIsLoadingPolicy(true);
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/settings/policy?type=attendance`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('Failed to fetch policy');
+        const data = await response.json();
+        setPolicyText(data.content);
+    } catch (error) {
+        console.error("Error fetching policy:", error);
+        toast({ title: "Policy Error", description: "Could not load company policy. Displaying default.", variant: "destructive" });
+        setPolicyText(fallbackPolicyText); // Fallback to default
+    } finally {
+        setIsLoadingPolicy(false);
+    }
+  }, [token, toast, isGuest]);
+
   useEffect(() => {
     if (isGuest) {
       setIsLoadingRecords(false);
@@ -159,7 +184,8 @@ export default function AttendanceReportingPage() {
     } else {
       fetchAttendanceRecords();
     }
-  }, [fetchAttendanceRecords, isGuest]);
+    fetchPolicy();
+  }, [fetchAttendanceRecords, fetchPolicy, isGuest]);
 
 
   useEffect(() => {
@@ -534,14 +560,35 @@ export default function AttendanceReportingPage() {
     setIsEditingPolicy(true);
   };
 
-  const handleSavePolicy = () => {
-    setPolicyText(tempPolicyText);
-    setIsEditingPolicy(false);
-    toast({
-      title: "Policy Updated (Mock)",
-      description: "The company attendance policy has been updated.",
-    });
-    // In a real app, you would make an API call here to save the policy.
+  const handleSavePolicy = async () => {
+    if (!token || isGuest) return;
+    setIsSavingPolicy(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/settings/policy`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ policyType: 'attendance', content: tempPolicyText })
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save policy');
+      }
+      
+      const data = await response.json();
+      setPolicyText(data.policy.content);
+      setIsEditingPolicy(false);
+      toast({
+        title: "Policy Updated",
+        description: "The company attendance policy has been saved.",
+      });
+    } catch (error: any) {
+        toast({ title: "Save Error", description: error.message, variant: "destructive" });
+    } finally {
+        setIsSavingPolicy(false);
+    }
   };
 
   const handleCancelEditPolicy = () => {
@@ -800,11 +847,14 @@ export default function AttendanceReportingPage() {
                     <div className="flex gap-2">
                         {isEditingPolicy ? (
                             <>
-                                <Button onClick={handleSavePolicy} size="sm">Save</Button>
-                                <Button onClick={handleCancelEditPolicy} variant="outline" size="sm">Cancel</Button>
+                                <Button onClick={handleSavePolicy} size="sm" disabled={isSavingPolicy}>
+                                    {isSavingPolicy && <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />}
+                                    Save
+                                </Button>
+                                <Button onClick={handleCancelEditPolicy} variant="outline" size="sm" disabled={isSavingPolicy}>Cancel</Button>
                             </>
                         ) : (
-                            <Button onClick={handleEditPolicy} variant="outline" size="sm">
+                            <Button onClick={handleEditPolicy} variant="outline" size="sm" disabled={isLoadingPolicy}>
                                 <Edit className="mr-2 h-4 w-4" /> Edit
                             </Button>
                         )}
@@ -813,11 +863,19 @@ export default function AttendanceReportingPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {isEditingPolicy ? (
+            {isLoadingPolicy ? (
+                 <div className="space-y-3 text-sm text-muted-foreground">
+                    <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
+                    <div className="h-4 bg-muted rounded w-full animate-pulse"></div>
+                    <div className="h-4 bg-muted rounded w-1/2 animate-pulse"></div>
+                    <div className="h-4 bg-muted rounded w-5/6 animate-pulse"></div>
+                </div>
+            ) : isEditingPolicy ? (
               <Textarea
                 value={tempPolicyText}
                 onChange={(e) => setTempPolicyText(e.target.value)}
                 className="min-h-[200px] text-sm"
+                disabled={isSavingPolicy}
               />
             ) : (
               <div className="space-y-3 text-sm text-muted-foreground">
