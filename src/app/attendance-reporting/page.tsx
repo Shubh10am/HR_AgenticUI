@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, type FormEvent, useCallback } from 'react';
@@ -61,6 +62,12 @@ interface LeaveRequest {
   reason: string;
 }
 
+const initialPolicyText = `Working Hours: Standard working hours are 9:00 AM to 5:30 PM, Monday to Friday.
+Late Policy: Arrival after 9:15 AM is considered late. More than 3 late marks in a month may affect performance reviews.
+Leave Application: All leaves must be applied for at least 3 days in advance, except for emergencies. Sick leave requires a medical certificate for absences longer than 2 days.
+Breaks: A total of 1 hour break (lunch and tea) is permitted during the workday.
+This is a summary. Please refer to the employee handbook for the complete attendance policy.`;
+
 export default function AttendanceReportingPage() {
   const [currentTime, setCurrentTime] = useState<string | null>(null);
   const [isClockedIn, setIsClockedIn] = useState(false);
@@ -70,6 +77,7 @@ export default function AttendanceReportingPage() {
   const { user, token } = useAuth();
 
   const isGuest = user?.organizationId === 'guest-org-id' || (token && token.startsWith('guest-'));
+  const canEditPolicy = user?.role === 'Admin' || user?.role === 'HR';
 
   const [filterEmployeeName, setFilterEmployeeName] = useState('');
   const [filterStartDate, setFilterStartDate] = useState<Date | undefined>();
@@ -79,6 +87,10 @@ export default function AttendanceReportingPage() {
   const [displayedAttendanceData, setDisplayedAttendanceData] = useState<AttendanceEntry[]>([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const [policyText, setPolicyText] = useState(initialPolicyText);
+  const [isEditingPolicy, setIsEditingPolicy] = useState(false);
+  const [tempPolicyText, setTempPolicyText] = useState(policyText);
 
 
   const [leaveRequest, setLeaveRequest] = useState<LeaveRequest>({
@@ -517,6 +529,25 @@ export default function AttendanceReportingPage() {
     toast({ title: "Text Report Downloaded", description: "A text version of the attendance report has been downloaded." });
   };
 
+  const handleEditPolicy = () => {
+    setTempPolicyText(policyText);
+    setIsEditingPolicy(true);
+  };
+
+  const handleSavePolicy = () => {
+    setPolicyText(tempPolicyText);
+    setIsEditingPolicy(false);
+    toast({
+      title: "Policy Updated (Mock)",
+      description: "The company attendance policy has been updated.",
+    });
+    // In a real app, you would make an API call here to save the policy.
+  };
+
+  const handleCancelEditPolicy = () => {
+    setIsEditingPolicy(false);
+  };
+
 
   return (
     <TooltipProvider>
@@ -755,20 +786,57 @@ export default function AttendanceReportingPage() {
             </div>
           </CardContent>
         </Card>
-         <Card className="lg:col-span-2 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <Card className="lg:col-span-2 shadow-lg hover:shadow-xl transition-shadow duration-300">
           <CardHeader>
-            <CardTitle className="flex items-center text-xl">
-              <FileText className="mr-2 h-6 w-6 text-primary" />
-              Company Attendance Policy
-            </CardTitle>
-            <CardDescription>Key highlights of our attendance policy.</CardDescription>
+            <div className="flex justify-between items-center">
+                <div className="flex-1">
+                    <CardTitle className="flex items-center text-xl">
+                    <FileText className="mr-2 h-6 w-6 text-primary" />
+                    Company Attendance Policy
+                    </CardTitle>
+                    <CardDescription>Key highlights of our attendance policy.</CardDescription>
+                </div>
+                {canEditPolicy && !isGuest && (
+                    <div className="flex gap-2">
+                        {isEditingPolicy ? (
+                            <>
+                                <Button onClick={handleSavePolicy} size="sm">Save</Button>
+                                <Button onClick={handleCancelEditPolicy} variant="outline" size="sm">Cancel</Button>
+                            </>
+                        ) : (
+                            <Button onClick={handleEditPolicy} variant="outline" size="sm">
+                                <Edit className="mr-2 h-4 w-4" /> Edit
+                            </Button>
+                        )}
+                    </div>
+                )}
+            </div>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <p><strong>Working Hours:</strong> Standard working hours are 9:00 AM to 5:30 PM, Monday to Friday.</p>
-            <p><strong>Late Policy:</strong> Arrival after 9:15 AM is considered late. More than 3 late marks in a month may affect performance reviews.</p>
-            <p><strong>Leave Application:</strong> All leaves must be applied for at least 3 days in advance, except for emergencies. Sick leave requires a medical certificate for absences longer than 2 days.</p>
-            <p><strong>Breaks:</strong> A total of 1 hour break (lunch and tea) is permitted during the workday.</p>
-            <p className="text-xs italic">This is a summary. Please refer to the employee handbook for the complete attendance policy.</p>
+          <CardContent>
+            {isEditingPolicy ? (
+              <Textarea
+                value={tempPolicyText}
+                onChange={(e) => setTempPolicyText(e.target.value)}
+                className="min-h-[200px] text-sm"
+              />
+            ) : (
+              <div className="space-y-3 text-sm text-muted-foreground">
+                {policyText.split('\n').map((line, index) => {
+                    const i = line.indexOf(':');
+                    if (i !== -1 && !line.toLowerCase().includes('this is a summary')) {
+                        return (
+                            <p key={index}>
+                                <strong>{line.substring(0, i + 1)}</strong>
+                                {line.substring(i + 1)}
+                            </p>
+                        );
+                    } else if (line.toLowerCase().includes('this is a summary')) {
+                        return <p key={index} className="text-xs italic pt-2">{line}</p>;
+                    }
+                    return <p key={index}>{line}</p>;
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
