@@ -6,11 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { User, Edit3, Activity, Settings2, Bell, Palette, Loader2 } from 'lucide-react';
+import { User, Edit3, Activity, Settings2, Bell, Palette, Loader2, BarChart2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { useEffect, useState, type FormEvent } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { useEffect, useState, type FormEvent, useCallback } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -27,12 +27,41 @@ export default function ProfilePage() {
   // Keep a client-side version of the user to avoid hydration issues
   // and to ensure the UI updates when the context does.
   const [clientUser, setClientUser] = useState(user);
+  const [employeeStats, setEmployeeStats] = useState<Record<string, number> | null>(null);
+  const [isStatsLoading, setIsStatsLoading] = useState(false);
+
+  const fetchEmployeeStats = useCallback(async () => {
+    if (!user || user.role !== 'Admin' || !token) return;
+    setIsStatsLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/employees`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to fetch employee data.');
+      
+      const employees: { department?: string }[] = await response.json();
+      const stats = employees.reduce((acc: Record<string, number>, employee) => {
+        const dept = employee.department || 'Not Assigned';
+        acc[dept] = (acc[dept] || 0) + 1;
+        return acc;
+      }, {});
+      setEmployeeStats(stats);
+    } catch (error: any) {
+      toast({ title: 'Error', description: 'Could not load employee statistics.', variant: 'destructive' });
+    } finally {
+      setIsStatsLoading(false);
+    }
+  }, [user, token, toast]);
+
   useEffect(() => {
     if (user) {
       setClientUser(user);
       setEditName(user.name); // Sync edit name when user context changes
+      if (user.role === 'Admin') {
+        fetchEmployeeStats();
+      }
     }
-  }, [user]);
+  }, [user, fetchEmployeeStats]);
 
   const handleEditProfileSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -192,6 +221,41 @@ export default function ProfilePage() {
           </Card>
         </div>
       </div>
+
+      {clientUser?.role === 'Admin' && (
+        <div className="mt-6">
+            <Card className="shadow-lg">
+                <CardHeader>
+                    <CardTitle className="flex items-center">
+                        <BarChart2 className="mr-2 h-5 w-5 text-primary" />
+                        Organization Overview
+                    </CardTitle>
+                    <CardDescription>A summary of employee distribution across departments.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {isStatsLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            <p className="ml-2">Loading statistics...</p>
+                        </div>
+                    ) : employeeStats && Object.keys(employeeStats).length > 0 ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {Object.entries(employeeStats).map(([dept, count]) => (
+                                <div key={dept} className="p-4 bg-secondary/50 rounded-lg text-center shadow-sm">
+                                    <p className="text-3xl font-bold text-primary">{count}</p>
+                                    <p className="text-sm text-muted-foreground truncate">{dept}</p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-center text-muted-foreground py-4">
+                            No departmental data available. Departments can be assigned in the 'Manage Employees' page.
+                        </p>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+      )}
     </>
   );
 }

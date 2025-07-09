@@ -51,7 +51,7 @@ export default async function handler(
       return res.status(403).json({ error: 'Forbidden: Only Admins can register new employees.' });
     }
 
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, department } = req.body;
 
     if (!name || !email || !password || !role) {
       return res.status(400).json({ error: 'Missing required fields: name, email, password, role.' });
@@ -85,6 +85,7 @@ export default async function handler(
         passwordHash,
         role: role as EmployeeRole,
         organizationId: currentUserOrgId,
+        department,
       });
 
       await newEmployee.save();

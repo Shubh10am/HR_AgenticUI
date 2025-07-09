@@ -35,6 +35,7 @@ interface ClientEmployee {
   organizationId: string;
   avatarUrl?: string;
   dataAiHint?: string;
+  department?: string;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
@@ -46,6 +47,7 @@ export default function ManageEmployeesPage() {
   const [employeeName, setEmployeeName] = useState('');
   const [employeeEmail, setEmployeeEmail] = useState('');
   const [employeeRole, setEmployeeRole] = useState<EmployeeRole>('Employee');
+  const [employeeDepartment, setEmployeeDepartment] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,6 +62,7 @@ export default function ManageEmployeesPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editName, setEditName] = useState('');
   const [editRole, setEditRole] = useState<EmployeeRole>('Employee');
+  const [editDepartment, setEditDepartment] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
 
 
@@ -74,7 +77,7 @@ export default function ManageEmployeesPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ name: editName, role: editRole }),
+        body: JSON.stringify({ name: editName, role: editRole, department: editDepartment }),
       });
 
       const data = await response.json();
@@ -83,7 +86,7 @@ export default function ManageEmployeesPage() {
         throw new Error(data.error || 'Failed to update employee');
       }
 
-      toast({ title: 'Employee Updated', description: `${data.name} is now a ${data.role}.` });
+      toast({ title: 'Employee Updated', description: `${data.name}'s profile has been updated.` });
       setIsEditDialogOpen(false);
       fetchEmployees(); // Refresh list
     } catch (error: any) {
@@ -152,7 +155,7 @@ export default function ManageEmployeesPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ name: employeeName, email: employeeEmail, password, role: employeeRole }),
+        body: JSON.stringify({ name: employeeName, email: employeeEmail, password, role: employeeRole, department: employeeDepartment }),
       });
       const data = await response.json();
 
@@ -168,6 +171,7 @@ export default function ManageEmployeesPage() {
       setEmployeeName('');
       setEmployeeEmail('');
       setEmployeeRole('Employee');
+      setEmployeeDepartment('');
       setPassword('');
       setConfirmPassword('');
       fetchEmployees();
@@ -274,6 +278,16 @@ export default function ManageEmployeesPage() {
                 />
                 {orgDomain && <p className="text-xs text-muted-foreground mt-1">Must use @{orgDomain} domain.</p>}
               </div>
+               <div>
+                <Label htmlFor="employeeDepartment">Department (Optional)</Label>
+                <Input
+                  id="employeeDepartment"
+                  value={employeeDepartment}
+                  onChange={(e) => setEmployeeDepartment(e.target.value)}
+                  placeholder="e.g., Engineering, Sales"
+                  disabled={isSubmitting}
+                />
+              </div>
               <div>
                 <Label htmlFor="employeeRole">Role</Label>
                 <Select
@@ -349,6 +363,7 @@ export default function ManageEmployeesPage() {
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Role</TableHead>
+                      <TableHead>Department</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -370,12 +385,14 @@ export default function ManageEmployeesPage() {
                             {employee.role}
                           </Badge>
                         </TableCell>
+                        <TableCell>{employee.department || 'N/A'}</TableCell>
                         <TableCell className="text-right space-x-1">
                           <Button variant="ghost" size="icon" className="h-8 w-8"
                             onClick={() => {
                               setEmployeeToEdit(employee);
                               setEditName(employee.name);
                               setEditRole(employee.role);
+                              setEditDepartment(employee.department || '');
                               setIsEditDialogOpen(true);
                             }}
                           >
@@ -422,6 +439,16 @@ export default function ManageEmployeesPage() {
                 />
               </div>
               <div>
+                <Label htmlFor="editDepartment">Department</Label>
+                <Input
+                  id="editDepartment"
+                  value={editDepartment}
+                  onChange={(e) => setEditDepartment(e.target.value)}
+                  placeholder="e.g., Engineering, Sales"
+                  disabled={isUpdating}
+                />
+              </div>
+              <div>
                 <Label htmlFor="editRole">Role</Label>
                 <Select value={editRole} onValueChange={(val) => setEditRole(val as EmployeeRole)} disabled={isUpdating}>
                   <SelectTrigger id="editRole">
@@ -464,4 +491,3 @@ export default function ManageEmployeesPage() {
     </AlertDialog>
   );
 }
-

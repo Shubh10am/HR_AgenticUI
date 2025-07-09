@@ -77,10 +77,10 @@ export default async function handler(
         return res.status(403).json({ error: 'Forbidden: Employee does not belong to your organization.' });
       }
 
-      const { name, role } = req.body;
+      const { name, role, department } = req.body;
 
-      if (!name && !role) {
-        return res.status(400).json({ error: 'At least one of name or role must be provided to update.' });
+      if (!name && !role && department === undefined) {
+        return res.status(400).json({ error: 'At least one field (name, role, department) must be provided to update.' });
       }
 
       if (role && !['Admin', 'HR', 'Employee'].includes(role)) {
@@ -90,6 +90,7 @@ export default async function handler(
       // Apply updates
       if (name) employeeToUpdate.name = name;
       if (role) employeeToUpdate.role = role as EmployeeRole;
+      if (department !== undefined) employeeToUpdate.department = department;
 
       await employeeToUpdate.save();
 
@@ -104,4 +105,3 @@ export default async function handler(
     return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 }
-
