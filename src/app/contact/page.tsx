@@ -214,9 +214,9 @@ export default function ContactPage() {
             <div>
               <h3 className="font-semibold text-white mb-4">Legal</h3>
               <ul className="space-y-2">
-                <li><Link href="#" className="text-neutral-400 hover:text-white">Security</Link></li>
-                <li><Link href="#" className="text-neutral-400 hover:text-white">Privacy</Link></li>
-                <li><Link href="#" className="text-neutral-400 hover:text-white">Terms</Link></li>
+                <li><Link href="/legal/security" className="text-neutral-400 hover:text-white">Security</Link></li>
+                <li><Link href="/legal/privacy" className="text-neutral-400 hover:text-white">Privacy</Link></li>
+                <li><Link href="/legal/terms" className="text-neutral-400 hover:text-white">Terms</Link></li>
               </ul>
             </div>
           </div>
