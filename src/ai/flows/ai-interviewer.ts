@@ -49,7 +49,7 @@ Begin Interview:
 `;
 
     const response = await runner.generate({
-      model: 'gemini-2.0-flash',
+      model: 'googleai/gemini-2.0-flash',
       prompt: promptText,
       config: {
         output: {
