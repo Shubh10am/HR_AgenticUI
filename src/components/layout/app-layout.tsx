@@ -54,11 +54,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
     );
   }
 
+  const logoHref = pathname === '/dashboard' ? '/' : '/dashboard';
+
   return (
     <SidebarProvider defaultOpen>
       <Sidebar variant="sidebar" collapsible="icon">
         <SidebarHeader className="p-4">
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href={logoHref} className="flex items-center gap-2">
             <Logo className="h-8 w-8 text-sidebar-primary" />
             <h1 className="text-xl font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
               HR Streamline AI
