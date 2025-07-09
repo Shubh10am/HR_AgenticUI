@@ -44,10 +44,8 @@ AI:`;
     const response = await runner.generate({
       model: 'googleai/gemini-2.0-flash',
       prompt: promptText,
-      config: {
-        output: {
-          schema: CopilotChatOutputSchemaDef,
-        },
+      output: {
+        schema: CopilotChatOutputSchemaDef,
       },
     });
 

@@ -49,10 +49,8 @@ Format your response as a JSON object. The 'drafts' field in the JSON should con
     const response = await runner.generate({
       model: 'googleai/gemini-2.0-flash',
       prompt: promptText,
-      config: {
-        output: {
-          schema: GenerateDraftEmailResponsesOutputSchemaDef,
-        },
+      output: {
+        schema: GenerateDraftEmailResponsesOutputSchemaDef,
       },
     });
 

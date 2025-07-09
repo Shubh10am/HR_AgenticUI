@@ -55,10 +55,8 @@ Ensure your output strictly adheres to the AnalyzeResumeOutputSchemaDef format.
     const response = await runner.generate({
       model: 'googleai/gemini-2.0-flash',
       prompt: promptText,
-      config: {
-        output: {
-          schema: AnalyzeResumeOutputSchemaDef,
-        },
+      output: {
+        schema: AnalyzeResumeOutputSchemaDef,
       },
     });
 

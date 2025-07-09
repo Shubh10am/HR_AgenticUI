@@ -45,10 +45,8 @@ const summarizeGithubActivityFlow = ai.defineFlow(
     const response = await runner.generate({
       model: 'googleai/gemini-2.0-flash',
       prompt: promptText,
-      config: {
-        output: {
-          schema: SummarizeGithubActivityOutputSchemaDef,
-        },
+      output: {
+        schema: SummarizeGithubActivityOutputSchemaDef,
       },
     });
     

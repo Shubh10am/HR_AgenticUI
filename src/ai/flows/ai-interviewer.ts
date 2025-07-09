@@ -51,10 +51,8 @@ Begin Interview:
     const response = await runner.generate({
       model: 'googleai/gemini-2.0-flash',
       prompt: promptText,
-      config: {
-        output: {
-          schema: AiInterviewerOutputSchemaDef,
-        },
+      output: {
+        schema: AiInterviewerOutputSchemaDef,
       },
     });
 

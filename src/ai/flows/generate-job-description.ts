@@ -44,10 +44,8 @@ const generateJobDescriptionFlow = ai.defineFlow(
     const response = await runner.generate({
       model: 'googleai/gemini-2.0-flash',
       prompt: promptText,
-      config: {
-        output: {
-          schema: GenerateJobDescriptionOutputSchemaDef,
-        },
+      output: {
+        schema: GenerateJobDescriptionOutputSchemaDef,
       },
     });
 
