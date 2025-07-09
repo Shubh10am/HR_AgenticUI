@@ -5,6 +5,7 @@ import {ai} from '@/ai/genkit';
 import {genkit, z} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 import { AiInterviewerInputSchemaDef as OriginalSchema, AiInterviewerOutputSchemaDef } from '@/ai/schemas/ai-interviewer-definitions';
+import { logTokenUsage } from '@/services/usageService';
 
 // Extend original schema to include optional apiKey
 const AiInterviewerInputSchemaDef = OriginalSchema.extend({
@@ -25,7 +26,7 @@ const aiInterviewerFlow = ai.defineFlow(
     outputSchema: AiInterviewerOutputSchemaDef,
   },
   async (input) => {
-    const { apiKey, ...promptData } = input;
+    const { apiKey, userId, organizationId, ...promptData } = input;
     
     const runner = apiKey ? genkit({plugins: [googleAI({apiKey})]}) : ai;
 
@@ -55,6 +56,15 @@ Begin Interview:
         schema: AiInterviewerOutputSchemaDef,
       },
     });
+
+    if (userId && organizationId && organizationId !== 'guest-org-id' && response.usage) {
+      logTokenUsage({
+        employeeId: userId,
+        organizationId,
+        feature: 'aiInterviewerFlow',
+        usage: response.usage,
+      });
+    }
 
     const output = response.output;
     if (!output) {

@@ -16,6 +16,8 @@ export const AiInterviewerInputSchemaDef = z.object({
       'The number of interview rounds to conduct. Each round consists of one question.'
     )
     .default(3),
+  userId: z.string().optional().describe("The ID of the user making the request for logging."),
+  organizationId: z.string().optional().describe("The ID of the organization for logging."),
 });
 
 export const AiInterviewerOutputSchemaDef = z.object({

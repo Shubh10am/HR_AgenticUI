@@ -80,7 +80,12 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
 
     try {
       const userApiKey = localStorage.getItem('userApiKey');
-      const aiInput: CopilotChatInput = { userInput: trimmedInput, apiKey: userApiKey };
+      const aiInput: CopilotChatInput = { 
+        userInput: trimmedInput, 
+        apiKey: userApiKey,
+        userId: user?.id,
+        organizationId: user?.organizationId,
+      };
       const result: CopilotChatOutput = await chatWithCopilot(aiInput);
       
       const newAiMessage: ChatMessage = {

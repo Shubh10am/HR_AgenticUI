@@ -1,4 +1,3 @@
-
 'use client';
 
 import PageHeader from '@/components/page-header';
@@ -39,15 +38,15 @@ export default function SettingsPage() {
   const [isKeyLoading, setIsKeyLoading] = useState(true);
   const [isKeySaving, setIsKeySaving] = useState(false);
 
-  // State for mock usage data
+  // State for usage data
   const [tokenUsage, setTokenUsage] = useState(0);
-  const [tokenLimit, setTokenLimit] = useState(500000); // Mock limit
+  const [tokenLimit, setTokenLimit] = useState(500000);
   const [isUsageLoading, setIsUsageLoading] = useState(true);
   const [nextResetDate, setNextResetDate] = useState('');
 
   
   const fetchApiKey = useCallback(async () => {
-    if (!token) {
+    if (!token || token.startsWith('guest-')) {
         setIsKeyLoading(false);
         return;
     };
@@ -74,6 +73,31 @@ export default function SettingsPage() {
     }
   }, [token, toast]);
 
+  const fetchUsageData = useCallback(async () => {
+    if (!token || token.startsWith('guest-')) {
+      setIsUsageLoading(false);
+      return;
+    }
+    setIsUsageLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/settings/usage`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setTokenUsage(data.usage);
+        setTokenLimit(data.limit);
+        const resetDate = new Date(data.cycleEndDate);
+        setNextResetDate(resetDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric'}));
+      } else {
+        toast({ title: "Could not fetch usage data", description: data.error, variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Usage Fetch Error", description: "An unexpected error occurred.", variant: "destructive" });
+    } finally {
+      setIsUsageLoading(false);
+    }
+  }, [token, toast]);
 
   useEffect(() => {
     // Sound preferences from local storage
@@ -88,23 +112,10 @@ export default function SettingsPage() {
       }
     }
 
-    // Mock Usage Data Fetching
-    setIsUsageLoading(true);
-    const usageTimer = setTimeout(() => {
-      setTokenUsage(Math.floor(Math.random() * 450000) + 50000); // Random usage
-      
-      const today = new Date();
-      const firstDayOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-      setNextResetDate(firstDayOfNextMonth.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric'}));
-      
-      setIsUsageLoading(false);
-    }, 800); // Simulate network delay
-
-    // Fetch API key from DB
+    fetchUsageData();
     fetchApiKey();
     
-    return () => clearTimeout(usageTimer);
-  }, [fetchApiKey]);
+  }, [fetchApiKey, fetchUsageData]);
 
 
   const handleMockAction = (action: string) => {
@@ -446,13 +457,15 @@ export default function SettingsPage() {
                   <span>Cycle resets on: {nextResetDate}</span>
                   <span>Based on UTC time.</span>
                 </div>
-                <Alert variant="default" className="mt-4 border-amber-500 dark:border-amber-400">
-                  <Info className="h-5 w-5 text-amber-500 dark:text-amber-400" />
-                  <AlertTitle className="text-amber-700 dark:text-amber-300 font-semibold">Demonstration Data</AlertTitle>
-                  <AlertDescription className="text-amber-600 dark:text-amber-200">
-                    This usage chart displays mock data for demonstration purposes. Real-time usage tracking is a planned feature.
-                  </AlertDescription>
-                </Alert>
+                {(token && token.startsWith('guest-')) && (
+                  <Alert variant="default" className="mt-4 border-amber-500 dark:border-amber-400">
+                    <Info className="h-5 w-5 text-amber-500 dark:text-amber-400" />
+                    <AlertTitle className="text-amber-700 dark:text-amber-300 font-semibold">Guest Mode</AlertTitle>
+                    <AlertDescription className="text-amber-600 dark:text-amber-200">
+                      Usage tracking is not available for guest users.
+                    </AlertDescription>
+                  </Alert>
+                )}
               </>
             )}
           </CardContent>
@@ -478,4 +491,3 @@ export default function SettingsPage() {
     </>
   );
 }
-

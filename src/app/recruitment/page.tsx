@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import * as pdfjsLib from 'pdfjs-dist';
+import { useAuth } from '@/contexts/auth-context';
 
 
 export default function RecruitmentPage() {
@@ -37,6 +38,7 @@ export default function RecruitmentPage() {
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
 
   const { toast } = useToast();
+  const { user } = useAuth();
 
   async function handleGenerateJd(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -48,7 +50,12 @@ export default function RecruitmentPage() {
     setGeneratedJd('');
     try {
       const userApiKey = localStorage.getItem('userApiKey');
-      const input: GenerateJobDescriptionInput = { prompt: jdPrompt, apiKey: userApiKey };
+      const input: GenerateJobDescriptionInput = { 
+        prompt: jdPrompt, 
+        apiKey: userApiKey,
+        userId: user?.id,
+        organizationId: user?.organizationId,
+      };
       const result: GenerateJobDescriptionOutput = await generateJobDescription(input);
       setGeneratedJd(result.jobDescription);
     } catch (error) {
@@ -95,6 +102,8 @@ export default function RecruitmentPage() {
         candidateName,
         interviewRounds: numInterviewRounds,
         apiKey: userApiKey,
+        userId: user?.id,
+        organizationId: user?.organizationId,
       };
       const result: AiInterviewerOutput = await aiInterviewer(input);
       setInterviewResult(result);
@@ -197,7 +206,12 @@ export default function RecruitmentPage() {
     setAnalysisResult(null);
     try {
       const userApiKey = localStorage.getItem('userApiKey');
-      const input: AnalyzeResumeInput = { resumeText: resumeForAnalysis, apiKey: userApiKey };
+      const input: AnalyzeResumeInput = { 
+        resumeText: resumeForAnalysis, 
+        apiKey: userApiKey,
+        userId: user?.id,
+        organizationId: user?.organizationId,
+      };
       const result: AnalyzeResumeOutput = await analyzeResume(input);
       setAnalysisResult(result);
     } catch (error) {

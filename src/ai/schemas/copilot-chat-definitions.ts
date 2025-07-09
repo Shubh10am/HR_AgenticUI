@@ -4,6 +4,8 @@ import {z} from 'genkit';
 
 export const CopilotChatInputSchemaDef = z.object({
   userInput: z.string().describe('The message sent by the user to the copilot.'),
+  userId: z.string().optional().describe("The ID of the user making the request for logging."),
+  organizationId: z.string().optional().describe("The ID of the organization for logging."),
 });
 
 export const CopilotChatOutputSchemaDef = z.object({

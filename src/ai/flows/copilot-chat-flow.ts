@@ -11,6 +11,7 @@ import {ai} from '@/ai/genkit';
 import {genkit, z} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 import { CopilotChatInputSchemaDef as OriginalSchema, CopilotChatOutputSchemaDef } from '@/ai/schemas/copilot-chat-definitions';
+import { logTokenUsage } from '@/services/usageService';
 
 // Extend original schema to include optional apiKey
 const CopilotChatInputSchemaDef = OriginalSchema.extend({
@@ -31,7 +32,7 @@ const copilotChatFlow = ai.defineFlow(
     outputSchema: CopilotChatOutputSchemaDef,
   },
   async (input) => {
-    const { apiKey, ...promptData } = input;
+    const { apiKey, userId, organizationId, ...promptData } = input;
     
     const runner = apiKey ? genkit({plugins: [googleAI({apiKey})]}) : ai;
 
@@ -48,6 +49,15 @@ AI:`;
         schema: CopilotChatOutputSchemaDef,
       },
     });
+
+    if (userId && organizationId && organizationId !== 'guest-org-id' && response.usage) {
+      logTokenUsage({
+        employeeId: userId,
+        organizationId,
+        feature: 'copilotChatFlow',
+        usage: response.usage,
+      });
+    }
 
     const output = response.output;
     if (!output) {

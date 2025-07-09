@@ -10,6 +10,7 @@ import { Loader2, Wand2, Send, Edit3 } from 'lucide-react'; // Added Edit3 for c
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, type GenerateDraftEmailResponsesOutput } from '@/ai/flows/draft-email-response';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation'; // Import useRouter
+import { useAuth } from '@/contexts/auth-context';
 
 interface EmailDraft {
   subject: string;
@@ -22,6 +23,7 @@ export default function EmailAssistancePage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter(); // Initialize useRouter
+  const { user } = useAuth();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -39,7 +41,12 @@ export default function EmailAssistancePage() {
 
     try {
       const userApiKey = localStorage.getItem('userApiKey');
-      const input: GenerateDraftEmailResponsesInput = { query, apiKey: userApiKey };
+      const input: GenerateDraftEmailResponsesInput = { 
+        query, 
+        apiKey: userApiKey,
+        userId: user?.id,
+        organizationId: user?.organizationId,
+      };
       const result: GenerateDraftEmailResponsesOutput = await generateDraftEmailResponses(input);
       setDrafts(result.drafts || []); 
       if (!result.drafts || result.drafts.length === 0) { 

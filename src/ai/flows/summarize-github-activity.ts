@@ -11,6 +11,7 @@ import {ai} from '@/ai/genkit';
 import {genkit, z} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 import { SummarizeGithubActivityInputSchemaDef as OriginalSchema, SummarizeGithubActivityOutputSchemaDef } from '@/ai/schemas/summarize-github-activity-definitions';
+import { logTokenUsage } from '@/services/usageService';
 
 // Extend original schema to include optional apiKey
 const SummarizeGithubActivityInputSchemaDef = OriginalSchema.extend({
@@ -32,7 +33,7 @@ const summarizeGithubActivityFlow = ai.defineFlow(
     outputSchema: SummarizeGithubActivityOutputSchemaDef,
   },
   async (input) => {
-    const { apiKey, ...promptData } = input;
+    const { apiKey, userId, organizationId, ...promptData } = input;
     
     const runner = apiKey ? genkit({plugins: [googleAI({apiKey})]}) : ai;
 
@@ -49,6 +50,15 @@ const summarizeGithubActivityFlow = ai.defineFlow(
         schema: SummarizeGithubActivityOutputSchemaDef,
       },
     });
+
+    if (userId && organizationId && organizationId !== 'guest-org-id' && response.usage) {
+      logTokenUsage({
+        employeeId: userId,
+        organizationId,
+        feature: 'summarizeGithubActivityFlow',
+        usage: response.usage,
+      });
+    }
     
     const output = response.output;
     if (!output) {

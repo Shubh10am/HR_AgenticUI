@@ -11,6 +11,7 @@ import {ai} from '@/ai/genkit';
 import {genkit, z} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 import { AnalyzeResumeInputSchemaDef as OriginalSchema, AnalyzeResumeOutputSchemaDef } from '@/ai/schemas/analyze-resume-definitions';
+import { logTokenUsage } from '@/services/usageService';
 
 // Extend original schema to include optional apiKey
 const AnalyzeResumeInputSchemaDef = OriginalSchema.extend({
@@ -32,7 +33,7 @@ const analyzeResumeFlow = ai.defineFlow(
     outputSchema: AnalyzeResumeOutputSchemaDef,
   },
   async (input) => {
-    const { apiKey, ...promptData } = input;
+    const { apiKey, userId, organizationId, ...promptData } = input;
     
     const runner = apiKey ? genkit({plugins: [googleAI({apiKey})]}) : ai;
 
@@ -59,6 +60,15 @@ Ensure your output strictly adheres to the AnalyzeResumeOutputSchemaDef format.
         schema: AnalyzeResumeOutputSchemaDef,
       },
     });
+
+    if (userId && organizationId && organizationId !== 'guest-org-id' && response.usage) {
+      logTokenUsage({
+        employeeId: userId,
+        organizationId,
+        feature: 'analyzeResumeFlow',
+        usage: response.usage,
+      });
+    }
 
     const output = response.output;
     if (!output) {

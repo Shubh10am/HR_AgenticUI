@@ -11,6 +11,7 @@ import {ai} from '@/ai/genkit';
 import {genkit, z} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 import { GenerateJobDescriptionInputSchemaDef as OriginalSchema, GenerateJobDescriptionOutputSchemaDef } from '@/ai/schemas/generate-job-description-definitions';
+import { logTokenUsage } from '@/services/usageService';
 
 // Extend original schema to include optional apiKey
 const GenerateJobDescriptionInputSchemaDef = OriginalSchema.extend({
@@ -31,7 +32,7 @@ const generateJobDescriptionFlow = ai.defineFlow(
     outputSchema: GenerateJobDescriptionOutputSchemaDef,
   },
   async (input) => {
-    const { apiKey, ...promptData } = input;
+    const { apiKey, userId, organizationId, ...promptData } = input;
     
     const runner = apiKey ? genkit({plugins: [googleAI({apiKey})]}) : ai;
 
@@ -48,6 +49,15 @@ const generateJobDescriptionFlow = ai.defineFlow(
         schema: GenerateJobDescriptionOutputSchemaDef,
       },
     });
+
+    if (userId && organizationId && organizationId !== 'guest-org-id' && response.usage) {
+      logTokenUsage({
+        employeeId: userId,
+        organizationId,
+        feature: 'generateJobDescriptionFlow',
+        usage: response.usage,
+      });
+    }
 
     const output = response.output;
     if (!output) {

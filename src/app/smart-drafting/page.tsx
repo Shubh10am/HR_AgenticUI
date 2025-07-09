@@ -11,6 +11,7 @@ import { Loader2, Wand2, Edit3, Save, XCircle, Send, Copy, FileText } from 'luci
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, type GenerateDraftEmailResponsesOutput } from '@/ai/flows/draft-email-response';
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/contexts/auth-context';
 
 const NONE_TEAM_VALUE = "--none--";
 
@@ -26,6 +27,7 @@ export default function SmartDraftingPage() {
   const [isGeneratingFromPrompt, setIsGeneratingFromPrompt] = useState(false);
   const [isEditingComposerBody, setIsEditingComposerBody] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const [recipients, setRecipients] = useState('');
   const [subject, setSubject] = useState('');
@@ -70,7 +72,12 @@ export default function SmartDraftingPage() {
     
     try {
       const userApiKey = localStorage.getItem('userApiKey');
-      const input: GenerateDraftEmailResponsesInput = { query: `Draft an email based on the following prompt: ${prompt}`, apiKey: userApiKey };
+      const input: GenerateDraftEmailResponsesInput = { 
+        query: `Draft an email based on the following prompt: ${prompt}`, 
+        apiKey: userApiKey,
+        userId: user?.id,
+        organizationId: user?.organizationId,
+      };
       const result: GenerateDraftEmailResponsesOutput = await generateDraftEmailResponses(input);
       
       if (result.drafts && result.drafts.length > 0) {

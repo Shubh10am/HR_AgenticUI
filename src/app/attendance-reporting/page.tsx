@@ -392,6 +392,8 @@ export default function AttendanceReportingPage() {
       const aiInput: GenerateDraftEmailResponsesInput = { 
         query: `Please write a concise and professional reason for a leave application based on the following input: ${leaveReasonPrompt}. Also provide a suitable subject line for this reason.`,
         apiKey: userApiKey,
+        userId: user?.id,
+        organizationId: user?.organizationId,
       };
       const result = await generateDraftEmailResponses(aiInput);
       

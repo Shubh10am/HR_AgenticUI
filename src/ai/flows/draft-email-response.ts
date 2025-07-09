@@ -15,6 +15,7 @@ import {
   GenerateDraftEmailResponsesInputSchemaDef as OriginalSchema, 
   GenerateDraftEmailResponsesOutputSchemaDef,
 } from '@/ai/schemas/draft-email-response-definitions';
+import { logTokenUsage } from '@/services/usageService';
 
 // Extend original schema to include optional apiKey
 const GenerateDraftEmailResponsesInputSchemaDef = OriginalSchema.extend({
@@ -35,7 +36,7 @@ const generateDraftEmailResponsesFlow = ai.defineFlow(
     outputSchema: GenerateDraftEmailResponsesOutputSchemaDef,
   },
   async (input) => {
-    const { apiKey, ...promptData } = input;
+    const { apiKey, userId, organizationId, ...promptData } = input;
     
     const runner = apiKey ? genkit({plugins: [googleAI({apiKey})]}) : ai;
 
@@ -53,6 +54,15 @@ Format your response as a JSON object. The 'drafts' field in the JSON should con
         schema: GenerateDraftEmailResponsesOutputSchemaDef,
       },
     });
+
+    if (userId && organizationId && organizationId !== 'guest-org-id' && response.usage) {
+      logTokenUsage({
+        employeeId: userId,
+        organizationId,
+        feature: 'generateDraftEmailResponsesFlow',
+        usage: response.usage,
+      });
+    }
 
     const output = response.output;
     if (!output) {
