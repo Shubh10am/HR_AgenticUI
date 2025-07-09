@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef, type SVGProps, type ReactNode } from 'react';
@@ -727,7 +726,7 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="border-t border-neutral-800">
-          <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between py-6 text-sm text-neutral-500 px-4 sm:px-6">
+          <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between py-6 text-sm text-neutral-500 px-4 sm:px-6 sm:pr-20">
             <div className="flex items-center gap-6 order-2 sm:order-1 mt-4 sm:mt-0">
                 <Link href="#" className="hover:text-white transition-colors"><Hash className="h-5 w-5" /></Link>
                 <Link href="#" className="hover:text-white transition-colors"><Linkedin className="h-5 w-5" /></Link>
