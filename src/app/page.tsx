@@ -184,7 +184,7 @@ export default function LandingPage() {
           <Link href="/" className="flex items-center gap-2">
             <Logo className="h-8 w-8 text-primary" />
             <span className="font-bold text-lg text-white hidden sm:block">HR Streamline AI</span>
-            <span className="font-bold text-lg text-white block sm:hidden">Agentic_HR</span>
+            <span className="font-bold text-lg text-white block sm:hidden">Agentic-HR</span>
           </Link>
           <div className="flex items-center gap-2">
             <Button variant="ghost" asChild className="text-white hover:bg-neutral-800 hover:text-white hidden sm:flex">
