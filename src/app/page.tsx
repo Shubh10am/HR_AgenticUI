@@ -162,14 +162,14 @@ export default function LandingPage() {
   );
 
   const tools = [
-      { name: 'Monday.com', hint: 'monday com logo' },
-      { name: 'ClickUp', hint: 'clickup logo' },
-      { name: 'Slack', hint: 'slack logo' },
-      { name: 'Asana', hint: 'asana logo' },
-      { name: 'Jira', hint: 'jira logo' },
-      { name: 'Trello', hint: 'trello logo' },
-      { name: 'Figma', hint: 'figma logo' },
-      { name: 'Notion', hint: 'notion logo' },
+      { name: 'Monday.com', hint: 'monday com logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/monday_logo_icon_168951.png' },
+      { name: 'ClickUp', hint: 'clickup logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/clickup_logo_icon_167882.png' },
+      { name: 'Slack', hint: 'slack logo', logoUrl: 'https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png' },
+      { name: 'Asana', hint: 'asana logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/asana_logo_icon_169148.png' },
+      { name: 'Jira', hint: 'jira logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/atlassian_jira_logo_icon_170545.png' },
+      { name: 'Trello', hint: 'trello logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/trello_logo_icon_168974.png' },
+      { name: 'Figma', hint: 'figma logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/figma_logo_icon_170157.png' },
+      { name: 'Notion', hint: 'notion logo', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png' },
   ];
 
   return (
@@ -457,7 +457,7 @@ export default function LandingPage() {
                     <div className="flex animate-marquee">
                         {[...tools, ...tools].map((tool, index) => (
                             <div key={`${tool.name}-${index}`} className="flex-shrink-0 flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-lg px-4 py-2 shadow-md text-black mx-4">
-                                <Image src={`https://placehold.co/24x24.png`} width={24} height={24} alt={`${tool.name} logo`} data-ai-hint={tool.hint} />
+                                <Image src={tool.logoUrl} width={24} height={24} alt={`${tool.name} logo`} data-ai-hint={tool.hint} className="object-contain" />
                                 <span className="font-semibold text-sm md:text-base">{tool.name}</span>
                             </div>
                         ))}
@@ -510,8 +510,8 @@ export default function LandingPage() {
               <div className="bg-neutral-800/50 backdrop-blur-sm border border-neutral-700 rounded-2xl px-4 py-3 flex items-center justify-center gap-4 sm:gap-5 shadow-2xl">
                 <Image src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" width={28} height={28} alt="Gmail logo" data-ai-hint="gmail logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
                 <Image src="https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png" width={28} height={28} alt="Slack logo" data-ai-hint="slack logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
-                <Image src="https://upload.wikimedia.org/wikipedia/commons/e/e6/Atlassian_logo_new.svg" width={28} height={28} alt="Atlassian logo" data-ai-hint="atlassian logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
-                <Image src="https://www.microsoft.com/favicon.ico" width={28} height={28} alt="Microsoft Teams logo" data-ai-hint="microsoft teams logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
+                <Image src="https://upload.wikimedia.org/wikipedia/commons/e/e6/Atlassian_logo_new.svg" width={28} height={28} alt="Atlassian logo" data-ai-hint="atlassian jira logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
+                <Image src="https://upload.wikimedia.org/wikipedia/commons/c/c9/Microsoft_Office_Teams_%282018%E2%80%93present%29.svg" width={28} height={28} alt="Microsoft Teams logo" data-ai-hint="microsoft teams logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity object-contain" />
                 <Image src="https://upload.wikimedia.org/wikipedia/commons/8/87/Google_Chrome_icon_%282011%29.png" width={28} height={28} alt="Chrome logo" data-ai-hint="chrome browser logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
               </div>
             </div>
