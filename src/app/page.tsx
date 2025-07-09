@@ -26,6 +26,10 @@ import {
   X,
   Instagram,
   Youtube,
+  Play,
+  Image as ImageIcon,
+  Signature,
+  Globe,
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -117,6 +121,36 @@ function HoverPill({ icon: Icon, label, variant = 'light' | 'dark' }: HoverPillP
     </div>
   );
 }
+
+const AssetIcon = ({
+  icon: Icon,
+  className,
+  wrapperClassName,
+  iconClassName,
+  animationDelay,
+  animation,
+}: {
+  icon: React.ElementType;
+  className?: string;
+  wrapperClassName?: string;
+  iconClassName?: string;
+  animationDelay?: string;
+  animation?: 'float' | 'float-slow';
+}) => {
+  return (
+    <div
+      className={cn(
+        'absolute w-20 h-24 rounded-2xl flex items-center justify-center opacity-0 group-[.is-visible]:animate-fade-in-up hidden lg:flex',
+        animation === 'float' ? 'animate-float' : 'animate-float-slow',
+        className
+      )}
+      style={{ animationDelay }}
+    >
+      <div className={cn('absolute inset-0 rounded-2xl border backdrop-blur-sm', wrapperClassName)} />
+      <Icon className={cn('h-10 w-10 z-10', iconClassName)} />
+    </div>
+  );
+};
 
 export default function LandingPage() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -483,12 +517,78 @@ export default function LandingPage() {
             </div>
         </section>
 
-        {/* Super Secure Section */}
+        {/* Consistent Collaboration Section */}
         <section
           ref={(el) => (sectionsRef.current[5] = el)}
           className={cn(
-            "bg-white text-black py-16 sm:py-24 md:py-32 group",
+            "container mx-auto py-16 sm:py-24 md:py-32 group",
             visibleSections.has(5) ? "is-visible" : ""
+          )}
+        >
+          <div className="relative flex flex-col items-center justify-center text-center max-w-4xl mx-auto">
+            <div className="absolute top-[-5rem] bottom-[-5rem] left-[-10rem] right-[-10rem] -z-10">
+                <AssetIcon
+                    icon={Play}
+                    className="top-12 left-12"
+                    wrapperClassName="border-cyan-500/20 bg-cyan-500/10"
+                    iconClassName="text-cyan-400"
+                    animation="float"
+                    animationDelay="0.3s"
+                />
+                <AssetIcon
+                    icon={FileText}
+                    className="top-[60%] left-0"
+                    wrapperClassName="border-red-500/20 bg-red-500/10"
+                    iconClassName="text-red-400"
+                    animation="float-slow"
+                    animationDelay="0.5s"
+                />
+                <AssetIcon
+                    icon={ImageIcon}
+                    className="bottom-0 left-1/2 -translate-x-1/2"
+                    wrapperClassName="border-purple-500/20 bg-purple-500/10"
+                    iconClassName="text-purple-400"
+                    animation="float"
+                    animationDelay="0.7s"
+                />
+                <AssetIcon
+                    icon={Signature}
+                    className="top-[60%] right-0"
+                    wrapperClassName="border-green-500/20 bg-green-500/10"
+                    iconClassName="text-green-400"
+                    animation="float-slow"
+                    animationDelay="0.6s"
+                />
+                <AssetIcon
+                    icon={Globe}
+                    className="top-12 right-12"
+                    wrapperClassName="border-indigo-500/20 bg-indigo-500/10"
+                    iconClassName="text-indigo-400"
+                    animation="float"
+                    animationDelay="0.4s"
+                />
+            </div>
+
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-8 text-white transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                Consistent collaboration <br className="hidden sm:block" /> experience across{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+                    all assets in one place
+                </span>
+            </h2>
+            <div className="opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+              <Button size="lg" asChild className="bg-black text-white hover:bg-neutral-800 rounded-full px-8 py-3 h-auto border border-neutral-700 shadow-lg">
+                <Link href="/register">Try Now For Free</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* Super Secure Section */}
+        <section
+          ref={(el) => (sectionsRef.current[6] = el)}
+          className={cn(
+            "bg-white text-black py-16 sm:py-24 md:py-32 group",
+            visibleSections.has(6) ? "is-visible" : ""
           )}
         >
           <div className="container mx-auto px-4 sm:px-6 flex flex-col items-center">
@@ -546,10 +646,10 @@ export default function LandingPage() {
 
         {/* Reviews in Slow Motion Section */}
         <section
-          ref={(el) => (sectionsRef.current[6] = el)}
+          ref={(el) => (sectionsRef.current[7] = el)}
           className={cn(
             "container mx-auto py-16 sm:py-24 md:py-32 group",
-            visibleSections.has(6) ? "is-visible" : ""
+            visibleSections.has(7) ? "is-visible" : ""
           )}
         >
           <div className="relative rounded-2xl bg-gradient-to-br from-orange-400 via-red-500 to-rose-600 p-6 sm:p-8 md:p-16 overflow-hidden min-h-[550px] sm:min-h-[600px] flex flex-col justify-around items-center">
@@ -593,10 +693,10 @@ export default function LandingPage() {
 
         {/* FAQ Section */}
         <section
-          ref={(el) => (sectionsRef.current[7] = el)}
+          ref={(el) => (sectionsRef.current[8] = el)}
           className={cn(
             "container relative mx-auto py-16 sm:py-24 md:py-32 group",
-            visibleSections.has(7) ? "is-visible" : ""
+            visibleSections.has(8) ? "is-visible" : ""
           )}
         >
           {/* Decorative background shapes */}
@@ -654,10 +754,10 @@ export default function LandingPage() {
 
         {/* Final CTA Section */}
         <section
-          ref={(el) => (sectionsRef.current[8] = el)}
+          ref={(el) => (sectionsRef.current[9] = el)}
           className={cn(
             "container mx-auto py-16 sm:py-24 md:py-32 group",
-            visibleSections.has(8) ? "is-visible" : ""
+            visibleSections.has(9) ? "is-visible" : ""
           )}
         >
           <div className="relative p-8 sm:p-16 rounded-2xl bg-gradient-to-br from-yellow-400 via-orange-500 to-red-600 text-center overflow-hidden grainy-texture opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
