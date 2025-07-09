@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect, useCallback } from 'react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/contexts/auth-context';
-import { Slider } from '@/components/ui/slider'; // Import Slider
+import { Slider } from '@/components/ui/slider';
 
 const NOTIFICATION_SOUND_ENABLED_KEY = 'notificationSoundEnabled';
 const NOTIFICATION_SOUND_VOLUME_KEY = 'notificationSoundVolume';
@@ -27,7 +27,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 export default function SettingsPage() {
   const { toast } = useToast();
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [notificationVolume, setNotificationVolume] = useState(50); // Default volume 50%
+  const [notificationVolume, setNotificationVolume] = useState(50);
   const { theme, setTheme } = useTheme();
   
   const { token } = useAuth();
@@ -35,11 +35,14 @@ export default function SettingsPage() {
   const [dbApiKey, setDbApiKey] = useState<string | null>(null);
   const [inputApiKey, setInputApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
-  const [isKeyLoading, setIsKeyLoading] = useState(false);
+  const [isKeyLoading, setIsKeyLoading] = useState(true);
   const [isKeySaving, setIsKeySaving] = useState(false);
   
   const fetchApiKey = useCallback(async () => {
-    if (!token) return;
+    if (!token) {
+        setIsKeyLoading(false);
+        return;
+    };
     setIsKeyLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/api/settings/api-key`, {
@@ -80,7 +83,6 @@ export default function SettingsPage() {
     fetchApiKey();
   }, [fetchApiKey]);
 
-
   const handleMockAction = (action: string) => {
     toast({
       title: `${action} (Mock)`,
@@ -100,10 +102,7 @@ export default function SettingsPage() {
     const newVolume = volumeArray[0];
     setNotificationVolume(newVolume);
     localStorage.setItem(NOTIFICATION_SOUND_VOLUME_KEY, String(newVolume));
-    // Optional: Provide immediate feedback for volume change, e.g., play a test sound
-    // toast({ title: `Volume set to ${newVolume}%` }); 
   };
-
 
   const handleThemeChange = (value: string) => {
     setTheme(value);
