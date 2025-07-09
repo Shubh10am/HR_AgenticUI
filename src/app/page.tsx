@@ -578,9 +578,9 @@ export default function LandingPage() {
               <div className="bg-neutral-800/50 backdrop-blur-sm border border-neutral-700 rounded-2xl px-4 py-3 flex items-center justify-center gap-4 sm:gap-5 shadow-2xl">
                 <Image src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" width={28} height={28} alt="Gmail logo" data-ai-hint="gmail logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
                 <Image src="https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png" width={28} height={28} alt="Slack logo" data-ai-hint="slack logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
-                <Image src="https://upload.wikimedia.org/wikipedia/commons/4/41/Atlassian_logo_gradient_blue_to_green.svg" width={28} height={28} alt="Atlassian logo" data-ai-hint="atlassian jira logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
+                <Image src="https://cdn.icon-icons.com/icons2/2699/PNG/512/atlassian_jira_logo_icon_170511.png" width={28} height={28} alt="Atlassian logo" data-ai-hint="atlassian jira logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
                 <Image src="https://upload.wikimedia.org/wikipedia/commons/c/c9/Microsoft_Office_Teams_%282018%E2%80%93present%29.svg" width={28} height={28} alt="Microsoft Teams logo" data-ai-hint="microsoft teams logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity object-contain" />
-                <Image src="https://upload.wikimedia.org/wikipedia/commons/a/a8/Google_Chrome_icon_%28send_to_phone%29.svg" width={28} height={28} alt="Chrome logo" data-ai-hint="chrome browser logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
+                <Image src="https://upload.wikimedia.org/wikipedia/commons/8/87/Google_Chrome_icon_%282011%29.png" width={28} height={28} alt="Chrome logo" data-ai-hint="chrome browser logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
               </div>
             </div>
           </div>
@@ -622,7 +622,7 @@ export default function LandingPage() {
             </div>
 
             {/* Right Column (Accordion) */}
-            <div className="lg:col-span-2 space-y-4 opacity-0 group-[.is-visible]:animate-fade-in-up max-w-3xl" style={{ animationDelay: '0.4s' }}>
+            <div className="lg:col-span-2 max-w-3xl space-y-4 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
               <Accordion type="single" collapsible className="w-full mx-auto">
                 <AccordionItem value="item-1">
                   <AccordionTrigger className="text-lg">What is HR Streamline AI?</AccordionTrigger>
@@ -672,9 +672,59 @@ export default function LandingPage() {
 
       </main>
 
-      <footer className="border-t border-neutral-800">
-        <div className="container py-6 text-center text-sm text-neutral-500 px-4 sm:px-6">
-          © {new Date().getFullYear()} HR Streamline AI. All Rights Reserved.
+      <footer className="border-t border-neutral-800 bg-black text-white">
+        <div className="container mx-auto px-4 sm:px-6 py-16">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+            {/* Column 1: Branding & Features */}
+            <div className="col-span-2 lg:col-span-2">
+              <Link href="/" className="flex items-center gap-2 mb-4">
+                <Logo className="h-8 w-8 text-primary" />
+                <span className="font-bold text-lg text-white">HR Streamline AI</span>
+              </Link>
+              <ul className="space-y-2">
+                <li><Link href="/recruitment" className="text-neutral-400 hover:text-white">For Recruitment</Link></li>
+                <li><Link href="/tasks" className="text-neutral-400 hover:text-white">For Onboarding</Link></li>
+                <li><Link href="/attendance-reporting" className="text-neutral-400 hover:text-white">For Reporting</Link></li>
+                <li><Link href="/unified-communications" className="text-neutral-400 hover:text-white">For Communication</Link></li>
+              </ul>
+            </div>
+
+            {/* Column 2: Integrations */}
+            <div>
+              <h3 className="font-semibold text-white mb-4">Integrations</h3>
+              <ul className="space-y-2">
+                <li><Link href="/integrations" className="text-neutral-400 hover:text-white">Slack</Link></li>
+                <li><Link href="/integrations" className="text-neutral-400 hover:text-white">Gmail</Link></li>
+                <li><Link href="/integrations" className="text-neutral-400 hover:text-white">Google Calendar</Link></li>
+                <li><Link href="/integrations" className="text-neutral-400 hover:text-white">GitHub</Link></li>
+              </ul>
+            </div>
+
+            {/* Column 3: Company */}
+            <div>
+              <h3 className="font-semibold text-white mb-4">Company</h3>
+              <ul className="space-y-2">
+                <li><Link href="/contact" className="text-neutral-400 hover:text-white">Contact Us</Link></li>
+                <li><Link href="#" className="text-neutral-400 hover:text-white">Blog</Link></li>
+                <li><Link href="#" className="text-neutral-400 hover:text-white">Docs</Link></li>
+              </ul>
+            </div>
+
+            {/* Column 4: Legal */}
+            <div>
+              <h3 className="font-semibold text-white mb-4">Legal</h3>
+              <ul className="space-y-2">
+                <li><Link href="#" className="text-neutral-400 hover:text-white">Security</Link></li>
+                <li><Link href="#" className="text-neutral-400 hover:text-white">Privacy</Link></li>
+                <li><Link href="#" className="text-neutral-400 hover:text-white">Terms</Link></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div className="border-t border-neutral-800">
+          <div className="container py-6 text-center text-sm text-neutral-500 px-4 sm:px-6">
+            © {new Date().getFullYear()} HR Streamline AI. All Rights Reserved.
+          </div>
         </div>
       </footer>
 

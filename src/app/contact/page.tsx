@@ -172,9 +172,59 @@ export default function ContactPage() {
         </div>
       </main>
 
-      <footer className="border-t border-neutral-800">
-        <div className="container py-6 text-center text-sm text-neutral-500 px-4 sm:px-6">
-          © {new Date().getFullYear()} HR Streamline AI. All Rights Reserved.
+      <footer className="border-t border-neutral-800 bg-black text-white">
+        <div className="container mx-auto px-4 sm:px-6 py-16">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+            {/* Column 1: Branding & Features */}
+            <div className="col-span-2 lg:col-span-2">
+              <Link href="/" className="flex items-center gap-2 mb-4">
+                <Logo className="h-8 w-8 text-primary" />
+                <span className="font-bold text-lg text-white">HR Streamline AI</span>
+              </Link>
+              <ul className="space-y-2">
+                <li><Link href="/recruitment" className="text-neutral-400 hover:text-white">For Recruitment</Link></li>
+                <li><Link href="/tasks" className="text-neutral-400 hover:text-white">For Onboarding</Link></li>
+                <li><Link href="/attendance-reporting" className="text-neutral-400 hover:text-white">For Reporting</Link></li>
+                <li><Link href="/unified-communications" className="text-neutral-400 hover:text-white">For Communication</Link></li>
+              </ul>
+            </div>
+
+            {/* Column 2: Integrations */}
+            <div>
+              <h3 className="font-semibold text-white mb-4">Integrations</h3>
+              <ul className="space-y-2">
+                <li><Link href="/integrations" className="text-neutral-400 hover:text-white">Slack</Link></li>
+                <li><Link href="/integrations" className="text-neutral-400 hover:text-white">Gmail</Link></li>
+                <li><Link href="/integrations" className="text-neutral-400 hover:text-white">Google Calendar</Link></li>
+                <li><Link href="/integrations" className="text-neutral-400 hover:text-white">GitHub</Link></li>
+              </ul>
+            </div>
+
+            {/* Column 3: Company */}
+            <div>
+              <h3 className="font-semibold text-white mb-4">Company</h3>
+              <ul className="space-y-2">
+                <li><Link href="/contact" className="text-neutral-400 hover:text-white">Contact Us</Link></li>
+                <li><Link href="#" className="text-neutral-400 hover:text-white">Blog</Link></li>
+                <li><Link href="#" className="text-neutral-400 hover:text-white">Docs</Link></li>
+              </ul>
+            </div>
+
+            {/* Column 4: Legal */}
+            <div>
+              <h3 className="font-semibold text-white mb-4">Legal</h3>
+              <ul className="space-y-2">
+                <li><Link href="#" className="text-neutral-400 hover:text-white">Security</Link></li>
+                <li><Link href="#" className="text-neutral-400 hover:text-white">Privacy</Link></li>
+                <li><Link href="#" className="text-neutral-400 hover:text-white">Terms</Link></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div className="border-t border-neutral-800">
+          <div className="container py-6 text-center text-sm text-neutral-500 px-4 sm:px-6">
+            © {new Date().getFullYear()} HR Streamline AI. All Rights Reserved.
+          </div>
         </div>
       </footer>
     </div>
