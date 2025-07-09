@@ -1,4 +1,3 @@
-
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
 import Organization from '@/models/Organization';
@@ -7,6 +6,7 @@ import { encrypt, decrypt } from '@/lib/encryption';
 
 type ApiKeyResponse = {
   apiKey?: string | null; // Decrypted key for GET, or part of it
+  organizationName?: string; // Add org name to response
   message?: string;
   error?: string;
 };
@@ -43,12 +43,12 @@ export default async function handler(
     try {
       if (organization.encryptedGoogleApiKey) {
         const decryptedKey = decrypt(organization.encryptedGoogleApiKey);
-        if (decryptedKey === null && organization.encryptedGoogleApiKey) { // Check if decryption explicitly failed vs. no key
+        if (decryptedKey === null && organization.encryptedGoogleApiKey) {
             return res.status(500).json({ error: 'Failed to decrypt API key. Key might be corrupted or encryption key changed.' });
         }
-        return res.status(200).json({ apiKey: decryptedKey });
+        return res.status(200).json({ apiKey: decryptedKey, organizationName: organization.name });
       }
-      return res.status(200).json({ apiKey: null, message: 'No API key configured for this organization.' });
+      return res.status(200).json({ apiKey: null, organizationName: organization.name, message: 'No API key configured for this organization.' });
     } catch (error: any) {
       console.error('Error fetching/decrypting API key:', error);
       return res.status(500).json({ error: error.message || 'Internal Server Error during API key retrieval.' });
@@ -73,7 +73,7 @@ export default async function handler(
       return res.status(500).json({ error: 'Internal Server Error while saving API key.' });
     }
   } else if (req.method === 'DELETE') {
-    organization.encryptedGoogleApiKey = undefined; // Or null, depending on schema definition
+    organization.encryptedGoogleApiKey = undefined;
     try {
       await organization.save();
       return res.status(200).json({ message: 'API key removed successfully.' });

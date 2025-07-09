@@ -1,4 +1,3 @@
-
 'use client';
 
 import PageHeader from '@/components/page-header';
@@ -10,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Lock, Bell, Palette, Plug, ChevronRight, KeyRound, Eye, EyeOff, Copy, Info, Loader2, Volume2, Sun, Moon, Laptop, VolumeX, Volume1, BarChart } from 'lucide-react';
+import { Lock, Bell, Palette, Plug, ChevronRight, KeyRound, Eye, EyeOff, Copy, Info, Loader2, Volume2, Sun, Moon, Laptop, VolumeX, Volume1, BarChart, Terminal } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
@@ -28,6 +27,17 @@ import {
   DialogClose,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 
 const NOTIFICATION_SOUND_ENABLED_KEY = 'notificationSoundEnabled';
@@ -41,7 +51,7 @@ export default function SettingsPage() {
   const [notificationVolume, setNotificationVolume] = useState(50);
   const { theme, setTheme } = useTheme();
   
-  const { token, user, setUserApiKey: setApiKeyInContext } = useAuth();
+  const { token, user, setUserApiKey: setApiKeyInContext, logout } = useAuth();
   const isGuest = user?.organizationId === 'guest-org-id';
 
   const [dbApiKey, setDbApiKey] = useState<string | null>(null);
@@ -62,6 +72,13 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
+  // State for account deletion
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [orgNameConfirm, setOrgNameConfirm] = useState('');
+  const [orgName, setOrgName] = useState(''); // To store org name for confirmation
+
   
   const fetchApiKey = useCallback(async () => {
     if (!token || token.startsWith('guest-')) {
@@ -77,6 +94,7 @@ export default function SettingsPage() {
       if (response.ok) {
         setDbApiKey(data.apiKey || null);
         setInputApiKey(data.apiKey || '');
+        if (data.organizationName) setOrgName(data.organizationName); // Set org name if returned
       } else {
         toast({ title: 'Failed to fetch API key', description: data.error || 'Could not retrieve API key.', variant: 'destructive' });
         setDbApiKey(null);
@@ -281,6 +299,48 @@ export default function SettingsPage() {
     });
   };
 
+  const handleDeleteAccountSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!token) return;
+
+    setIsDeleting(true);
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/profile/delete-account`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                password: passwordConfirm,
+                ...(user?.role === 'Admin' && { organizationName: orgNameConfirm }),
+            }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to delete account.');
+        }
+
+        toast({ title: 'Account Deleted', description: 'Your account has been permanently deleted.' });
+        setIsDeleteDialogOpen(false);
+        logout(); // Log out the user after successful deletion
+    } catch (error: any) {
+        toast({ title: 'Deletion Failed', description: error.message, variant: 'destructive' });
+    } finally {
+        setIsDeleting(false);
+        setPasswordConfirm('');
+        setOrgNameConfirm('');
+    }
+  };
+
+  const isDeleteConfirmed = () => {
+    if (user?.role === 'Admin') {
+      return passwordConfirm.length > 0 && orgNameConfirm === orgName;
+    }
+    return passwordConfirm.length > 0;
+  };
+
   return (
     <>
       <PageHeader
@@ -343,9 +403,50 @@ export default function SettingsPage() {
               </Label>
               <Switch id="twoFactor" disabled checked={false} aria-readonly />
             </div>
-             <Button variant="destructive" className="w-full justify-start" onClick={() => handleMockAction('Delete Account Clicked')}>
-              Delete Account (Mock)
-            </Button>
+             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="w-full justify-start" disabled={isGuest}>
+                        Delete Account
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <form id="delete-account-form" onSubmit={handleDeleteAccountSubmit}>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center">
+                               <Terminal className="mr-2 h-5 w-5"/> Are you absolutely sure?
+                            </AlertDialogTitle>
+                            {user?.role === 'Admin' ? (
+                                <AlertDialogDescription className="text-destructive/90">
+                                    This action is irreversible. Deleting your admin account will permanently delete the entire <strong>{orgName}</strong> organization, including all employee accounts, attendance data, and settings.
+                                </AlertDialogDescription>
+                            ) : (
+                                <AlertDialogDescription>
+                                    This will permanently delete your account and all associated data. This action cannot be undone.
+                                </AlertDialogDescription>
+                            )}
+                        </AlertDialogHeader>
+                        <div className="py-4 space-y-4">
+                            {user?.role === 'Admin' && (
+                                <div>
+                                    <Label htmlFor="orgNameConfirm">To confirm, type your organization name: <span className="font-bold">{orgName}</span></Label>
+                                    <Input id="orgNameConfirm" value={orgNameConfirm} onChange={(e) => setOrgNameConfirm(e.target.value)} required disabled={isDeleting}/>
+                                </div>
+                            )}
+                            <div>
+                                <Label htmlFor="passwordConfirm">Please enter your password to confirm</Label>
+                                <Input id="passwordConfirm" type="password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} required disabled={isDeleting}/>
+                            </div>
+                        </div>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                            <Button type="submit" variant="destructive" disabled={isDeleting || !isDeleteConfirmed()}>
+                                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                                {user?.role === 'Admin' ? 'Delete Organization' : 'Delete My Account'}
+                            </Button>
+                        </AlertDialogFooter>
+                    </form>
+                </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
 
