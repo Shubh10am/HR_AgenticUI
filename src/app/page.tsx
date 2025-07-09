@@ -98,7 +98,7 @@ function HoverPill({ icon: Icon, label, variant = 'light' | 'dark' }: HoverPillP
   const isDark = variant === 'dark';
   return (
     <div className={cn(
-      "absolute top-4 left-4 sm:top-8 sm:left-8 flex cursor-pointer items-center gap-2 rounded-full p-2 text-sm font-semibold transition-all duration-300 ease-in-out group-hover:gap-3 group-hover:pl-2 group-hover:pr-4",
+      "self-start mb-8 flex cursor-pointer items-center gap-2 rounded-full p-2 text-sm font-semibold transition-all duration-300 ease-in-out group-hover:gap-3 group-hover:pl-2 group-hover:pr-4",
       isDark
         ? "bg-white/10 text-neutral-200 group-hover:bg-white/20"
         : "bg-black/10 text-neutral-800 group-hover:bg-black/20"
