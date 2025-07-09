@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, type FormEvent } from 'react';
@@ -39,10 +38,11 @@ export default function EmailAssistancePage() {
     setDrafts([]);
 
     try {
-      const input: GenerateDraftEmailResponsesInput = { query };
+      const userApiKey = localStorage.getItem('userApiKey');
+      const input: GenerateDraftEmailResponsesInput = { query, apiKey: userApiKey };
       const result: GenerateDraftEmailResponsesOutput = await generateDraftEmailResponses(input);
-      setDrafts(result.drafts || []); // Corrected: draftResponses -> drafts
-      if (!result.drafts || result.drafts.length === 0) { // Corrected: draftResponses -> drafts
+      setDrafts(result.drafts || []); 
+      if (!result.drafts || result.drafts.length === 0) { 
         toast({
           title: "No Drafts Generated",
           description: "The AI couldn't generate drafts for this query. Try rephrasing.",
@@ -60,11 +60,8 @@ export default function EmailAssistancePage() {
     }
   }
 
-  const handleUseDraft = (draft: EmailDraft) => { // Updated to accept EmailDraft
-    localStorage.setItem('selectedEmailDraftForSmartDrafting', draft.body); // Still sending only body for now
-    // If you want to send subject too, you might stringify an object:
-    // localStorage.setItem('selectedEmailDraftForSmartDrafting', JSON.stringify(draft));
-    // And then parse it in smart-drafting page. For now, keeping it simple.
+  const handleUseDraft = (draft: EmailDraft) => { 
+    localStorage.setItem('selectedEmailDraftForSmartDrafting', draft.body); 
     toast({
       title: "Draft Selected",
       description: "Redirecting to Smart Drafting page with the selected draft body...",

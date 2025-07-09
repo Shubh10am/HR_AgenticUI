@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -10,34 +9,24 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {genkit, z} from 'genkit';
+import {googleAI} from '@genkit-ai/googleai';
 import { 
-  GenerateDraftEmailResponsesInputSchemaDef, 
+  GenerateDraftEmailResponsesInputSchemaDef as OriginalSchema, 
   GenerateDraftEmailResponsesOutputSchemaDef,
-  DraftEmailSchemaDef // Though DraftEmailSchemaDef is used within OutputSchemaDef, importing explicitly is fine.
 } from '@/ai/schemas/draft-email-response-definitions';
+
+// Extend original schema to include optional apiKey
+const GenerateDraftEmailResponsesInputSchemaDef = OriginalSchema.extend({
+  apiKey: z.string().optional().nullable(),
+});
 
 export type GenerateDraftEmailResponsesInput = z.infer<typeof GenerateDraftEmailResponsesInputSchemaDef>;
 export type GenerateDraftEmailResponsesOutput = z.infer<typeof GenerateDraftEmailResponsesOutputSchemaDef>;
-// If DraftEmail type is needed by client, export it here as well:
-// export type DraftEmail = z.infer<typeof DraftEmailSchemaDef>;
-
 
 export async function generateDraftEmailResponses(input: GenerateDraftEmailResponsesInput): Promise<GenerateDraftEmailResponsesOutput> {
   return generateDraftEmailResponsesFlow(input);
 }
-
-const prompt = ai.definePrompt({
-  name: 'generateDraftEmailResponsesPrompt',
-  input: {schema: GenerateDraftEmailResponsesInputSchemaDef},
-  output: {schema: GenerateDraftEmailResponsesOutputSchemaDef},
-  prompt: `You are an HR assistant tasked with drafting emails. Generate multiple distinct draft email options based on the following query/prompt. For each option, provide both a relevant subject line and the full email body.
-
-Query/Prompt: {{{query}}}
-
-Format your response as a JSON object. The 'drafts' field in the JSON should contain an array of objects, where each object has a 'subject' (string) and a 'body' (string) field.
-`,
-});
 
 const generateDraftEmailResponsesFlow = ai.defineFlow(
   {
@@ -45,8 +34,32 @@ const generateDraftEmailResponsesFlow = ai.defineFlow(
     inputSchema: GenerateDraftEmailResponsesInputSchemaDef,
     outputSchema: GenerateDraftEmailResponsesOutputSchemaDef,
   },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  async (input) => {
+    const { apiKey, ...promptData } = input;
+    
+    const runner = apiKey ? genkit({plugins: [googleAI({apiKey})]}) : ai;
+
+    const promptText = `You are an HR assistant tasked with drafting emails. Generate multiple distinct draft email options based on the following query/prompt. For each option, provide both a relevant subject line and the full email body.
+
+Query/Prompt: ${promptData.query}
+
+Format your response as a JSON object. The 'drafts' field in the JSON should contain an array of objects, where each object has a 'subject' (string) and a 'body' (string) field.
+`;
+
+    const response = await runner.generate({
+      model: 'gemini-2.0-flash',
+      prompt: promptText,
+      config: {
+        output: {
+          schema: GenerateDraftEmailResponsesOutputSchemaDef,
+        },
+      },
+    });
+
+    const output = response.output;
+    if (!output) {
+      throw new Error("Email draft generation failed: No output from model.");
+    }
+    return output;
   }
 );

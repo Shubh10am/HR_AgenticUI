@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, type FormEvent, useEffect } from 'react';
@@ -70,7 +69,8 @@ export default function SmartDraftingPage() {
     setIsEditingComposerBody(false);
     
     try {
-      const input: GenerateDraftEmailResponsesInput = { query: `Draft an email based on the following prompt: ${prompt}` };
+      const userApiKey = localStorage.getItem('userApiKey');
+      const input: GenerateDraftEmailResponsesInput = { query: `Draft an email based on the following prompt: ${prompt}`, apiKey: userApiKey };
       const result: GenerateDraftEmailResponsesOutput = await generateDraftEmailResponses(input);
       
       if (result.drafts && result.drafts.length > 0) {

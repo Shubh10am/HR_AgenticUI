@@ -1,4 +1,3 @@
-
 'use client';
 
 import PageHeader from '@/components/page-header';
@@ -29,7 +28,7 @@ export default function SettingsPage() {
   const [notificationVolume, setNotificationVolume] = useState(50);
   const { theme, setTheme } = useTheme();
   
-  const { token } = useAuth();
+  const { token, setUserApiKey: setApiKeyInContext } = useAuth();
 
   const [dbApiKey, setDbApiKey] = useState<string | null>(null);
   const [inputApiKey, setInputApiKey] = useState('');
@@ -132,11 +131,13 @@ export default function SettingsPage() {
       });
       const data = await response.json();
       if (response.ok) {
-        setDbApiKey(inputApiKey.trim());
+        const newKey = inputApiKey.trim();
+        setDbApiKey(newKey);
+        setApiKeyInContext(newKey);
+        localStorage.setItem('userApiKey', newKey);
         toast({
-          title: 'API Key Saved to Database',
-          description: 'Key stored for your organization. Crucially, follow steps below for local dev server.',
-          duration: 7000,
+          title: 'API Key Saved',
+          description: "Your organization's API key has been securely saved and is now active for this session.",
         });
       } else {
         toast({ title: 'Failed to save API key', description: data.error || 'Could not save API key to database.', variant: 'destructive' });
@@ -164,7 +165,9 @@ export default function SettingsPage() {
         setDbApiKey(null);
         setInputApiKey('');
         setShowApiKey(false);
-        toast({ title: 'API Key Removed', description: 'API key successfully removed from the database.' });
+        setApiKeyInContext(null);
+        localStorage.removeItem('userApiKey');
+        toast({ title: 'API Key Removed', description: 'Your key has been removed. The application will now use the fallback key, if available.' });
       } else {
         toast({ title: 'Failed to remove API key', description: data.error || 'Could not remove API key from database.', variant: 'destructive' });
       }
@@ -176,14 +179,13 @@ export default function SettingsPage() {
   };
 
   const handleCopyToClipboard = () => {
-    if (!dbApiKey && !inputApiKey) {
+    if (!inputApiKey && !dbApiKey) {
         toast({ title: 'No API Key', description: 'No API key is available to copy.', variant: 'destructive' });
         return;
     }
     const keyToCopy = inputApiKey || dbApiKey || '';
-    const instruction = `GOOGLE_API_KEY=${keyToCopy}`;
-    navigator.clipboard.writeText(instruction).then(() => {
-        toast({ title: 'Copied to Clipboard', description: 'Instructions copied. Paste into your .env.local file and restart server.' });
+    navigator.clipboard.writeText(keyToCopy).then(() => {
+        toast({ title: 'Copied to Clipboard', description: 'API Key copied to clipboard.' });
     }).catch(err => {
         toast({ title: 'Copy Failed', description: 'Could not copy to clipboard.', variant: 'destructive' });
     });
@@ -315,11 +317,10 @@ export default function SettingsPage() {
         <Card className="md:col-span-2 lg:col-span-3 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
           <CardHeader>
             <CardTitle className="flex items-center">
-              <KeyRound className="mr-2 h-5 w-5 text-primary" /> API Key Configuration (Local Development)
+              <KeyRound className="mr-2 h-5 w-5 text-primary" /> API Key Configuration
             </CardTitle>
             <CardDescription>
-             Configure the Google AI API Key for your organization. This key is stored encrypted in the database.
-             <strong className="block mt-1">For local development, AI features still require this key in <code>.env.local</code> and a server restart to take effect.</strong>
+             Configure your organization's Google AI API Key. The key is stored encrypted and used for all AI features.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -344,6 +345,10 @@ export default function SettingsPage() {
                     />
                     <Button variant="ghost" size="icon" onClick={() => setShowApiKey(!showApiKey)} aria-label={showApiKey ? 'Hide API Key' : 'Show API Key'} disabled={isKeySaving}>
                       {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                     <Button variant="outline" size="icon" onClick={handleCopyToClipboard} disabled={(!inputApiKey && !dbApiKey) || isKeyLoading}>
+                      <Copy className="h-4 w-4" />
+                      <span className="sr-only">Copy API Key</span>
                     </Button>
                   </div>
                 </div>
@@ -371,27 +376,14 @@ export default function SettingsPage() {
             )}
             <Alert variant="default" className="mt-4 border-blue-500 dark:border-blue-400">
               <Info className="h-5 w-5 text-blue-500 dark:text-blue-400" />
-              <AlertTitle className="text-blue-700 dark:text-blue-300 font-semibold">Critical Activation Steps for Local AI Features</AlertTitle>
+              <AlertTitle className="text-blue-700 dark:text-blue-300 font-semibold">API Key Usage</AlertTitle>
               <AlertDescription className="text-blue-600 dark:text-blue-200 space-y-2">
-                <p className="font-semibold">
-                  Your local development server's AI features will <strong className="text-blue-700 dark:text-blue-100">ALWAYS</strong> use the API key from the <code>.env.local</code> file found at the root of your project.
-                  The key saved to the database here is for management, for retrieval to populate <code>.env.local</code>, and for potential use in deployed environments (which would require different Genkit initialization).
-                </p>
-                <p>
-                  To make local AI features work with the desired key (even if it's the one you just saved to the database):
-                </p>
-                <ol className="list-decimal list-inside mt-2 space-y-1 pl-4">
-                  <li>Ensure the API key is correctly set in your <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">.env.local</code> file:
-                    <pre className="mt-1 p-2 bg-blue-50 dark:bg-blue-900 rounded text-xs overflow-x-auto">GOOGLE_API_KEY={inputApiKey || dbApiKey || 'YOUR_API_KEY_HERE'}</pre>
-                  </li>
-                  <li><strong>Crucial:</strong> After adding or changing the key in <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">.env.local</code>, you <strong className="text-blue-700 dark:text-blue-100">MUST completely stop your development server and then restart it</strong> (e.g., re-run <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-sm">npm run dev</code>).</li>
-                </ol>
-                <p className="mt-2 font-semibold">
-                  If <code>GOOGLE_API_KEY</code> is incorrect or missing in <code>.env.local</code>, or if the server isn't restarted after a change, local AI features will fail or use the wrong key, <strong className="text-blue-700 dark:text-blue-100">regardless of the key status shown or saved on this settings page.</strong>
-                </p>
-                <Button variant="outline" size="sm" onClick={handleCopyToClipboard} className="mt-3 text-blue-700 border-blue-500 hover:bg-blue-100 dark:text-blue-300 dark:border-blue-400 dark:hover:bg-blue-800" disabled={(!inputApiKey && !dbApiKey) || isKeyLoading}>
-                  <Copy className="mr-2 h-4 w-4" /> Copy .env.local line
-                </Button>
+                  <p>
+                    This API key will be used for all AI features within your organization. Once saved, it is fetched upon login and stored in your browser's local storage for the current session.
+                  </p>
+                  <p>
+                    If no key is provided here, the application will attempt to use a global fallback key set by the system administrator. If the fallback is also not available, AI features will be disabled.
+                  </p>
               </AlertDescription>
             </Alert>
           </CardContent>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { EmployeeRole } from '@/models/Employee';
@@ -21,6 +20,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  userApiKey: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (values: Record<string, string>) => Promise<boolean>;
@@ -28,6 +28,7 @@ interface AuthContextType {
   loginAsGuest: () => Promise<boolean>;
   logout: () => void;
   checkAuth: () => void;
+  setUserApiKey: (key: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,6 +36,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [userApiKey, setUserApiKey] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true); // Start true to check auth on load
   const router = useRouter();
   const pathname = usePathname();
@@ -45,44 +47,86 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('hrStreamlineClockInTime');
   };
 
-  const checkAuth = useCallback(() => {
+  const fetchAndSetUserApiKey = async (userToken: string) => {
+    if (!userToken || userToken.startsWith('guest-')) {
+      localStorage.removeItem('userApiKey');
+      setUserApiKey(null);
+      return;
+    }
+    try {
+      const endpoint = '/api/settings/api-key';
+      let requestUrl = endpoint;
+      if (API_BASE_URL) {
+        requestUrl = `${API_BASE_URL.replace(/\/$/, '')}${endpoint}`;
+      }
+      const response = await fetch(requestUrl, {
+        headers: { Authorization: `Bearer ${userToken}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.apiKey) {
+          localStorage.setItem('userApiKey', data.apiKey);
+          setUserApiKey(data.apiKey);
+        } else {
+          localStorage.removeItem('userApiKey');
+          setUserApiKey(null);
+        }
+      } else {
+        localStorage.removeItem('userApiKey');
+        setUserApiKey(null);
+      }
+    } catch (e) {
+      console.error("Failed to fetch user API key", e);
+      localStorage.removeItem('userApiKey');
+      setUserApiKey(null);
+    }
+  };
+  
+  const logout = useCallback(() => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('authUser');
+    localStorage.removeItem('userApiKey');
+    clearAttendanceLocalStorage();
+    setToken(null);
+    setUser(null);
+    setUserApiKey(null);
+    toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
+    router.push('/login');
+  }, [router, toast]);
+
+  const checkAuth = useCallback(async () => {
     setIsLoading(true);
     const storedToken = localStorage.getItem('authToken');
     const storedUser = localStorage.getItem('authUser');
 
     if (storedToken && storedUser) {
-      // Check if the token is a guest token.
-      if (storedToken.startsWith('guest-auth-token-')) {
-        // If it is a guest token, we treat the session as expired on a full page reload.
-        // This forces the user to click "Continue as Guest" again.
+      if (storedToken.startsWith('guest-')) {
         localStorage.removeItem('authToken');
         localStorage.removeItem('authUser');
+        localStorage.removeItem('userApiKey');
         clearAttendanceLocalStorage();
         setUser(null);
         setToken(null);
+        setUserApiKey(null);
       } else {
-        // It's a real user's token, proceed with authentication.
         setToken(storedToken);
         try {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
+          await fetchAndSetUserApiKey(storedToken);
         } catch (e) {
           console.error("Failed to parse stored user:", e);
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('authUser');
-          clearAttendanceLocalStorage();
-          setUser(null);
-          setToken(null);
+          logout();
         }
       }
     } else {
-      // No token found, ensure user is logged out.
       setUser(null);
       setToken(null);
+      setUserApiKey(null);
       clearAttendanceLocalStorage();
     }
     setIsLoading(false);
-  }, []);
+  }, [logout]);
 
   useEffect(() => {
     checkAuth();
@@ -99,10 +143,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const isPublicRoute = publicRoutes.includes(pathname);
 
       if (isAuthenticatedUser && isPublicOnlyRoute) {
-        // If logged in, redirect from login/register to dashboard
         router.push('/dashboard'); 
       } else if (!isAuthenticatedUser && !isPublicRoute) {
-        // If not logged in and not on a public route, redirect to login
         router.push('/login'); 
       }
     }
@@ -131,11 +173,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
       
-      clearAttendanceLocalStorage(); // Clear previous user's attendance state
+      clearAttendanceLocalStorage();
       localStorage.setItem('authToken', data.token);
       localStorage.setItem('authUser', JSON.stringify(data.user));
       setToken(data.token);
       setUser(data.user);
+      await fetchAndSetUserApiKey(data.token);
       toast({ title: 'Login Successful', description: 'Welcome back!' });
       router.push('/dashboard'); 
       setIsLoading(false);
@@ -170,7 +213,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
       
-      clearAttendanceLocalStorage(); // Clear any potential attendance state before redirecting to login
+      clearAttendanceLocalStorage(); 
       toast({ title: 'Registration Successful', description: 'Please log in with your new credentials.' });
       router.push('/login'); 
       setIsLoading(false);
@@ -186,7 +229,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const loginAsGuest = async (): Promise<boolean> => {
     setIsLoading(true);
     
-    clearAttendanceLocalStorage(); // Ensure guest session starts clean
+    clearAttendanceLocalStorage();
+    localStorage.removeItem('userApiKey');
+    setUserApiKey(null);
 
     const guestUser: User = {
       id: 'guest-user-id-' + Date.now(), 
@@ -207,21 +252,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false);
     return true;
   };
-
-  const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('authUser');
-    clearAttendanceLocalStorage(); // Clear attendance state on logout
-    setToken(null);
-    setUser(null);
-    toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
-    router.push('/login'); 
-  };
   
   const isAuthenticated = !!user && !!token;
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, isAuthenticated, login, register, loginAsGuest, logout, checkAuth }}>
+    <AuthContext.Provider value={{ user, token, userApiKey, isLoading, isAuthenticated, login, register, loginAsGuest, logout, checkAuth, setUserApiKey }}>
       {children}
     </AuthContext.Provider>
   );

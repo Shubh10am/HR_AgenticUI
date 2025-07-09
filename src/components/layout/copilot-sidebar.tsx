@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect, type FormEvent } from 'react';
@@ -93,7 +92,8 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
     setIsLoading(true);
 
     try {
-      const aiInput: CopilotChatInput = { userInput: trimmedInput };
+      const userApiKey = localStorage.getItem('userApiKey');
+      const aiInput: CopilotChatInput = { userInput: trimmedInput, apiKey: userApiKey };
       const result: CopilotChatOutput = await chatWithCopilot(aiInput);
       
       const newAiMessage: ChatMessage = {

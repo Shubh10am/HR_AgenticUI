@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect } from 'react'
@@ -48,7 +47,8 @@ export default function RecruitmentPage() {
     setIsJdLoading(true);
     setGeneratedJd('');
     try {
-      const input: GenerateJobDescriptionInput = { prompt: jdPrompt };
+      const userApiKey = localStorage.getItem('userApiKey');
+      const input: GenerateJobDescriptionInput = { prompt: jdPrompt, apiKey: userApiKey };
       const result: GenerateJobDescriptionOutput = await generateJobDescription(input);
       setGeneratedJd(result.jobDescription);
     } catch (error) {
@@ -88,11 +88,13 @@ export default function RecruitmentPage() {
     setIsInterviewLoading(true);
     setInterviewResult(null);
     try {
+      const userApiKey = localStorage.getItem('userApiKey');
       const input: AiInterviewerInput = {
         jobDescription: interviewerJobDesc,
         candidateResume: candidateResumeTextForInterview,
         candidateName,
-        interviewRounds: numInterviewRounds
+        interviewRounds: numInterviewRounds,
+        apiKey: userApiKey,
       };
       const result: AiInterviewerOutput = await aiInterviewer(input);
       setInterviewResult(result);
@@ -194,7 +196,8 @@ export default function RecruitmentPage() {
     setIsAnalysisLoading(true);
     setAnalysisResult(null);
     try {
-      const input: AnalyzeResumeInput = { resumeText: resumeForAnalysis };
+      const userApiKey = localStorage.getItem('userApiKey');
+      const input: AnalyzeResumeInput = { resumeText: resumeForAnalysis, apiKey: userApiKey };
       const result: AnalyzeResumeOutput = await analyzeResume(input);
       setAnalysisResult(result);
     } catch (error) {
@@ -356,37 +359,20 @@ export default function RecruitmentPage() {
                     </CardContent>
                   </Card>
                   
-                  {analysisResult.extractedUrls && analysisResult.extractedUrls.length > 0 && (
+                  {analysisResult.keywords && analysisResult.keywords.length > 0 && (
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-lg flex items-center"><LinkIcon className="mr-2 h-5 w-5 text-primary"/>Extracted Links</CardTitle>
+                        <CardTitle className="text-lg flex items-center"><CheckSquare className="mr-2 h-5 w-5 text-primary"/>Keywords Identified</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <ul className="list-disc pl-5 space-y-1 text-sm">
-                          {analysisResult.extractedUrls.map((url, index) => (
-                            <li key={index}>
-                              <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">
-                                {url}
-                              </a>
-                            </li>
+                        <div className="flex flex-wrap gap-2">
+                          {analysisResult.keywords.map((keyword, index) => (
+                            <Badge key={index} variant="secondary">{keyword}</Badge>
                           ))}
-                        </ul>
+                        </div>
                       </CardContent>
                     </Card>
                   )}
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg flex items-center"><CheckSquare className="mr-2 h-5 w-5 text-primary"/>Keywords Identified</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-2">
-                        {analysisResult.keywords.map((keyword, index) => (
-                          <Badge key={index} variant="secondary">{keyword}</Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
 
                   <div className="grid md:grid-cols-2 gap-6">
                     <Card>
