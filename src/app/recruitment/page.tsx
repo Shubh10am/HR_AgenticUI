@@ -229,7 +229,7 @@ export default function RecruitmentPage() {
         description="Manage your entire recruitment lifecycle with AI-powered tools."
       />
       <Tabs defaultValue="job-creation" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-2 md:grid-cols-5 mb-6">
           <TabsTrigger value="job-creation"><FileText className="mr-2 h-4 w-4" />Job Creation</TabsTrigger>
           <TabsTrigger value="resume-filtering"><UserCheck className="mr-2 h-4 w-4" />Resume Filtering</TabsTrigger>
           <TabsTrigger value="ats-score-check"><SearchCheck className="mr-2 h-4 w-4" />ATS Score Check</TabsTrigger>
