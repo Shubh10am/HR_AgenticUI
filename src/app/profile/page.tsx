@@ -9,26 +9,69 @@ import { Separator } from '@/components/ui/separator';
 import { User, Edit3, Activity, Settings2, Bell, Palette, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export default function ProfilePage() {
   const { toast } = useToast();
-  const { user, isLoading: authLoading } = useAuth();
-  const [clientUser, setClientUser] = useState(user);
+  const { user, token, isLoading: authLoading, checkAuth } = useAuth();
 
-  // Ensure user data is updated on client after hydration
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editName, setEditName] = useState(user?.name || '');
+
+  // Keep a client-side version of the user to avoid hydration issues
+  // and to ensure the UI updates when the context does.
+  const [clientUser, setClientUser] = useState(user);
   useEffect(() => {
     if (user) {
       setClientUser(user);
+      setEditName(user.name); // Sync edit name when user context changes
     }
   }, [user]);
 
+  const handleEditProfileSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!token || !editName.trim()) return;
 
-  const handleEditProfile = () => {
-    toast({
-      title: 'Edit Profile Clicked',
-      description: 'This would open a modal or navigate to an edit profile form (mock).',
-    });
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: editName.trim() }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update profile.');
+      }
+
+      // Update local storage and refresh auth context
+      localStorage.setItem('authUser', JSON.stringify(data.user));
+      checkAuth();
+
+      toast({
+        title: 'Profile Updated',
+        description: 'Your name has been successfully updated.',
+      });
+      setIsEditDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        title: 'Update Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (authLoading || !clientUser) {
@@ -60,9 +103,42 @@ export default function ProfilePage() {
             </Avatar>
             <CardTitle className="text-2xl">{clientUser.name}</CardTitle>
             <CardDescription>{clientUser.email}</CardDescription>
-            <Button variant="outline" size="sm" className="mt-4" onClick={handleEditProfile}>
-              <Edit3 className="mr-2 h-4 w-4" /> Edit Profile (Mock)
-            </Button>
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="mt-4">
+                        <Edit3 className="mr-2 h-4 w-4" /> Edit Profile
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Your Profile</DialogTitle>
+                        <DialogDescription>
+                            Make changes to your profile here. Click save when you're done.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form id="edit-profile-form" onSubmit={handleEditProfileSubmit}>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="name" className="text-right">Name</Label>
+                                <Input id="name" value={editName} onChange={(e) => setEditName(e.target.value)} className="col-span-3" disabled={isSubmitting}/>
+                            </div>
+                             <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="email" className="text-right">Email</Label>
+                                <Input id="email" value={clientUser.email} className="col-span-3" disabled />
+                            </div>
+                        </div>
+                    </form>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="outline" disabled={isSubmitting}>Cancel</Button>
+                        </DialogClose>
+                        <Button type="submit" form="edit-profile-form" disabled={isSubmitting}>
+                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Changes
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <div className="space-y-2">
@@ -100,17 +176,17 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <CustomLabel htmlFor="emailNotifications" className="flex items-center">
+                <Label htmlFor="emailNotifications" className="flex items-center">
                   <Bell className="mr-2 h-4 w-4" /> Email Notifications
-                </CustomLabel>
+                </Label>
                 <span className="text-sm text-muted-foreground">Enabled</span>
               </div>
               <Separator />
               <div className="flex items-center justify-between">
-                <CustomLabel htmlFor="defaultTheme" className="flex items-center">
+                <Label htmlFor="defaultTheme" className="flex items-center">
                   <Palette className="mr-2 h-4 w-4" /> Default Theme
-                </CustomLabel>
-                <span className="text-sm text-muted-foreground">Dark</span>
+                </Label>
+                <span className="text-sm text-muted-foreground">System</span>
               </div>
             </CardContent>
           </Card>
@@ -119,8 +195,3 @@ export default function ProfilePage() {
     </>
   );
 }
-
-// Renamed Label to CustomLabel to avoid conflict with ShadCN Label if this file were to import it.
-const CustomLabel = ({ children, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) => (
-  <label {...props}>{children}</label>
-);
