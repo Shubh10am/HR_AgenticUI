@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef, type SVGProps, type ReactNode } from 'react';
@@ -165,8 +166,8 @@ export default function LandingPage() {
   );
 
   const tools = [
-      { name: 'Gmail', hint: 'gmail logo', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg' },
-      { name: 'Team', hint: 'msteam logo', logoUrl: 'https://www.microsoft.com/favicon.ico' },
+      { name: 'Monday.com', hint: 'monday logo', logoUrl: 'https://cdn-icons-png.flaticon.com/512/3536/3536482.png' },
+      { name: 'ClickUp', hint: 'clickup logo', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e1/ClickUp_logo_app.png' },
       { name: 'Slack', hint: 'slack logo', logoUrl: 'https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png' },
       { name: 'Asana', hint: 'asana logo', logoUrl: 'https://cdn-icons-png.flaticon.com/512/3536/3536482.png' },
       { name: 'Jira', hint: 'jira logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/atlassian_jira_logo_icon_170511.png' },
@@ -182,7 +183,8 @@ export default function LandingPage() {
         <div className="container flex h-20 items-center justify-between mx-auto px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2">
             <Logo className="h-8 w-8 text-primary" />
-            <span className="font-bold text-lg text-white">HR Streamline AI</span>
+            <span className="font-bold text-lg text-white hidden sm:block">HR Streamline AI</span>
+            <span className="font-bold text-lg text-white block sm:hidden">Agentic_HR</span>
           </Link>
           <div className="flex items-center gap-2">
             <Button variant="ghost" asChild className="text-white hover:bg-neutral-800 hover:text-white hidden sm:flex">
@@ -576,9 +578,9 @@ export default function LandingPage() {
               <div className="bg-neutral-800/50 backdrop-blur-sm border border-neutral-700 rounded-2xl px-4 py-3 flex items-center justify-center gap-4 sm:gap-5 shadow-2xl">
                 <Image src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" width={28} height={28} alt="Gmail logo" data-ai-hint="gmail logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
                 <Image src="https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png" width={28} height={28} alt="Slack logo" data-ai-hint="slack logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
-                <Image src="https://cdn.icon-icons.com/icons2/2699/PNG/512/atlassian_jira_logo_icon_170511.png" width={28} height={28} alt="Atlassian logo" data-ai-hint="atlassian jira logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
+                <Image src="https://upload.wikimedia.org/wikipedia/commons/4/41/Atlassian_logo_gradient_blue_to_green.svg" width={28} height={28} alt="Atlassian logo" data-ai-hint="atlassian jira logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
                 <Image src="https://upload.wikimedia.org/wikipedia/commons/c/c9/Microsoft_Office_Teams_%282018%E2%80%93present%29.svg" width={28} height={28} alt="Microsoft Teams logo" data-ai-hint="microsoft teams logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity object-contain" />
-                <Image src="https://upload.wikimedia.org/wikipedia/commons/8/87/Google_Chrome_icon_%282011%29.png" width={28} height={28} alt="Chrome logo" data-ai-hint="chrome browser logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
+                <Image src="https://upload.wikimedia.org/wikipedia/commons/a/a8/Google_Chrome_icon_%28send_to_phone%29.svg" width={28} height={28} alt="Chrome logo" data-ai-hint="chrome browser logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
               </div>
             </div>
           </div>
@@ -620,8 +622,8 @@ export default function LandingPage() {
             </div>
 
             {/* Right Column (Accordion) */}
-            <div className="lg:col-span-2 space-y-4 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-              <Accordion type="single" collapsible className="w-full max-w-3xl mx-auto">
+            <div className="lg:col-span-2 space-y-4 opacity-0 group-[.is-visible]:animate-fade-in-up max-w-3xl" style={{ animationDelay: '0.4s' }}>
+              <Accordion type="single" collapsible className="w-full mx-auto">
                 <AccordionItem value="item-1">
                   <AccordionTrigger className="text-lg">What is HR Streamline AI?</AccordionTrigger>
                   <AccordionContent className="text-neutral-400">
