@@ -31,7 +31,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const [isCopilotOpen, setIsCopilotOpen] = useState(false); // Added state for copilot
 
   // Define routes that don't use this AppLayout (e.g., login, register)
-  const noAppLayoutRoutes = ['/login', '/register', '/', '/contact'];
+  const noAppLayoutRoutes = ['/login', '/register', '/', '/contact', '/book-a-demo'];
   const isLegalPage = pathname.startsWith('/legal'); // Check for legal pages
 
   if (noAppLayoutRoutes.includes(pathname) || isLegalPage) {

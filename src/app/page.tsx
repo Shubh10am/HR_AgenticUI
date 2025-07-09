@@ -719,7 +719,7 @@ export default function LandingPage() {
                     Contact Us
                   </Link>{' '}
                   or{' '}
-                  <Link href="#" className="underline hover:text-white">
+                  <Link href="/book-a-demo" className="underline hover:text-white">
                     Book a Demo
                   </Link>
                 </p>
