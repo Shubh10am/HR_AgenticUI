@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef, type SVGProps, type ReactNode } from 'react';
@@ -20,11 +19,14 @@ import {
   Asterisk,
   RefreshCw,
   FileSearch,
+  Plus,
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import ChatWidget from '@/components/chat-widget';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+
 
 interface CustomIconProps extends SVGProps<SVGSVGElement> {}
 interface CollaboratorTagProps {
@@ -162,12 +164,12 @@ export default function LandingPage() {
   );
 
   const tools = [
-      { name: 'Monday.com', hint: 'monday com logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/monday_logo_icon_168951.png' },
-      { name: 'ClickUp', hint: 'clickup logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/clickup_logo_icon_167882.png' },
+      { name: 'Gmail', hint: 'gmail logo', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg' },
+      { name: 'ClickUp', hint: 'clickup logo', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e1/ClickUp_logo_symbol.svg' },
       { name: 'Slack', hint: 'slack logo', logoUrl: 'https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png' },
-      { name: 'Asana', hint: 'asana logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/asana_logo_icon_169148.png' },
-      { name: 'Jira', hint: 'jira logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/atlassian_jira_logo_icon_170545.png' },
-      { name: 'Trello', hint: 'trello logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/trello_logo_icon_168974.png' },
+      { name: 'Asana', hint: 'asana logo', logoUrl: 'https://cdn-icons-png.flaticon.com/512/3536/3536482.png' },
+      { name: 'Jira', hint: 'jira logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/atlassian_jira_logo_icon_170511.png' },
+      { name: 'Trello', hint: 'trello logo', logoUrl: 'https://cdn-icons-png.flaticon.com/512/5968/5968812.png' },
       { name: 'Figma', hint: 'figma logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/figma_logo_icon_170157.png' },
       { name: 'Notion', hint: 'notion logo', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png' },
   ];
@@ -193,29 +195,31 @@ export default function LandingPage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col justify-center">
+      <main className="flex-1 flex flex-col">
 
         {/* HERO SECTION */}
         <section
           ref={(el) => (sectionsRef.current[0] = el)}
           className={cn(
-            "container flex flex-col items-center text-center py-16 sm:py-24 md:py-32 relative group",
+            "container flex flex-col items-center justify-center text-center py-16 sm:py-24 md:py-32 relative group",
             visibleSections.has(0) ? "is-visible" : ""
           )}
         >
           {/* Floating tags */}
-          <CollaboratorTag name="HR Admin" className="top-1/4 left-[8%] xl:left-[12%] hidden lg:flex animate-float" cursorClass="!text-cyan-400" style={{ top: '35%', left: '3%' }} />
+          <CollaboratorTag name="HR Admin" className="top-[calc(50%-10rem)] left-[6%] xl:left-[10%] hidden lg:flex animate-float" cursorClass="!text-cyan-400" />
           <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden lg:flex animate-float-slow" cursorClass="!text-pink-400" />
 
           {/* Main Headline */}
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02]">
-            <span className="block opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              Your creative workflow just got
-            </span>
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 transition-all duration-300 hover:brightness-110 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-              1000x more collaborative
-            </span>
-          </h1>
+          <div className="flex flex-col items-center">
+             <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02] text-center">
+                <span className="block opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                Your creative workflow just got
+                </span>
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 transition-all duration-300 hover:brightness-110 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                1000x more collaborative
+                </span>
+            </h1>
+          </div>
 
           {/* Workflow diagram */}
           <div className="relative my-16 sm:my-24 flex w-full max-w-4xl mx-auto items-center justify-around sm:justify-between opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
@@ -255,17 +259,17 @@ export default function LandingPage() {
             visibleSections.has(1) ? "is-visible" : ""
           )}
         >
-          <div className="group relative rounded-2xl bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 p-6 sm:p-8 md:p-16 text-center overflow-hidden flex flex-col items-center">
+          <div className="group relative rounded-2xl bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 p-6 sm:p-8 md:p-16 overflow-hidden flex flex-col items-center">
              <HoverPill icon={FileSearch} label="Review" variant="dark" />
 
             {/* Floating elements */}
             <CollaboratorTag name="Hiring Manager" className="top-1/4 left-8 hidden lg:flex animate-float" cursorClass="transform -rotate-12 !text-cyan-400" />
             <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden lg:flex animate-float-slow" cursorClass="transform rotate-[120deg] !text-pink-400" />
 
-            <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+            <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
               Review candidate profiles with precision
             </h2>
-            <p className="text-base sm:text-lg text-blue-200 mb-8 sm:mb-12 md:mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-blue-100 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            <p className="text-base sm:text-lg text-blue-200 mb-8 sm:mb-12 md:mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-blue-100 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
               Collaborate directly on profiles and resumes for clearer feedback and faster decisions.
             </p>
 
@@ -291,7 +295,7 @@ export default function LandingPage() {
             visibleSections.has(2) ? "is-visible" : ""
           )}
         >
-            <div className="group relative rounded-2xl bg-gradient-to-br from-yellow-200 via-yellow-300 to-amber-300 p-6 sm:p-8 md:p-16 text-center overflow-hidden flex flex-col items-center">
+            <div className="group relative rounded-2xl bg-gradient-to-br from-yellow-200 via-yellow-300 to-amber-300 p-6 sm:p-8 md:p-16 overflow-hidden flex flex-col items-center">
                 <HoverPill icon={FeatureFlagIcon} label="Prioritize" />
 
                 <DevCollaboratorTag
@@ -308,10 +312,10 @@ export default function LandingPage() {
                     tagColorClass="bg-yellow-500 text-black border-yellow-600/50"
                 />
 
-                <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
                     Manage, prioritize<br />& assign
                 </h2>
-                <p className="text-base sm:text-lg text-neutral-700 mb-8 sm:mb-12 md:mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                <p className="text-base sm:text-lg text-neutral-700 mb-8 sm:mb-12 md:mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
                     Use our built-in task manager or integrate your own.
                 </p>
 
@@ -374,7 +378,7 @@ export default function LandingPage() {
             visibleSections.has(3) ? "is-visible" : ""
           )}
         >
-            <div className="group relative rounded-2xl bg-gradient-to-br from-violet-200 via-purple-200 to-indigo-200 p-6 sm:p-8 md:p-16 text-center overflow-hidden flex flex-col items-center">
+            <div className="group relative rounded-2xl bg-gradient-to-br from-violet-200 via-purple-200 to-indigo-200 p-6 sm:p-8 md:p-16 overflow-hidden flex flex-col items-center">
                 <HoverPill icon={Check} label="Approve" />
 
                 <DevCollaboratorTag
@@ -391,10 +395,10 @@ export default function LandingPage() {
                     tagColorClass="bg-pink-400 text-white font-bold border-pink-500"
                 />
 
-                <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
                 Get approvals<br />at hyper speed
                 </h2>
-                <p className="text-base sm:text-lg text-neutral-700 mb-8 sm:mb-12 md:mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                <p className="text-base sm:text-lg text-neutral-700 mb-8 sm:mb-12 md:mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
                 Built-in approvals for less back-and-forth-ing
                 </p>
 
@@ -430,7 +434,7 @@ export default function LandingPage() {
             visibleSections.has(4) ? "is-visible" : ""
           )}
         >
-            <div className="group relative rounded-2xl bg-gradient-to-br from-rose-100 via-pink-100 to-red-100 p-6 sm:p-8 md:p-16 text-center overflow-hidden flex flex-col items-center">
+            <div className="group relative rounded-2xl bg-gradient-to-br from-rose-100 via-pink-100 to-red-100 p-6 sm:p-8 md:p-16 overflow-hidden flex flex-col items-center">
                 <HoverPill icon={RefreshCw} label="Sync" />
 
                 <DevCollaboratorTag
@@ -446,10 +450,10 @@ export default function LandingPage() {
                     tagColorClass="bg-yellow-300 text-yellow-900 font-bold border-yellow-400"
                 />
 
-                <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
                     Sync with<br />your tools
                 </h2>
-                <p className="text-base sm:text-lg text-neutral-700 mb-8 sm:mb-12 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                <p className="text-base sm:text-lg text-neutral-700 mb-8 sm:mb-12 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
                     Seamlessly integrate your Slack or favorite task manager
                 </p>
 
@@ -471,55 +475,6 @@ export default function LandingPage() {
             </div>
         </section>
 
-        {/* Reviews in Slow Motion Section */}
-        <section
-          ref={(el) => (sectionsRef.current[6] = el)}
-          className={cn(
-            "container mx-auto py-16 sm:py-24 md:py-32 group",
-            visibleSections.has(6) ? "is-visible" : ""
-          )}
-        >
-          <div className="relative rounded-2xl bg-gradient-to-br from-orange-400 via-red-500 to-rose-600 p-6 sm:p-8 md:p-16 text-center overflow-hidden min-h-[550px] sm:min-h-[600px] flex flex-col justify-around items-center">
-            
-            {/* Cursor + Spinning Wheel */}
-            <div className="flex items-center gap-2 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              <CursorIcon className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
-              <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-[conic-gradient(from_90deg_at_50%_50%,#F59E0B_0%,#EF4444_25%,#8B5CF6_50%,#3B82F6_75%,#4ADE80_100%)] animate-slow-spin"></div>
-            </div>
-
-            {/* Text Content */}
-            <div className="relative z-10 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-              <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black">
-                Reviews can move
-                <br />
-                in slow motio<span className="opacity-80">n</span><span className="opacity-60">n</span><span className="opacity-40">n</span>
-              </h2>
-              <p className="text-base sm:text-lg text-neutral-800 max-w-md mx-auto">
-                Screenshots are for memes. Not precise and efficient review process
-              </p>
-            </div>
-          
-            {/* Tooltip and Icon Bar */}
-            <div className="flex flex-col items-center opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-              <div className="relative bg-neutral-900 text-white rounded-lg px-4 py-2 mb-3 shadow-lg">
-                <p className="text-sm text-center">
-                  You are using <span className="font-bold">more than 6 tools</span> to review
-                </p>
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-neutral-900 transform rotate-45" style={{ zIndex: -1 }}></div>
-              </div>
-              <div className="bg-neutral-800/50 backdrop-blur-sm border border-neutral-700 rounded-2xl px-4 py-3 flex items-center justify-center gap-4 sm:gap-5 shadow-2xl">
-                <Image src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" width={28} height={28} alt="Gmail logo" data-ai-hint="gmail logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
-                <Image src="https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png" width={28} height={28} alt="Slack logo" data-ai-hint="slack logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
-                <Image src="https://upload.wikimedia.org/wikipedia/commons/e/e6/Atlassian_logo_new.svg" width={28} height={28} alt="Atlassian logo" data-ai-hint="atlassian jira logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
-                <Image src="https://upload.wikimedia.org/wikipedia/commons/c/c9/Microsoft_Office_Teams_%282018%E2%80%93present%29.svg" width={28} height={28} alt="Microsoft Teams logo" data-ai-hint="microsoft teams logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity object-contain" />
-                <Image src="https://upload.wikimedia.org/wikipedia/commons/8/87/Google_Chrome_icon_%282011%29.png" width={28} height={28} alt="Chrome logo" data-ai-hint="chrome browser logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
-              </div>
-            </div>
-
-          </div>
-        </section>
-
-
         {/* Super Secure Section */}
         <section
           ref={(el) => (sectionsRef.current[5] = el)}
@@ -528,7 +483,7 @@ export default function LandingPage() {
             visibleSections.has(5) ? "is-visible" : ""
           )}
         >
-          <div className="container mx-auto px-4 sm:px-6">
+          <div className="container mx-auto px-4 sm:px-6 flex flex-col items-center">
             <div className="p-1.5 rounded-[30px] sm:rounded-[40px] bg-gradient-to-br from-blue-300 to-purple-400">
               <div className="p-1.5 rounded-[25px] sm:rounded-[35px] bg-white">
                 <div className="p-1.5 rounded-[20px] sm:rounded-[30px] bg-gradient-to-br from-blue-200/50 to-purple-300/50">
@@ -551,10 +506,10 @@ export default function LandingPage() {
                     </div>
 
                     <div className="opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                      <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-4 text-neutral-800 transition-transform duration-300 hover:scale-[1.02]">
+                      <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-4 text-neutral-800 transition-transform duration-300 hover:scale-[1.02] text-center">
                         Super secure with
                       </h2>
-                      <p className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-8 sm:mb-16 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300 hover:brightness-110">
+                      <p className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-8 sm:mb-16 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300 hover:brightness-110 text-center">
                         SOCII Type I Compliance
                       </p>
                     </div>
@@ -580,6 +535,115 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* Reviews in Slow Motion Section */}
+        <section
+          ref={(el) => (sectionsRef.current[6] = el)}
+          className={cn(
+            "container mx-auto py-16 sm:py-24 md:py-32 group",
+            visibleSections.has(6) ? "is-visible" : ""
+          )}
+        >
+          <div className="relative rounded-2xl bg-gradient-to-br from-orange-400 via-red-500 to-rose-600 p-6 sm:p-8 md:p-16 overflow-hidden min-h-[550px] sm:min-h-[600px] flex flex-col justify-around items-center">
+            
+            {/* Cursor + Spinning Wheel */}
+            <div className="flex items-center gap-2 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+              <CursorIcon className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
+              <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-[conic-gradient(from_90deg_at_50%_50%,#F59E0B_0%,#EF4444_25%,#8B5CF6_50%,#3B82F6_75%,#4ADE80_100%)] animate-slow-spin"></div>
+            </div>
+
+            {/* Text Content */}
+            <div className="relative z-10 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
+              <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black">
+                Reviews can move
+                <br />
+                in slow motio<span className="opacity-80">n</span><span className="opacity-60">n</span><span className="opacity-40">n</span>
+              </h2>
+              <p className="text-base sm:text-lg text-neutral-800 max-w-md mx-auto">
+                Screenshots are for memes. Not precise and efficient review process
+              </p>
+            </div>
+          
+            {/* Tooltip and Icon Bar */}
+            <div className="flex flex-col items-center opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+              <div className="relative bg-neutral-900 text-white rounded-lg px-4 py-2 mb-3 shadow-lg">
+                <p className="text-sm text-center">
+                  You are using <span className="font-bold">more than 6 tools</span> to review
+                </p>
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-neutral-900 transform rotate-45" style={{ zIndex: -1 }}></div>
+              </div>
+              <div className="bg-neutral-800/50 backdrop-blur-sm border border-neutral-700 rounded-2xl px-4 py-3 flex items-center justify-center gap-4 sm:gap-5 shadow-2xl">
+                <Image src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" width={28} height={28} alt="Gmail logo" data-ai-hint="gmail logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
+                <Image src="https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png" width={28} height={28} alt="Slack logo" data-ai-hint="slack logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
+                <Image src="https://upload.wikimedia.org/wikipedia/commons/4/41/Atlassian_logo_gradient_blue_to_green.svg" width={28} height={28} alt="Atlassian logo" data-ai-hint="atlassian logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
+                <Image src="https://upload.wikimedia.org/wikipedia/commons/c/c9/Microsoft_Office_Teams_%282018%E2%80%93present%29.svg" width={28} height={28} alt="Microsoft Teams logo" data-ai-hint="microsoft teams logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity object-contain" />
+                <Image src="https://upload.wikimedia.org/wikipedia/commons/8/87/Google_Chrome_icon_%282011%29.png" width={28} height={28} alt="Chrome logo" data-ai-hint="chrome browser logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section
+          ref={(el) => (sectionsRef.current[7] = el)}
+          className={cn(
+            "container relative mx-auto py-16 sm:py-24 md:py-32 group",
+            visibleSections.has(7) ? "is-visible" : ""
+          )}
+        >
+          {/* Decorative background shapes */}
+          <div className="absolute top-0 left-0 w-48 h-48 border-2 border-neutral-800 rounded-full opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}></div>
+          <div className="absolute bottom-0 right-0 w-32 h-32 border-2 border-neutral-800 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}></div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-8 items-start relative z-10">
+            {/* Left Column */}
+            <div className="lg:col-span-1 space-y-6 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+              <h2 className="text-4xl sm:text-5xl font-bold tracking-tight">
+                Frequently
+                <br />
+                Asked Question
+              </h2>
+              <div className="text-neutral-400">
+                <p>Got more questions?</p>
+                <p>
+                  You can{' '}
+                  <Link href="#" className="underline hover:text-white">
+                    Contact Us
+                  </Link>{' '}
+                  or{' '}
+                  <Link href="#" className="underline hover:text-white">
+                    Book a Demo
+                  </Link>
+                </p>
+              </div>
+            </div>
+
+            {/* Right Column (Accordion) */}
+            <div className="lg:col-span-2 space-y-4 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="item-1">
+                  <AccordionTrigger className="text-lg">What is HR Streamline AI?</AccordionTrigger>
+                  <AccordionContent className="text-neutral-400">
+                    HR Streamline AI is an intelligent, all-in-one platform designed to automate and simplify your HR operations, from recruitment and onboarding to attendance and communication.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-2">
+                  <AccordionTrigger className="text-lg">What integrations are supported?</AccordionTrigger>
+                  <AccordionContent className="text-neutral-400">
+                    We support integrations with many popular tools like Gmail, Slack, Google Calendar, GitHub, and more. You can manage all integrations from the settings page.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-3">
+                  <AccordionTrigger className="text-lg">Does HR Streamline AI offer a free plan?</AccordionTrigger>
+                  <AccordionContent className="text-neutral-400">
+                     Yes, we offer a free plan with core features to get you started. You can also explore our premium plans for more advanced capabilities and unlimited access by continuing as a Guest.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          </div>
+        </section>
+
       </main>
 
       <footer className="border-t border-neutral-800">
