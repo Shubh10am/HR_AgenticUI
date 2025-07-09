@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -46,12 +47,12 @@ const navItems: NavItem[] = [
 
 export default function SidebarNav() {
   const pathname = usePathname();
-  const { isMobile, setOpenMobile } = useSidebar(); 
+  const { isMobile, setOpen } = useSidebar(); 
   const { user } = useAuth(); // Get user from AuthContext
 
   const handleLinkClick = () => {
     if (isMobile) {
-      setOpenMobile(false); 
+      setOpen(false); 
     }
   };
 
