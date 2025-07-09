@@ -63,7 +63,7 @@ export default function ContactPage() {
       <main className="flex-1 flex flex-col items-center justify-center container mx-auto px-4 sm:px-6 py-16 sm:py-24">
         <div className="text-center mb-12">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter mb-4">Contact Us</h1>
-            <p className="text-lg text-neutral-400 max-w-2xl mx-auto">We'd love to hear from you. Please fill out the form below or reach out to us directly.</p>
+            <p className="text-lg text-neutral-400 max-w-2xl mx-auto">Welcome to Agentic-Era. We'd love to hear from you. Please fill out the form below or reach out to us directly.</p>
         </div>
         
         <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -95,7 +95,7 @@ export default function ContactPage() {
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="john.doe@example.com"
+                        placeholder="company@domain.com"
                         required
                         disabled={isSubmitting}
                         className="bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-500"
@@ -149,21 +149,21 @@ export default function ContactPage() {
                     <Mail className="h-6 w-6 text-primary mt-1 flex-shrink-0" />
                     <div>
                     <h4 className="font-semibold">Email</h4>
-                    <p className="text-neutral-400 text-sm">support@hrstreamline.ai</p>
+                    <p className="text-neutral-400 text-sm">support@agentic-hr.in</p>
                     </div>
                 </div>
                 <div className="flex items-start gap-4">
                     <Phone className="h-6 w-6 text-primary mt-1 flex-shrink-0" />
                     <div>
-                    <h4 className="font-semibold">Phone (Mock)</h4>
-                    <p className="text-neutral-400 text-sm">+1 (555) 123-4567</p>
+                    <h4 className="font-semibold">Phone Number</h4>
+                    <p className="text-neutral-400 text-sm">+91 6388842678</p>
                     </div>
                 </div>
                 <div className="flex items-start gap-4">
                     <MapPin className="h-6 w-6 text-primary mt-1 flex-shrink-0" />
                     <div>
-                    <h4 className="font-semibold">Address (Mock)</h4>
-                    <p className="text-neutral-400 text-sm">123 Innovation Drive, Tech City, 12345</p>
+                    <h4 className="font-semibold">Address</h4>
+                    <p className="text-neutral-400 text-sm">Office 61 Satyam Home Green City Noida 201009</p>
                     </div>
                 </div>
                 </CardContent>
