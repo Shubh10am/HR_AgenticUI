@@ -315,7 +315,7 @@ export default function LandingPage() {
               Collaborate directly on profiles and resumes for clearer feedback and faster decisions.
             </p>
 
-            <div className="relative max-w-2xl mx-auto border-2 border-dashed border-blue-400/50 rounded-2xl p-4 sm:p-8 min-h-[200px] sm:min-h-[250px] flex items-center justify-center opacity-0 group-[.is-visible]:animate-fade-in-up transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.3s' }}>
+            <div className="relative w-full max-w-3xl mx-auto border-2 border-solid border-blue-400/50 rounded-2xl p-4 sm:p-8 min-h-[200px] sm:min-h-[250px] flex items-center justify-center opacity-0 group-[.is-visible]:animate-fade-in-up transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.3s' }}>
               <div className="relative">
                 <FileText className="h-20 w-20 sm:h-24 sm:w-24 text-pink-400/80" />
                 <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2">
