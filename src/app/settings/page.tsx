@@ -1,3 +1,4 @@
+
 'use client';
 
 import PageHeader from '@/components/page-header';
@@ -9,13 +10,15 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Lock, Bell, Palette, Plug, ChevronRight, KeyRound, Eye, EyeOff, Copy, Info, Loader2, Volume2, Sun, Moon, Laptop, VolumeX, Volume1 } from 'lucide-react';
+import { Lock, Bell, Palette, Plug, ChevronRight, KeyRound, Eye, EyeOff, Copy, Info, Loader2, Volume2, Sun, Moon, Laptop, VolumeX, Volume1, BarChart } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect, useCallback } from 'react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/contexts/auth-context';
 import { Slider } from '@/components/ui/slider';
+import { Progress } from '@/components/ui/progress';
+
 
 const NOTIFICATION_SOUND_ENABLED_KEY = 'notificationSoundEnabled';
 const NOTIFICATION_SOUND_VOLUME_KEY = 'notificationSoundVolume';
@@ -35,6 +38,13 @@ export default function SettingsPage() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [isKeyLoading, setIsKeyLoading] = useState(true);
   const [isKeySaving, setIsKeySaving] = useState(false);
+
+  // State for mock usage data
+  const [tokenUsage, setTokenUsage] = useState(0);
+  const [tokenLimit, setTokenLimit] = useState(500000); // Mock limit
+  const [isUsageLoading, setIsUsageLoading] = useState(true);
+  const [nextResetDate, setNextResetDate] = useState('');
+
   
   const fetchApiKey = useCallback(async () => {
     if (!token) {
@@ -64,7 +74,9 @@ export default function SettingsPage() {
     }
   }, [token, toast]);
 
+
   useEffect(() => {
+    // Sound preferences from local storage
     if (typeof window !== 'undefined') {
       const storedSoundPreference = localStorage.getItem(NOTIFICATION_SOUND_ENABLED_KEY);
       if (storedSoundPreference !== null) {
@@ -75,11 +87,25 @@ export default function SettingsPage() {
         setNotificationVolume(parseInt(storedVolume, 10));
       }
     }
-  }, []);
 
-  useEffect(() => {
+    // Mock Usage Data Fetching
+    setIsUsageLoading(true);
+    const usageTimer = setTimeout(() => {
+      setTokenUsage(Math.floor(Math.random() * 450000) + 50000); // Random usage
+      
+      const today = new Date();
+      const firstDayOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+      setNextResetDate(firstDayOfNextMonth.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric'}));
+      
+      setIsUsageLoading(false);
+    }, 800); // Simulate network delay
+
+    // Fetch API key from DB
     fetchApiKey();
+    
+    return () => clearTimeout(usageTimer);
   }, [fetchApiKey]);
+
 
   const handleMockAction = (action: string) => {
     toast({
@@ -389,6 +415,49 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
+        <Card className="md:col-span-2 lg:col-span-3 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <BarChart className="mr-2 h-5 w-5 text-primary" /> API Usage Tracking
+            </CardTitle>
+            <CardDescription>
+              Monitor your organization's token usage for the current billing cycle.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isUsageLoading ? (
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Loading usage data...</span>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-baseline">
+                    <p className="text-sm text-muted-foreground">Current cycle usage</p>
+                    <p className="text-2xl font-bold text-primary">
+                      {tokenUsage.toLocaleString()}
+                      <span className="text-sm font-normal text-muted-foreground"> / {tokenLimit.toLocaleString()} tokens</span>
+                    </p>
+                  </div>
+                  <Progress value={(tokenUsage / tokenLimit) * 100} className="h-3" />
+                </div>
+                <div className="text-xs text-muted-foreground flex justify-between">
+                  <span>Cycle resets on: {nextResetDate}</span>
+                  <span>Based on UTC time.</span>
+                </div>
+                <Alert variant="default" className="mt-4 border-amber-500 dark:border-amber-400">
+                  <Info className="h-5 w-5 text-amber-500 dark:text-amber-400" />
+                  <AlertTitle className="text-amber-700 dark:text-amber-300 font-semibold">Demonstration Data</AlertTitle>
+                  <AlertDescription className="text-amber-600 dark:text-amber-200">
+                    This usage chart displays mock data for demonstration purposes. Real-time usage tracking is a planned feature.
+                  </AlertDescription>
+                </Alert>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
         <Card className="lg:col-span-3 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -409,3 +478,4 @@ export default function SettingsPage() {
     </>
   );
 }
+
