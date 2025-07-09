@@ -27,7 +27,7 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
 
       <main className="flex-1 container mx-auto px-4 sm:px-6 py-16 sm:py-24">
         <div className="max-w-4xl mx-auto">
-          <Button asChild variant="ghost" className="text-neutral-400 hover:text-white px-0 mb-8">
+          <Button asChild variant="ghost" className="text-neutral-400 hover:text-white hover:bg-transparent px-0 mb-8">
             <Link href="/">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Home
