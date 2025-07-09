@@ -626,7 +626,7 @@ export default function TasksPage() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <PageHeader title="Task Management Board" description="Organize, track, and manage your project tasks.">
-        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" onClick={() => toast({ title: "GitHub Sync (Mock)", description: "This would initiate GitHub project sync."})}>
             <Github className="mr-2 h-4 w-4" /> Connect to GitHub (Mock)
           </Button>
@@ -708,7 +708,7 @@ export default function TasksPage() {
       </Dialog>
       
       {/* Container for Kanban columns - scrolls horizontally */}
-      <div className="flex overflow-x-auto gap-6 pb-4 items-stretch flex-1">
+      <div className="flex overflow-x-auto gap-6 pb-4 items-start flex-1">
         {boardColumns.length === 0 && (
           <div className="w-full text-center py-10 flex-grow flex items-center justify-center">
             <p className="text-muted-foreground">No columns yet. Click "Add Column" to get started!</p>
@@ -746,3 +746,4 @@ export default function TasksPage() {
     
 
     
+
