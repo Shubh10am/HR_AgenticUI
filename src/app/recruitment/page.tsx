@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect } from 'react'
@@ -9,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, UserCheck, FileText, PlayCircle, Briefcase, UploadCloud, BarChart, Lightbulb, CheckSquare, ThumbsUp, SearchCheck, Copy, Link as LinkIcon } from 'lucide-react';
+import { Loader2, Wand2, UserCheck, FileText, PlayCircle, Briefcase, UploadCloud, BarChart, Lightbulb, CheckSquare, ThumbsUp, SearchCheck, Copy, Link as LinkIcon, ArrowRight, GitBranch, ArrowDown, Cpu, Medal } from 'lucide-react';
 import { generateJobDescription, type GenerateJobDescriptionInput, type GenerateJobDescriptionOutput } from '@/ai/flows/generate-job-description';
 import { aiInterviewer, type AiInterviewerInput, type AiInterviewerOutput } from '@/ai/flows/ai-interviewer';
 import { analyzeResume, type AnalyzeResumeInput, type AnalyzeResumeOutput } from '@/ai/flows/analyze-resume-flow';
@@ -279,21 +280,66 @@ export default function RecruitmentPage() {
         <TabsContent value="resume-filtering">
           <Card className="shadow-lg transition-all duration-300 hover:shadow-xl">
             <CardHeader>
-              <CardTitle>Resume Filtering & Screening</CardTitle>
-              <CardDescription>Define screening criteria and manage candidate pools. For detailed AI analysis, use "ATS Score Check".</CardDescription>
+              <CardTitle>Resume Filtering & Screening Process</CardTitle>
+              <CardDescription>A systematic approach to match candidates with job requirements.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                This section can be expanded with features like keyword-based filters, experience level requirements, and batch processing against basic criteria.
-              </p>
-              <div className="mt-4 p-4 border rounded-md bg-secondary/30">
-                <h4 className="font-semibold mb-2">Future Features (Mock):</h4>
-                <ul className="list-disc pl-5 text-sm space-y-1">
-                  <li>Define keyword-based filters</li>
-                  <li>Set experience level requirements</li>
-                  <li>Integrate with job board applications</li>
-                </ul>
-              </div>
+            <CardContent className="space-y-6">
+                {/* Step 1: Input */}
+                <div className="flex items-start gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary flex-shrink-0">
+                        <GitBranch className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-lg">1. Input Parsing</h4>
+                        <p className="text-muted-foreground">The system takes two primary inputs: the Job Description (JD) detailing role requirements, and the candidate's Resume outlining their qualifications. Both are parsed using Natural Language Processing (NLP) to extract structured data like roles, responsibilities, skills, and experience.</p>
+                    </div>
+                </div>
+
+                 <div className="pl-5">
+                    <ArrowDown className="h-6 w-6 text-muted-foreground" />
+                </div>
+
+                {/* Step 2: Feature Extraction */}
+                 <div className="flex items-start gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary flex-shrink-0">
+                        <Cpu className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-lg">2. Feature Extraction</h4>
+                        <p className="text-muted-foreground">Key features are extracted from both documents. From the JD, we identify required skills, years of experience, and educational needs. From the resume, we pull the candidate's corresponding skill set, work history, and certifications.</p>
+                    </div>
+                </div>
+
+                <div className="pl-5">
+                    <ArrowDown className="h-6 w-6 text-muted-foreground" />
+                </div>
+
+                {/* Step 3: Matching Algorithm */}
+                 <div className="flex items-start gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary flex-shrink-0">
+                        <BarChart className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-lg">3. Matching Algorithm</h4>
+                        <p className="text-muted-foreground">A sophisticated algorithm computes a match score (e.g., 0-100) based on how well the resume aligns with the JD. It considers skill overlap, job title relevance, experience alignment, and can weigh critical skills more heavily than optional ones.</p>
+                    </div>
+                </div>
+                
+                 <div className="pl-5">
+                    <ArrowDown className="h-6 w-6 text-muted-foreground" />
+                </div>
+
+                {/* Step 4: Result Output */}
+                 <div className="flex items-start gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary flex-shrink-0">
+                        <Medal className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-lg">4. Result Output</h4>
+                        <p className="text-muted-foreground">The final output provides a clear match score, highlights which requirements were met and which are missing, and can rank multiple resumes against the same job description, enabling recruiters to focus on the most promising candidates first.</p>
+                    </div>
+                </div>
+
             </CardContent>
           </Card>
         </TabsContent>
