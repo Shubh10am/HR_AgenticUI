@@ -103,6 +103,16 @@ export default function KnowledgeBasePage() {
     setSelectedFile(null);
   };
 
+  const handleRefresh = () => {
+    setSearchTerm('');
+    // Optionally reset items to a fetched state if there was a backend
+    // setItems(initialItems); 
+    toast({
+      title: 'View Refreshed',
+      description: 'Cleared filters and showing all items.',
+    });
+  };
+
   const displayedContent = searchTerm ? filteredItems : items;
 
   return (
@@ -130,7 +140,7 @@ export default function KnowledgeBasePage() {
           />
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleRefresh}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
