@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, useEffect } from 'react';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface KnowledgeBaseItem {
   id: string;
@@ -46,6 +46,8 @@ const EmptyState = ({ onAddFolder, onUploadFile }: { onAddFolder: () => void; on
 
 export default function KnowledgeBasePage() {
   const [items, setItems] = useState<KnowledgeBaseItem[]>(initialItems);
+  const [filteredItems, setFilteredItems] = useState<KnowledgeBaseItem[]>(initialItems);
+  const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
@@ -54,6 +56,14 @@ export default function KnowledgeBasePage() {
 
   const { toast } = useToast();
   const { user } = useAuth();
+
+  useEffect(() => {
+    const results = items.filter(item =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.owner.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredItems(results);
+  }, [searchTerm, items]);
 
   const handleCreateFolder = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -93,6 +103,8 @@ export default function KnowledgeBasePage() {
     setSelectedFile(null);
   };
 
+  const displayedContent = searchTerm ? filteredItems : items;
+
   return (
     <>
       <PageHeader
@@ -110,7 +122,12 @@ export default function KnowledgeBasePage() {
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
         <div className="relative w-full sm:w-auto sm:flex-grow max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search knowledge bases..." className="pl-10" />
+          <Input 
+            placeholder="Search knowledge bases..." 
+            className="pl-10" 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline">
@@ -213,7 +230,7 @@ export default function KnowledgeBasePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((item) => (
+              {displayedContent.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium flex items-center gap-2">
                     {item.type === 'Folder' ? <Folder className="h-4 w-4 text-primary"/> : <File className="h-4 w-4 text-muted-foreground"/>}
@@ -229,7 +246,7 @@ export default function KnowledgeBasePage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-4">
-          {items.map((item) => (
+          {displayedContent.map((item) => (
             <Card key={item.id} className="cursor-pointer hover:shadow-lg transition-shadow">
               <CardContent className="flex flex-col items-center justify-center p-6 text-center">
                 {item.type === 'Folder' ? (
@@ -246,6 +263,13 @@ export default function KnowledgeBasePage() {
           ))}
         </div>
       )}
+       {items.length > 0 && displayedContent.length === 0 && (
+          <div className="text-center py-16">
+            <Search className="h-16 w-16 text-muted-foreground mx-auto" strokeWidth={1} />
+            <h3 className="mt-6 text-xl font-semibold">No Results Found</h3>
+            <p className="mt-2 text-muted-foreground">Your search for "{searchTerm}" did not match any items.</p>
+          </div>
+        )}
     </>
   );
 }
