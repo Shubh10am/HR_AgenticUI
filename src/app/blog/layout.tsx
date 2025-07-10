@@ -3,9 +3,9 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import Logo from '@/components/icons/logo';
 import { Button } from '@/components/ui/button';
-import { Hash, Linkedin, X, Instagram, Youtube, ArrowLeft } from 'lucide-react';
+import { Hash, Linkedin, X, Instagram, Youtube } from 'lucide-react';
 
-export default function LegalLayout({ children }: { children: ReactNode }) {
+export default function BlogLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-col min-h-screen bg-black text-white antialiased">
       {/* Header */}
@@ -27,15 +27,7 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
       </header>
 
       <main className="flex-1 container mx-auto px-4 sm:px-6 py-16 sm:py-24">
-        <div className="max-w-4xl mx-auto">
-          <Button asChild variant="ghost" className="text-neutral-400 hover:text-white hover:bg-transparent px-0 mb-8">
-            <Link href="/">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Home
-            </Link>
-          </Button>
-          {children}
-        </div>
+        {children}
       </main>
 
       {/* Footer */}

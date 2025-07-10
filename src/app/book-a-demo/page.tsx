@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, type FormEvent } from 'react';
@@ -229,7 +230,7 @@ export default function BookDemoPage() {
               <h3 className="font-semibold text-white mb-4">Company</h3>
               <ul className="space-y-2">
                 <li><Link href="/contact" className="text-neutral-400 hover:text-white">Contact Us</Link></li>
-                <li><Link href="#" className="text-neutral-400 hover:text-white">Blog</Link></li>
+                <li><Link href="/blog" className="text-neutral-400 hover:text-white">Blog</Link></li>
                 <li><Link href="#" className="text-neutral-400 hover:text-white">Docs</Link></li>
               </ul>
             </div>

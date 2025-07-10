@@ -508,25 +508,11 @@ export default function LandingPage() {
         <section
           ref={(el) => (sectionsRef.current[4] = el)}
           className={cn(
-            "container mx-auto py-16 sm:py-24 md:py-32 group",
+            "bg-white text-black py-16 sm:py-24 md:py-32 group",
             visibleSections.has(4) ? "is-visible" : ""
           )}
         >
-            <div className="group relative rounded-2xl bg-gradient-to-br from-rose-100 via-pink-100 to-red-100 p-6 sm:p-8 md:p-16 overflow-hidden flex flex-col items-center">
-                <HoverPill icon={RefreshCw} label="Sync" />
-
-                <DevCollaboratorTag
-                    name="Administrator"
-                    className="top-1/4 left-12 hidden md:flex animate-float"
-                    cursorClass="text-orange-500"
-                    tagColorClass="bg-orange-300 text-orange-900 font-bold border-orange-400"
-                />
-                <DevCollaboratorTag
-                    name="Product Manager"
-                    className="bottom-1/2 right-12 hidden md:flex animate-float-slow"
-                    cursorClass="text-yellow-500"
-                    tagColorClass="bg-yellow-300 text-yellow-900 font-bold border-yellow-400"
-                />
+            <div className="container mx-auto px-4 sm:px-6 flex flex-col items-center">
 
                 <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
                     Sync with<br />your tools
@@ -538,7 +524,7 @@ export default function LandingPage() {
                 <div className="relative w-full max-w-4xl mx-auto overflow-hidden mt-12 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                     <div className="flex animate-marquee">
                         {[...tools, ...tools].map((tool, index) => (
-                            <div key={`${tool.name}-${index}`} className="flex-shrink-0 flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-lg px-4 py-2 shadow-md text-black mx-2 sm:mx-4">
+                            <div key={`${tool.name}-${index}`} className="flex-shrink-0 flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-lg px-4 py-2 shadow-md text-black mx-2 sm:mx-4 border border-neutral-200">
                                 <Image src={tool.logoUrl} width={24} height={24} alt={`${tool.name} logo`} data-ai-hint={tool.hint} className="object-contain" />
                                 <span className="font-semibold text-sm md:text-base">{tool.name}</span>
                             </div>
@@ -846,7 +832,7 @@ export default function LandingPage() {
               <h3 className="font-semibold text-white mb-4">Company</h3>
               <ul className="space-y-2">
                 <li><Link href="/contact" className="text-neutral-400 hover:text-white">Contact Us</Link></li>
-                <li><Link href="#" className="text-neutral-400 hover:text-white">Blog</Link></li>
+                <li><Link href="/blog" className="text-neutral-400 hover:text-white">Blog</Link></li>
                 <li><Link href="#" className="text-neutral-400 hover:text-white">Docs</Link></li>
               </ul>
             </div>
