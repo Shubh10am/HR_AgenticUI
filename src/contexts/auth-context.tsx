@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { EmployeeRole } from '@/models/Employee';
@@ -134,15 +135,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return; // Wait until auth state is determined
     }
 
-    // A "real user" is one who is not a guest.
     const isRealUser = !!user && !!token && !token.startsWith('guest-');
     
-    // Auth routes are for non-authenticated users only (login, register)
     const authRoutes = ['/login', '/register'];
     const isOnAuthRoute = authRoutes.includes(pathname);
     
-    // Protected routes require some form of authentication (real or guest)
-    const protectedRoutes = !['/', '/login', '/register', '/contact'].includes(pathname);
+    // Public routes that don't need authentication
+    const publicPages = ['/', '/login', '/register', '/contact', '/book-a-demo'];
+    const isPublicPage = publicPages.includes(pathname) || pathname.startsWith('/legal');
     
     // If a real user tries to access login/register, redirect to dashboard
     if (isRealUser && isOnAuthRoute) {
@@ -150,8 +150,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // If a completely unauthenticated user (not real, not guest) tries to access a protected route, redirect to login
-    if (!user && !token && protectedRoutes) {
+    // If an unauthenticated user tries to access a page that is NOT public, redirect to login
+    if (!user && !token && !isPublicPage) {
       router.push('/login');
       return;
     }
