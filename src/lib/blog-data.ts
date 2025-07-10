@@ -8,7 +8,7 @@ export const blogPosts = [
     author: 'Jane Doe',
     date: 'July 28, 2024',
     category: 'Recruitment',
-    image: '/recruitment.jpg',
+    image: '/images/recruitment.jpg',
     dataAiHint: 'recruitment technology office',
     content: `
       <p>The world of recruitment is undergoing a seismic shift. Traditional methods, often bogged down by manual processes and human bias, are giving way to a more efficient, data-driven approach powered by Artificial Intelligence. At HR Streamline AI, we're at the forefront of this revolution, building tools that empower HR professionals to find the best talent faster.</p>
@@ -36,7 +36,7 @@ export const blogPosts = [
     author: 'John Smith',
     date: 'July 25, 2024',
     category: 'HR Tech',
-    image: '/hrtech.jpg',
+    image: '/images/hrtech.jpg',
     dataAiHint: 'futuristic office hr',
     content: `
       <p>The role of a Human Resources professional is evolving. No longer just about payroll and paperwork, HR is becoming a strategic partner in business growth, employee well-being, and company culture. The key to unlocking this potential? Automation.</p>
@@ -60,7 +60,7 @@ export const blogPosts = [
     author: 'Alice Johnson',
     date: 'July 22, 2024',
     category: 'Analytics',
-    image: '/anyalitcs.jpg',
+    image: '/images/analytics.jpg',
     dataAiHint: 'charts graphs analytics',
     content: `
       <p>In today's competitive landscape, intuition is no longer enough. Data-driven decision-making is transforming every business function, and Human Resources is no exception. By leveraging analytics, HR teams can move from reactive problem-solving to proactive strategy.</p>
@@ -85,7 +85,7 @@ export const blogPosts = [
     author: 'Mike Brown',
     date: 'July 18, 2024',
     category: 'Productivity',
-    image: '/productivity.jpg',
+    image: '/images/productivity.jpg',
     dataAiHint: 'team working taskboard',
     content: `
       <p>Effective task management is the backbone of a productive team. It provides clarity on who is doing what, by when, and ensures that projects move forward smoothly. When integrated into a broader HR platform, it becomes even more powerful.</p>
@@ -116,7 +116,7 @@ export const blogPosts = [
     author: 'Emily White',
     date: 'July 15, 2024',
     category: 'Onboarding',
-    image: '/onboarding.jpg',
+    image: '/images/onboarding.jpg',
     dataAiHint: 'remote onboarding video call',
     content: `
       <p>Onboarding has always been crucial, but in a remote or hybrid environment, it's the most critical step in setting a new employee up for success. A well-structured remote onboarding process can significantly improve retention, engagement, and time-to-productivity.</p>
@@ -148,7 +148,7 @@ export const blogPosts = [
     author: 'Chris Green',
     date: 'July 12, 2024',
     category: 'Communication',
-    image: '/communication.jpg',
+    image: '/images/communication.jpg',
     dataAiHint: 'communication icons network',
     content: `
       <p>In a hybrid workforce, communication is fragmented across multiple platforms: email for formal announcements, Slack or Teams for quick chats, Zoom or Google Meet for meetings. This fragmentation can lead to lost information and context-switching that kills productivity. A unified communications strategy is the solution.</p>
