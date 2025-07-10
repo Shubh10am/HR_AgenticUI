@@ -339,7 +339,7 @@ export default function LandingPage() {
              <HoverPill icon={FileSearch} label="Review" variant="dark" />
 
             {/* Floating elements */}
-            <CollaboratorTag name="Hiring Manager" className="top-1/4 left-8 hidden md:flex animate-float" cursorClass="transform -rotate-12 !text-cyan-400" />
+            <CollaboratorTag name="Hiring Manager" className="bottom-1/4 left-8 hidden md:flex animate-float" cursorClass="transform -rotate-12 !text-cyan-400" />
             <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden md:flex animate-float-slow" cursorClass="transform rotate-[120deg] !text-pink-400" />
 
             <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>

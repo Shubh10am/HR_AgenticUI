@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
 
@@ -101,14 +102,6 @@ export default {
           '0%': { transform: 'translateX(0%)' },
           '100%': { transform: 'translateX(-50%)' },
         },
-        // 'float': {
-        //   '0%, 100%': { transform: 'translateY(0px)' },
-        //   '50%': { transform: 'translateY(-8px)' },
-        // },
-        // 'float-slow': {
-        //     '0%, 100%': { transform: 'translateY(0px)' },
-        //     '50%': { transform: 'translateY(-6px)' },
-        // },
 		'float': {
 			'0%, 100%': { transform: 'translateY(0px)' },
 			'25%': { transform: 'translateY(-4px)' },
