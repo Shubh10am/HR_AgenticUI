@@ -39,6 +39,7 @@ import ChatWidget from '@/components/chat-widget';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import CtaLogo from '@/components/icons/cta-logo';
 import { useAuth } from '@/contexts/auth-context';
+import ImageWithFallback from '@/components/image-with-fallback';
 
 
 interface CustomIconProps extends SVGProps<SVGSVGElement> {}
@@ -388,8 +389,9 @@ export default function LandingPage() {
                     </div>
 
                     <div className="flex items-start gap-3">
-                        <Image
-                            src="https://placehold.co/32x32.png"
+                        <ImageWithFallback
+                            src="https://randomuser.me/api/portraits/men/75.jpg"
+                            fallbackSrc="https://placehold.co/32x32.png"
                             alt="Calvin F."
                             width={32}
                             height={32}
@@ -457,13 +459,14 @@ export default function LandingPage() {
 
                 <div className="relative max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-6 sm:p-8 text-center text-black opacity-0 group-[.is-visible]:animate-fade-in-up transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.3s' }}>
                 <div className="relative inline-block mb-4">
-                    <Image
-                    src="https://placehold.co/80x80.png"
-                    alt="Mike Mulligan"
-                    width={80}
-                    height={80}
-                    className="rounded-full w-16 h-16 sm:w-20 sm:h-20 object-cover"
-                    data-ai-hint="man face"
+                    <ImageWithFallback
+                        src="https://randomuser.me/api/portraits/men/73.jpg"
+                        fallbackSrc="https://placehold.co/80x80.png"
+                        alt="Mike Mulligan"
+                        width={80}
+                        height={80}
+                        className="rounded-full w-16 h-16 sm:w-20 sm:h-20 object-cover"
+                        data-ai-hint="man face"
                     />
                     <div className="absolute -top-1 -right-1 bg-green-500 rounded-full p-1.5 border-2 border-white">
                     <Check className="h-4 w-4 text-white" />
