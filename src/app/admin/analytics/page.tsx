@@ -1,11 +1,12 @@
+
 'use client';
 
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Users, DollarSign, Activity, FileText, BarChart2, AreaChart, LineChart } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ResponsiveContainer, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
-import { BarChart as ShadcnBarChart, LineChart as ShadcnLineChart } from '@/components/ui/chart';
+import { Bar, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Line } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 
 const kpiData = [
@@ -16,34 +17,34 @@ const kpiData = [
 ];
 
 const featureUsageData = [
-    { name: 'AI Interviewer', usage: 450, fill: 'var(--chart-1)' },
-    { name: 'Resume Analysis', usage: 820, fill: 'var(--chart-2)' },
-    { name: 'Job Descriptions', usage: 650, fill: 'var(--chart-3)' },
-    { name: 'Email Drafting', usage: 1100, fill: 'var(--chart-4)' },
-    { name: 'Copilot Chat', usage: 1500, fill: 'var(--chart-5)' },
+    { name: 'AI Interviewer', usage: 450, fill: 'var(--color-interviewer)' },
+    { name: 'Resume Analysis', usage: 820, fill: 'var(--color-analysis)' },
+    { name: 'Job Descriptions', usage: 650, fill: 'var(--color-descriptions)' },
+    { name: 'Email Drafting', usage: 1100, fill: 'var(--color-drafting)' },
+    { name: 'Copilot Chat', usage: 1500, fill: 'var(--color-copilot)' },
 ];
 
 const chartConfig = {
   usage: {
     label: "Usage",
   },
-  'AI Interviewer': {
+  interviewer: {
     label: "AI Interviewer",
     color: "hsl(var(--chart-1))",
   },
-  'Resume Analysis': {
+  analysis: {
     label: "Resume Analysis",
     color: "hsl(var(--chart-2))",
   },
-  'Job Descriptions': {
+  descriptions: {
     label: "Job Descriptions",
     color: "hsl(var(--chart-3))",
   },
-  'Email Drafting': {
+  drafting: {
     label: "Email Drafting",
     color: "hsl(var(--chart-4))",
   },
-  'Copilot Chat': {
+  copilot: {
     label: "Copilot Chat",
     color: "hsl(var(--chart-5))",
   },
@@ -93,16 +94,12 @@ export default function AdminAnalyticsPage() {
             <CardTitle className="flex items-center"><AreaChart className="mr-2 h-5 w-5 text-primary" /> API Usage Over Time</CardTitle>
             <CardDescription>Total API calls per day for the selected period.</CardDescription>
           </CardHeader>
-          <CardContent className="h-80 bg-secondary/30 rounded-md flex items-center justify-center">
-             <ShadcnLineChart
-              data={[]}
-              index="date"
-              categories={['Total Calls']}
-              colors={['blue']}
-              yAxisWidth={48}
-              className="h-full w-full"
-              noDataText="Line Chart Placeholder - No Data"
-            />
+          <CardContent className="h-80">
+             <ChartContainer config={chartConfig} className="h-full w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <p className="text-muted-foreground text-center pt-20">Line Chart Placeholder - No Data</p>
+                </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
         <Card className="shadow-lg">
@@ -110,16 +107,12 @@ export default function AdminAnalyticsPage() {
             <CardTitle className="flex items-center"><LineChart className="mr-2 h-5 w-5 text-primary" /> New User Signups</CardTitle>
             <CardDescription>Daily new user registrations.</CardDescription>
           </CardHeader>
-          <CardContent className="h-80 bg-secondary/30 rounded-md flex items-center justify-center">
-            <ShadcnLineChart
-              data={[]}
-              index="date"
-              categories={['New Users']}
-              colors={['green']}
-              yAxisWidth={48}
-              className="h-full w-full"
-              noDataText="Line Chart Placeholder - No Data"
-            />
+          <CardContent className="h-80">
+            <ChartContainer config={chartConfig} className="h-full w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <p className="text-muted-foreground text-center pt-20">Line Chart Placeholder - No Data</p>
+                </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>
@@ -131,16 +124,16 @@ export default function AdminAnalyticsPage() {
             <CardDescription>Most frequently used AI features across the platform.</CardDescription>
           </CardHeader>
           <CardContent className="h-96">
-            <ShadcnBarChart
-              data={featureUsageData}
-              index="name"
-              categories={['usage']}
-              colors={['blue']}
-              chartConfig={chartConfig}
-              layout="vertical"
-              yAxisWidth={120}
-              className="h-full w-full"
-            />
+            <ChartContainer config={chartConfig} className="h-full w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <RechartsPrimitive.BarChart layout="vertical" data={featureUsageData}>
+                        <XAxis type="number" hide />
+                        <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={120} />
+                        <Tooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="usage" radius={5} />
+                    </RechartsPrimitive.BarChart>
+                </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>
