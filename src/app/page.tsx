@@ -260,8 +260,8 @@ export default function LandingPage() {
             <Button variant="ghost" asChild className="text-white hover:bg-neutral-800 hover:text-white hidden sm:flex">
               <Link href="/login">Log In</Link>
             </Button>
-            <Button onClick={handleGuestLogin} disabled={isGuestLoading} className="bg-white text-black hover:bg-neutral-200 rounded-full">
-              {isGuestLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button onClick={handleGuestLogin} disabled={isLoading || isGuestLoading} className="bg-white text-black hover:bg-neutral-200 rounded-full">
+              {(isLoading || isGuestLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Try Now
             </Button>
           </div>
@@ -319,8 +319,8 @@ export default function LandingPage() {
 
           {/* CTA Button */}
           <div className="flex justify-center gap-4 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
-              <Button size="lg" onClick={handleGuestLogin} disabled={isGuestLoading} className="bg-white text-black hover:bg-neutral-200 rounded-full px-8 py-3 h-auto">
-                {isGuestLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button size="lg" onClick={handleGuestLogin} disabled={isLoading || isGuestLoading} className="bg-white text-black hover:bg-neutral-200 rounded-full px-8 py-3 h-auto">
+                {(isLoading || isGuestLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Try Now for Free
               </Button>
           </div>
@@ -599,8 +599,9 @@ export default function LandingPage() {
                 </span>
             </h2>
             <div className="opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-              <Button size="lg" asChild className="bg-black text-white hover:bg-neutral-800 rounded-full px-8 py-3 h-auto border border-neutral-700 shadow-lg">
-                <Link href="/register">Try Now For Free</Link>
+              <Button size="lg" onClick={handleGuestLogin} disabled={isLoading || isGuestLoading} className="bg-black text-white hover:bg-neutral-800 rounded-full px-8 py-3 h-auto border border-neutral-700 shadow-lg">
+                {(isLoading || isGuestLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Try Now For Free
               </Button>
             </div>
           </div>
@@ -791,8 +792,8 @@ export default function LandingPage() {
               <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-black">
                 Streamline operations and build a better workplace.
               </h2>
-              <Button size="lg" onClick={handleGuestLogin} disabled={isGuestLoading} className="bg-black text-white hover:bg-neutral-800 rounded-full px-8 py-3 h-auto shadow-lg transition-transform hover:scale-105">
-                {isGuestLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button size="lg" onClick={handleGuestLogin} disabled={isLoading || isGuestLoading} className="bg-black text-white hover:bg-neutral-800 rounded-full px-8 py-3 h-auto shadow-lg transition-transform hover:scale-105">
+                 {(isLoading || isGuestLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Try Now For Free
               </Button>
             </div>
