@@ -26,7 +26,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         </div>
         <Badge variant="outline" className="mb-4 border-primary/50 text-primary">{post.category}</Badge>
         <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-4">{post.title}</h1>
-        <div className="flex items-center justify-center gap-6 text-sm text-neutral-400">
+        <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <User className="h-4 w-4" />
             <span>{post.author}</span>
@@ -38,7 +38,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         </div>
       </header>
       
-      <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-12">
+      <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-12 shadow-lg">
         <Image
           src={post.image}
           alt={post.title}
@@ -50,13 +50,13 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
       </div>
 
       <div
-        className="prose prose-invert prose-lg max-w-none mx-auto
-                   prose-p:text-neutral-300
-                   prose-headings:text-white prose-headings:font-bold
-                   prose-strong:text-white
+        className="prose dark:prose-invert prose-lg max-w-none mx-auto
+                   prose-p:text-foreground/80
+                   prose-headings:text-foreground prose-headings:font-bold
+                   prose-strong:text-foreground
                    prose-a:text-primary hover:prose-a:text-primary/80
-                   prose-ul:text-neutral-300
-                   prose-ol:text-neutral-300"
+                   prose-ul:text-foreground/80
+                   prose-ol:text-foreground/80"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
     </article>

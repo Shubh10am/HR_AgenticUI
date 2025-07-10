@@ -1,23 +1,24 @@
+
 export default function PrivacyPage() {
   const lastUpdated = "October 26, 2023";
 
   return (
-    <article className="space-y-8">
+    <article className="space-y-8 prose dark:prose-invert max-w-none">
       <header>
-        <h1 className="text-4xl sm:text-5xl font-black tracking-tighter mb-4">Privacy Policy</h1>
-        <p className="text-lg text-neutral-400">Last Updated: {lastUpdated}</p>
+        <h1 className="text-4xl sm:text-5xl font-black tracking-tighter mb-4 text-foreground">Privacy Policy</h1>
+        <p className="text-lg text-muted-foreground">Last Updated: {lastUpdated}</p>
       </header>
 
-      <div className="space-y-6 text-neutral-300">
+      <div className="space-y-6 text-foreground/80">
         <section className="space-y-3">
-          <h2 className="text-2xl font-bold border-b border-neutral-700 pb-2">1. Information We Collect</h2>
+          <h2 className="text-2xl font-bold border-b border-border pb-2 text-foreground">1. Information We Collect</h2>
           <p>
             We collect information you provide directly to us, such as when you create an account, manage your employees, or communicate with us. This may include your name, email address, organization details, and any other information you choose to provide. We also collect technical data automatically, such as IP address and browser type, to ensure the smooth operation of our services.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-2xl font-bold border-b border-neutral-700 pb-2">2. How We Use Your Information</h2>
+          <h2 className="text-2xl font-bold border-b border-border pb-2 text-foreground">2. How We Use Your Information</h2>
           <p>
             We use the information we collect to:
           </p>
@@ -31,7 +32,7 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-2xl font-bold border-b border-neutral-700 pb-2">3. Sharing of Information</h2>
+          <h2 className="text-2xl font-bold border-b border-border pb-2 text-foreground">3. Sharing of Information</h2>
           <p>
             We do not share your personal information with third parties except in the following circumstances or as otherwise described in this Privacy Policy:
           </p>
@@ -43,14 +44,14 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-2xl font-bold border-b border-neutral-700 pb-2">4. Your Rights</h2>
+          <h2 className="text-2xl font-bold border-b border-border pb-2 text-foreground">4. Your Rights</h2>
           <p>
             You have the right to access, correct, or delete your personal information. You can manage your account information by logging into your account. For any requests regarding your data, please contact us.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-2xl font-bold border-b border-neutral-700 pb-2">5. Contact Us</h2>
+          <h2 className="text-2xl font-bold border-b border-border pb-2 text-foreground">5. Contact Us</h2>
           <p>
             If you have any questions about this Privacy Policy, please contact us at <a href="mailto:privacy@agentic-hr.in" className="text-primary hover:underline">privacy@agentic-hr.in</a>.
           </p>
