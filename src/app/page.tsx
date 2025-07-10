@@ -31,6 +31,7 @@ import {
   Signature,
   Globe,
   Loader2,
+  Plug,
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -514,7 +515,7 @@ export default function LandingPage() {
           )}
         >
             <div className="container mx-auto px-4 sm:px-6 flex flex-col items-center">
-
+                <HoverPill icon={Plug} label="Integrate" />
                 <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
                     Sync with<br />your tools
                 </h2>
