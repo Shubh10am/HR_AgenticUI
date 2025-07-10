@@ -1,3 +1,4 @@
+
 'use client'; // Required for hooks like usePathname, useRouter, useAuth
 
 import type { ReactNode } from 'react';
@@ -32,13 +33,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   // Define routes that don't use this AppLayout (e.g., login, register)
   const noAppLayoutRoutes = ['/login', '/register', '/', '/contact', '/book-a-demo'];
-  const isLegalPage = pathname.startsWith('/legal'); // Check for legal pages
+  const isLegalPage = pathname.startsWith('/legal');
 
   if (noAppLayoutRoutes.includes(pathname) || isLegalPage) {
-    return <>{children}</>; // Render children directly for auth and legal pages
+    return <>{children}</>; // Render children directly for public pages
   }
   
-  if (isLoading && !noAppLayoutRoutes.includes(pathname) && !isLegalPage) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
