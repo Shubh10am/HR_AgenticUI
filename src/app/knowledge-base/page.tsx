@@ -1,12 +1,17 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, RefreshCw, LayoutGrid, List, FolderPlus, Plus, File, Folder } from 'lucide-react';
 import Link from 'next/link';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/auth-context';
 
 interface KnowledgeBaseItem {
   id: string;
@@ -16,10 +21,9 @@ interface KnowledgeBaseItem {
   owner: string;
 }
 
-// Mock data - in a real app, this would come from an API
 const initialItems: KnowledgeBaseItem[] = [];
 
-const EmptyState = () => (
+const EmptyState = ({ onAddFolder, onAddFile }: { onAddFolder: () => void; onAddFile: () => void }) => (
   <div className="text-center py-16">
     <div className="inline-block bg-secondary p-6 rounded-full">
       <div className="inline-block bg-background p-4 rounded-full">
@@ -29,10 +33,10 @@ const EmptyState = () => (
     <h3 className="mt-6 text-xl font-semibold">No Knowledge Bases</h3>
     <p className="mt-2 text-muted-foreground">Get started by creating a new knowledge base or folder.</p>
     <div className="mt-6 flex justify-center gap-2">
-      <Button variant="outline">
+      <Button variant="outline" onClick={onAddFolder}>
         <FolderPlus className="mr-2 h-4 w-4" /> Create Folder
       </Button>
-      <Button>
+      <Button onClick={onAddFile}>
         <Plus className="mr-2 h-4 w-4" /> Create New
       </Button>
     </div>
@@ -42,6 +46,50 @@ const EmptyState = () => (
 export default function KnowledgeBasePage() {
   const [items, setItems] = useState<KnowledgeBaseItem[]>(initialItems);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
+  const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  const handleCreateFolder = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!newItemName.trim()) {
+      toast({ title: 'Folder name is required', variant: 'destructive' });
+      return;
+    }
+    const newFolder: KnowledgeBaseItem = {
+      id: `folder-${Date.now()}`,
+      name: newItemName.trim(),
+      type: 'Folder',
+      createdAt: new Date().toLocaleDateString(),
+      owner: user?.name || 'You',
+    };
+    setItems([...items, newFolder]);
+    toast({ title: 'Folder Created', description: `Folder "${newFolder.name}" has been created.` });
+    setIsFolderDialogOpen(false);
+    setNewItemName('');
+  };
+
+  const handleCreateFile = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!newItemName.trim()) {
+      toast({ title: 'File name is required', variant: 'destructive' });
+      return;
+    }
+    const newFile: KnowledgeBaseItem = {
+      id: `file-${Date.now()}`,
+      name: newItemName.trim(),
+      type: 'File',
+      createdAt: new Date().toLocaleDateString(),
+      owner: user?.name || 'You',
+    };
+    setItems([...items, newFile]);
+    toast({ title: 'File Created', description: `File "${newFile.name}" has been created.` });
+    setIsFileDialogOpen(false);
+    setNewItemName('');
+  };
 
   return (
     <>
@@ -85,12 +133,57 @@ export default function KnowledgeBasePage() {
               <List className="h-4 w-4" />
             </Button>
           </div>
-          <Button variant="outline">
-            <FolderPlus className="mr-2 h-4 w-4" /> Create Folder
-          </Button>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> Create New
-          </Button>
+          
+          <Dialog open={isFolderDialogOpen} onOpenChange={(open) => { if (!open) setNewItemName(''); setIsFolderDialogOpen(open); }}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <FolderPlus className="mr-2 h-4 w-4" /> Create Folder
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Folder</DialogTitle>
+                <DialogDescription>Enter a name for your new folder.</DialogDescription>
+              </DialogHeader>
+              <form id="create-folder-form" onSubmit={handleCreateFolder}>
+                <div className="py-4">
+                  <Label htmlFor="folder-name">Folder Name</Label>
+                  <Input id="folder-name" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} required />
+                </div>
+              </form>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsFolderDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" form="create-folder-form">Create</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isFileDialogOpen} onOpenChange={(open) => { if (!open) setNewItemName(''); setIsFileDialogOpen(open); }}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" /> Create New
+              </Button>
+            </DialogTrigger>
+             <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Knowledge Base File</DialogTitle>
+                <DialogDescription>
+                    This will create a new file entry. You can upload content later.
+                </DialogDescription>
+              </DialogHeader>
+              <form id="create-file-form" onSubmit={handleCreateFile}>
+                <div className="py-4">
+                  <Label htmlFor="file-name">File Name</Label>
+                  <Input id="file-name" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} required />
+                </div>
+              </form>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsFileDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" form="create-file-form">Create File</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
         </div>
       </div>
 
@@ -120,7 +213,10 @@ export default function KnowledgeBasePage() {
             </TableBody>
           </Table>
         ) : (
-          <EmptyState />
+          <EmptyState 
+            onAddFolder={() => setIsFolderDialogOpen(true)} 
+            onAddFile={() => setIsFileDialogOpen(true)} 
+          />
         )}
       </div>
     </>
