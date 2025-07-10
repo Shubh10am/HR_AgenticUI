@@ -137,7 +137,7 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
         <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
           {isGuest ? (
              <div className="text-center text-muted-foreground py-10 h-full flex flex-col items-center justify-center">
-              <Lock className="h-10 w-10 mx-auto mb-4 opacity-50" />
+              <Lock className="h-10 w-10 text-primary mb-4" />
               <p className="font-semibold text-lg mb-2">Feature Locked</p>
               <p className="text-sm mb-4">
                 Please log in or register to use the HR Copilot.
