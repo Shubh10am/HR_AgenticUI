@@ -319,8 +319,9 @@ export default function LandingPage() {
 
           {/* CTA Button */}
           <div className="flex justify-center gap-4 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
-              <Button size="lg" asChild className="bg-white text-black hover:bg-neutral-200 rounded-full px-8 py-3 h-auto">
-                <Link href="/register">Try Now for Free</Link>
+              <Button size="lg" onClick={handleGuestLogin} disabled={isGuestLoading} className="bg-white text-black hover:bg-neutral-200 rounded-full px-8 py-3 h-auto">
+                {isGuestLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Try Now for Free
               </Button>
           </div>
         </section>
@@ -790,8 +791,9 @@ export default function LandingPage() {
               <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-black">
                 Streamline operations and build a better workplace.
               </h2>
-              <Button size="lg" asChild className="bg-black text-white hover:bg-neutral-800 rounded-full px-8 py-3 h-auto shadow-lg transition-transform hover:scale-105">
-                <Link href="/register">Try Now For Free</Link>
+              <Button size="lg" onClick={handleGuestLogin} disabled={isGuestLoading} className="bg-black text-white hover:bg-neutral-800 rounded-full px-8 py-3 h-auto shadow-lg transition-transform hover:scale-105">
+                {isGuestLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Try Now For Free
               </Button>
             </div>
           </div>
