@@ -26,23 +26,23 @@ export default function AdminContentManagementPage() {
       />
       
       <Tabs defaultValue="plans" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 h-auto">
           <TabsTrigger value="plans"><DollarSign className="mr-2 h-4 w-4" />Subscription Plans</TabsTrigger>
           <TabsTrigger value="emails"><Mail className="mr-2 h-4 w-4" />Email Templates</TabsTrigger>
         </TabsList>
 
         <TabsContent value="plans" className="mt-4">
           <Card className="shadow-lg">
-            <CardHeader className="flex flex-row justify-between items-center">
+            <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <CardTitle>Subscription Plans</CardTitle>
                     <CardDescription>Define and manage subscription tiers for organizations.</CardDescription>
                 </div>
-                 <Button>
+                 <Button className="w-full sm:w-auto">
                     <PlusCircle className="mr-2 h-4 w-4" /> Add New Plan
                 </Button>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {plans.map(plan => (
                     <Card key={plan.name} className="flex flex-col">
                         <CardHeader>

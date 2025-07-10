@@ -55,7 +55,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-md">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-4 sm:px-6 backdrop-blur-md">
           <div className="flex items-center">
             <SidebarTrigger />
           </div>
@@ -63,7 +63,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <UserNav />
           </div>
         </header>
-        <main className="flex-1 p-6 overflow-x-hidden animated-background-gradient">
+        <main className="flex-1 p-4 sm:p-6 overflow-x-hidden animated-background-gradient">
           <div className="animate-fade-in">
             {children}
           </div>

@@ -20,7 +20,7 @@ export default function AdminSettingsPage() {
       />
       
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-4 h-auto">
           <TabsTrigger value="general"><Shield className="mr-2 h-4 w-4" />General</TabsTrigger>
           <TabsTrigger value="api"><KeyRound className="mr-2 h-4 w-4" />API & Integrations</TabsTrigger>
           <TabsTrigger value="billing"><CreditCard className="mr-2 h-4 w-4" />Billing</TabsTrigger>
