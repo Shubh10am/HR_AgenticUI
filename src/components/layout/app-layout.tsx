@@ -31,11 +31,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const { isLoading, isAuthenticated } = useAuth();
   const [isCopilotOpen, setIsCopilotOpen] = useState(false); // Added state for copilot
 
-  // Define routes that don't use this AppLayout (e.g., login, register)
-  const noAppLayoutRoutes = ['/login', '/register', '/', '/contact', '/book-a-demo'];
+  // Define routes that are public and should not use the dashboard AppLayout
+  const publicPages = ['/login', '/register', '/', '/contact', '/book-a-demo'];
   const isLegalPage = pathname.startsWith('/legal');
+  const isPublicPage = publicPages.includes(pathname) || isLegalPage;
 
-  if (noAppLayoutRoutes.includes(pathname) || isLegalPage) {
+  if (isPublicPage) {
     return <>{children}</>; // Render children directly for public pages
   }
   
