@@ -33,11 +33,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   // Define routes that are public and should not use the dashboard AppLayout
   const publicPages = ['/login', '/register', '/', '/contact', '/book-a-demo'];
+  const isAdminPage = pathname.startsWith('/admin');
   const isLegalPage = pathname.startsWith('/legal');
   const isPublicPage = publicPages.includes(pathname) || isLegalPage;
 
-  if (isPublicPage) {
-    return <>{children}</>; // Render children directly for public pages
+  if (isPublicPage || isAdminPage) {
+    return <>{children}</>; // Render children directly for public and admin pages
   }
   
   if (isLoading) {
