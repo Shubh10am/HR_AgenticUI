@@ -30,6 +30,7 @@ import {
   Image as ImageIcon,
   Signature,
   Globe,
+  Loader2,
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -37,6 +38,7 @@ import { Badge } from '@/components/ui/badge';
 import ChatWidget from '@/components/chat-widget';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import CtaLogo from '@/components/icons/cta-logo';
+import { useAuth } from '@/contexts/auth-context';
 
 
 interface CustomIconProps extends SVGProps<SVGSVGElement> {}
@@ -158,6 +160,14 @@ export default function LandingPage() {
 
   const sectionsRef = useRef<(HTMLElement | null)[]>([]);
   const [visibleSections, setVisibleSections] = useState<Set<number>>(new Set());
+  const { loginAsGuest, isLoading } = useAuth();
+  const [isGuestLoading, setIsGuestLoading] = useState(false);
+
+  const handleGuestLogin = async () => {
+    setIsGuestLoading(true);
+    await loginAsGuest();
+    // No need to set isGuestLoading to false, as the page will redirect.
+  };
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -229,8 +239,9 @@ export default function LandingPage() {
             <Button variant="ghost" asChild className="text-white hover:bg-neutral-800 hover:text-white hidden sm:flex">
               <Link href="/login">Log In</Link>
             </Button>
-            <Button asChild className="bg-white text-black hover:bg-neutral-200 rounded-full">
-              <Link href="/register">Try Now</Link>
+            <Button onClick={handleGuestLogin} disabled={isGuestLoading} className="bg-white text-black hover:bg-neutral-200 rounded-full">
+              {isGuestLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Try Now
             </Button>
           </div>
         </div>
