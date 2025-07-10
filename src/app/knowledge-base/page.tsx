@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface KnowledgeBaseItem {
   id: string;
@@ -118,20 +119,20 @@ export default function KnowledgeBasePage() {
           </Button>
           <div className="flex items-center rounded-md bg-muted p-1">
             <Button
-              variant={viewMode === 'grid' ? 'outline' : 'ghost'}
-              size="icon"
-              className={`h-8 w-8 ${viewMode === 'grid' ? 'bg-background shadow-sm' : ''}`}
-              onClick={() => setViewMode('grid')}
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button
               variant={viewMode === 'list' ? 'outline' : 'ghost'}
               size="icon"
               className={`h-8 w-8 ${viewMode === 'list' ? 'bg-background shadow-sm' : ''}`}
               onClick={() => setViewMode('list')}
             >
               <List className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'grid' ? 'outline' : 'ghost'}
+              size="icon"
+              className={`h-8 w-8 ${viewMode === 'grid' ? 'bg-background shadow-sm' : ''}`}
+              onClick={() => setViewMode('grid')}
+            >
+              <LayoutGrid className="h-4 w-4" />
             </Button>
           </div>
           
@@ -194,9 +195,14 @@ export default function KnowledgeBasePage() {
 
         </div>
       </div>
-
-      <div className="rounded-lg border mt-4">
-        {items.length > 0 ? (
+      
+      {items.length === 0 ? (
+        <EmptyState
+          onAddFolder={() => setIsFolderDialogOpen(true)}
+          onUploadFile={() => setIsUploadDialogOpen(true)}
+        />
+      ) : viewMode === 'list' ? (
+        <div className="rounded-lg border mt-4">
           <Table>
             <TableHeader>
               <TableRow>
@@ -220,13 +226,26 @@ export default function KnowledgeBasePage() {
               ))}
             </TableBody>
           </Table>
-        ) : (
-          <EmptyState 
-            onAddFolder={() => setIsFolderDialogOpen(true)} 
-            onUploadFile={() => setIsUploadDialogOpen(true)} 
-          />
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-4">
+          {items.map((item) => (
+            <Card key={item.id} className="cursor-pointer hover:shadow-lg transition-shadow">
+              <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+                {item.type === 'Folder' ? (
+                  <Folder className="h-16 w-16 text-primary mb-4" />
+                ) : (
+                  <File className="h-16 w-16 text-muted-foreground mb-4" />
+                )}
+                <p className="font-semibold truncate w-full" title={item.name}>{item.name}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  By {item.owner} on {item.createdAt}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </>
   );
 }
