@@ -1,13 +1,25 @@
 
+'use client';
+
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import Logo from '@/components/icons/logo';
 import { Button } from '@/components/ui/button';
-import { Hash, Linkedin, X, Instagram, Youtube, ArrowLeft } from 'lucide-react';
+import { Hash, Linkedin, X, Instagram, Youtube, ArrowLeft, Loader2 } from 'lucide-react';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { useAuth } from '@/contexts/auth-context';
+import { useState } from 'react';
 
 export default function LegalLayout({ children }: { children: ReactNode }) {
+  const { loginAsGuest, isLoading } = useAuth();
+  const [isGuestLoading, setIsGuestLoading] = useState(false);
+
+  const handleGuestLogin = async () => {
+    setIsGuestLoading(true);
+    await loginAsGuest();
+  };
+
   return (
      <ThemeProvider
       attribute="class"
@@ -28,8 +40,9 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
               <Button variant="ghost" asChild className="text-foreground hover:bg-accent hover:text-accent-foreground hidden sm:flex">
                 <Link href="/login">Log In</Link>
               </Button>
-              <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full">
-                <Link href="/register">Try Now</Link>
+              <Button onClick={handleGuestLogin} disabled={isLoading || isGuestLoading} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full">
+                {(isLoading || isGuestLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Try Now
               </Button>
             </div>
           </div>

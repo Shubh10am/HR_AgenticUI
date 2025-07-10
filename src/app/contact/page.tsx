@@ -13,6 +13,7 @@ import Link from 'next/link';
 import Logo from '@/components/icons/logo';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { useAuth } from '@/contexts/auth-context';
 
 export default function ContactPage() {
   const { toast } = useToast();
@@ -21,6 +22,13 @@ export default function ContactPage() {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { loginAsGuest, isLoading: authLoading } = useAuth();
+  const [isGuestLoading, setIsGuestLoading] = useState(false);
+
+  const handleGuestLogin = async () => {
+    setIsGuestLoading(true);
+    await loginAsGuest();
+  };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -63,8 +71,9 @@ export default function ContactPage() {
               <Button variant="ghost" asChild className="text-foreground hover:bg-accent hover:text-accent-foreground hidden sm:flex">
                 <Link href="/login">Log In</Link>
               </Button>
-              <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full">
-                <Link href="/register">Try Now</Link>
+              <Button onClick={handleGuestLogin} disabled={authLoading || isGuestLoading} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full">
+                {(authLoading || isGuestLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Try Now
               </Button>
             </div>
           </div>
