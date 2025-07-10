@@ -5,7 +5,7 @@ import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Users, DollarSign, Activity, FileText, BarChart2, AreaChart, LineChart } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Bar, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Line } from 'recharts';
+import { Bar, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Line, BarChart } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 
@@ -126,12 +126,12 @@ export default function AdminAnalyticsPage() {
           <CardContent className="h-96">
             <ChartContainer config={chartConfig} className="h-full w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                    <RechartsPrimitive.BarChart layout="vertical" data={featureUsageData}>
+                    <BarChart layout="vertical" data={featureUsageData}>
                         <XAxis type="number" hide />
                         <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={120} />
                         <Tooltip content={<ChartTooltipContent />} />
                         <Bar dataKey="usage" radius={5} />
-                    </RechartsPrimitive.BarChart>
+                    </BarChart>
                 </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
