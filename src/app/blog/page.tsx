@@ -3,72 +3,9 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
 import { ArrowRight, Calendar, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-
-const blogPosts = [
-  {
-    slug: 'optimizing-recruitment-with-ai',
-    title: 'Optimizing Recruitment: How AI is Reshaping the Hiring Landscape',
-    description: 'Explore how artificial intelligence is streamlining the recruitment process, from resume screening to candidate interviews, saving time and improving hire quality.',
-    author: 'Jane Doe',
-    date: 'July 28, 2024',
-    category: 'Recruitment',
-    image: 'https://placehold.co/600x400.png',
-    dataAiHint: 'recruitment technology',
-  },
-  {
-    slug: 'future-of-hr-automation',
-    title: 'The Future of HR is Here: Embracing Automation for Better Workplaces',
-    description: 'A deep dive into how automation tools are freeing up HR professionals to focus on strategic initiatives and employee engagement.',
-    author: 'John Smith',
-    date: 'July 25, 2024',
-    category: 'HR Tech',
-    image: 'https://placehold.co/600x400.png',
-    dataAiHint: 'hr automation',
-  },
-  {
-    slug: 'data-driven-decision-making-in-hr',
-    title: 'Data-Driven Decision Making in Human Resources',
-    description: 'Learn how to leverage analytics and reporting tools to make informed decisions that boost employee retention and performance.',
-    author: 'Alice Johnson',
-    date: 'July 22, 2024',
-    category: 'Analytics',
-    image: 'https://placehold.co/600x400.png',
-    dataAiHint: 'data analytics',
-  },
-  {
-    slug: 'boosting-productivity-with-task-management',
-    title: 'Boosting Team Productivity with Integrated Task Management',
-    description: 'Discover the best practices for using task management systems to keep your projects on track and your team aligned.',
-    author: 'Mike Brown',
-    date: 'July 18, 2024',
-    category: 'Productivity',
-    image: 'https://placehold.co/600x400.png',
-    dataAiHint: 'team productivity',
-  },
-    {
-    slug: 'effective-onboarding-in-a-remote-world',
-    title: 'Effective Onboarding in a Remote World',
-    description: 'Strategies for creating a welcoming and effective onboarding experience for new remote employees.',
-    author: 'Emily White',
-    date: 'July 15, 2024',
-    category: 'Onboarding',
-    image: 'https://placehold.co/600x400.png',
-    dataAiHint: 'remote work onboarding',
-  },
-  {
-    slug: 'the-role-of-unified-communications',
-    title: 'The Role of Unified Communications in a Hybrid Workforce',
-    description: 'How integrating communication channels can enhance collaboration and connection for hybrid teams.',
-    author: 'Chris Green',
-    date: 'July 12, 2024',
-    category: 'Communication',
-    image: 'https://placehold.co/600x400.png',
-    dataAiHint: 'team communication',
-  },
-];
+import { blogPosts } from '@/lib/blog-data';
 
 
 export default function BlogPage() {
