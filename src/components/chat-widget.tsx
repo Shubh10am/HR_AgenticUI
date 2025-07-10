@@ -67,7 +67,7 @@ export default function ChatWidget() {
 
   const handleOpenMessagesTab = () => {
     setActiveTab('messages');
-    if (isGuest && chatHistory.length === 0) {
+    if (chatHistory.length === 0) {
         setChatHistory([guestWelcomeMessage]);
     }
   }
@@ -148,7 +148,7 @@ export default function ChatWidget() {
         <div className="bg-card rounded-lg p-4 shadow-sm border border-border/80 space-y-3">
             <p className="font-semibold text-card-foreground">Search for help</p>
             <div className="relative">
-                <Input placeholder="Search..." className="pr-10" />
+                <Input placeholder="Search..." className="pr-10 bg-secondary/50 dark:bg-secondary/30" />
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             </div>
              <Link href="#" className="flex justify-between items-center text-sm text-card-foreground hover:text-primary">
@@ -207,7 +207,7 @@ export default function ChatWidget() {
         </ScrollArea>
         <form onSubmit={handleSendMessage} className="flex-shrink-0 pt-3 mt-auto">
           <div className="relative">
-            <Input ref={inputRef} type="text" placeholder="Type your message..." value={userInput} onChange={(e) => setUserInput(e.target.value)} disabled={isLoading} className="pr-12" />
+            <Input ref={inputRef} type="text" placeholder="Type your message..." value={userInput} onChange={(e) => setUserInput(e.target.value)} disabled={isLoading} className="pr-12 text-card-foreground" />
             <Button type="submit" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" disabled={isLoading || !userInput.trim()}><Send className="h-4 w-4" /></Button>
           </div>
         </form>

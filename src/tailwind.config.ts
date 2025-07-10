@@ -11,9 +11,9 @@ export default {
   ],
   theme: {
   	extend: {
-      fontFamily: {
-        sans: ["var(--font-sans)", ...fontFamily.sans],
-      },
+		fontFamily: {
+			sans: ['Poppins', ...fontFamily.sans],
+		  },
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
@@ -102,20 +102,35 @@ export default {
           '0%': { transform: 'translateX(0%)' },
           '100%': { transform: 'translateX(-50%)' },
         },
-		'float': {
-			'0%, 100%': { transform: 'translateY(0px)' },
-			'25%': { transform: 'translateY(-4px)' },
-			'50%': { transform: 'translateY(-8px)' },
-			'75%': { transform: 'translateY(-4px)' },
-			},
-		'float-slow': {
-			'0%, 100%': { transform: 'translateY(0px)' },
-			'50%': { transform: 'translateY(-6px)' },
-			},
-
+        'float': {
+          '0%': { transform: 'translate(0px, 0px)' },
+          '25%': { transform: 'translate(5px, -8px)' },
+          '50%': { transform: 'translate(0px, -16px)' },
+          '75%': { transform: 'translate(-5px, -8px)' },
+          '100%': { transform: 'translate(0px, 0px)' },
+        },
+        'float-slow': {
+          '0%': { transform: 'translate(0px, 0px)' },
+          '25%': { transform: 'translate(-6px, 5px)' },
+          '50%': { transform: 'translate(0px, 10px)' },
+          '75%': { transform: 'translate(6px, 5px)' },
+          '100%': { transform: 'translate(0px, 0px)' },
+        },
         'slow-spin': {
             from: { transform: 'rotate(0deg)' },
             to: { transform: 'rotate(360deg)' },
+        },
+        'grain': {
+          '0%, 100%': { transform: 'translate(0, 0)' },
+          '10%': { transform: 'translate(-5%, -10%)' },
+          '20%': { transform: 'translate(-15%, 5%)' },
+          '30%': { transform: 'translate(7%, -25%)' },
+          '40%': { transform: 'translate(-5%, 25%)' },
+          '50%': { transform: 'translate(-15%, 10%)' },
+          '60%': { transform: 'translate(15%, 0%)' },
+          '70%': { transform: 'translate(0%, 15%)' },
+          '80%': { transform: 'translate(3%, 35%)' },
+          '90%': { transform: 'translate(-10%, 10%)' },
         },
   		},
   		animation: {
@@ -126,6 +141,7 @@ export default {
         'float': 'float 12s ease-in-out infinite',
         'float-slow': 'float-slow 18s ease-in-out infinite',
         'slow-spin': 'slow-spin 3s linear infinite',
+        'grain': 'grain 8s steps(10) infinite',
   		}
   	}
   },
