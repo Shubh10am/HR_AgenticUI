@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -19,6 +18,7 @@ import {
   FileSignature,
   ListChecks, 
   Users, // Added Users icon
+  Library, // Added Library icon
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar'; 
@@ -41,6 +41,7 @@ const navItems: NavItem[] = [
   { href: '/recruitment', label: 'Recruitment', icon: GitFork, tooltip: 'AI Recruitment' },
   { href: '/smart-drafting', label: 'Smart Drafting', icon: FileSignature, tooltip: 'Smart Email Drafting' },
   { href: '/tasks', label: 'Tasks', icon: ListChecks, tooltip: 'Task Management' },
+  { href: '/knowledge-base', label: 'Knowledge Base', icon: Library, tooltip: 'Knowledge Base' },
   { href: '/manage-employees', label: 'Manage Employees', icon: Users, tooltip: 'Manage Employees', adminOnly: true }, // New Manage Employees link
   { href: '/integrations', label: 'Integrations', icon: Plug, tooltip: 'Manage Integrations' },
 ];
