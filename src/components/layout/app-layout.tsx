@@ -35,7 +35,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const publicPages = ['/login', '/register', '/', '/contact', '/book-a-demo'];
   const isAdminPage = pathname.startsWith('/admin');
   const isLegalPage = pathname.startsWith('/legal');
-  const isPublicPage = publicPages.includes(pathname) || isLegalPage;
+  const isBlogPage = pathname.startsWith('/blog');
+  const isPublicPage = publicPages.includes(pathname) || isLegalPage || isBlogPage;
 
   if (isPublicPage || isAdminPage) {
     return <>{children}</>; // Render children directly for public and admin pages
