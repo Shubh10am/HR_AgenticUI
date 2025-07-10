@@ -5,7 +5,7 @@ import { useState, type FormEvent } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Github, Link as LinkIcon, CheckCircle, Settings, MessageSquare, CalendarDays, Webcam, Users, LayoutGrid, FileSignature, KanbanSquare, Video, Inbox, Loader2, Send } from 'lucide-react';
+import { Github, Link as LinkIcon, CheckCircle, Settings, MessageSquare, CalendarDays, Webcam, Users, LayoutGrid, FileSignature, KanbanSquare, Video, Inbox, Loader2, Send, FileText } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
@@ -155,6 +155,42 @@ const initialIntegrations: Integration[] = [
     category: 'Project Management',
     isConnected: false,
     features: ['Issue Tracking', 'Project Automation', 'Custom Workflows'],
+  },
+  {
+    id: 'notion',
+    name: 'Notion',
+    description: 'Connect your workspace to sync notes, docs, and project plans with your HR workflows.',
+    icon: FileText,
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png',
+    dataAiHint: 'notion logo',
+    category: 'Productivity',
+    isConnected: false,
+    features: ['Sync Pages', 'Database Integration', 'Knowledge Base Sync'],
+    requiresOAuth: true,
+  },
+  {
+    id: 'calendly',
+    name: 'Calendly',
+    description: 'Automate meeting scheduling to save time and reduce back-and-forth emails.',
+    icon: CalendarDays,
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Calendly_logo.svg/1004px-Calendly_logo.svg.png',
+    dataAiHint: 'calendly logo',
+    category: 'Productivity',
+    isConnected: false,
+    features: ['Embed Scheduling Page', 'Automated Reminders', 'Calendar Sync'],
+    requiresOAuth: true,
+  },
+  {
+    id: 'outlook',
+    name: 'Outlook Calendar',
+    description: 'Sync your Outlook calendar for scheduling and availability tracking across the Microsoft ecosystem.',
+    icon: CalendarDays,
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg/512px-Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg.png',
+    dataAiHint: 'outlook logo',
+    category: 'Email',
+    isConnected: false,
+    features: ['Schedule Meetings', 'Availability Sync', 'Contact Sync'],
+    requiresOAuth: true,
   },
 ];
 
