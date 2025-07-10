@@ -173,7 +173,7 @@ const initialIntegrations: Integration[] = [
     name: 'Calendly',
     description: 'Automate meeting scheduling to save time and reduce back-and-forth emails.',
     icon: CalendarDays,
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Calendly_logo.svg/1004px-Calendly_logo.svg.png',
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/7f/Calendly_company_logo.png/500px-Calendly_company_logo.png',
     dataAiHint: 'calendly logo',
     category: 'Productivity',
     isConnected: false,
