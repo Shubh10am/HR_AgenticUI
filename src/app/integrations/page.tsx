@@ -145,6 +145,17 @@ const initialIntegrations: Integration[] = [
     isConnected: true,
     features: ['Board Sync', 'Task Automation', 'Recruitment Tracking'],
   },
+  {
+    id: 'jira',
+    name: 'Jira',
+    description: 'Track issues, manage projects, and automate workflows for HR and development teams.',
+    icon: KanbanSquare,
+    logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/atlassian_jira_logo_icon_170511.png',
+    dataAiHint: 'jira logo',
+    category: 'Project Management',
+    isConnected: false,
+    features: ['Issue Tracking', 'Project Automation', 'Custom Workflows'],
+  },
 ];
 
 
@@ -376,4 +387,3 @@ export default function IntegrationsPage() {
     </>
   );
 }
-
