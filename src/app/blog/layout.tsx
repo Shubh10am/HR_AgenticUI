@@ -6,7 +6,6 @@ import Link from 'next/link';
 import Logo from '@/components/icons/logo';
 import { Button } from '@/components/ui/button';
 import { Hash, Linkedin, X, Instagram, Youtube, Loader2 } from 'lucide-react';
-import { ThemeProvider } from '@/components/theme-provider';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useAuth } from '@/contexts/auth-context';
 import { useState } from 'react';
@@ -21,11 +20,7 @@ export default function BlogLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="dark"
-      disableTransitionOnChange
-    >
+    <div className="dark">
       <div className="flex flex-col min-h-screen bg-background text-foreground antialiased">
         {/* Header */}
         <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
@@ -110,6 +105,6 @@ export default function BlogLayout({ children }: { children: ReactNode }) {
           </div>
         </footer>
       </div>
-    </ThemeProvider>
+    </div>
   );
 }

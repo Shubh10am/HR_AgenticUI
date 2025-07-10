@@ -12,7 +12,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Calendar, Users, Mail, Phone, MapPin, Send, Loader2, Hash, Linkedin, X, Instagram, Youtube } from 'lucide-react';
 import Link from 'next/link';
 import Logo from '@/components/icons/logo';
-import { ThemeProvider } from '@/components/theme-provider';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -55,11 +54,7 @@ export default function BookDemoPage() {
   };
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="dark"
-      disableTransitionOnChange
-    >
+    <div className="dark">
       <div className="flex flex-col min-h-screen bg-background text-foreground antialiased">
         {/* Header */}
         <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
@@ -277,6 +272,6 @@ export default function BookDemoPage() {
           </div>
         </footer>
       </div>
-    </ThemeProvider>
+    </div>
   );
 }
