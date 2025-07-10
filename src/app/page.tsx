@@ -164,6 +164,8 @@ export default function LandingPage() {
   const { loginAsGuest, isLoading } = useAuth();
   const [isGuestLoading, setIsGuestLoading] = useState(false);
 
+  const [activeTaskState, setActiveTaskState] = useState<'po' | 'inProgress' | 'question'>('po');
+
   const handleGuestLogin = async () => {
     setIsGuestLoading(true);
     await loginAsGuest();
@@ -225,6 +227,24 @@ export default function LandingPage() {
       { name: 'Figma', hint: 'figma logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/figma_logo_icon_170157.png' },
       { name: 'Notion', hint: 'notion logo', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png' },
   ];
+
+  const taskContent = {
+    po: {
+      assignee: '@You',
+      message: "Let's add a sun here, @felix",
+      replies: 2,
+    },
+    inProgress: {
+      assignee: '@Felix',
+      message: 'Sure, I have added the sun asset. How does this look?',
+      replies: 3,
+    },
+    question: {
+      assignee: '@You',
+      message: 'Looks great! What about making it a bit brighter?',
+      replies: 4,
+    },
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white antialiased">
@@ -377,13 +397,15 @@ export default function LandingPage() {
                 <div className="relative max-w-lg mx-auto bg-white rounded-2xl shadow-2xl p-4 text-left text-black opacity-0 group-[.is-visible]:animate-fade-in-up transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.3s' }}>
                     <div className="flex items-center justify-between border-b pb-3 mb-3">
                         <div className="flex items-center gap-2 flex-wrap">
-                            <Badge variant="outline" className="border-red-300 bg-red-50 text-red-700">
-                                <Flag className="h-3 w-3 mr-1.5"/> PO
-                            </Badge>
-                             <Badge variant="outline" className="border-yellow-300 bg-yellow-50 text-yellow-800">
-                                <Clock className="h-3 w-3 mr-1.5"/> In Progress
-                            </Badge>
-                            <Badge variant="secondary">#Question</Badge>
+                            <button onClick={() => setActiveTaskState('po')} className={cn("flex items-center gap-1.5 px-2 py-1 rounded-md text-sm transition-colors", activeTaskState === 'po' ? "bg-red-100 text-red-700 border border-red-200" : "hover:bg-neutral-100")}>
+                                <Flag className="h-3 w-3"/> PO
+                            </button>
+                             <button onClick={() => setActiveTaskState('inProgress')} className={cn("flex items-center gap-1.5 px-2 py-1 rounded-md text-sm transition-colors", activeTaskState === 'inProgress' ? "bg-yellow-100 text-yellow-800 border border-yellow-200" : "hover:bg-neutral-100")}>
+                                <Clock className="h-3 w-3"/> In Progress
+                            </button>
+                            <button onClick={() => setActiveTaskState('question')} className={cn("flex items-center gap-1.5 px-2 py-1 rounded-md text-sm transition-colors", activeTaskState === 'question' ? "bg-blue-100 text-blue-700 border border-blue-200" : "hover:bg-neutral-100")}>
+                               <span className="font-semibold text-neutral-400">#</span>Question
+                            </button>
                         </div>
                         <MoreHorizontal className="h-5 w-5 text-neutral-400" />
                     </div>
@@ -405,15 +427,15 @@ export default function LandingPage() {
                                 <div className="w-1.5 h-1.5 bg-red-500 rounded-full ml-2"></div>
                             </div>
                             <p className="text-xs text-neutral-500">
-                                Assigned to <span className="text-blue-600 font-medium">@You</span>
+                                Assigned to <span className="text-blue-600 font-medium">{taskContent[activeTaskState].assignee}</span>
                             </p>
                             <p className="my-2 text-neutral-800">
-                                Let's add a sun here, <span className="text-blue-600">@felix</span>
+                                {taskContent[activeTaskState].message}
                             </p>
 
                             <div className="flex items-center justify-between text-xs text-neutral-500 mt-3">
                                 <button className="flex items-center gap-1 hover:text-blue-600">
-                                    <MessageSquare className="h-4 w-4" /> 2 Replies
+                                    <MessageSquare className="h-4 w-4" /> {taskContent[activeTaskState].replies} Replies
                                 </button>
                                 <div className="flex items-center gap-2">
                                     <Monitor className="h-4 w-4" />
