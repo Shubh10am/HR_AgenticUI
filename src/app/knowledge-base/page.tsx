@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, RefreshCw, LayoutGrid, List, FolderPlus, Plus, File, Folder } from 'lucide-react';
+import { Search, RefreshCw, LayoutGrid, List, FolderPlus, Plus, File, Folder, UploadCloud } from 'lucide-react';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -23,7 +23,7 @@ interface KnowledgeBaseItem {
 
 const initialItems: KnowledgeBaseItem[] = [];
 
-const EmptyState = ({ onAddFolder, onAddFile }: { onAddFolder: () => void; onAddFile: () => void }) => (
+const EmptyState = ({ onAddFolder, onUploadFile }: { onAddFolder: () => void; onUploadFile: () => void }) => (
   <div className="text-center py-16">
     <div className="inline-block bg-secondary p-6 rounded-full">
       <div className="inline-block bg-background p-4 rounded-full">
@@ -31,13 +31,13 @@ const EmptyState = ({ onAddFolder, onAddFile }: { onAddFolder: () => void; onAdd
       </div>
     </div>
     <h3 className="mt-6 text-xl font-semibold">No Knowledge Bases</h3>
-    <p className="mt-2 text-muted-foreground">Get started by creating a new knowledge base or folder.</p>
+    <p className="mt-2 text-muted-foreground">Get started by creating a folder or uploading a file.</p>
     <div className="mt-6 flex justify-center gap-2">
       <Button variant="outline" onClick={onAddFolder}>
         <FolderPlus className="mr-2 h-4 w-4" /> Create Folder
       </Button>
-      <Button onClick={onAddFile}>
-        <Plus className="mr-2 h-4 w-4" /> Create New
+      <Button onClick={onUploadFile}>
+        <UploadCloud className="mr-2 h-4 w-4" /> Upload File
       </Button>
     </div>
   </div>
@@ -47,8 +47,9 @@ export default function KnowledgeBasePage() {
   const [items, setItems] = useState<KnowledgeBaseItem[]>(initialItems);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
-  const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [newItemName, setNewItemName] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const { toast } = useToast();
   const { user } = useAuth();
@@ -72,23 +73,23 @@ export default function KnowledgeBasePage() {
     setNewItemName('');
   };
 
-  const handleCreateFile = (event: FormEvent<HTMLFormElement>) => {
+  const handleFileUpload = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!newItemName.trim()) {
-      toast({ title: 'File name is required', variant: 'destructive' });
+    if (!selectedFile) {
+      toast({ title: 'No file selected', description: 'Please choose a file to upload.', variant: 'destructive' });
       return;
     }
     const newFile: KnowledgeBaseItem = {
       id: `file-${Date.now()}`,
-      name: newItemName.trim(),
+      name: selectedFile.name,
       type: 'File',
       createdAt: new Date().toLocaleDateString(),
       owner: user?.name || 'You',
     };
     setItems([...items, newFile]);
-    toast({ title: 'File Created', description: `File "${newFile.name}" has been created.` });
-    setIsFileDialogOpen(false);
-    setNewItemName('');
+    toast({ title: 'File Uploaded (Simulated)', description: `File "${newFile.name}" has been added.` });
+    setIsUploadDialogOpen(false);
+    setSelectedFile(null);
   };
 
   return (
@@ -158,28 +159,35 @@ export default function KnowledgeBasePage() {
             </DialogContent>
           </Dialog>
 
-          <Dialog open={isFileDialogOpen} onOpenChange={(open) => { if (!open) setNewItemName(''); setIsFileDialogOpen(open); }}>
+          <Dialog open={isUploadDialogOpen} onOpenChange={(open) => { if (!open) setSelectedFile(null); setIsUploadDialogOpen(open); }}>
             <DialogTrigger asChild>
               <Button>
-                <Plus className="mr-2 h-4 w-4" /> Create New
+                <UploadCloud className="mr-2 h-4 w-4" /> Upload File
               </Button>
             </DialogTrigger>
              <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create New Knowledge Base File</DialogTitle>
+                <DialogTitle>Upload a File</DialogTitle>
                 <DialogDescription>
-                    This will create a new file entry. You can upload content later.
+                    Select a file from your computer to add to the knowledge base.
                 </DialogDescription>
               </DialogHeader>
-              <form id="create-file-form" onSubmit={handleCreateFile}>
+              <form id="upload-file-form" onSubmit={handleFileUpload}>
                 <div className="py-4">
-                  <Label htmlFor="file-name">File Name</Label>
-                  <Input id="file-name" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} required />
+                  <Label htmlFor="file-upload">File</Label>
+                  <Input 
+                    id="file-upload" 
+                    type="file" 
+                    onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}
+                    required
+                    className="mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                  />
+                  {selectedFile && <p className="text-sm text-muted-foreground mt-2">Selected: {selectedFile.name}</p>}
                 </div>
               </form>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsFileDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" form="create-file-form">Create File</Button>
+                <Button type="button" variant="outline" onClick={() => setIsUploadDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" form="upload-file-form">Upload</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -187,7 +195,7 @@ export default function KnowledgeBasePage() {
         </div>
       </div>
 
-      <div className="rounded-lg border">
+      <div className="rounded-lg border mt-4">
         {items.length > 0 ? (
           <Table>
             <TableHeader>
@@ -215,7 +223,7 @@ export default function KnowledgeBasePage() {
         ) : (
           <EmptyState 
             onAddFolder={() => setIsFolderDialogOpen(true)} 
-            onAddFile={() => setIsFileDialogOpen(true)} 
+            onUploadFile={() => setIsUploadDialogOpen(true)} 
           />
         )}
       </div>
