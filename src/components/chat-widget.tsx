@@ -23,6 +23,16 @@ interface ChatMessage {
   dataAiHint?: string;
 }
 
+const guestWelcomeMessage: ChatMessage = {
+    id: 'ai-guest-welcome',
+    sender: 'ai',
+    text: "Welcome to HR Streamline AI! I'm the copilot, here to help. This is an all-in-one platform to assist with recruitment, email drafting, attendance, and more. Feel free to ask me anything about the platform's features!",
+    avatarUrl: 'https://placehold.co/40x40.png?text=AI',
+    avatarFallback: 'AI',
+    dataAiHint: 'robot avatar'
+};
+
+
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
@@ -38,13 +48,13 @@ export default function ChatWidget() {
   useEffect(() => {
     if (isOpen && inputRef.current) {
       const timer = setTimeout(() => {
-        if (activeTab === 'messages' && !isGuest) {
+        if (activeTab === 'messages') {
             inputRef.current?.focus();
         }
       }, 150);
       return () => clearTimeout(timer);
     }
-  }, [isOpen, activeTab, isGuest]);
+  }, [isOpen, activeTab]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -55,13 +65,15 @@ export default function ChatWidget() {
     }
   }, [chatHistory]);
 
+  const handleOpenMessagesTab = () => {
+    setActiveTab('messages');
+    if (isGuest && chatHistory.length === 0) {
+        setChatHistory([guestWelcomeMessage]);
+    }
+  }
+
   const handleSendMessage = async (event?: FormEvent<HTMLFormElement>) => {
     if (event) event.preventDefault();
-    
-    if (isGuest) {
-        toast({ title: "Feature Locked", description: "Please log in or register to use the Copilot.", variant: "default" });
-        return;
-    }
 
     const trimmedInput = userInput.trim();
     if (!trimmedInput) return;
@@ -80,7 +92,12 @@ export default function ChatWidget() {
 
     try {
       const userApiKey = localStorage.getItem('userApiKey');
-      const aiInput: CopilotChatInput = { userInput: trimmedInput, apiKey: userApiKey };
+      const aiInput: CopilotChatInput = { 
+        userInput: isGuest ? `The user is a guest. Please answer their question about the platform: "${trimmedInput}"` : trimmedInput,
+        apiKey: userApiKey,
+        userId: user?.id,
+        organizationId: user?.organizationId,
+       };
       const result: CopilotChatOutput = await chatWithCopilot(aiInput);
       
       const newAiMessage: ChatMessage = {
@@ -123,7 +140,7 @@ export default function ChatWidget() {
                 <p className="font-semibold text-card-foreground">Send us a message</p>
                 <p className="text-sm text-muted-foreground">We typically reply in a few minutes</p>
             </div>
-            <Button size="icon" className="h-9 w-9 bg-primary hover:bg-primary/90 rounded-full flex-shrink-0" onClick={() => setActiveTab('messages')}>
+            <Button size="icon" className="h-9 w-9 bg-primary hover:bg-primary/90 rounded-full flex-shrink-0" onClick={handleOpenMessagesTab}>
                 <Send className="h-4 w-4" />
             </Button>
         </div>
@@ -131,7 +148,7 @@ export default function ChatWidget() {
         <div className="bg-card rounded-lg p-4 shadow-sm border border-border/80 space-y-3">
             <p className="font-semibold text-card-foreground">Search for help</p>
             <div className="relative">
-                <Input placeholder="Search..." className="pr-10 bg-secondary/50 dark:bg-secondary/30" />
+                <Input placeholder="Search..." className="pr-10" />
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             </div>
              <Link href="#" className="flex justify-between items-center text-sm text-card-foreground hover:text-primary">
@@ -158,23 +175,6 @@ export default function ChatWidget() {
   );
 
   const renderMessagesContent = () => (
-    isGuest ? (
-        <div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center">
-          <Lock className="h-10 w-10 mx-auto mb-4 opacity-50" />
-          <p className="font-semibold text-lg mb-2">Feature Locked</p>
-          <p className="text-sm mb-4">
-            Please log in or register to use the HR Copilot.
-          </p>
-          <div className="flex gap-4">
-            <Button asChild size="sm" onClick={() => setIsOpen(false)}>
-              <Link href="/login">Log In</Link>
-            </Button>
-            <Button asChild variant="outline" size="sm" onClick={() => setIsOpen(false)}>
-              <Link href="/register">Register</Link>
-            </Button>
-          </div>
-        </div>
-    ) : (
       <div className="flex flex-col h-full">
         <ScrollArea className="flex-grow p-1 pr-4 -mr-3" ref={scrollAreaRef}>
           <div className="space-y-4">
@@ -212,7 +212,6 @@ export default function ChatWidget() {
           </div>
         </form>
       </div>
-    )
   );
 
   return (
@@ -232,7 +231,7 @@ export default function ChatWidget() {
 
             <div className="flex-shrink-0 border-t flex justify-around items-center p-2 bg-card">
                 <button onClick={() => setActiveTab('home')} className={cn("flex flex-col items-center gap-1 p-2 rounded-lg w-20 transition-colors", activeTab === 'home' ? 'text-primary' : 'text-muted-foreground hover:bg-secondary')}><Home className="h-6 w-6" /><span className="text-xs font-semibold">Home</span></button>
-                <button onClick={() => setActiveTab('messages')} className={cn("flex flex-col items-center gap-1 p-2 rounded-lg w-20 transition-colors", activeTab === 'messages' ? 'text-primary' : 'text-muted-foreground hover:bg-secondary')}><MessageSquare className="h-6 w-6" /><span className="text-xs font-semibold">Messages</span></button>
+                <button onClick={handleOpenMessagesTab} className={cn("flex flex-col items-center gap-1 p-2 rounded-lg w-20 transition-colors", activeTab === 'messages' ? 'text-primary' : 'text-muted-foreground hover:bg-secondary')}><MessageSquare className="h-6 w-6" /><span className="text-xs font-semibold">Messages</span></button>
                 <button onClick={() => setActiveTab('help')} className={cn("flex flex-col items-center gap-1 p-2 rounded-lg w-20 transition-colors", activeTab === 'help' ? 'text-primary' : 'text-muted-foreground hover:bg-secondary')}><HelpCircle className="h-6 w-6" /><span className="text-xs font-semibold">Help</span></button>
             </div>
         </div>
