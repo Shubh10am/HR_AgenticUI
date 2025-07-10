@@ -24,7 +24,6 @@ export default function BlogLayout({ children }: { children: ReactNode }) {
     <ThemeProvider
       attribute="class"
       defaultTheme="dark"
-      enableSystem
       disableTransitionOnChange
     >
       <div className="flex flex-col min-h-screen bg-background text-foreground antialiased">

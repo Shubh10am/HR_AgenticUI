@@ -55,7 +55,6 @@ export default function ContactPage() {
     <ThemeProvider
       attribute="class"
       defaultTheme="dark"
-      enableSystem
       disableTransitionOnChange
     >
       <div className="flex flex-col min-h-screen bg-background text-foreground antialiased">
