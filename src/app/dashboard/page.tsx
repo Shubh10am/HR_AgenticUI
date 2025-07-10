@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, type FormEvent, type ReactNode } from 'react';
@@ -5,7 +6,7 @@ import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowRight, Mail, Users, FileText, MessageSquare, ListChecks, CalendarDays, GitFork, BarChart3, Plug, Briefcase } from 'lucide-react';
+import { ArrowRight, Mail, Users, FileText, MessageSquare, ListChecks, CalendarDays, GitFork, BarChart3, Plug, Briefcase, Library } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
@@ -95,6 +96,7 @@ export default function DashboardPage() {
     { title: 'Smart Drafting', description: 'Generate emails from prompts.', href: '/smart-drafting', icon: FileText },
     { title: 'Unified Comms', description: 'Aggregated communication logs.', href: '/unified-communications', icon: MessageSquare },
     { title: 'Attendance', description: 'Clock in/out and view reports.', href: '/attendance-reporting', icon: CalendarDays },
+    { title: 'Knowledge Base', description: 'Manage documents and sources.', href: '/knowledge-base', icon: Library },
     { title: 'Integrations', description: 'Connect to other services.', href: '/integrations', icon: Plug },
   ];
   
@@ -106,7 +108,7 @@ export default function DashboardPage() {
         titleClassName="text-3xl sm:text-4xl md:text-5xl lg:text-6xl min-h-[1.2em]" // Added min-h to reduce layout shift
         description="Your intelligent assistant for efficient HR operations."
       />
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {quickActions.map((action) => (
           <Card key={action.href} className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out transform hover:-translate-y-1 flex flex-col">
             <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
