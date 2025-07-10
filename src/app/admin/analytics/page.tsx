@@ -1,10 +1,12 @@
-
 'use client';
 
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Users, DollarSign, Activity, FileText, BarChart2, AreaChart, LineChart } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ResponsiveContainer, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { BarChart as ShadcnBarChart, LineChart as ShadcnLineChart } from '@/components/ui/chart';
+
 
 const kpiData = [
   { title: 'Total Revenue', value: '$250,480', icon: DollarSign, change: '+8.1%', changeType: 'increase', period: 'this month' },
@@ -14,12 +16,39 @@ const kpiData = [
 ];
 
 const featureUsageData = [
-    { name: 'AI Interviewer', usage: 450, fill: 'var(--color-interviewer)' },
-    { name: 'Resume Analysis', usage: 820, fill: 'var(--color-resume)' },
-    { name: 'Job Descriptions', usage: 650, fill: 'var(--color-jd)' },
-    { name: 'Email Drafting', usage: 1100, fill: 'var(--color-email)' },
-    { name: 'Copilot Chat', usage: 1500, fill: 'var(--color-copilot)' },
+    { name: 'AI Interviewer', usage: 450, fill: 'var(--chart-1)' },
+    { name: 'Resume Analysis', usage: 820, fill: 'var(--chart-2)' },
+    { name: 'Job Descriptions', usage: 650, fill: 'var(--chart-3)' },
+    { name: 'Email Drafting', usage: 1100, fill: 'var(--chart-4)' },
+    { name: 'Copilot Chat', usage: 1500, fill: 'var(--chart-5)' },
 ];
+
+const chartConfig = {
+  usage: {
+    label: "Usage",
+  },
+  'AI Interviewer': {
+    label: "AI Interviewer",
+    color: "hsl(var(--chart-1))",
+  },
+  'Resume Analysis': {
+    label: "Resume Analysis",
+    color: "hsl(var(--chart-2))",
+  },
+  'Job Descriptions': {
+    label: "Job Descriptions",
+    color: "hsl(var(--chart-3))",
+  },
+  'Email Drafting': {
+    label: "Email Drafting",
+    color: "hsl(var(--chart-4))",
+  },
+  'Copilot Chat': {
+    label: "Copilot Chat",
+    color: "hsl(var(--chart-5))",
+  },
+} satisfies import('@/components/ui/chart').ChartConfig;
+
 
 export default function AdminAnalyticsPage() {
   return (
@@ -65,7 +94,15 @@ export default function AdminAnalyticsPage() {
             <CardDescription>Total API calls per day for the selected period.</CardDescription>
           </CardHeader>
           <CardContent className="h-80 bg-secondary/30 rounded-md flex items-center justify-center">
-            <p className="text-muted-foreground">Chart Placeholder</p>
+             <ShadcnLineChart
+              data={[]}
+              index="date"
+              categories={['Total Calls']}
+              colors={['blue']}
+              yAxisWidth={48}
+              className="h-full w-full"
+              noDataText="Line Chart Placeholder - No Data"
+            />
           </CardContent>
         </Card>
         <Card className="shadow-lg">
@@ -74,55 +111,36 @@ export default function AdminAnalyticsPage() {
             <CardDescription>Daily new user registrations.</CardDescription>
           </CardHeader>
           <CardContent className="h-80 bg-secondary/30 rounded-md flex items-center justify-center">
-            <p className="text-muted-foreground">Chart Placeholder</p>
+            <ShadcnLineChart
+              data={[]}
+              index="date"
+              categories={['New Users']}
+              colors={['green']}
+              yAxisWidth={48}
+              className="h-full w-full"
+              noDataText="Line Chart Placeholder - No Data"
+            />
           </CardContent>
         </Card>
       </div>
 
-       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="shadow-lg lg:col-span-2">
+       <div className="mt-6">
+        <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center"><BarChart2 className="mr-2 h-5 w-5 text-primary" /> Top Used Features</CardTitle>
+            <CardTitle className="flex items-center"><BarChart2 className="mr-2 h-5 w-5 text-primary" /> Feature Usage Breakdown</CardTitle>
             <CardDescription>Most frequently used AI features across the platform.</CardDescription>
           </CardHeader>
           <CardContent className="h-96">
-            <div className="space-y-4">
-                {featureUsageData.sort((a, b) => b.usage - a.usage).map((feature) => (
-                    <div key={feature.name} className="space-y-1">
-                        <div className="flex justify-between text-sm">
-                            <span className="font-medium text-foreground">{feature.name}</span>
-                            <span className="text-muted-foreground">{feature.usage.toLocaleString()} API Calls</span>
-                        </div>
-                        <div className="h-2 bg-secondary rounded-full w-full">
-                            <div 
-                                className="h-2 rounded-full" 
-                                style={{ 
-                                    width: `${(feature.usage / Math.max(...featureUsageData.map(f => f.usage))) * 100}%`,
-                                    backgroundColor: feature.fill 
-                                }}
-                            />
-                        </div>
-                    </div>
-                ))}
-            </div>
-            <style jsx>{`
-                :root {
-                    --color-interviewer: #3B82F6;
-                    --color-resume: #8B5CF6;
-                    --color-jd: #10B981;
-                    --color-email: #F59E0B;
-                    --color-copilot: #EF4444;
-                }
-            `}</style>
-          </CardContent>
-        </Card>
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center"><Users className="mr-2 h-5 w-5 text-primary" /> User Geography</CardTitle>
-            <CardDescription>User distribution by country.</CardDescription>
-          </CardHeader>
-          <CardContent className="h-96 bg-secondary/30 rounded-md flex items-center justify-center">
-            <p className="text-muted-foreground">Map Placeholder</p>
+            <ShadcnBarChart
+              data={featureUsageData}
+              index="name"
+              categories={['usage']}
+              colors={['blue']}
+              chartConfig={chartConfig}
+              layout="vertical"
+              yAxisWidth={120}
+              className="h-full w-full"
+            />
           </CardContent>
         </Card>
       </div>
