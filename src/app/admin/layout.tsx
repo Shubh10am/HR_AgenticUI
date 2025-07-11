@@ -46,13 +46,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     <SidebarProvider defaultOpen>
       <Sidebar variant="sidebar" collapsible="icon">
         <SidebarHeader className="p-4">
-          <Link href="/admin/dashboard" className="flex items-center gap-2">
-            <Logo className="h-10 w-10 text-sidebar-primary" />
-            <div className="flex flex-col">
-              <h1 className="text-lg font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
+          <Link href="/admin/dashboard" className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
+            <Logo className="h-10 w-10 text-sidebar-primary flex-shrink-0" />
+            <div className="flex flex-col group-data-[collapsible=icon]:hidden">
+              <h1 className="text-lg font-semibold text-sidebar-foreground">
                 HR Streamline
               </h1>
-              <span className="text-xs text-primary group-data-[collapsible=icon]:hidden">Admin Panel</span>
+              <span className="text-xs text-primary">Admin Panel</span>
             </div>
           </Link>
         </SidebarHeader>
