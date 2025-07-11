@@ -15,12 +15,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { AdminUserData } from '@/pages/api/admin/users/index';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/auth-context'; // Import the main auth hook
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUserData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { token: authToken } = useAuth(); // Use the token from the auth context
 
   const [isAddAdminDialogOpen, setIsAddAdminDialogOpen] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState('');
@@ -32,13 +34,12 @@ export default function AdminUsersPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('adminAuthToken');
-      if (!token) {
-        throw new Error('Admin token not found.');
+      if (!authToken) { // Check if the auth token from context exists
+        throw new Error('Authentication token not found.');
       }
 
       const response = await fetch(`/api/admin/users`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${authToken}` } // Use the correct token
       });
 
       if (!response.ok) {
@@ -61,8 +62,13 @@ export default function AdminUsersPage() {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if(authToken) { // Only fetch if token is available
+        fetchUsers();
+    } else {
+        setIsLoading(false);
+        setError("Authentication token not available.");
+    }
+  }, [authToken]); // Rerun effect when token changes
 
   const handleAddAdminSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -72,12 +78,14 @@ export default function AdminUsersPage() {
     }
     setIsAddingAdmin(true);
     try {
-      const token = localStorage.getItem('adminAuthToken');
+      if (!authToken) {
+        throw new Error('Authentication token not found.');
+      }
       const response = await fetch('/api/admin/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${authToken}`, // Use the correct token
         },
         body: JSON.stringify({ email: newAdminEmail, password: newAdminPassword, role: 'Admin' }),
       });
