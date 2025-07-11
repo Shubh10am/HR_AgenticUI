@@ -47,7 +47,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <Sidebar variant="sidebar" collapsible="icon">
         <SidebarHeader className="p-4">
           <Link href="/admin/dashboard" className="flex items-center gap-2">
-            <Logo className="h-8 w-8 text-sidebar-primary" />
+            <Logo className="h-10 w-10 text-sidebar-primary" />
             <div className="flex flex-col">
               <h1 className="text-lg font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
                 HR Streamline
