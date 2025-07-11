@@ -71,6 +71,11 @@ export default function ManageEmployeesPage() {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [isBulkSubmitting, setIsBulkSubmitting] = useState(false);
 
+  // State for bulk delete
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [deleteCsvFile, setDeleteCsvFile] = useState<File | null>(null);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
 
   const handleEditEmployee = async () => {
     if (!employeeToEdit || !token) return;
@@ -276,6 +281,75 @@ export default function ManageEmployeesPage() {
     });
   };
 
+  const handleBulkDelete = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!deleteCsvFile) {
+        toast({ title: 'No File Selected', description: 'Please select a CSV file for deletion.', variant: 'destructive' });
+        return;
+    }
+    setIsBulkDeleting(true);
+    Papa.parse(deleteCsvFile, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (results) => {
+            const employeesToDelete = results.data;
+            if (employeesToDelete.length === 0) {
+                toast({ title: 'Empty CSV', description: 'The deletion CSV is empty.', variant: 'destructive' });
+                setIsBulkDeleting(false);
+                return;
+            }
+
+            const emails = (employeesToDelete as { email: string }[]).map(e => e.email).filter(Boolean);
+            if (emails.length === 0) {
+                toast({ title: 'Invalid Format', description: 'CSV must contain an "email" column.', variant: 'destructive' });
+                setIsBulkDeleting(false);
+                return;
+            }
+
+            try {
+              const response = await fetch('/api/employees/bulk-delete', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({ emails }),
+              });
+              const data = await response.json();
+
+              if (!response.ok) {
+                throw new Error(data.error || 'Failed to process bulk deletion.');
+              }
+
+              toast({
+                title: 'Bulk Deletion Processed',
+                description: `Successfully deleted ${data.deletedCount} employees. Failed: ${data.failedCount}.`,
+              });
+               if (data.failedCount > 0) {
+                console.error("Failed deletions:", data.errors);
+                 toast({
+                  title: 'Some Deletions Failed',
+                  description: 'Check the browser console for a list of errors.',
+                  variant: 'destructive',
+                  duration: 10000,
+                });
+              }
+              fetchEmployees();
+              setIsBulkDeleteOpen(false);
+              setDeleteCsvFile(null);
+            } catch (error: any) {
+              toast({ title: 'Bulk Deletion Error', description: error.message, variant: 'destructive' });
+            } finally {
+              setIsBulkDeleting(false);
+            }
+        },
+        error: (error: any) => {
+            toast({ title: 'CSV Parsing Error', description: error.message, variant: 'destructive' });
+            setIsBulkDeleting(false);
+        }
+    });
+  };
+
   if (authLoading) {
     return (
       <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center">
@@ -309,7 +383,7 @@ export default function ManageEmployeesPage() {
             <Dialog open={isBulkUploadOpen} onOpenChange={setIsBulkUploadOpen}>
                 <DialogTrigger asChild>
                     <Button variant="outline">
-                        <UploadCloud className="mr-2 h-4 w-4" /> Bulk Register from CSV
+                        <UploadCloud className="mr-2 h-4 w-4" /> Bulk Register
                     </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -322,7 +396,6 @@ export default function ManageEmployeesPage() {
                     <div className="py-2 text-sm text-muted-foreground bg-secondary/50 p-3 rounded-md">
                         <p className="font-semibold text-foreground mb-1">CSV Format Requirements:</p>
                         <p>The file must contain a header row with the following columns: <code className="bg-muted px-1 py-0.5 rounded">name</code>, <code className="bg-muted px-1 py-0.5 rounded">email</code>, <code className="bg-muted px-1 py-0.5 rounded">password</code>, <code className="bg-muted px-1 py-0.5 rounded">role</code>, <code className="bg-muted px-1 py-0.5 rounded">department</code> (optional).</p>
-                        <p className="mt-2">Sample Row: <code className="bg-muted px-1 py-0.5 rounded">John Doe,john@yourdomain.com,password123,Software Engineer,Engineering</code></p>
                     </div>
                     <form id="bulk-upload-form" onSubmit={handleBulkUpload}>
                         <div className="grid gap-4 py-4">
@@ -335,6 +408,38 @@ export default function ManageEmployeesPage() {
                         <Button type="submit" form="bulk-upload-form" disabled={isBulkSubmitting || !csvFile}>
                             {isBulkSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                             Upload and Register
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+             <Dialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="destructive">
+                        <Trash2 className="mr-2 h-4 w-4" /> Bulk Delete
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Bulk Employee Deletion</DialogTitle>
+                        <DialogDescription>
+                            Upload a CSV file with emails to delete multiple employees. This action is irreversible.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-2 text-sm text-muted-foreground bg-destructive/10 p-3 rounded-md border border-destructive/20">
+                        <p className="font-semibold text-destructive mb-1">CSV Format Requirements:</p>
+                        <p>The file must contain a single column with the header: <code className="bg-muted px-1 py-0.5 rounded">email</code>.</p>
+                    </div>
+                    <form id="bulk-delete-form" onSubmit={handleBulkDelete}>
+                        <div className="grid gap-4 py-4">
+                            <Label htmlFor="deleteCsvFile">Deletion CSV File</Label>
+                            <Input id="deleteCsvFile" type="file" accept=".csv" onChange={(e) => setDeleteCsvFile(e.target.files ? e.target.files[0] : null)} required disabled={isBulkDeleting}/>
+                        </div>
+                    </form>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setIsBulkDeleteOpen(false)} disabled={isBulkDeleting}>Cancel</Button>
+                        <Button type="submit" form="bulk-delete-form" variant="destructive" disabled={isBulkDeleting || !deleteCsvFile}>
+                            {isBulkDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                            Delete Employees
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -388,7 +493,7 @@ export default function ManageEmployeesPage() {
               </div>
               <div>
                 <Label htmlFor="employeeRole">Role / Position</Label>
-                <Select value={employeeRole} onValueChange={setEmployeeRole} required disabled={isSubmitting}>
+                <Select value={employeeRole} onValueChange={(value: EmployeeRole) => setEmployeeRole(value)} required disabled={isSubmitting}>
                   <SelectTrigger id="employeeRole">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
@@ -544,7 +649,7 @@ export default function ManageEmployeesPage() {
               </div>
               <div>
                 <Label htmlFor="editRole">Role</Label>
-                <Select value={editRole} onValueChange={(value) => setEditRole(value as EmployeeRole)} required disabled={isUpdating}>
+                <Select value={editRole} onValueChange={(value: EmployeeRole) => setEditRole(value)} required disabled={isUpdating}>
                   <SelectTrigger id="editRole">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
