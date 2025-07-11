@@ -1,9 +1,8 @@
 
 'use client';
 
-import type { ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/auth-context';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import AdminSidebarNav from './components/admin-sidebar-nav';
 import UserNav from '@/components/layout/user-nav'; 
@@ -13,28 +12,31 @@ import { Loader2 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const { user, isLoading } = useAuth();
   const router = useRouter();
   const { theme } = useTheme();
+  const [isVerified, setIsVerified] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (isLoading) {
+  useEffect(() => {
+    const adminToken = localStorage.getItem('adminAuthToken');
+    // In a real app, you'd verify this token with a backend endpoint.
+    // For this prototype, we'll just check for its existence and value.
+    if (adminToken === process.env.NEXT_PUBLIC_ADMIN_AUTH_TOKEN) {
+      setIsVerified(true);
+    } else {
+      router.replace('/admin/login');
+    }
+    setIsLoading(false);
+  }, [router]);
+
+  if (isLoading || !isVerified) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        <p className="ml-4">Verifying admin access...</p>
       </div>
     );
   }
-
-  // Temporarily commented out for development purposes
-  // if (!user || user.role !== 'Admin') {
-  //   router.replace('/dashboard');
-  //   return (
-  //      <div className="flex min-h-screen items-center justify-center bg-background">
-  //       <Loader2 className="h-16 w-16 animate-spin text-primary" />
-  //       <p className="ml-4">Redirecting...</p>
-  //     </div>
-  //   );
-  // }
 
   return (
     <SidebarProvider defaultOpen>
@@ -60,7 +62,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <SidebarTrigger />
           </div>
           <div className="flex items-center gap-4">
-            <UserNav />
+            {/* The regular UserNav might not be appropriate here. 
+                Could be an Admin-specific UserNav in the future. */}
           </div>
         </header>
         <main className="flex-1 p-4 sm:p-6 overflow-x-hidden animated-background-gradient">
