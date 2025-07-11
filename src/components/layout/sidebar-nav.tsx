@@ -19,6 +19,7 @@ import {
   ListChecks, 
   Users, // Added Users icon
   Library, // Added Library icon
+  LifeBuoy,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar'; 
@@ -44,6 +45,7 @@ const navItems: NavItem[] = [
   { href: '/knowledge-base', label: 'Knowledge Base', icon: Library, tooltip: 'Knowledge Base' },
   { href: '/manage-employees', label: 'Manage Employees', icon: Users, tooltip: 'Manage Employees', adminOnly: true }, // New Manage Employees link
   { href: '/integrations', label: 'Integrations', icon: Plug, tooltip: 'Manage Integrations' },
+  { href: '/support', label: 'Get Support', icon: LifeBuoy, tooltip: 'Get Support' },
 ];
 
 export default function SidebarNav() {
