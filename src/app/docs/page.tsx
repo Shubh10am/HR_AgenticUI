@@ -71,7 +71,7 @@ export default function DocsPage() {
   const defaultAccordionValue = docsData.length > 0 ? [docsData[0].id] : [];
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)]">
+    <div className="flex">
       {/* Left Sidebar */}
       <aside className="hidden lg:block sticky top-16 h-[calc(100vh-4rem)] w-64 xl:w-72 flex-shrink-0 border-r py-8 pr-4">
         <div className="relative">
@@ -116,7 +116,7 @@ export default function DocsPage() {
       </aside>
 
       {/* Main Content */}
-      <main id="docs-content-area" className="flex-1 py-8 lg:py-12 px-4 lg:px-12 scroll-smooth">
+      <main id="docs-content-area" className="flex-1 py-8 lg:py-12 px-4 lg:px-12">
         {activePage ? (
           <article className="prose dark:prose-invert max-w-none">
             <div className="mb-4 text-sm text-muted-foreground">
@@ -124,7 +124,15 @@ export default function DocsPage() {
             </div>
             <h1>{activePage.title}</h1>
             <p className="lead">{activePage.description}</p>
-            <div dangerouslySetInnerHTML={{ __html: activePage.content }} />
+             <div
+              className="prose-p:text-foreground/80
+                         prose-headings:text-foreground prose-headings:font-bold
+                         prose-strong:text-foreground
+                         prose-a:text-primary hover:prose-a:text-primary/80
+                         prose-ul:text-foreground/80
+                         prose-ol:text-foreground/80"
+              dangerouslySetInnerHTML={{ __html: activePage.content }}
+            />
           </article>
         ) : (
           <div className="text-center py-16">
@@ -148,6 +156,10 @@ export default function DocsPage() {
                 <li key={heading.id}>
                   <Link
                     href={`#${heading.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById(heading.id)?.scrollIntoView({ behavior: 'smooth' });
+                    }}
                     className={cn(
                       "block text-sm border-l-2 pl-3",
                       activeHeading === heading.id
