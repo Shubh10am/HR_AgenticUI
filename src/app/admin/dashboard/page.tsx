@@ -3,7 +3,8 @@
 
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { AreaChart, BarChart, FileText, Users, Activity, DollarSign, ListOrdered, CheckCircle } from 'lucide-react';
+import { AreaChart, BarChart, FileText, Users, Activity, DollarSign, ListOrdered, CheckCircle, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid, Area, Bar } from 'lucide-react';
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 
 const kpiData = [
   { title: 'Total Users', value: '1,250', icon: Users, change: '+12.5%', changeType: 'increase' },
@@ -11,6 +12,41 @@ const kpiData = [
   { title: 'Monthly Recurring Revenue', value: '$15,600', icon: DollarSign, change: '-1.8%', changeType: 'decrease' },
   { title: 'Open Support Tickets', value: '28', icon: ListOrdered, change: '+3', changeType: 'increase' },
 ];
+
+const userGrowthData = [
+  { month: 'Jan', users: 150 },
+  { month: 'Feb', users: 200 },
+  { month: 'Mar', users: 350 },
+  { month: 'Apr', users: 500 },
+  { month: 'May', users: 680 },
+  { month: 'Jun', users: 820 },
+  { month: 'Jul', users: 1250 },
+];
+
+const planDistributionData = [
+    { plan: 'Free', users: 800, fill: 'var(--color-free)'},
+    { plan: 'Pro', users: 300, fill: 'var(--color-pro)' },
+    { plan: 'Enterprise', users: 150, fill: 'var(--color-enterprise)'},
+];
+
+const chartConfig = {
+  users: {
+    label: "Users",
+    color: "hsl(var(--chart-1))",
+  },
+  free: {
+    label: "Free",
+    color: "hsl(var(--chart-2))",
+  },
+  pro: {
+    label: "Pro",
+    color: "hsl(var(--chart-1))",
+  },
+  enterprise: {
+    label: "Enterprise",
+    color: "hsl(var(--chart-5))",
+  }
+} satisfies import('@/components/ui/chart').ChartConfig;
 
 export default function AdminDashboardPage() {
   return (
@@ -42,8 +78,24 @@ export default function AdminDashboardPage() {
             <CardTitle className="flex items-center"><AreaChart className="mr-2 h-5 w-5 text-primary" /> User Growth</CardTitle>
             <CardDescription>Monthly new user registrations.</CardDescription>
           </CardHeader>
-          <CardContent className="h-64 bg-secondary/30 rounded-md flex items-center justify-center">
-            <p className="text-muted-foreground">Chart Placeholder</p>
+          <CardContent className="h-64">
+            <ChartContainer config={chartConfig} className="h-full w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={userGrowthData}>
+                        <defs>
+                            <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="var(--color-users)" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="var(--color-users)" stopOpacity={0}/>
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                        <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+                        <Tooltip content={<ChartTooltipContent />} />
+                        <Area type="monotone" dataKey="users" stroke="var(--color-users)" fillOpacity={1} fill="url(#colorUsers)" />
+                    </AreaChart>
+                </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
         <Card className="shadow-lg">
@@ -51,8 +103,19 @@ export default function AdminDashboardPage() {
             <CardTitle className="flex items-center"><BarChart className="mr-2 h-5 w-5 text-primary" /> Plan Distribution</CardTitle>
             <CardDescription>Distribution of users across subscription plans.</CardDescription>
           </CardHeader>
-          <CardContent className="h-64 bg-secondary/30 rounded-md flex items-center justify-center">
-            <p className="text-muted-foreground">Chart Placeholder</p>
+          <CardContent className="h-64">
+             <ChartContainer config={chartConfig} className="h-full w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={planDistributionData} layout="vertical" margin={{ left: 10 }}>
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                        <XAxis type="number" hide />
+                        <YAxis dataKey="plan" type="category" tickLine={false} axisLine={false} tickMargin={8} width={80} />
+                        <Tooltip content={<ChartTooltipContent />} />
+                        <Legend />
+                        <Bar dataKey="users" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>
