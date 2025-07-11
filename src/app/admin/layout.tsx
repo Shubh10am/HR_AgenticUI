@@ -1,14 +1,47 @@
 
 'use client';
 
-import { type ReactNode } from 'react';
+import { type ReactNode, useState, useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import AdminSidebarNav from './components/admin-sidebar-nav';
-import UserNav from '@/components/layout/user-nav'; 
 import Logo from '@/components/icons/logo';
 import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isVerifying, setIsVerifying] = useState(true);
+
+  useEffect(() => {
+    // Only run this check on the client side
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('adminAuthToken');
+      
+      // If there's no token and we're not on the login page, redirect
+      if (!token && pathname !== '/admin/login') {
+        router.push('/admin/login');
+      } else {
+        setIsVerifying(false);
+      }
+    }
+  }, [pathname, router]);
+
+  // If it's the login page, render it without the main layout shell
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
+  // Show a loading spinner while verifying the token to prevent content flashing
+  if (isVerifying) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider defaultOpen>
       <Sidebar variant="sidebar" collapsible="icon">
