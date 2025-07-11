@@ -12,8 +12,6 @@ import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Logo from '@/components/icons/logo';
 
-const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || '';
-
 export default function RegisterPage() {
   const [orgName, setOrgName] = useState(''); // Reverted
   const [orgDomain, setOrgDomain] = useState(''); // Reverted

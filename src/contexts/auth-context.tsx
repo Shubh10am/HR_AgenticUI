@@ -7,9 +7,6 @@ import type { ReactNode} from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-// This will be undefined if not set in the environment, which is handled by the logic below.
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
 export interface User {
   id: string;
   name: string;
@@ -58,12 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     try {
-      const endpoint = '/api/settings/api-key';
-      let requestUrl = endpoint;
-      if (API_BASE_URL) {
-        requestUrl = `${API_BASE_URL.replace(/\/$/, '')}${endpoint}`;
-      }
-      const response = await fetch(requestUrl, {
+      const response = await fetch('/api/settings/api-key', {
         headers: { Authorization: `Bearer ${userToken}` },
       });
       if (response.ok) {
@@ -162,13 +154,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (values: Record<string, string>): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const endpoint = '/api/auth/login';
-      let requestUrl = endpoint;
-      if (API_BASE_URL) {
-        requestUrl = `${API_BASE_URL.replace(/\/$/, '')}${endpoint}`;
-      }
-      
-      const response = await fetch(requestUrl, {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
@@ -202,13 +188,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register = async (values: Record<string, string>): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const endpoint = '/api/auth/register';
-      let requestUrl = endpoint;
-      if (API_BASE_URL) {
-        requestUrl = `${API_BASE_URL.replace(/\/$/, '')}${endpoint}`;
-      }
-      
-      const response = await fetch(requestUrl, {
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),

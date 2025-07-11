@@ -38,8 +38,6 @@ interface ClientEmployee {
   department?: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
-
 export default function ManageEmployeesPage() {
   const { toast } = useToast();
   const { user: adminUser, token, isLoading: authLoading } = useAuth();
@@ -71,7 +69,7 @@ export default function ManageEmployeesPage() {
 
     setIsUpdating(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/employees/${employeeToEdit._id}`, {
+      const response = await fetch(`/api/employees/${employeeToEdit._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +100,7 @@ export default function ManageEmployeesPage() {
     if (!adminUser || !token || adminUser.role !== 'Admin') return;
     setIsLoadingEmployees(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/employees`, {
+      const response = await fetch(`/api/employees`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) {
@@ -149,7 +147,7 @@ export default function ManageEmployeesPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/employees`, {
+      const response = await fetch(`/api/employees`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -191,7 +189,7 @@ export default function ManageEmployeesPage() {
     if (!employeeToDelete || !token) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/employees/${employeeToDelete._id}`, {
+      const response = await fetch(`/api/employees/${employeeToDelete._id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

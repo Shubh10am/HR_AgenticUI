@@ -23,9 +23,6 @@ import { useAuth } from '@/contexts/auth-context';
 import type { TransformedAttendanceRecord } from '@/pages/api/attendance/records';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
-
 interface AttendanceEntry {
   id: string;
   employee: string;
@@ -119,7 +116,7 @@ export default function AttendanceReportingPage() {
     setIsLoadingRecords(true);
     setFetchError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/attendance/records`, {
+      const response = await fetch(`/api/attendance/records`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!response.ok) {
@@ -160,7 +157,7 @@ export default function AttendanceReportingPage() {
     }
     setIsLoadingPolicy(true);
     try {
-        const response = await fetch(`${API_BASE_URL}/api/settings/policy?type=attendance`, {
+        const response = await fetch(`/api/settings/policy?type=attendance`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!response.ok) throw new Error('Failed to fetch policy');
@@ -258,7 +255,7 @@ export default function AttendanceReportingPage() {
     }
     setIsClocking(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/attendance/clock-in`, {
+      const response = await fetch(`/api/attendance/clock-in`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -297,7 +294,7 @@ export default function AttendanceReportingPage() {
     }
     setIsClocking(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/attendance/clock-out`, {
+      const response = await fetch(`/api/attendance/clock-out`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -386,7 +383,7 @@ export default function AttendanceReportingPage() {
         endDate: leaveRequest.endDate?.toISOString(),
       };
 
-      const response = await fetch(`${API_BASE_URL}/api/leave-requests`, {
+      const response = await fetch(`/api/leave-requests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -564,7 +561,7 @@ export default function AttendanceReportingPage() {
     if (!token || isGuest) return;
     setIsSavingPolicy(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/settings/policy`, {
+      const response = await fetch(`/api/settings/policy`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',

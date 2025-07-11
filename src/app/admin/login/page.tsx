@@ -12,8 +12,6 @@ import Logo from '@/components/icons/logo';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
-
 export default function AdminLoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -26,7 +24,7 @@ export default function AdminLoginPage() {
     setIsLoading(true);
     
     try {
-      const response = await fetch(`${API_BASE_URL}/api/admin/auth`, {
+      const response = await fetch(`/api/admin/auth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),

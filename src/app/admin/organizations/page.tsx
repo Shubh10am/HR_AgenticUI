@@ -13,8 +13,6 @@ import type { AdminOrganizationData } from '@/pages/api/admin/organizations/inde
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link'; // Import Link
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
-
 export default function AdminOrganizationsPage() {
   const [organizations, setOrganizations] = useState<AdminOrganizationData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,7 +29,7 @@ export default function AdminOrganizationsPage() {
           throw new Error('Admin token not found.');
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/admin/organizations`, {
+        const response = await fetch(`/api/admin/organizations`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 

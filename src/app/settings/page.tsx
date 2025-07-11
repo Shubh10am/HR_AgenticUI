@@ -1,3 +1,4 @@
+
 'use client';
 
 import PageHeader from '@/components/page-header';
@@ -43,8 +44,6 @@ import {
 const NOTIFICATION_SOUND_ENABLED_KEY = 'notificationSoundEnabled';
 const NOTIFICATION_SOUND_VOLUME_KEY = 'notificationSoundVolume';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
-
 export default function SettingsPage() {
   const { toast } = useToast();
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -87,7 +86,7 @@ export default function SettingsPage() {
     };
     setIsKeyLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/settings/api-key`, {
+      const response = await fetch(`/api/settings/api-key`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       const data = await response.json();
@@ -116,7 +115,7 @@ export default function SettingsPage() {
     }
     setIsUsageLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/settings/usage`, {
+      const response = await fetch(`/api/settings/usage`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       const data = await response.json();
@@ -193,7 +192,7 @@ export default function SettingsPage() {
     }
     setIsPasswordChanging(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
+      const response = await fetch(`/api/auth/change-password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -229,7 +228,7 @@ export default function SettingsPage() {
     }
     setIsKeySaving(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/settings/api-key`, {
+      const response = await fetch(`/api/settings/api-key`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -264,7 +263,7 @@ export default function SettingsPage() {
     }
     setIsKeySaving(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/settings/api-key`, {
+      const response = await fetch(`/api/settings/api-key`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -305,7 +304,7 @@ export default function SettingsPage() {
 
     setIsDeleting(true);
     try {
-        const response = await fetch(`${API_BASE_URL}/api/profile/delete-account`, {
+        const response = await fetch(`/api/profile/delete-account`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',

@@ -13,8 +13,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import type { AdminUserData } from '@/pages/api/admin/users/index';
 import { useToast } from '@/hooks/use-toast';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
-
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUserData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,7 +29,7 @@ export default function AdminUsersPage() {
           throw new Error('Admin token not found.');
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/admin/users`, {
+        const response = await fetch(`/api/admin/users`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 

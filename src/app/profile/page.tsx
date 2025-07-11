@@ -1,3 +1,4 @@
+
 'use client';
 
 import PageHeader from '@/components/page-header';
@@ -12,8 +13,6 @@ import { useEffect, useState, type FormEvent, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export default function ProfilePage() {
   const { toast } = useToast();
@@ -33,7 +32,7 @@ export default function ProfilePage() {
     if (!user || user.role !== 'Admin' || !token) return;
     setIsStatsLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/employees`, {
+      const response = await fetch(`/api/employees`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to fetch employee data.');
@@ -68,7 +67,7 @@ export default function ProfilePage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/profile`, {
+      const response = await fetch(`/api/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -14,8 +14,6 @@ import type { OrganizationDetailData } from '@/pages/api/admin/organizations/[id
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
-
 export default function OrganizationDetailsPage() {
   const params = useParams();
   const id = params.id as string;
@@ -35,7 +33,7 @@ export default function OrganizationDetailsPage() {
         const token = localStorage.getItem('adminAuthToken');
         if (!token) throw new Error('Admin token not found.');
 
-        const response = await fetch(`${API_BASE_URL}/api/admin/organizations/${id}`, {
+        const response = await fetch(`/api/admin/organizations/${id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -171,4 +169,3 @@ export default function OrganizationDetailsPage() {
     </>
   );
 }
-
