@@ -2,7 +2,7 @@
 import mongoose, { Schema, Document, models, Model } from 'mongoose';
 import type { IOrganization } from './Organization';
 
-export type EmployeeRole = string;
+export type EmployeeRole = 'Admin' | 'Manager' | 'HR' | 'Employee' | string;
 
 export interface IEmployee extends Document {
   name: string;

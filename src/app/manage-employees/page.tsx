@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Papa from 'papaparse';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 interface ClientEmployee {
@@ -46,7 +47,7 @@ export default function ManageEmployeesPage() {
 
   const [employeeName, setEmployeeName] = useState('');
   const [employeeEmail, setEmployeeEmail] = useState('');
-  const [employeeRole, setEmployeeRole] = useState('');
+  const [employeeRole, setEmployeeRole] = useState<EmployeeRole>('Employee');
   const [employeeDepartment, setEmployeeDepartment] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -61,7 +62,7 @@ export default function ManageEmployeesPage() {
   const [employeeToEdit, setEmployeeToEdit] = useState<ClientEmployee | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editName, setEditName] = useState('');
-  const [editRole, setEditRole] = useState<EmployeeRole>('');
+  const [editRole, setEditRole] = useState<EmployeeRole>('Employee');
   const [editDepartment, setEditDepartment] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -173,7 +174,7 @@ export default function ManageEmployeesPage() {
 
       setEmployeeName('');
       setEmployeeEmail('');
-      setEmployeeRole('');
+      setEmployeeRole('Employee');
       setEmployeeDepartment('');
       setPassword('');
       setConfirmPassword('');
@@ -387,14 +388,17 @@ export default function ManageEmployeesPage() {
               </div>
               <div>
                 <Label htmlFor="employeeRole">Role / Position</Label>
-                <Input
-                  id="employeeRole"
-                  value={employeeRole}
-                  onChange={(e) => setEmployeeRole(e.target.value)}
-                  placeholder="e.g., Software Engineer, HR Manager"
-                  required
-                  disabled={isSubmitting}
-                />
+                <Select value={employeeRole} onValueChange={setEmployeeRole} required disabled={isSubmitting}>
+                  <SelectTrigger id="employeeRole">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Employee">Employee</SelectItem>
+                    <SelectItem value="HR">HR</SelectItem>
+                    <SelectItem value="Manager">Manager</SelectItem>
+                    <SelectItem value="Admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="password">Password</Label>
@@ -540,13 +544,17 @@ export default function ManageEmployeesPage() {
               </div>
               <div>
                 <Label htmlFor="editRole">Role</Label>
-                <Input
-                  id="editRole"
-                  value={editRole}
-                  onChange={(e) => setEditRole(e.target.value)}
-                  placeholder="e.g., Software Engineer"
-                  disabled={isUpdating}
-                />
+                <Select value={editRole} onValueChange={(value) => setEditRole(value as EmployeeRole)} required disabled={isUpdating}>
+                  <SelectTrigger id="editRole">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Employee">Employee</SelectItem>
+                    <SelectItem value="HR">HR</SelectItem>
+                    <SelectItem value="Manager">Manager</SelectItem>
+                    <SelectItem value="Admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <AlertDialogFooter>
