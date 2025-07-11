@@ -281,8 +281,8 @@ export default function LandingPage() {
           )}
         >
           {/* Floating tags */}
-          <CollaboratorTag name="HR Admin" className="top-[calc(50%-4rem)] left-[6%] xl:left-[10%] hidden md:flex animate-float" cursorClass="!text-cyan-400" />
-          <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden md:flex animate-float-slow" cursorClass="!text-pink-400" />
+          <CollaboratorTag name="HR Admin" className="top-[calc(50%-4rem)] left-[6%] xl:left-[10%] hidden md:flex animate-float-elliptical" cursorClass="!text-cyan-400" />
+          <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden md:flex animate-float-elliptical-slow" cursorClass="!text-pink-400" />
 
           {/* Main Headline */}
           <div className="flex flex-col items-center">
@@ -339,8 +339,8 @@ export default function LandingPage() {
              <HoverPill icon={FileSearch} label="Review" variant="dark" />
 
             {/* Floating elements */}
-            <CollaboratorTag name="Hiring Manager" className="bottom-1/4 left-8 hidden md:flex animate-float" cursorClass="transform -rotate-12 !text-cyan-400" />
-            <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden md:flex animate-float-slow" cursorClass="transform rotate-[120deg] !text-pink-400" />
+            <CollaboratorTag name="Hiring Manager" className="bottom-1/4 left-8 hidden md:flex animate-float-elliptical" cursorClass="transform -rotate-12 !text-cyan-400" />
+            <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden md:flex animate-float-elliptical-slow" cursorClass="transform rotate-[120deg] !text-pink-400" />
 
             <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
               Review candidate profiles with precision
@@ -376,14 +376,14 @@ export default function LandingPage() {
 
                 <DevCollaboratorTag
                     name="Developer"
-                    className="top-1/2 -translate-y-1/2 left-8 hidden md:flex animate-float"
+                    className="top-1/2 -translate-y-1/2 left-8 hidden md:flex animate-float-elliptical"
                     cursorClass="text-pink-500"
                     tagColorClass="bg-pink-500 text-white border-pink-500/50"
                 />
 
                 <DevCollaboratorTag
                     name="Developer"
-                    className="top-1/2 -translate-y-1/2 right-8 hidden md:flex animate-float-slow"
+                    className="top-1/2 -translate-y-1/2 right-8 hidden md:flex animate-float-elliptical-slow"
                     cursorClass="text-yellow-600"
                     tagColorClass="bg-yellow-500 text-black border-yellow-600/50"
                 />
@@ -462,14 +462,14 @@ export default function LandingPage() {
 
                 <DevCollaboratorTag
                     name="Manager"
-                    className="top-1/4 left-12 hidden md:flex animate-float"
+                    className="top-1/4 left-12 hidden md:flex animate-float-elliptical"
                     cursorClass="text-lime-500"
                     tagColorClass="bg-lime-300 text-lime-900 font-bold border-lime-400"
                 />
 
                 <DevCollaboratorTag
                     name="Team Lead"
-                    className="bottom-1/4 right-12 hidden md:flex animate-float-slow"
+                    className="bottom-1/4 right-12 hidden md:flex animate-float-elliptical-slow"
                     cursorClass="text-pink-500"
                     tagColorClass="bg-pink-400 text-white font-bold border-pink-500"
                 />

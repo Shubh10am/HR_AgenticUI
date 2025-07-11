@@ -103,18 +103,18 @@ export default {
           '100%': { transform: 'translateX(-50%)' },
         },
         'float': {
-          '0%': { transform: 'translate(0px, 0px)' },
-          '25%': { transform: 'translate(5px, -8px)' },
-          '50%': { transform: 'translate(0px, -16px)' },
-          '75%': { transform: 'translate(-5px, -8px)' },
-          '100%': { transform: 'translate(0px, 0px)' },
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-8px)' },
         },
         'float-slow': {
-          '0%': { transform: 'translate(0px, 0px)' },
-          '25%': { transform: 'translate(-6px, 5px)' },
-          '50%': { transform: 'translate(0px, 10px)' },
-          '75%': { transform: 'translate(6px, 5px)' },
-          '100%': { transform: 'translate(0px, 0px)' },
+            '0%, 100%': { transform: 'translateY(0px)' },
+            '50%': { transform: 'translateY(-6px)' },
+        },
+        'floatX': {
+            '50%': { transform: 'translateX(20px)' },
+        },
+        'floatY': {
+            '50%': { transform: 'translateY(10px)' },
         },
         'slow-spin': {
             from: { transform: 'rotate(0deg)' },
@@ -140,6 +140,8 @@ export default {
         'marquee': 'marquee 30s linear infinite',
         'float': 'float 12s ease-in-out infinite',
         'float-slow': 'float-slow 18s ease-in-out infinite',
+        'float-elliptical': 'floatX 10s ease-in-out infinite alternate, floatY 7s ease-in-out infinite alternate',
+        'float-elliptical-slow': 'floatX 14s ease-in-out infinite alternate, floatY 10s ease-in-out infinite alternate',
         'slow-spin': 'slow-spin 3s linear infinite',
         'grain': 'grain 8s steps(10) infinite',
   		}
