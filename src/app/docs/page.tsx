@@ -1,108 +1,168 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LayoutDashboard, MailPlus, Inbox, CalendarCheck, MessagesSquare, GitFork, FileSignature, ListChecks, Library, Plug } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+'use client';
 
-interface DocSection {
-  title: string;
-  description: string;
-  icon: LucideIcon;
-  id: string;
-}
-
-const sections: DocSection[] = [
-  {
-    id: 'dashboard',
-    title: 'Dashboard',
-    icon: LayoutDashboard,
-    description: 'Your central hub for a high-level overview of all HR activities, key metrics, and quick access to different modules.'
-  },
-  {
-    id: 'email-assistance',
-    title: 'Email Assistance',
-    icon: MailPlus,
-    description: 'An AI-powered tool that helps you generate draft responses to common employee inquiries, saving time and ensuring consistency.'
-  },
-  {
-    id: 'gmail-inbox',
-    title: 'Gmail Inbox',
-    icon: Inbox,
-    description: 'Directly integrate your Gmail account to manage emails within the platform, using AI to help summarize threads and draft replies.'
-  },
-  {
-    id: 'attendance',
-    title: 'Attendance',
-    icon: CalendarCheck,
-    description: 'Manage employee attendance with clock-in/out functionality, view reports, handle leave requests, and monitor productivity.'
-  },
-  {
-    id: 'communications',
-    title: 'Communications',
-    icon: MessagesSquare,
-    description: 'A unified hub to aggregate communication logs from integrated platforms like Slack and Email for streamlined oversight.'
-  },
-  {
-    id: 'recruitment',
-    title: 'Recruitment',
-    icon: GitFork,
-    description: 'An end-to-end AI recruitment system. Generate job descriptions, filter resumes, check ATS scores, and conduct AI-powered interviews.'
-  },
-  {
-    id: 'smart-drafting',
-    title: 'Smart Drafting',
-    icon: FileSignature,
-    description: 'A powerful composer to write professional emails from scratch or based on AI-generated templates and prompts.'
-  },
-  {
-    id: 'tasks',
-    title: 'Tasks',
-    icon: ListChecks,
-    description: 'A Kanban-style board to organize, assign, and track project tasks, from onboarding checklists to cross-functional projects.'
-  },
-  {
-    id: 'knowledge-base',
-    title: 'Knowledge Base',
-    icon: Library,
-    description: 'Create and manage a central repository of documents and company information to be used as a source for AI responses.'
-  },
-  {
-    id: 'integrations',
-    title: 'Integrations',
-    icon: Plug,
-    description: 'Connect HR Streamline AI with your favorite third-party services like Slack, GitHub, Google Calendar, and more.'
-  }
-];
+import { useState, useEffect, useMemo } from 'react';
+import { docsData, type DocPage, type DocSection } from '@/lib/docs-data';
+import { Input } from '@/components/ui/input';
+import { Search, ChevronDown } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 export default function DocsPage() {
-  return (
-    <article className="space-y-8">
-      <header>
-        <h1 className="text-4xl sm:text-5xl font-black tracking-tighter mb-4 text-foreground">Documentation</h1>
-        <p className="text-lg text-muted-foreground">
-          Welcome to the official documentation for HR Streamline AI. Here you'll find detailed explanations for each module of the platform.
-        </p>
-      </header>
+  const [activePage, setActivePage] = useState<DocPage | null>(docsData[0]?.pages[0] || null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeHeading, setActiveHeading] = useState<string | null>(null);
 
-      <div className="space-y-6">
-        {sections.map(section => (
-          <Card key={section.id} id={section.id} className="scroll-mt-20">
-            <CardHeader>
-              <div className="flex items-center gap-4">
-                <section.icon className="h-8 w-8 text-primary" />
-                <div>
-                  <CardTitle className="text-2xl">{section.title}</CardTitle>
-                  <CardDescription className="mt-1">{section.description}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                More detailed documentation for the <span className="font-semibold text-foreground">{section.title}</span> module is coming soon. This section will include step-by-step guides, best practices, and advanced feature explanations.
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </article>
+  const filteredDocsData = useMemo(() => {
+    if (!searchTerm) return docsData;
+    const lowercasedTerm = searchTerm.toLowerCase();
+
+    const filtered = docsData.map(section => {
+      const filteredPages = section.pages.filter(page =>
+        page.title.toLowerCase().includes(lowercasedTerm) ||
+        page.content.toLowerCase().includes(lowercasedTerm)
+      );
+      return { ...section, pages: filteredPages };
+    }).filter(section => section.pages.length > 0);
+    
+    return filtered;
+  }, [searchTerm]);
+
+  const headings = useMemo(() => {
+    if (!activePage) return [];
+    const matches = activePage.content.matchAll(/<h3 id="([^"]+)">([^<]+)<\/h3>/g);
+    return Array.from(matches, match => ({ id: match[1], title: match[2] }));
+  }, [activePage]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let currentBest: IntersectionObserverEntry | null = null;
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            if (!currentBest || entry.intersectionRatio > currentBest.intersectionRatio) {
+              currentBest = entry;
+            }
+          }
+        }
+        if (currentBest) {
+          setActiveHeading(currentBest.target.id);
+        }
+      },
+      { rootMargin: "0px 0px -80% 0px", threshold: 0.1 }
+    );
+
+    const elements = headings.map(h => document.getElementById(h.id)).filter(Boolean);
+    elements.forEach(el => el && observer.observe(el));
+
+    return () => {
+      elements.forEach(el => el && observer.unobserve(el));
+    };
+  }, [headings]);
+
+  const handlePageSelect = (page: DocPage) => {
+    setActivePage(page);
+    // Reset scroll position to top of content area on page change
+    const contentArea = document.getElementById('docs-content-area');
+    if(contentArea) contentArea.scrollTo(0, 0);
+  }
+
+  const defaultAccordionValue = docsData.length > 0 ? [docsData[0].id] : [];
+
+  return (
+    <div className="flex min-h-[calc(100vh-4rem)]">
+      {/* Left Sidebar */}
+      <aside className="hidden lg:block sticky top-16 h-[calc(100vh-4rem)] w-64 xl:w-72 flex-shrink-0 border-r py-8 pr-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Search docs..." 
+            className="pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <nav className="mt-6">
+          <Accordion type="multiple" defaultValue={defaultAccordionValue} className="w-full">
+            {filteredDocsData.map(section => (
+              <AccordionItem key={section.id} value={section.id}>
+                <AccordionTrigger className="text-base font-semibold hover:no-underline [&[data-state=open]>svg]:rotate-180">
+                  {section.title}
+                </AccordionTrigger>
+                <AccordionContent>
+                  <ul className="space-y-1 mt-2 border-l border-border ml-2">
+                    {section.pages.map(page => (
+                      <li key={page.slug}>
+                        <button
+                          onClick={() => handlePageSelect(page)}
+                          className={cn(
+                            "block w-full text-left pl-4 py-1.5 text-sm rounded-r-md border-l-2",
+                            activePage?.slug === page.slug
+                              ? "text-primary border-primary bg-primary/10"
+                              : "text-muted-foreground hover:text-foreground hover:border-muted-foreground border-transparent"
+                          )}
+                        >
+                          {page.title}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <main id="docs-content-area" className="flex-1 py-8 lg:py-12 px-4 lg:px-12 overflow-y-auto h-[calc(100vh-4rem)] scroll-smooth">
+        {activePage ? (
+          <article className="prose dark:prose-invert max-w-none">
+            <div className="mb-4 text-sm text-muted-foreground">
+              Docs &gt; {docsData.find(s => s.pages.some(p => p.slug === activePage.slug))?.title} &gt; {activePage.title}
+            </div>
+            <h1>{activePage.title}</h1>
+            <p className="lead">{activePage.description}</p>
+            <div dangerouslySetInnerHTML={{ __html: activePage.content }} />
+          </article>
+        ) : (
+          <div className="text-center py-16">
+            <h2 className="text-2xl font-semibold">
+              {searchTerm ? 'No results found' : 'Welcome to the Documentation'}
+            </h2>
+            <p className="text-muted-foreground mt-2">
+              {searchTerm ? `Your search for "${searchTerm}" did not match any documents.` : 'Select a topic from the left to get started.'}
+            </p>
+          </div>
+        )}
+      </main>
+
+      {/* Right Sidebar */}
+      <aside className="hidden xl:block sticky top-16 h-[calc(100vh-4rem)] w-64 flex-shrink-0 py-8 pl-8">
+        {headings.length > 0 && (
+          <div>
+            <h4 className="font-semibold mb-2">On this page</h4>
+            <ul className="space-y-2">
+              {headings.map(heading => (
+                <li key={heading.id}>
+                  <Link
+                    href={`#${heading.id}`}
+                    className={cn(
+                      "block text-sm border-l-2 pl-3",
+                      activeHeading === heading.id
+                        ? "text-primary border-primary"
+                        : "text-muted-foreground hover:text-foreground border-transparent hover:border-muted-foreground"
+                    )}
+                  >
+                    {heading.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </aside>
+    </div>
   );
 }
