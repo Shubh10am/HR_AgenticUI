@@ -85,8 +85,8 @@ const playSound = (soundFile: string) => {
       return;
     }
     
-    const storedVolume = typeof window !== 'undefined' ? localStorage.getItem('notificationSoundVolume') : '50';
-    let volumeLevel = 0.5; // Default volume 50%
+    const storedVolume = typeof window !== 'undefined' ? localStorage.getItem('notificationSoundVolume') : '10';
+    let volumeLevel = 0.1; // Default volume 10%
     if (storedVolume !== null) {
       const parsedVolume = parseInt(storedVolume, 10);
       if (!isNaN(parsedVolume) && parsedVolume >= 0 && parsedVolume <= 100) {

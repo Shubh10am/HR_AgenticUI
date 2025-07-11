@@ -47,7 +47,7 @@ const NOTIFICATION_SOUND_VOLUME_KEY = 'notificationSoundVolume';
 export default function SettingsPage() {
   const { toast } = useToast();
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [notificationVolume, setNotificationVolume] = useState(50);
+  const [notificationVolume, setNotificationVolume] = useState(10);
   const { theme, setTheme } = useTheme();
   
   const { token, user, setUserApiKey: setApiKeyInContext, logout } = useAuth();
