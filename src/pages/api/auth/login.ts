@@ -25,9 +25,6 @@ type ResponseData = {
   };
 };
 
-const SUPER_ADMIN_EMAIL = 'shubham12342019@gmail.com';
-const SUPER_ADMIN_PASSWORD = '$Shubh@912513';
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResponseData | { error: string }>
@@ -47,46 +44,36 @@ export default async function handler(
   email = email.toLowerCase();
 
   try {
-    // --- SuperAdmin Check ---
-    if (email === SUPER_ADMIN_EMAIL.toLowerCase()) {
-      let superAdmin = await Admin.findOne({ email });
-
-      // If SuperAdmin doesn't exist, create it (first-time seed)
-      if (!superAdmin) {
-        const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash(SUPER_ADMIN_PASSWORD, salt);
-        superAdmin = new Admin({
-          email: SUPER_ADMIN_EMAIL.toLowerCase(),
-          passwordHash,
-          role: 'SuperAdmin',
-        });
-        await superAdmin.save();
-      }
-
-      const isMatch = await bcrypt.compare(password, superAdmin.passwordHash);
+    // --- SuperAdmin/Admin Check ---
+    const adminUser = await Admin.findOne({ email });
+    if (adminUser) {
+      const isMatch = await bcrypt.compare(password, adminUser.passwordHash);
       if (isMatch) {
         const tokenPayload: JwtPayload = {
-          employeeId: superAdmin._id.toString(),
-          email: superAdmin.email,
-          role: superAdmin.role,
-          organizationId: null, // SuperAdmin is not tied to an organization
-          name: 'Shubham (SuperAdmin)',
+          employeeId: adminUser._id.toString(),
+          email: adminUser.email,
+          role: adminUser.role,
+          organizationId: null, // Admins are not tied to an organization
+          name: adminUser.role === 'SuperAdmin' ? 'Shubham' : 'Admin', // Example name
         };
         const token = signToken(tokenPayload);
         return res.status(200).json({
-          message: 'SuperAdmin login successful.',
+          message: `${adminUser.role} login successful.`,
           token,
           user: {
-            id: superAdmin._id.toString(),
+            id: adminUser._id.toString(),
             name: tokenPayload.name,
-            email: superAdmin.email,
-            role: superAdmin.role,
+            email: adminUser.email,
+            role: adminUser.role,
             organizationId: null,
           },
         });
       }
-      // If password doesn't match, fall through to prevent confirming the account exists
+      // If password doesn't match, fall through to check employee collection.
+      // Or, we could fail here to prevent account enumeration. For simplicity, we fall through,
+      // but in a high-security scenario, we'd return an error immediately.
     }
+
 
     // --- Regular Employee Check ---
     let employee = await Employee.findOne({ email }).populate('organizationId', 'name emailDomain');
