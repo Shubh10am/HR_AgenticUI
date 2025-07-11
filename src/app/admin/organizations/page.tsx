@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ export default function AdminOrganizationsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   const fetchOrganizations = async () => {
     setIsLoading(true);
@@ -124,6 +126,10 @@ export default function AdminOrganizationsPage() {
     );
   }
 
+  const handleRowClick = (orgId: string) => {
+    router.push(`/admin/organizations/${orgId}`);
+  };
+
   return (
     <>
       <PageHeader
@@ -155,14 +161,16 @@ export default function AdminOrganizationsPage() {
               </TableHeader>
               <TableBody>
                 {organizations.map((org) => (
-                  <TableRow key={org._id}>
+                  <TableRow 
+                    key={org._id} 
+                    onClick={() => handleRowClick(org._id)} 
+                    className="cursor-pointer"
+                  >
                     <TableCell className="font-medium">
-                      <Link href={`/admin/organizations/${org._id}`} className="hover:underline">
-                        <div>
-                          <p>{org.name}</p>
-                          <p className="text-sm text-muted-foreground">{org.emailDomain}</p>
-                        </div>
-                      </Link>
+                      <div>
+                        <p className="hover:underline">{org.name}</p>
+                        <p className="text-sm text-muted-foreground">{org.emailDomain}</p>
+                      </div>
                     </TableCell>
                     <TableCell>{org.adminName}</TableCell>
                     <TableCell>{org.userCount}</TableCell>
@@ -175,7 +183,7 @@ export default function AdminOrganizationsPage() {
                     <TableCell>
                       {getStatusComponent(org.status)}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0">
@@ -188,16 +196,16 @@ export default function AdminOrganizationsPage() {
                           <DropdownMenuItem asChild>
                             <Link href={`/admin/organizations/${org._id}`}>View Details</Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/admin/organizations/${org._id}`}>Manage Users</Link>
+                          <DropdownMenuItem onClick={(e) => {e.stopPropagation(); router.push(`/admin/organizations/${org._id}`)}}>
+                            Manage Users
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuLabel>Change Status</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(org._id, 'Active')} disabled={org.status === 'Active'}>Activate</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(org._id, 'Hold')} disabled={org.status === 'Hold'}>Place on Hold</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(org._id, 'Suspended')} disabled={org.status === 'Suspended'}>Suspend</DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => {e.stopPropagation(); handleUpdateStatus(org._id, 'Active')}} disabled={org.status === 'Active'}>Activate</DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => {e.stopPropagation(); handleUpdateStatus(org._id, 'Hold')}} disabled={org.status === 'Hold'}>Place on Hold</DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => {e.stopPropagation(); handleUpdateStatus(org._id, 'Suspended')}} disabled={org.status === 'Suspended'}>Suspend</DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">
+                          <DropdownMenuItem className="text-destructive" onClick={(e) => e.stopPropagation()}>
                             <Trash2 className="mr-2 h-4 w-4" /> Delete Organization
                           </DropdownMenuItem>
                         </DropdownMenuContent>
