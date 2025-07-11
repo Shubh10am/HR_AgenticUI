@@ -8,21 +8,21 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, AlertTriangle, Shield, Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { AdminUserData } from '@/pages/api/admin/users/index';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/auth-context'; // Import the main auth hook
+import { useAuth } from '@/contexts/auth-context';
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<AdminUserData[]>([]);
+  const [admins, setAdmins] = useState<AdminUserData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const { token: authToken } = useAuth(); // Use the token from the auth context
+  const { token: authToken } = useAuth();
 
   const [isAddAdminDialogOpen, setIsAddAdminDialogOpen] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState('');
@@ -30,16 +30,16 @@ export default function AdminUsersPage() {
   const [newAdminConfirmPassword, setNewAdminConfirmPassword] = useState('');
   const [isAddingAdmin, setIsAddingAdmin] = useState(false);
 
-  const fetchUsers = async () => {
+  const fetchAdmins = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      if (!authToken) { // Check if the auth token from context exists
+      if (!authToken) {
         throw new Error('Authentication token not found.');
       }
 
       const response = await fetch(`/api/admin/users`, {
-        headers: { 'Authorization': `Bearer ${authToken}` } // Use the correct token
+        headers: { 'Authorization': `Bearer ${authToken}` }
       });
 
       if (!response.ok) {
@@ -48,11 +48,11 @@ export default function AdminUsersPage() {
       }
 
       const data: AdminUserData[] = await response.json();
-      setUsers(data);
+      setAdmins(data);
     } catch (e: any) {
       setError(e.message);
       toast({
-        title: 'Error Fetching Users',
+        title: 'Error Fetching Admins',
         description: e.message,
         variant: 'destructive',
       });
@@ -62,13 +62,13 @@ export default function AdminUsersPage() {
   };
 
   useEffect(() => {
-    if(authToken) { // Only fetch if token is available
-        fetchUsers();
+    if(authToken) {
+        fetchAdmins();
     } else {
         setIsLoading(false);
         setError("Authentication token not available.");
     }
-  }, [authToken]); // Rerun effect when token changes
+  }, [authToken]);
 
   const handleAddAdminSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -85,7 +85,7 @@ export default function AdminUsersPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`, // Use the correct token
+          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify({ email: newAdminEmail, password: newAdminPassword, role: 'Admin' }),
       });
@@ -100,7 +100,7 @@ export default function AdminUsersPage() {
       setNewAdminEmail('');
       setNewAdminPassword('');
       setNewAdminConfirmPassword('');
-      fetchUsers(); // Refresh user list
+      fetchAdmins(); // Refresh admin list
     } catch (e: any) {
       toast({ title: 'Error Adding Admin', description: e.message, variant: 'destructive' });
     } finally {
@@ -112,7 +112,6 @@ export default function AdminUsersPage() {
   const getRoleVariant = (role: string) => {
     if (role === 'SuperAdmin') return 'destructive';
     if (role === 'Admin') return 'default';
-    if (role === 'HR') return 'secondary';
     return 'outline';
   };
   
@@ -120,7 +119,7 @@ export default function AdminUsersPage() {
     return (
       <div className="flex justify-center items-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2">Loading users...</p>
+        <p className="ml-2">Loading administrators...</p>
       </div>
     );
   }
@@ -129,7 +128,7 @@ export default function AdminUsersPage() {
     return (
       <div className="flex flex-col items-center justify-center h-64 bg-destructive/10 rounded-lg">
         <AlertTriangle className="h-8 w-8 text-destructive" />
-        <p className="mt-2 text-destructive font-semibold">Failed to load users</p>
+        <p className="mt-2 text-destructive font-semibold">Failed to load administrators</p>
         <p className="text-sm text-destructive/80">{error}</p>
       </div>
     );
@@ -138,8 +137,8 @@ export default function AdminUsersPage() {
   return (
     <>
       <PageHeader
-        title="User Management"
-        description="View and manage all platform and organization users."
+        title="Platform Administrators"
+        description="View and manage SuperAdmin and Admin users."
       >
         <Dialog open={isAddAdminDialogOpen} onOpenChange={setIsAddAdminDialogOpen}>
             <DialogTrigger asChild>
@@ -181,54 +180,56 @@ export default function AdminUsersPage() {
       
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle>All Users</CardTitle>
-          <CardDescription>A list of all registered users and their roles.</CardDescription>
+          <CardTitle>Platform Admins</CardTitle>
+          <CardDescription>A list of all administrators and their roles.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Organization</TableHead>
+                  <TableHead>Admin</TableHead>
+                  <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead>Created At</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
+                {admins.map((user) => (
                   <TableRow key={user._id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
                         <Avatar>
                            <AvatarImage src={`https://placehold.co/40x40.png?text=${user.name.charAt(0).toUpperCase()}`} alt={user.name} />
-                          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                          <AvatarFallback><Shield className="h-4 w-4 text-muted-foreground"/></AvatarFallback>
                         </Avatar>
                         <div>
                           <p>{user.name}</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{user.organizationName}</TableCell>
+                    <TableCell>{user.email}</TableCell>
                     <TableCell>
                       <Badge variant={getRoleVariant(user.role)}>
                         {user.role}
                       </Badge>
                     </TableCell>
+                    <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
+                          <Button variant="ghost" className="h-8 w-8 p-0" disabled={user.role === 'SuperAdmin'}>
                             <span className="sr-only">Open menu</span>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>Edit User</DropdownMenuItem>
                           <DropdownMenuItem>Change Role</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">Delete User</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete Admin
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

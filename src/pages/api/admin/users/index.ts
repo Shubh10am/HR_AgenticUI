@@ -1,8 +1,6 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
-import Employee from '@/models/Employee';
-import Organization from '@/models/Organization';
 import Admin, { type IAdmin, type AdminRole } from '@/models/Admin';
 import { verifyToken } from '@/lib/jwt';
 import bcrypt from 'bcryptjs';
@@ -11,9 +9,10 @@ export interface AdminUserData {
   _id: string;
   name: string;
   email: string;
-  role: 'SuperAdmin' | 'Admin' | 'HR' | 'Employee';
-  organizationName: string;
+  role: 'SuperAdmin' | 'Admin';
   createdAt: string;
+  // This field is kept for type consistency but will be static
+  organizationName: 'Platform'; 
 }
 
 export default async function handler(
@@ -39,35 +38,20 @@ export default async function handler(
     }
     
     try {
-      const employees = await Employee.find({}).populate('organizationId', 'name').sort({ createdAt: -1 });
       const admins = await Admin.find({}).sort({ createdAt: -1 });
-
-      const employeeUsers: AdminUserData[] = employees.map(user => {
-        const org = user.organizationId as any;
-        return {
-          _id: user._id.toString(),
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          organizationName: org?.name || 'N/A',
-          createdAt: user.createdAt.toISOString(),
-        };
-      });
 
       const adminUsers: AdminUserData[] = admins.map(admin => ({
         _id: admin._id.toString(),
         name: admin.role, // Use role as name for platform admins
         email: admin.email,
-        role: admin.role,
+        role: admin.role as 'SuperAdmin' | 'Admin',
         organizationName: 'Platform',
         createdAt: admin.createdAt.toISOString(),
       }));
 
-      const allUsers = [...adminUsers, ...employeeUsers].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-      return res.status(200).json(allUsers);
+      return res.status(200).json(adminUsers);
     } catch (error: any) {
-      console.error('Error fetching users for admin:', error);
+      console.error('Error fetching admins:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
   } else if (req.method === 'POST') {
