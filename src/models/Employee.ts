@@ -1,6 +1,6 @@
 
 import mongoose, { Schema, Document, models, Model } from 'mongoose';
-import Organization, { type IOrganization } from './Organization';
+import type { IOrganization } from './Organization';
 
 export type EmployeeRole = 'Admin' | 'Manager' | 'HR' | 'Employee';
 
