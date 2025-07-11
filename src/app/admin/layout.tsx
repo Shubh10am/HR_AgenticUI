@@ -9,12 +9,15 @@ import Logo from '@/components/icons/logo';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context'; // Using the main app's auth context
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isLoading, logout } = useAuth(); // Get user and loading state from context
   const [isVerifying, setIsVerifying] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Wait for the auth context to finish loading
@@ -33,7 +36,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     // The regular admin login page is no longer needed with unified login
     // so we don't need a special check for it.
 
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, toast]);
 
 
   // Show a loading spinner while verifying the role
