@@ -52,7 +52,7 @@ export default async function handler(
           _id: org._id.toString(),
           name: org.name,
           emailDomain: org.emailDomain,
-          status: org.status,
+          status: org.status || 'Active', // If status is missing, default to 'Active'
           userCount,
           adminName: orgAdmin ? orgAdmin.name : 'N/A',
           createdAt: org.createdAt.toISOString(),
