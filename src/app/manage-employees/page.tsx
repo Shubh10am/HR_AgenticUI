@@ -46,7 +46,7 @@ export default function ManageEmployeesPage() {
 
   const [employeeName, setEmployeeName] = useState('');
   const [employeeEmail, setEmployeeEmail] = useState('');
-  const [employeeRole, setEmployeeRole] = useState('Employee'); // Default value
+  const [employeeRole, setEmployeeRole] = useState('');
   const [employeeDepartment, setEmployeeDepartment] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -61,7 +61,7 @@ export default function ManageEmployeesPage() {
   const [employeeToEdit, setEmployeeToEdit] = useState<ClientEmployee | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editName, setEditName] = useState('');
-  const [editRole, setEditRole] = useState<EmployeeRole>('Employee');
+  const [editRole, setEditRole] = useState<EmployeeRole>('');
   const [editDepartment, setEditDepartment] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -173,7 +173,7 @@ export default function ManageEmployeesPage() {
 
       setEmployeeName('');
       setEmployeeEmail('');
-      setEmployeeRole('Employee');
+      setEmployeeRole('');
       setEmployeeDepartment('');
       setPassword('');
       setConfirmPassword('');
