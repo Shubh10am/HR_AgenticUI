@@ -53,7 +53,7 @@ export default function AdminOrganizationsPage() {
 
   useEffect(() => {
     fetchOrganizations();
-  }, [toast]);
+  }, []);
 
   const handleUpdateStatus = async (orgId: string, status: 'Active' | 'Suspended' | 'Inactive') => {
     try {
@@ -185,7 +185,9 @@ export default function AdminOrganizationsPage() {
                           <DropdownMenuItem asChild>
                             <Link href={`/admin/organizations/${org._id}`}>View Details</Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem>Manage Users</DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href={`/admin/organizations/${org._id}`}>Manage Users</Link>
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuLabel>Change Status</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => handleUpdateStatus(org._id, 'Active')} disabled={org.status === 'Active'}>Activate</DropdownMenuItem>
