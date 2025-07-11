@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, type ChangeEvent } from 'react';
 import { useParams } from 'next/navigation';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,12 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MoreHorizontal, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, Activity, PauseCircle, List, LayoutGrid, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, Activity, PauseCircle, List, LayoutGrid, ChevronLeft, ChevronRight, Download, Search } from 'lucide-react';
 import type { OrganizationDetailData } from '@/pages/api/admin/organizations/[id]';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import type { OrganizationStatus } from '@/models/Organization';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const mockActivityLog = [
     { id: 'act-1', description: "Admin 'Shubham' registered new employee 'John Doe'.", timestamp: new Date() },
@@ -23,6 +26,8 @@ const mockActivityLog = [
 ];
 
 const ITEMS_PER_PAGE = 10;
+
+type OrgEmployee = OrganizationDetailData['employees'][0];
 
 export default function OrganizationDetailsPage() {
   const params = useParams();
@@ -35,13 +40,37 @@ export default function OrganizationDetailsPage() {
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [currentPage, setCurrentPage] = useState(1);
   
-  const totalPages = orgDetails ? Math.ceil(orgDetails.employees.length / ITEMS_PER_PAGE) : 0;
-  const paginatedEmployees = orgDetails
-    ? orgDetails.employees.slice(
+  // State for filtering
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('All');
+  const [departmentFilter, setDepartmentFilter] = useState('');
+
+  const filteredEmployees = useMemo(() => {
+    if (!orgDetails) return [];
+    return orgDetails.employees.filter(employee => {
+      const searchLower = searchQuery.toLowerCase();
+      const deptLower = departmentFilter.toLowerCase();
+      
+      const matchesSearch = !searchQuery || employee.name.toLowerCase().includes(searchLower);
+      const matchesRole = roleFilter === 'All' || employee.role === roleFilter;
+      const matchesDept = !departmentFilter || (employee.department && employee.department.toLowerCase().includes(deptLower));
+      
+      return matchesSearch && matchesRole && matchesDept;
+    });
+  }, [orgDetails, searchQuery, roleFilter, departmentFilter]);
+  
+  const totalPages = Math.ceil(filteredEmployees.length / ITEMS_PER_PAGE);
+  const paginatedEmployees = useMemo(() => {
+    return filteredEmployees.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
-      )
-    : [];
+    );
+  }, [filteredEmployees, currentPage]);
+
+  useEffect(() => {
+    // Reset page to 1 whenever filters change
+    setCurrentPage(1);
+  }, [searchQuery, roleFilter, departmentFilter]);
 
 
   useEffect(() => {
@@ -93,6 +122,36 @@ export default function OrganizationDetailsPage() {
       default: return <Badge variant="outline">{status}</Badge>;
     }
   };
+  
+  const handleDownloadCsv = () => {
+    if (filteredEmployees.length === 0) {
+      toast({ title: 'No Data', description: 'No employees match the current filters to download.', variant: 'destructive' });
+      return;
+    }
+
+    const headers = ['Name', 'Email', 'Role', 'Department'];
+    const csvContent = [
+      headers.join(','),
+      ...filteredEmployees.map(emp => [
+        `"${emp.name}"`,
+        `"${emp.email}"`,
+        `"${emp.role}"`,
+        `"${emp.department || 'N/A'}"`
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${orgDetails?.name || 'organization'}_employees.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({ title: 'CSV Downloaded', description: `Report for ${filteredEmployees.length} employees is being downloaded.` });
+  };
 
 
   if (isLoading) {
@@ -125,11 +184,16 @@ export default function OrganizationDetailsPage() {
         title={orgDetails.name}
         description={`Details for organization ID: ${orgDetails._id}`}
       >
-        <Button asChild variant="outline">
-          <Link href="/admin/organizations">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Organizations
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+            <Button variant="outline" onClick={handleDownloadCsv}>
+                <Download className="mr-2 h-4 w-4" /> Download CSV
+            </Button>
+            <Button asChild variant="outline">
+            <Link href="/admin/organizations">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+            </Link>
+            </Button>
+        </div>
       </PageHeader>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
@@ -154,14 +218,45 @@ export default function OrganizationDetailsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
             <Card>
-                <CardHeader className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
-                    <div>
-                        <CardTitle>Employees ({orgDetails.employees.length})</CardTitle>
-                        <CardDescription>A list of all employees in this organization.</CardDescription>
+                <CardHeader>
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                        <div>
+                            <CardTitle>Employees ({filteredEmployees.length} of {orgDetails.employees.length})</CardTitle>
+                            <CardDescription>A list of all employees in this organization.</CardDescription>
+                        </div>
+                        <div className="flex items-center gap-2 self-start sm:self-center">
+                            <Button variant={viewMode === 'table' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('table')}><List className="h-4 w-4" /></Button>
+                            <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('grid')}><LayoutGrid className="h-4 w-4" /></Button>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                        <Button variant={viewMode === 'table' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('table')}><List className="h-4 w-4" /></Button>
-                        <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('grid')}><LayoutGrid className="h-4 w-4" /></Button>
+                    <div className="mt-4 border-t pt-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div>
+                                <Label htmlFor="searchName">Search by Name</Label>
+                                <div className="relative mt-1">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input id="searchName" placeholder="e.g., John Doe" className="pl-9" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                                </div>
+                            </div>
+                             <div>
+                                <Label htmlFor="filterRole">Filter by Role</Label>
+                                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                                    <SelectTrigger id="filterRole" className="mt-1">
+                                        <SelectValue placeholder="Select a role" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="All">All Roles</SelectItem>
+                                        <SelectItem value="Admin">Admin</SelectItem>
+                                        <SelectItem value="HR">HR</SelectItem>
+                                        <SelectItem value="Employee">Employee</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                             <div>
+                                <Label htmlFor="searchDept">Search by Department</Label>
+                                <Input id="searchDept" placeholder="e.g., Engineering" className="mt-1" value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)}/>
+                            </div>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -206,6 +301,13 @@ export default function OrganizationDetailsPage() {
                               </TableCell>
                           </TableRow>
                           ))}
+                          {paginatedEmployees.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center">
+                                    No employees found matching your criteria.
+                                </TableCell>
+                            </TableRow>
+                          )}
                       </TableBody>
                       </Table>
                     </div>
@@ -224,20 +326,28 @@ export default function OrganizationDetailsPage() {
                     )}
                   </>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {orgDetails.employees.map((user) => (
-                          <Card key={user._id} className="p-4 flex flex-col items-center text-center">
-                              <Avatar className="h-16 w-16 mb-2">
-                                  <AvatarImage src={`https://placehold.co/64x64.png?text=${user.name.charAt(0).toUpperCase()}`} alt={user.name} />
-                                  <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                              <p className="font-semibold truncate w-full">{user.name}</p>
-                              <p className="text-xs text-muted-foreground truncate w-full">{user.email}</p>
-                              <p className="text-xs text-muted-foreground truncate w-full mt-1">{user.department || 'No Department'}</p>
-                              <Badge variant={getRoleVariant(user.role)} className="mt-2">{user.role}</Badge>
-                          </Card>
-                      ))}
-                    </div>
+                    <>
+                        {filteredEmployees.length === 0 ? (
+                             <div className="text-center py-10 text-muted-foreground">
+                                No employees found matching your criteria.
+                            </div>
+                        ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {filteredEmployees.map((user) => (
+                                <Card key={user._id} className="p-4 flex flex-col items-center text-center">
+                                    <Avatar className="h-16 w-16 mb-2">
+                                        <AvatarImage src={`https://placehold.co/64x64.png?text=${user.name.charAt(0).toUpperCase()}`} alt={user.name} />
+                                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <p className="font-semibold truncate w-full">{user.name}</p>
+                                    <p className="text-xs text-muted-foreground truncate w-full">{user.email}</p>
+                                    <p className="text-xs text-muted-foreground truncate w-full mt-1">{user.department || 'No Department'}</p>
+                                    <Badge variant={getRoleVariant(user.role)} className="mt-2">{user.role}</Badge>
+                                </Card>
+                            ))}
+                        </div>
+                        )}
+                    </>
                   )}
                 </CardContent>
             </Card>
