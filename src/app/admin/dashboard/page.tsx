@@ -3,7 +3,8 @@
 
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { AreaChart, BarChart, FileText, Users, Activity, DollarSign, ListOrdered, CheckCircle, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid, Area, Bar } from 'lucide-react';
+import { AreaChart as AreaChartIcon, BarChart as BarChartIcon, Users, DollarSign, ListOrdered, CheckCircle, Activity } from 'lucide-react';
+import { ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip, AreaChart, Area, BarChart, Bar, Legend } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 
 const kpiData = [
@@ -75,7 +76,7 @@ export default function AdminDashboardPage() {
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center"><AreaChart className="mr-2 h-5 w-5 text-primary" /> User Growth</CardTitle>
+            <CardTitle className="flex items-center"><AreaChartIcon className="mr-2 h-5 w-5 text-primary" /> User Growth</CardTitle>
             <CardDescription>Monthly new user registrations.</CardDescription>
           </CardHeader>
           <CardContent className="h-64">
@@ -100,7 +101,7 @@ export default function AdminDashboardPage() {
         </Card>
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center"><BarChart className="mr-2 h-5 w-5 text-primary" /> Plan Distribution</CardTitle>
+            <CardTitle className="flex items-center"><BarChartIcon className="mr-2 h-5 w-5 text-primary" /> Plan Distribution</CardTitle>
             <CardDescription>Distribution of users across subscription plans.</CardDescription>
           </CardHeader>
           <CardContent className="h-64">
