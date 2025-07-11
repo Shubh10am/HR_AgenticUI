@@ -1,39 +1,85 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import type { AdminUserData } from '@/pages/api/admin/users/index';
+import { useToast } from '@/hooks/use-toast';
 
-const users = [
-  { id: 1, name: 'Aisha Smith', email: 'aisha.smith@techinc.io', role: 'Admin', status: 'Active', avatarUrl: 'https://placehold.co/40x40.png', dataAiHint: 'woman avatar' },
-  { id: 2, name: 'John Doe', email: 'john.doe@newcorp.com', role: 'User', status: 'Active', avatarUrl: 'https://placehold.co/40x40.png', dataAiHint: 'man avatar' },
-  { id: 3, name: 'Maria Garcia', email: 'maria.g@webstart.es', role: 'User', status: 'Pending', avatarUrl: 'https://placehold.co/40x40.png', dataAiHint: 'woman face' },
-  { id: 4, name: 'David Chen', email: 'david.c@datasys.co', role: 'User', status: 'Inactive', avatarUrl: 'https://placehold.co/40x40.png', dataAiHint: 'man face' },
-];
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export default function AdminUsersPage() {
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'Active': return 'default';
-      case 'Pending': return 'secondary';
-      case 'Inactive': return 'outline';
-      default: return 'outline';
-    }
+  const [users, setUsers] = useState<AdminUserData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const token = localStorage.getItem('adminAuthToken');
+        if (!token) {
+          throw new Error('Admin token not found.');
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/admin/users`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch users');
+        }
+
+        const data: AdminUserData[] = await response.json();
+        setUsers(data);
+      } catch (e: any) {
+        setError(e.message);
+        toast({
+          title: 'Error Fetching Users',
+          description: e.message,
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchUsers();
+  }, [toast]);
+
+  const getRoleVariant = (role: string) => {
+    if (role === 'Admin') return 'default';
+    if (role === 'HR') return 'secondary';
+    return 'outline';
   };
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case 'Active': return 'bg-green-500 text-white';
-      case 'Pending': return 'bg-yellow-500 text-black';
-      case 'Inactive': return 'border-gray-400 text-gray-500';
-      default: return '';
-    }
-  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2">Loading users...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 bg-destructive/10 rounded-lg">
+        <AlertTriangle className="h-8 w-8 text-destructive" />
+        <p className="mt-2 text-destructive font-semibold">Failed to load users</p>
+        <p className="text-sm text-destructive/80">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -57,18 +103,18 @@ export default function AdminUsersPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>
+                  <TableHead>Organization</TableHead>
                   <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {users.map((user) => (
-                  <TableRow key={user.id}>
+                  <TableRow key={user._id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
                         <Avatar>
-                          <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint={user.dataAiHint} />
+                           <AvatarImage src={`https://placehold.co/40x40.png?text=${user.name.charAt(0).toUpperCase()}`} alt={user.name} />
                           <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
@@ -77,10 +123,10 @@ export default function AdminUsersPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{user.role}</TableCell>
+                    <TableCell>{user.organizationName}</TableCell>
                     <TableCell>
-                      <Badge variant={getStatusVariant(user.status)} className={getStatusClass(user.status)}>
-                        {user.status}
+                      <Badge variant={getRoleVariant(user.role)}>
+                        {user.role}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
