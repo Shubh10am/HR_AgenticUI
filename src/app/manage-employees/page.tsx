@@ -257,7 +257,7 @@ export default function ManageEmployeesPage() {
                 description: `Successfully created ${data.createdCount} employees. Failed: ${data.failedCount}.`,
               });
               if (data.failedCount > 0) {
-                console.error("Failed registrations:", data.errors);
+                console.warn("Failed registrations:", data.errors);
                  toast({
                   title: 'Some Registrations Failed',
                   description: 'Check the browser console for a list of errors.',
@@ -326,7 +326,7 @@ export default function ManageEmployeesPage() {
                 description: `Successfully deleted ${data.deletedCount} employees. Failed: ${data.failedCount}.`,
               });
                if (data.failedCount > 0) {
-                console.error("Failed deletions:", data.errors);
+                console.warn("Failed deletions:", data.errors);
                  toast({
                   title: 'Some Deletions Failed',
                   description: 'Check the browser console for a list of errors.',
