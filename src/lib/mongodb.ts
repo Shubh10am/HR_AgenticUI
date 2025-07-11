@@ -1,6 +1,19 @@
 
 import mongoose from 'mongoose';
 
+// Import all models to ensure they are registered with Mongoose before use.
+// This is crucial for serverless environments like Vercel where file execution
+// order is not guaranteed across different function invocations.
+import './../models/Organization';
+import './../models/Employee';
+import './../models/Admin';
+import './../models/AttendanceRecord';
+import './../models/CompanyPolicy';
+import './../models/LeaveRequest';
+import './../models/SupportTicket';
+import './../models/TokenUsageLog';
+
+
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
