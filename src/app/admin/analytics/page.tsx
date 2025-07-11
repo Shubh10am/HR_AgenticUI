@@ -3,9 +3,9 @@
 
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Users, DollarSign, Activity, FileText, BarChart2, AreaChart, LineChart } from 'lucide-react';
+import { Users, DollarSign, Activity, FileText, BarChart2, AreaChart as AreaChartIcon, LineChart as LineChartIcon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Bar, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Line, BarChart } from 'recharts';
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 
@@ -24,30 +24,38 @@ const featureUsageData = [
     { name: 'Copilot Chat', usage: 1500, fill: 'var(--color-copilot)' },
 ];
 
+const dailyApiUsageData = [
+  { date: 'Jul 1', backend: 35000, ai: 2200 },
+  { date: 'Jul 2', backend: 38000, ai: 2500 },
+  { date: 'Jul 3', backend: 32000, ai: 2100 },
+  { date: 'Jul 4', backend: 41000, ai: 3100 },
+  { date: 'Jul 5', backend: 45000, ai: 3500 },
+  { date: 'Jul 6', backend: 42000, ai: 3200 },
+  { date: 'Jul 7', backend: 50000, ai: 4000 },
+];
+
+const dailySignupsData = [
+  { date: 'Jul 1', signups: 20 },
+  { date: 'Jul 2', signups: 25 },
+  { date: 'Jul 3', signups: 18 },
+  { date: 'Jul 4', signups: 30 },
+  { date: 'Jul 5', signups: 35 },
+  { date: 'Jul 6', signups: 32 },
+  { date: 'Jul 7', signups: 40 },
+];
+
 const chartConfig = {
   usage: {
     label: "Usage",
   },
-  interviewer: {
-    label: "AI Interviewer",
-    color: "hsl(var(--chart-1))",
-  },
-  analysis: {
-    label: "Resume Analysis",
-    color: "hsl(var(--chart-2))",
-  },
-  descriptions: {
-    label: "Job Descriptions",
-    color: "hsl(var(--chart-3))",
-  },
-  drafting: {
-    label: "Email Drafting",
-    color: "hsl(var(--chart-4))",
-  },
-  copilot: {
-    label: "Copilot Chat",
-    color: "hsl(var(--chart-5))",
-  },
+  interviewer: { label: "AI Interviewer", color: "hsl(var(--chart-1))" },
+  analysis: { label: "Resume Analysis", color: "hsl(var(--chart-2))" },
+  descriptions: { label: "Job Descriptions", color: "hsl(var(--chart-3))" },
+  drafting: { label: "Email Drafting", color: "hsl(var(--chart-4))" },
+  copilot: { label: "Copilot Chat", color: "hsl(var(--chart-5))" },
+  backend: { label: "Backend API Calls", color: "hsl(var(--chart-2))" },
+  ai: { label: "AI API Calls", color: "hsl(var(--chart-1))" },
+  signups: { label: "New Users", color: "hsl(var(--chart-1))" }
 } satisfies import('@/components/ui/chart').ChartConfig;
 
 
@@ -58,7 +66,7 @@ export default function AdminAnalyticsPage() {
         title="Platform Analytics"
         description="Deep dive into your application's usage and performance metrics."
       >
-        <Select defaultValue="30d">
+        <Select defaultValue="7d">
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select time period" />
           </SelectTrigger>
@@ -91,27 +99,43 @@ export default function AdminAnalyticsPage() {
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center"><AreaChart className="mr-2 h-5 w-5 text-primary" /> API Usage Over Time</CardTitle>
-            <CardDescription>Total API calls per day for the selected period.</CardDescription>
+            <CardTitle className="flex items-center"><AreaChartIcon className="mr-2 h-5 w-5 text-primary" /> API Usage Over Time</CardTitle>
+            <CardDescription>Total backend and AI API calls per day for the selected period.</CardDescription>
           </CardHeader>
           <CardContent className="h-80">
              <ChartContainer config={chartConfig} className="h-full w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                    <p className="text-muted-foreground text-center pt-20">Line Chart Placeholder - No Data</p>
-                </ResponsiveContainer>
+                <AreaChart data={dailyApiUsageData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+                    <YAxis
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={8}
+                        tickFormatter={(value) => `${Number(value) / 1000}k`}
+                    />
+                    <Tooltip content={<ChartTooltipContent />} />
+                    <Legend />
+                    <Area type="monotone" dataKey="backend" stackId="1" stroke="var(--color-backend)" fill="var(--color-backend)" fillOpacity={0.4} />
+                    <Area type="monotone" dataKey="ai" stackId="1" stroke="var(--color-ai)" fill="var(--color-ai)" fillOpacity={0.6} />
+                </AreaChart>
             </ChartContainer>
           </CardContent>
         </Card>
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center"><LineChart className="mr-2 h-5 w-5 text-primary" /> New User Signups</CardTitle>
+            <CardTitle className="flex items-center"><LineChartIcon className="mr-2 h-5 w-5 text-primary" /> New User Signups</CardTitle>
             <CardDescription>Daily new user registrations.</CardDescription>
           </CardHeader>
           <CardContent className="h-80">
             <ChartContainer config={chartConfig} className="h-full w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                    <p className="text-muted-foreground text-center pt-20">Line Chart Placeholder - No Data</p>
-                </ResponsiveContainer>
+               <LineChart data={dailySignupsData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+                    <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+                    <Tooltip content={<ChartTooltipContent />} />
+                    <Legend />
+                    <Line type="monotone" dataKey="signups" stroke="var(--color-signups)" strokeWidth={2} dot={false} />
+                </LineChart>
             </ChartContainer>
           </CardContent>
         </Card>
@@ -126,7 +150,7 @@ export default function AdminAnalyticsPage() {
           <CardContent className="h-96">
             <ChartContainer config={chartConfig} className="h-full w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={featureUsageData}>
+                    <BarChart layout="vertical" data={featureUsageData} margin={{ right: 20 }}>
                         <XAxis type="number" hide />
                         <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={120} />
                         <Tooltip content={<ChartTooltipContent />} />
