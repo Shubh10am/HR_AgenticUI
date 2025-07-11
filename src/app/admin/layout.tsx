@@ -19,9 +19,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const adminToken = localStorage.getItem('adminAuthToken');
-    // In a real app, you'd verify this token with a backend endpoint.
-    // For this prototype, we'll just check for its existence and value.
-    if (adminToken === process.env.NEXT_PUBLIC_ADMIN_AUTH_TOKEN) {
+    // For this prototype, we'll just check for the token's existence.
+    // In a real app, you would make an API call here to a backend endpoint 
+    // to verify the token's validity on the server.
+    if (adminToken) {
       setIsVerified(true);
     } else {
       router.replace('/admin/login');
