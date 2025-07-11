@@ -1,44 +1,14 @@
 
 'use client';
 
-import { useState, useEffect, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { type ReactNode } from 'react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import AdminSidebarNav from './components/admin-sidebar-nav';
 import UserNav from '@/components/layout/user-nav'; 
 import Logo from '@/components/icons/logo';
 import Link from 'next/link';
-import { Loader2 } from 'lucide-react';
-import { useTheme } from 'next-themes';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const router = useRouter();
-  const { theme } = useTheme();
-  const [isVerified, setIsVerified] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const adminToken = localStorage.getItem('adminAuthToken');
-    // For this prototype, we'll just check for the token's existence.
-    // In a real app, you would make an API call here to a backend endpoint 
-    // to verify the token's validity on the server.
-    if (adminToken) {
-      setIsVerified(true);
-    } else {
-      router.replace('/admin/login');
-    }
-    setIsLoading(false);
-  }, [router]);
-
-  if (isLoading || !isVerified) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        <p className="ml-4">Verifying admin access...</p>
-      </div>
-    );
-  }
-
   return (
     <SidebarProvider defaultOpen>
       <Sidebar variant="sidebar" collapsible="icon">
