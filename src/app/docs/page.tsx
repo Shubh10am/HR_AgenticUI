@@ -116,7 +116,7 @@ export default function DocsPage() {
       </aside>
 
       {/* Main Content */}
-      <main id="docs-content-area" className="flex-1 py-8 lg:py-12 px-4 lg:px-12 overflow-y-auto h-[calc(100vh-4rem)] scroll-smooth">
+      <main id="docs-content-area" className="flex-1 py-8 lg:py-12 px-4 lg:px-12 scroll-smooth">
         {activePage ? (
           <article className="prose dark:prose-invert max-w-none">
             <div className="mb-4 text-sm text-muted-foreground">
