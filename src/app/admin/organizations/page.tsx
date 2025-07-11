@@ -157,10 +157,12 @@ export default function AdminOrganizationsPage() {
                 {organizations.map((org) => (
                   <TableRow key={org._id}>
                     <TableCell className="font-medium">
-                      <div>
-                        <p>{org.name}</p>
-                        <p className="text-sm text-muted-foreground">{org.emailDomain}</p>
-                      </div>
+                      <Link href={`/admin/organizations/${org._id}`} className="hover:underline">
+                        <div>
+                          <p>{org.name}</p>
+                          <p className="text-sm text-muted-foreground">{org.emailDomain}</p>
+                        </div>
+                      </Link>
                     </TableCell>
                     <TableCell>{org.adminName}</TableCell>
                     <TableCell>{org.userCount}</TableCell>
