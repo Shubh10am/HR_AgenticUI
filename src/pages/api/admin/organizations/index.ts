@@ -1,7 +1,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
-import Organization from '@/models/Organization';
+import Organization, { type OrganizationStatus } from '@/models/Organization';
 import Employee from '@/models/Employee';
 import { verifyToken, type JwtPayload } from '@/lib/jwt';
 
@@ -9,6 +9,7 @@ export interface AdminOrganizationData {
   _id: string;
   name: string;
   emailDomain: string;
+  status: OrganizationStatus;
   userCount: number;
   adminName: string;
   createdAt: string;
@@ -51,6 +52,7 @@ export default async function handler(
           _id: org._id.toString(),
           name: org.name,
           emailDomain: org.emailDomain,
+          status: org.status,
           userCount,
           adminName: orgAdmin ? orgAdmin.name : 'N/A',
           createdAt: org.createdAt.toISOString(),

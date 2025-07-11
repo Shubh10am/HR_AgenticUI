@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MoreHorizontal, Loader2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, ShieldOff } from 'lucide-react';
 import type { OrganizationDetailData } from '@/pages/api/admin/organizations/[id]';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
@@ -64,6 +64,16 @@ export default function OrganizationDetailsPage() {
     return 'outline';
   };
 
+  const getStatusComponent = (status: string) => {
+    switch (status) {
+      case 'Active': return <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-white"><ShieldCheck className="mr-1 h-3 w-3" /> Active</Badge>;
+      case 'Suspended': return <Badge variant="destructive"><ShieldAlert className="mr-1 h-3 w-3" /> Suspended</Badge>;
+      case 'Inactive': return <Badge variant="secondary"><ShieldOff className="mr-1 h-3 w-3" /> Inactive</Badge>;
+      default: return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -101,10 +111,14 @@ export default function OrganizationDetailsPage() {
         </Button>
       </PageHeader>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <Card>
               <CardHeader><CardTitle>Total Users</CardTitle></CardHeader>
               <CardContent><p className="text-3xl font-bold">{orgDetails.employees.length}</p></CardContent>
+          </Card>
+           <Card>
+              <CardHeader><CardTitle>Status</CardTitle></CardHeader>
+              <CardContent>{getStatusComponent(orgDetails.status)}</CardContent>
           </Card>
           <Card>
               <CardHeader><CardTitle>Admin</CardTitle></CardHeader>

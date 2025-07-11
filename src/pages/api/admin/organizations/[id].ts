@@ -1,7 +1,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
-import Organization from '@/models/Organization';
+import Organization, { type IOrganization, type OrganizationStatus } from '@/models/Organization';
 import Employee, { type IEmployee } from '@/models/Employee';
 import { verifyToken } from '@/lib/jwt';
 import mongoose from 'mongoose';
@@ -21,6 +21,7 @@ export interface OrganizationDetailData {
   _id: string;
   name: string;
   emailDomain: string;
+  status: OrganizationStatus;
   employees: OrgEmployee[];
   createdAt: string;
 }
@@ -63,6 +64,7 @@ export default async function handler(
         _id: organization._id.toString(),
         name: organization.name,
         emailDomain: organization.emailDomain,
+        status: organization.status,
         employees: employees.map(e => ({
           _id: e._id.toString(),
           name: e.name,
@@ -80,8 +82,31 @@ export default async function handler(
       console.error('Error fetching organization details:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
+  } else if (req.method === 'PUT') {
+    try {
+        const { status } = req.body;
+        if (!status || !['Active', 'Suspended', 'Inactive'].includes(status)) {
+            return res.status(400).json({ error: 'Invalid status provided.' });
+        }
+        
+        const organization = await Organization.findByIdAndUpdate(
+            orgId, 
+            { status: status as OrganizationStatus }, 
+            { new: true, runValidators: true }
+        );
+
+        if (!organization) {
+            return res.status(404).json({ error: 'Organization not found.' });
+        }
+        
+        return res.status(200).json({ message: `Organization status updated to ${status}.`, organization });
+
+    } catch (error: any) {
+        console.error('Error updating organization status:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
   } else {
-    res.setHeader('Allow', ['GET']);
+    res.setHeader('Allow', ['GET', 'PUT']);
     return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 }

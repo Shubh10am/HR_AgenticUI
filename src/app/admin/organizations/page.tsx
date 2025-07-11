@@ -7,11 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle, Star, Trash2, Loader2, AlertTriangle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Star, Trash2, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, ShieldOff } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import type { AdminOrganizationData } from '@/pages/api/admin/organizations/index';
 import { useToast } from '@/hooks/use-toast';
-import Link from 'next/link'; // Import Link
+import Link from 'next/link';
 
 export default function AdminOrganizationsPage() {
   const [organizations, setOrganizations] = useState<AdminOrganizationData[]>([]);
@@ -19,46 +19,79 @@ export default function AdminOrganizationsPage() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchOrganizations = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const token = localStorage.getItem('adminAuthToken');
-        if (!token) {
-          throw new Error('Admin token not found.');
-        }
-
-        const response = await fetch(`/api/admin/organizations`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch organizations');
-        }
-
-        const data: AdminOrganizationData[] = await response.json();
-        setOrganizations(data);
-      } catch (e: any) {
-        setError(e.message);
-        toast({
-          title: 'Error Fetching Organizations',
-          description: e.message,
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
+  const fetchOrganizations = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('adminAuthToken');
+      if (!token) {
+        throw new Error('Admin token not found.');
       }
-    };
+
+      const response = await fetch(`/api/admin/organizations`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch organizations');
+      }
+
+      const data: AdminOrganizationData[] = await response.json();
+      setOrganizations(data);
+    } catch (e: any) {
+      setError(e.message);
+      toast({
+        title: 'Error Fetching Organizations',
+        description: e.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchOrganizations();
   }, [toast]);
 
-  const getStatusVariant = (status: string) => {
+  const handleUpdateStatus = async (orgId: string, status: 'Active' | 'Suspended' | 'Inactive') => {
+    try {
+        const token = localStorage.getItem('adminAuthToken');
+        if (!token) throw new Error('Admin token not found.');
+
+        const response = await fetch(`/api/admin/organizations/${orgId}`, {
+            method: 'PUT',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ status }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update status');
+        }
+
+        toast({ title: 'Status Updated', description: `Organization status set to ${status}.` });
+        fetchOrganizations(); // Refresh the list to show the new status
+    } catch (e: any) {
+        toast({
+            title: 'Error Updating Status',
+            description: e.message,
+            variant: 'destructive',
+        });
+    }
+  };
+
+
+  const getStatusComponent = (status: string) => {
     switch (status) {
-      case 'Active': return 'default';
-      case 'Inactive': return 'outline';
-      default: return 'secondary';
+      case 'Active': return <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-white"><ShieldCheck className="mr-1 h-3 w-3" /> Active</Badge>;
+      case 'Suspended': return <Badge variant="destructive"><ShieldAlert className="mr-1 h-3 w-3" /> Suspended</Badge>;
+      case 'Inactive': return <Badge variant="secondary"><ShieldOff className="mr-1 h-3 w-3" /> Inactive</Badge>;
+      default: return <Badge variant="outline">{status}</Badge>;
     }
   };
 
@@ -115,7 +148,7 @@ export default function AdminOrganizationsPage() {
                   <TableHead>Admin</TableHead>
                   <TableHead>Users</TableHead>
                   <TableHead>Plan (Mock)</TableHead>
-                  <TableHead>Status (Mock)</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -137,9 +170,7 @@ export default function AdminOrganizationsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getStatusVariant('Active')}>
-                        Active
-                      </Badge>
+                      {getStatusComponent(org.status)}
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
@@ -155,7 +186,10 @@ export default function AdminOrganizationsPage() {
                             <Link href={`/admin/organizations/${org._id}`}>View Details</Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem>Manage Users</DropdownMenuItem>
-                          <DropdownMenuItem>Change Plan</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel>Change Status</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(org._id, 'Active')} disabled={org.status === 'Active'}>Activate</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(org._id, 'Suspended')} disabled={org.status === 'Suspended'}>Suspend</DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem className="text-destructive">
                             <Trash2 className="mr-2 h-4 w-4" /> Delete Organization
