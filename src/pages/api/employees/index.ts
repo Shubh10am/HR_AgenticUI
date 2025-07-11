@@ -57,9 +57,10 @@ export default async function handler(
       return res.status(400).json({ error: 'Missing required fields: name, email, password, role.' });
     }
     
-    if (!['Admin', 'HR', 'Employee'].includes(role)) {
-        return res.status(400).json({ error: 'Invalid role specified.' });
+    if (typeof role !== 'string' || !role.trim()) {
+        return res.status(400).json({ error: 'Role must be a non-empty string.' });
     }
+
 
     try {
       const organization = await Organization.findById(currentUserOrgId);

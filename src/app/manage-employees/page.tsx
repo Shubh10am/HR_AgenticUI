@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -47,7 +46,7 @@ export default function ManageEmployeesPage() {
 
   const [employeeName, setEmployeeName] = useState('');
   const [employeeEmail, setEmployeeEmail] = useState('');
-  const [employeeRole, setEmployeeRole] = useState<EmployeeRole>('Employee');
+  const [employeeRole, setEmployeeRole] = useState('Employee'); // Default value
   const [employeeDepartment, setEmployeeDepartment] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -322,7 +321,7 @@ export default function ManageEmployeesPage() {
                     <div className="py-2 text-sm text-muted-foreground bg-secondary/50 p-3 rounded-md">
                         <p className="font-semibold text-foreground mb-1">CSV Format Requirements:</p>
                         <p>The file must contain a header row with the following columns: <code className="bg-muted px-1 py-0.5 rounded">name</code>, <code className="bg-muted px-1 py-0.5 rounded">email</code>, <code className="bg-muted px-1 py-0.5 rounded">password</code>, <code className="bg-muted px-1 py-0.5 rounded">role</code>, <code className="bg-muted px-1 py-0.5 rounded">department</code> (optional).</p>
-                        <p className="mt-2">Sample Row: <code className="bg-muted px-1 py-0.5 rounded">John Doe,john@yourdomain.com,password123,Employee,Engineering</code></p>
+                        <p className="mt-2">Sample Row: <code className="bg-muted px-1 py-0.5 rounded">John Doe,john@yourdomain.com,password123,Software Engineer,Engineering</code></p>
                     </div>
                     <form id="bulk-upload-form" onSubmit={handleBulkUpload}>
                         <div className="grid gap-4 py-4">
@@ -387,21 +386,15 @@ export default function ManageEmployeesPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="employeeRole">Role</Label>
-                <Select
+                <Label htmlFor="employeeRole">Role / Position</Label>
+                <Input
+                  id="employeeRole"
                   value={employeeRole}
-                  onValueChange={(value: EmployeeRole) => setEmployeeRole(value)}
+                  onChange={(e) => setEmployeeRole(e.target.value)}
+                  placeholder="e.g., Software Engineer, HR Manager"
+                  required
                   disabled={isSubmitting}
-                >
-                  <SelectTrigger id="employeeRole">
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Employee">Employee</SelectItem>
-                    <SelectItem value="HR">HR</SelectItem>
-                    <SelectItem value="Admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
+                />
               </div>
               <div>
                 <Label htmlFor="password">Password</Label>
@@ -547,16 +540,13 @@ export default function ManageEmployeesPage() {
               </div>
               <div>
                 <Label htmlFor="editRole">Role</Label>
-                <Select value={editRole} onValueChange={(val) => setEditRole(val as EmployeeRole)} disabled={isUpdating}>
-                  <SelectTrigger id="editRole">
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Employee">Employee</SelectItem>
-                    <SelectItem value="HR">HR</SelectItem>
-                    <SelectItem value="Admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="editRole"
+                  value={editRole}
+                  onChange={(e) => setEditRole(e.target.value)}
+                  placeholder="e.g., Software Engineer"
+                  disabled={isUpdating}
+                />
               </div>
             </div>
             <AlertDialogFooter>

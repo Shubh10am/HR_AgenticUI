@@ -83,8 +83,8 @@ export default async function handler(
         return res.status(400).json({ error: 'At least one field (name, role, department) must be provided to update.' });
       }
 
-      if (role && !['Admin', 'HR', 'Employee'].includes(role)) {
-        return res.status(400).json({ error: 'Invalid role specified.' });
+      if (role && (typeof role !== 'string' || !role.trim())) {
+        return res.status(400).json({ error: 'Role must be a non-empty string.' });
       }
 
       // Apply updates

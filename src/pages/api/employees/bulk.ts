@@ -77,8 +77,8 @@ export default async function handler(
       continue;
     }
 
-    if (!['Admin', 'HR', 'Employee'].includes(role)) {
-      registrationErrors.push({ email, reason: 'Invalid role specified.' });
+    if (typeof role !== 'string' || !role.trim()) {
+      registrationErrors.push({ email, reason: 'Role must be a non-empty string.' });
       continue;
     }
 
