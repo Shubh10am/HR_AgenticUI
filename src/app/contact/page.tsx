@@ -219,7 +219,7 @@ export default function ContactPage() {
                 <ul className="space-y-2">
                   <li><Link href="/contact" className="text-muted-foreground hover:text-foreground">Contact Us</Link></li>
                   <li><Link href="/blog" className="text-muted-foreground hover:text-foreground">Blog</Link></li>
-                  <li><Link href="#" className="text-muted-foreground hover:text-foreground">Docs</Link></li>
+                  <li><Link href="/docs" className="text-muted-foreground hover:text-foreground">Docs</Link></li>
                 </ul>
               </div>
 

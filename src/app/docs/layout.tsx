@@ -5,12 +5,12 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import Logo from '@/components/icons/logo';
 import { Button } from '@/components/ui/button';
-import { Hash, Linkedin, X, Instagram, Youtube, Loader2 } from 'lucide-react';
+import { Hash, Linkedin, X, Instagram, Youtube, ArrowLeft, Loader2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useAuth } from '@/contexts/auth-context';
 import { useState } from 'react';
 
-export default function BlogLayout({ children }: { children: ReactNode }) {
+export default function DocsLayout({ children }: { children: ReactNode }) {
   const { loginAsGuest, isLoading } = useAuth();
   const [isGuestLoading, setIsGuestLoading] = useState(false);
 
@@ -43,7 +43,15 @@ export default function BlogLayout({ children }: { children: ReactNode }) {
         </header>
 
         <main className="flex-1 container mx-auto px-4 sm:px-6 py-16 sm:py-24">
-          {children}
+          <div className="max-w-4xl mx-auto">
+            <Button asChild variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-transparent px-0 mb-8">
+              <Link href="/">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Home
+              </Link>
+            </Button>
+            {children}
+          </div>
         </main>
 
         {/* Footer */}
