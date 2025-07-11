@@ -34,6 +34,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// A flag to manage the guest login transition and prevent race conditions.
+let isGuestTransitioning = false;
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -84,6 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const logout = useCallback(() => {
+    isGuestTransitioning = false; // Reset on logout
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
     localStorage.removeItem('userApiKey');
@@ -106,18 +110,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(parsedUser);
             setToken(storedToken);
 
-            // Only fetch API key for non-guest users
             if (!storedToken.startsWith('guest-')) {
                 await fetchAndSetUserApiKey(storedToken);
             } else {
-                setUserApiKey(null); // Ensure API key is null for guests
+                setUserApiKey(null);
             }
         } catch (e) {
             console.error("Failed to parse stored user:", e);
-            logout(); // If parsing fails, something is wrong, so log out.
+            logout();
         }
     } else {
-      // No auth info found, clear everything
       setUser(null);
       setToken(null);
       setUserApiKey(null);
@@ -131,8 +133,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [checkAuth]);
   
   useEffect(() => {
-    if (isLoading) {
-      return; // Wait until auth state is determined
+    if (isLoading || isGuestTransitioning) { // Prevent routing logic while loading or transitioning to guest
+      return;
     }
 
     const isRealUser = !!user && !!token && !token.startsWith('guest-');
@@ -140,19 +142,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const authRoutes = ['/login', '/register'];
     const isOnAuthRoute = authRoutes.includes(pathname);
     
-    // Public routes that don't need authentication
     const publicPages = ['/', '/login', '/register', '/contact', '/book-a-demo'];
-    const isPublicPage = publicPages.includes(pathname) || pathname.startsWith('/legal') || pathname.startsWith('/blog');
+    const isPublicPage = publicPages.includes(pathname) || pathname.startsWith('/legal') || pathname.startsWith('/blog') || pathname.startsWith('/docs');
     const isAdminRoute = pathname.startsWith('/admin');
     
-    // If a real user tries to access login/register, redirect to dashboard
     if (isRealUser && isOnAuthRoute) {
       router.push('/dashboard');
       return;
     }
 
-    // If an unauthenticated user tries to access a page that is NOT public, redirect to login
-    if (!user && !token && !isPublicPage && !isAdminRoute) { // Allow unauthed access to admin for its own guard
+    if (!user && !token && !isPublicPage && !isAdminRoute) {
       router.push('/login');
       return;
     }
@@ -236,6 +235,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const loginAsGuest = async (): Promise<boolean> => {
+    isGuestTransitioning = true; // Set flag to pause routing logic
     setIsLoading(true);
     
     clearAttendanceLocalStorage();
@@ -257,8 +257,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(guestUser);
     
     toast({ title: 'Continuing as Guest', description: 'Welcome! Some features may be limited.' });
-    router.push('/dashboard');
-    setIsLoading(false);
+    
+    // Instead of pushing directly, let the useEffect handle the redirection
+    // after the state has been properly set.
+    router.push('/dashboard', { scroll: false });
+    
+    // Allow state to update and useEffect to run before resetting flags
+    setTimeout(() => {
+        isGuestTransitioning = false;
+        setIsLoading(false);
+    }, 50); // A small delay is usually sufficient
+
     return true;
   };
   
