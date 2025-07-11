@@ -2,6 +2,7 @@
 'use client';
 
 import type { EmployeeRole } from '@/models/Employee';
+import type { AdminRole } from '@/models/Admin';
 import { useRouter, usePathname } from 'next/navigation';
 import type { ReactNode} from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
@@ -11,8 +12,8 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: EmployeeRole;
-  organizationId: string;
+  role: EmployeeRole | AdminRole; // Combined roles
+  organizationId: string | null; // Can be null for SuperAdmins
 }
 
 interface AuthContextType {
@@ -102,7 +103,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(parsedUser);
             setToken(storedToken);
 
-            if (!storedToken.startsWith('guest-')) {
+            if (!storedToken.startsWith('guest-') && parsedUser.role !== 'SuperAdmin') {
                 await fetchAndSetUserApiKey(storedToken);
             } else {
                 setUserApiKey(null);
@@ -172,7 +173,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('authUser', JSON.stringify(data.user));
       setToken(data.token);
       setUser(data.user);
-      await fetchAndSetUserApiKey(data.token);
+      if (data.user.role !== 'SuperAdmin') {
+        await fetchAndSetUserApiKey(data.token);
+      }
       toast({ title: 'Login Successful', description: 'Welcome back!' });
       router.push('/dashboard'); 
       setIsLoading(false);

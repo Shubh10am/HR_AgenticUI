@@ -1,10 +1,12 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
-import Employee, { type EmployeeRole } from '@/models/Employee';
+import Employee from '@/models/Employee';
+import Admin, { type IAdmin } from '@/models/Admin';
 import Organization from '@/models/Organization';
 import bcrypt from 'bcryptjs';
 import { signToken, type JwtPayload } from '@/lib/jwt';
+import type { EmployeeRole } from '@/models/Employee';
 
 type LoginRequestBody = {
   email: string;
@@ -19,16 +21,12 @@ type ResponseData = {
     name: string;
     email: string;
     role: JwtPayload['role'];
-    organizationId: string;
+    organizationId: string | null; // SuperAdmin won't have an org
   };
 };
 
-// Define dummy credentials and organization details
-const DUMMY_ADMIN_EMAIL = 'testadmin@example.com';
-const DUMMY_ADMIN_PASSWORD = 'password123';
-const DUMMY_ADMIN_NAME = 'Test Admin User';
-const DUMMY_ORG_NAME = 'TestCorp';
-const DUMMY_ORG_DOMAIN = 'example.com';
+const SUPER_ADMIN_EMAIL = 'shubham12342019@gmail.com';
+const SUPER_ADMIN_PASSWORD = '$Shubh@912513';
 
 export default async function handler(
   req: NextApiRequest,
@@ -49,38 +47,49 @@ export default async function handler(
   email = email.toLowerCase();
 
   try {
-    let employee = await Employee.findOne({ email }).populate('organizationId', 'name emailDomain');
+    // --- SuperAdmin Check ---
+    if (email === SUPER_ADMIN_EMAIL.toLowerCase()) {
+      let superAdmin = await Admin.findOne({ email });
 
-    // Handle dummy user creation if logging in with dummy credentials and user doesn't exist
-    if (!employee && email === DUMMY_ADMIN_EMAIL) {
-      // Find or create the dummy organization
-      let organization = await Organization.findOne({ emailDomain: DUMMY_ORG_DOMAIN });
-      if (!organization) {
-        organization = new Organization({
-          name: DUMMY_ORG_NAME,
-          emailDomain: DUMMY_ORG_DOMAIN,
+      // If SuperAdmin doesn't exist, create it (first-time seed)
+      if (!superAdmin) {
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(SUPER_ADMIN_PASSWORD, salt);
+        superAdmin = new Admin({
+          email: SUPER_ADMIN_EMAIL.toLowerCase(),
+          passwordHash,
+          role: 'SuperAdmin',
         });
-        await organization.save();
+        await superAdmin.save();
       }
 
-      // Create the dummy admin employee
-      const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash(DUMMY_ADMIN_PASSWORD, salt);
-
-      const newDummyEmployee = new Employee({
-        name: DUMMY_ADMIN_NAME,
-        email: DUMMY_ADMIN_EMAIL,
-        passwordHash,
-        role: 'Admin' as EmployeeRole,
-        organizationId: organization._id,
-      });
-      await newDummyEmployee.save();
-      
-      // Re-fetch the newly created employee to populate organizationId correctly for the response
-      employee = await Employee.findById(newDummyEmployee._id).populate('organizationId', 'name emailDomain');
-      // Since this is a new user, the provided password is the one to use for login
-      password = DUMMY_ADMIN_PASSWORD; 
+      const isMatch = await bcrypt.compare(password, superAdmin.passwordHash);
+      if (isMatch) {
+        const tokenPayload: JwtPayload = {
+          employeeId: superAdmin._id.toString(),
+          email: superAdmin.email,
+          role: superAdmin.role,
+          organizationId: null, // SuperAdmin is not tied to an organization
+          name: 'Shubham (SuperAdmin)',
+        };
+        const token = signToken(tokenPayload);
+        return res.status(200).json({
+          message: 'SuperAdmin login successful.',
+          token,
+          user: {
+            id: superAdmin._id.toString(),
+            name: tokenPayload.name,
+            email: superAdmin.email,
+            role: superAdmin.role,
+            organizationId: null,
+          },
+        });
+      }
+      // If password doesn't match, fall through to prevent confirming the account exists
     }
+
+    // --- Regular Employee Check ---
+    let employee = await Employee.findOne({ email }).populate('organizationId', 'name emailDomain');
     
     if (!employee) {
       return res.status(401).json({ error: 'Invalid email or password.' });
@@ -91,17 +100,10 @@ export default async function handler(
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    // Ensure organizationId is populated and is an object with _id
     if (!employee.organizationId || typeof employee.organizationId !== 'object' || !('_id' in employee.organizationId)) {
-        // Attempt to re-fetch employee with populated organization if somehow it wasn't populated
-        const populatedEmployee = await Employee.findById(employee._id).populate('organizationId', 'name emailDomain');
-        if (!populatedEmployee || !populatedEmployee.organizationId || typeof populatedEmployee.organizationId !== 'object' || !('_id' in populatedEmployee.organizationId)) {
-            console.error('Organization ID missing or not populated for employee:', employee._id);
-            return res.status(500).json({ error: 'Internal server error: Organization details missing.' });
-        }
-        employee.organizationId = populatedEmployee.organizationId;
+        console.error('Organization ID missing or not populated for employee:', employee._id);
+        return res.status(500).json({ error: 'Internal server error: Organization details missing.' });
     }
-
 
     const tokenPayload: JwtPayload = {
       employeeId: employee._id.toString(),

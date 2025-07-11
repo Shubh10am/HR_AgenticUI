@@ -8,33 +8,36 @@ import AdminSidebarNav from './components/admin-sidebar-nav';
 import Logo from '@/components/icons/logo';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/auth-context'; // Using the main app's auth context
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { user, isLoading, logout } = useAuth(); // Get user and loading state from context
   const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
-    // Only run this check on the client side
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('adminAuthToken');
-      
-      // If there's no token and we're not on the login page, redirect
-      if (!token && pathname !== '/admin/login') {
-        router.push('/admin/login');
-      } else {
-        setIsVerifying(false);
-      }
+    // Wait for the auth context to finish loading
+    if (isLoading) {
+      return;
     }
-  }, [pathname, router]);
+    
+    // Check if the user is authenticated and has the SuperAdmin role
+    if (user?.role !== 'SuperAdmin') {
+      // If not, redirect to the main dashboard or login page
+      toast({ title: "Access Denied", description: "You do not have permission to access the admin panel.", variant: "destructive" });
+      router.push('/dashboard');
+    } else {
+      setIsVerifying(false);
+    }
+    // The regular admin login page is no longer needed with unified login
+    // so we don't need a special check for it.
 
-  // If it's the login page, render it without the main layout shell
-  if (pathname === '/admin/login') {
-    return <>{children}</>;
-  }
+  }, [user, isLoading, router]);
 
-  // Show a loading spinner while verifying the token to prevent content flashing
-  if (isVerifying) {
+
+  // Show a loading spinner while verifying the role
+  if (isVerifying || isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -66,8 +69,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <SidebarTrigger />
           </div>
           <div className="flex items-center gap-4">
-            {/* The regular UserNav might not be appropriate here. 
-                Could be an Admin-specific UserNav in the future. */}
+            <Button onClick={logout} variant="outline">Logout</Button>
           </div>
         </header>
         <main className="flex-1 p-4 sm:p-6 overflow-x-hidden animated-background-gradient">

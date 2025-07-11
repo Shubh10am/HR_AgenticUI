@@ -1,6 +1,7 @@
 
 import jwt from 'jsonwebtoken';
-import type { IEmployee } from '@/models/Employee';
+import type { IEmployee, EmployeeRole } from '@/models/Employee';
+import type { AdminRole } from '@/models/Admin';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -9,10 +10,10 @@ if (!JWT_SECRET) {
 }
 
 export interface JwtPayload {
-  employeeId: string;
+  employeeId: string; // Can be Employee ID or Admin ID
   email: string;
-  role: IEmployee['role'];
-  organizationId: string;
+  role: EmployeeRole | AdminRole;
+  organizationId: string | null; // Null for SuperAdmin
   name: string;
 }
 
