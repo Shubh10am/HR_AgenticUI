@@ -9,10 +9,18 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MoreHorizontal, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, ShieldOff } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, ShieldOff, Activity } from 'lucide-react';
 import type { OrganizationDetailData } from '@/pages/api/admin/organizations/[id]';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { format } from 'date-fns';
+
+const mockActivityLog = [
+    { id: 'act-1', description: "Admin 'Shubham' registered new employee 'John Doe'.", timestamp: new Date() },
+    { id: 'act-2', description: "Organization status changed to 'Active'.", timestamp: new Date(new Date().setDate(new Date().getDate() - 1)) },
+    { id: 'act-3', description: "API Key was updated.", timestamp: new Date(new Date().setDate(new Date().getDate() - 2)) },
+];
+
 
 export default function OrganizationDetailsPage() {
   const params = useParams();
@@ -129,57 +137,86 @@ export default function OrganizationDetailsPage() {
               <CardContent><p className="text-lg font-medium">{orgDetails.emailDomain}</p></CardContent>
           </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Employees</CardTitle>
-          <CardDescription>A list of all employees in this organization.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Department</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orgDetails.employees.map((user) => (
-                  <TableRow key={user._id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                           <AvatarImage src={`https://placehold.co/40x40.png?text=${user.name.charAt(0).toUpperCase()}`} alt={user.name} />
-                          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p>{user.name}</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+            <Card>
+                <CardHeader>
+                <CardTitle>Employees</CardTitle>
+                <CardDescription>A list of all employees in this organization.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                <div className="rounded-md border overflow-x-auto">
+                    <Table>
+                    <TableHeader>
+                        <TableRow>
+                        <TableHead>User</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Department</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {orgDetails.employees.map((user) => (
+                        <TableRow key={user._id}>
+                            <TableCell className="font-medium">
+                            <div className="flex items-center gap-3">
+                                <Avatar>
+                                <AvatarImage src={`https://placehold.co/40x40.png?text=${user.name.charAt(0).toUpperCase()}`} alt={user.name} />
+                                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                <p>{user.name}</p>
+                                <p className="text-sm text-muted-foreground">{user.email}</p>
+                                </div>
+                            </div>
+                            </TableCell>
+                            <TableCell>
+                            <Badge variant={getRoleVariant(user.role)}>
+                                {user.role}
+                            </Badge>
+                            </TableCell>
+                            <TableCell>{user.department || 'N/A'}</TableCell>
+                            <TableCell className="text-right">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </TableCell>
+                        </TableRow>
+                        ))}
+                    </TableBody>
+                    </Table>
+                </div>
+                </CardContent>
+            </Card>
+        </div>
+        
+        <div className="lg:col-span-1">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center">
+                        <Activity className="mr-2 h-5 w-5 text-primary" />
+                        Recent Activity Log
+                    </CardTitle>
+                    <CardDescription>A log of recent important events for this organization.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                    {mockActivityLog.map(log => (
+                        <div key={log.id} className="flex items-start gap-3">
+                            <div className="mt-1 h-2 w-2 rounded-full bg-primary flex-shrink-0" />
+                            <div>
+                                <p className="text-sm">{log.description}</p>
+                                <p className="text-xs text-muted-foreground">{format(log.timestamp, 'PPP p')}</p>
+                            </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getRoleVariant(user.role)}>
-                        {user.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{user.department || 'N/A'}</TableCell>
-                    <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                    ))}
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+      </div>
     </>
   );
 }
