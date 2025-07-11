@@ -106,6 +106,13 @@ export default function ManageEmployeesPage() {
       setIsUpdating(false);
     }
   };
+  
+  const roleSortOrder: Record<EmployeeRole, number> = {
+    'Admin': 1,
+    'HR': 2,
+    'Manager': 3,
+    'Employee': 4,
+  };
 
   const fetchEmployees = useCallback(async () => {
     if (!adminUser || !token || adminUser.role !== 'Admin') return;
@@ -119,7 +126,17 @@ export default function ManageEmployeesPage() {
         throw new Error(errorData.error || 'Failed to fetch employees');
       }
       const data: ClientEmployee[] = await response.json();
-      setCurrentEmployees(data.map(emp => ({
+
+      const sortedData = data.sort((a, b) => {
+          const roleA = roleSortOrder[a.role] || 99;
+          const roleB = roleSortOrder[b.role] || 99;
+          if (roleA !== roleB) {
+              return roleA - roleB;
+          }
+          return a.name.localeCompare(b.name);
+      });
+
+      setCurrentEmployees(sortedData.map(emp => ({
         ...emp,
         avatarUrl: `https://placehold.co/40x40.png?text=${emp.name.charAt(0).toUpperCase()}`,
         dataAiHint: `${emp.role.toLowerCase()} avatar`

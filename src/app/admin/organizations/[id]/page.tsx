@@ -29,6 +29,12 @@ const ITEMS_PER_PAGE = 10;
 
 type OrgEmployee = OrganizationDetailData['employees'][0];
 
+const roleSortOrder = {
+  'Admin': 1,
+  'HR': 2,
+  'Employee': 3,
+};
+
 export default function OrganizationDetailsPage() {
   const params = useParams();
   const id = params.id as string;
@@ -47,7 +53,8 @@ export default function OrganizationDetailsPage() {
 
   const filteredEmployees = useMemo(() => {
     if (!orgDetails) return [];
-    return orgDetails.employees.filter(employee => {
+    
+    const filtered = orgDetails.employees.filter(employee => {
       const searchLower = searchQuery.toLowerCase();
       const deptLower = departmentFilter.toLowerCase();
       
@@ -57,6 +64,17 @@ export default function OrganizationDetailsPage() {
       
       return matchesSearch && matchesRole && matchesDept;
     });
+
+    // Now sort the filtered results
+    return filtered.sort((a, b) => {
+        const roleA = roleSortOrder[a.role as keyof typeof roleSortOrder] || 99;
+        const roleB = roleSortOrder[b.role as keyof typeof roleSortOrder] || 99;
+        if (roleA !== roleB) {
+            return roleA - roleB;
+        }
+        return a.name.localeCompare(b.name);
+    });
+
   }, [orgDetails, searchQuery, roleFilter, departmentFilter]);
   
   const totalPages = Math.ceil(filteredEmployees.length / ITEMS_PER_PAGE);
