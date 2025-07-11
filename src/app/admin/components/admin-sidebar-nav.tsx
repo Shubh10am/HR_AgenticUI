@@ -1,10 +1,9 @@
-
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
-import { LayoutDashboard, Users, BarChart2, Settings, Shield, Briefcase, FileText, Server } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart2, Settings, Shield, Briefcase, FileText, Server, LifeBuoy } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 
@@ -20,6 +19,7 @@ const navItems: NavItem[] = [
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart2, tooltip: 'View Analytics' },
   { href: '/admin/users', label: 'User Management', icon: Users, tooltip: 'Manage Users' },
   { href: '/admin/organizations', label: 'Organizations', icon: Briefcase, tooltip: 'Manage Organizations' },
+  { href: '/admin/support-tickets', label: 'Support', icon: LifeBuoy, tooltip: 'Support Tickets' },
   { href: '/admin/content-management', label: 'Content', icon: FileText, tooltip: 'Content Management' },
   { href: '/admin/system-health', label: 'System Health', icon: Server, tooltip: 'System Health & Logs' },
   { href: '/admin/settings', label: 'System Settings', icon: Settings, tooltip: 'System Settings' },

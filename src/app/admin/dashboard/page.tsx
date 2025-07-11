@@ -1,4 +1,3 @@
-
 'use client';
 
 import PageHeader from '@/components/page-header';
@@ -6,12 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { AreaChart as AreaChartIcon, BarChart as BarChartIcon, Users, DollarSign, ListOrdered, CheckCircle, Activity } from 'lucide-react';
 import { ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip, AreaChart, Area, BarChart, Bar, Legend } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+import Link from 'next/link';
 
 const kpiData = [
-  { title: 'Total Users', value: '1,250', icon: Users, change: '+12.5%', changeType: 'increase' },
-  { title: 'Active Subscriptions', value: '340', icon: CheckCircle, change: '+5.2%', changeType: 'increase' },
-  { title: 'Monthly Recurring Revenue', value: '$15,600', icon: DollarSign, change: '-1.8%', changeType: 'decrease' },
-  { title: 'Open Support Tickets', value: '28', icon: ListOrdered, change: '+3', changeType: 'increase' },
+  { title: 'Total Users', value: '1,250', icon: Users, change: '+12.5%', changeType: 'increase', href: '/admin/users' },
+  { title: 'Active Subscriptions', value: '340', icon: CheckCircle, change: '+5.2%', changeType: 'increase', href: '/admin/organizations' },
+  { title: 'Monthly Recurring Revenue', value: '$15,600', icon: DollarSign, change: '-1.8%', changeType: 'decrease', href: '/admin/analytics' },
+  { title: 'Open Support Tickets', value: '28', icon: ListOrdered, change: '+3', changeType: 'increase', href: '/admin/support-tickets' },
 ];
 
 const userGrowthData = [
@@ -58,18 +58,20 @@ export default function AdminDashboardPage() {
       />
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {kpiData.map((kpi) => (
-          <Card key={kpi.title} className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
-              <kpi.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{kpi.value}</div>
-              <p className={`text-xs ${kpi.changeType === 'increase' ? 'text-green-500' : 'text-red-500'}`}>
-                {kpi.change} from last month
-              </p>
-            </CardContent>
-          </Card>
+          <Link key={kpi.title} href={kpi.href}>
+            <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
+                <kpi.icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{kpi.value}</div>
+                <p className={`text-xs ${kpi.changeType === 'increase' ? 'text-green-500' : 'text-red-500'}`}>
+                  {kpi.change} from last month
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 
