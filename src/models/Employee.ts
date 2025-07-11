@@ -1,8 +1,8 @@
 
 import mongoose, { Schema, Document, models, Model } from 'mongoose';
-import type { IOrganization } from './Organization';
+import Organization, { type IOrganization } from './Organization';
 
-export type EmployeeRole = 'Admin' | 'Manager' | 'HR' | 'Employee' | string;
+export type EmployeeRole = 'Admin' | 'Manager' | 'HR' | 'Employee';
 
 export interface IEmployee extends Document {
   name: string;
@@ -37,9 +37,9 @@ const EmployeeSchema: Schema<IEmployee> = new Schema(
     },
     role: {
       type: String,
+      enum: ['Admin', 'Manager', 'HR', 'Employee'],
       default: 'Employee',
       required: true,
-      trim: true,
     },
     organizationId: {
       type: Schema.Types.ObjectId,
