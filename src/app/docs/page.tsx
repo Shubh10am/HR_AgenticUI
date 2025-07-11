@@ -4,10 +4,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { docsData, type DocPage, type DocSection } from '@/lib/docs-data';
 import { Input } from '@/components/ui/input';
-import { Search, ChevronDown } from 'lucide-react';
+import { Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export default function DocsPage() {
   const [activePage, setActivePage] = useState<DocPage | null>(docsData[0]?.pages[0] || null);
@@ -28,6 +29,11 @@ export default function DocsPage() {
     
     return filtered;
   }, [searchTerm]);
+
+  const activeSection = useMemo(() => {
+    if (!activePage) return null;
+    return docsData.find(s => s.pages.some(p => p.slug === activePage.slug));
+  }, [activePage]);
 
   const headings = useMemo(() => {
     if (!activePage) return [];
@@ -67,6 +73,19 @@ export default function DocsPage() {
     const contentArea = document.getElementById('docs-content-area');
     if(contentArea) contentArea.scrollTo(0, 0);
   }
+
+  const handleBreadcrumbClick = (section: DocSection) => {
+    if (section.pages.length > 0) {
+      handlePageSelect(section.pages[0]);
+    }
+  };
+
+  const handleHomeBreadcrumbClick = () => {
+    if (docsData.length > 0 && docsData[0].pages.length > 0) {
+      handlePageSelect(docsData[0].pages[0]);
+    }
+  };
+
 
   const defaultAccordionValue = docsData.length > 0 ? [docsData[0].id] : [];
 
@@ -119,9 +138,15 @@ export default function DocsPage() {
       <main id="docs-content-area" className="flex-1 py-8 lg:py-12 px-4 lg:px-12">
         {activePage ? (
           <article className="prose dark:prose-invert max-w-none">
-            <div className="mb-4 text-sm text-muted-foreground">
-              Docs &gt; {docsData.find(s => s.pages.some(p => p.slug === activePage.slug))?.title} &gt; {activePage.title}
-            </div>
+            {activeSection && (
+                <div className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
+                  <Button variant="link" onClick={handleHomeBreadcrumbClick} className="p-0 h-auto text-muted-foreground hover:text-primary">Docs</Button>
+                  <ChevronRight className="h-4 w-4" />
+                  <Button variant="link" onClick={() => handleBreadcrumbClick(activeSection)} className="p-0 h-auto text-muted-foreground hover:text-primary">{activeSection.title}</Button>
+                  <ChevronRight className="h-4 w-4" />
+                  <span className="text-foreground">{activePage.title}</span>
+                </div>
+            )}
             <h1>{activePage.title}</h1>
             <p className="lead">{activePage.description}</p>
              <div
