@@ -7,11 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle, Star, Trash2, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, ShieldOff } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Star, Trash2, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, ShieldOff, PauseCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import type { AdminOrganizationData } from '@/pages/api/admin/organizations/index';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import type { OrganizationStatus } from '@/models/Organization';
 
 export default function AdminOrganizationsPage() {
   const [organizations, setOrganizations] = useState<AdminOrganizationData[]>([]);
@@ -55,7 +56,7 @@ export default function AdminOrganizationsPage() {
     fetchOrganizations();
   }, []);
 
-  const handleUpdateStatus = async (orgId: string, status: 'Active' | 'Suspended' | 'Inactive') => {
+  const handleUpdateStatus = async (orgId: string, status: OrganizationStatus) => {
     try {
         const token = localStorage.getItem('adminAuthToken');
         if (!token) throw new Error('Admin token not found.');
@@ -86,11 +87,11 @@ export default function AdminOrganizationsPage() {
   };
 
 
-  const getStatusComponent = (status: string) => {
+  const getStatusComponent = (status: OrganizationStatus) => {
     switch (status) {
       case 'Active': return <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-white"><ShieldCheck className="mr-1 h-3 w-3" /> Active</Badge>;
       case 'Suspended': return <Badge variant="destructive"><ShieldAlert className="mr-1 h-3 w-3" /> Suspended</Badge>;
-      case 'Inactive': return <Badge variant="secondary"><ShieldOff className="mr-1 h-3 w-3" /> Inactive</Badge>;
+      case 'Hold': return <Badge variant="secondary" className="bg-yellow-500 hover:bg-yellow-600 text-black"><PauseCircle className="mr-1 h-3 w-3" /> On Hold</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
   };
@@ -191,6 +192,7 @@ export default function AdminOrganizationsPage() {
                           <DropdownMenuSeparator />
                           <DropdownMenuLabel>Change Status</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => handleUpdateStatus(org._id, 'Active')} disabled={org.status === 'Active'}>Activate</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(org._id, 'Hold')} disabled={org.status === 'Hold'}>Place on Hold</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleUpdateStatus(org._id, 'Suspended')} disabled={org.status === 'Suspended'}>Suspend</DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem className="text-destructive">

@@ -9,11 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MoreHorizontal, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, ShieldOff, Activity } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, Activity, PauseCircle } from 'lucide-react';
 import type { OrganizationDetailData } from '@/pages/api/admin/organizations/[id]';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import type { OrganizationStatus } from '@/models/Organization';
 
 const mockActivityLog = [
     { id: 'act-1', description: "Admin 'Shubham' registered new employee 'John Doe'.", timestamp: new Date() },
@@ -72,11 +73,11 @@ export default function OrganizationDetailsPage() {
     return 'outline';
   };
 
-  const getStatusComponent = (status: string) => {
+  const getStatusComponent = (status: OrganizationStatus) => {
     switch (status) {
       case 'Active': return <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-white"><ShieldCheck className="mr-1 h-3 w-3" /> Active</Badge>;
       case 'Suspended': return <Badge variant="destructive"><ShieldAlert className="mr-1 h-3 w-3" /> Suspended</Badge>;
-      case 'Inactive': return <Badge variant="secondary"><ShieldOff className="mr-1 h-3 w-3" /> Inactive</Badge>;
+      case 'Hold': return <Badge variant="secondary" className="bg-yellow-500 hover:bg-yellow-600 text-black"><PauseCircle className="mr-1 h-3 w-3" /> On Hold</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
   };

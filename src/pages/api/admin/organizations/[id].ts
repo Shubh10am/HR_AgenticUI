@@ -85,7 +85,7 @@ export default async function handler(
   } else if (req.method === 'PUT') {
     try {
         const { status } = req.body;
-        if (!status || !['Active', 'Suspended', 'Inactive'].includes(status)) {
+        if (!status || !['Active', 'Hold', 'Suspended'].includes(status)) {
             return res.status(400).json({ error: 'Invalid status provided.' });
         }
         

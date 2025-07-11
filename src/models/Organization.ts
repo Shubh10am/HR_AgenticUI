@@ -1,7 +1,7 @@
 
 import mongoose, { Schema, Document, models, Model } from 'mongoose';
 
-export type OrganizationStatus = 'Active' | 'Suspended' | 'Inactive';
+export type OrganizationStatus = 'Active' | 'Hold' | 'Suspended';
 
 export interface IOrganization extends Document {
   name: string;
@@ -28,7 +28,7 @@ const OrganizationSchema: Schema<IOrganization> = new Schema(
     },
     status: {
       type: String,
-      enum: ['Active', 'Suspended', 'Inactive'],
+      enum: ['Active', 'Hold', 'Suspended'],
       default: 'Active',
       required: true,
     },
