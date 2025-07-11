@@ -345,13 +345,13 @@ export default function OrganizationDetailsPage() {
                   </>
                   ) : (
                     <>
-                        {filteredEmployees.length === 0 ? (
+                        {paginatedEmployees.length === 0 ? (
                              <div className="text-center py-10 text-muted-foreground">
                                 No employees found matching your criteria.
                             </div>
                         ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {filteredEmployees.map((user) => (
+                            {paginatedEmployees.map((user) => (
                                 <Card key={user._id} className="p-4 flex flex-col items-center text-center">
                                     <Avatar className="h-16 w-16 mb-2">
                                         <AvatarImage src={`https://placehold.co/64x64.png?text=${user.name.charAt(0).toUpperCase()}`} alt={user.name} />
@@ -364,6 +364,19 @@ export default function OrganizationDetailsPage() {
                                 </Card>
                             ))}
                         </div>
+                        )}
+                        {totalPages > 1 && (
+                          <div className="flex items-center justify-between mt-4">
+                            <span className="text-sm text-muted-foreground">Page {currentPage} of {totalPages}</span>
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>
+                                <ChevronLeft className="mr-2 h-4 w-4"/> Previous
+                              </Button>
+                              <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages}>
+                                Next <ChevronRight className="ml-2 h-4 w-4"/>
+                              </Button>
+                            </div>
+                          </div>
                         )}
                     </>
                   )}
