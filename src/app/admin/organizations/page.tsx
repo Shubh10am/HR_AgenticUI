@@ -11,6 +11,7 @@ import { MoreHorizontal, PlusCircle, Star, Trash2, Loader2, AlertTriangle } from
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import type { AdminOrganizationData } from '@/pages/api/admin/organizations/index';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link'; // Import Link
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -152,7 +153,9 @@ export default function AdminOrganizationsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href={`/admin/organizations/${org._id}`}>View Details</Link>
+                          </DropdownMenuItem>
                           <DropdownMenuItem>Manage Users</DropdownMenuItem>
                           <DropdownMenuItem>Change Plan</DropdownMenuItem>
                           <DropdownMenuSeparator />
