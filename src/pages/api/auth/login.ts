@@ -7,6 +7,7 @@ import Organization from '@/models/Organization';
 import bcrypt from 'bcryptjs';
 import { signToken, type JwtPayload } from '@/lib/jwt';
 import type { EmployeeRole } from '@/models/Employee';
+import type { OrganizationStatus } from '@/models/Organization';
 
 type LoginRequestBody = {
   email: string;
@@ -21,7 +22,8 @@ type ResponseData = {
     name: string;
     email: string;
     role: JwtPayload['role'];
-    organizationId: string | null; // SuperAdmin won't have an org
+    organizationId: string | null;
+    organizationStatus: OrganizationStatus | null;
   };
 };
 
@@ -44,7 +46,6 @@ export default async function handler(
   email = email.toLowerCase();
 
   try {
-    // --- SuperAdmin/Admin Check ---
     const adminUser = await Admin.findOne({ email });
     if (adminUser) {
       const isMatch = await bcrypt.compare(password, adminUser.passwordHash);
@@ -53,8 +54,8 @@ export default async function handler(
           employeeId: adminUser._id.toString(),
           email: adminUser.email,
           role: adminUser.role,
-          organizationId: null, // Admins are not tied to an organization
-          name: adminUser.role === 'SuperAdmin' ? 'Shubham' : 'Admin', // Example name
+          organizationId: null,
+          name: adminUser.role === 'SuperAdmin' ? 'Shubham' : 'Admin',
         };
         const token = signToken(tokenPayload);
         return res.status(200).json({
@@ -66,17 +67,13 @@ export default async function handler(
             email: adminUser.email,
             role: adminUser.role,
             organizationId: null,
+            organizationStatus: null, // SuperAdmins don't belong to an org
           },
         });
       }
-      // If password doesn't match, fall through to check employee collection.
-      // Or, we could fail here to prevent account enumeration. For simplicity, we fall through,
-      // but in a high-security scenario, we'd return an error immediately.
     }
 
-
-    // --- Regular Employee Check ---
-    let employee = await Employee.findOne({ email }).populate('organizationId', 'name emailDomain');
+    const employee = await Employee.findOne({ email }).populate('organizationId', 'name emailDomain status');
     
     if (!employee) {
       return res.status(401).json({ error: 'Invalid email or password.' });
@@ -87,7 +84,8 @@ export default async function handler(
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    if (!employee.organizationId || typeof employee.organizationId !== 'object' || !('_id' in employee.organizationId)) {
+    const organization = employee.organizationId as any;
+    if (!organization || !organization._id) {
         console.error('Organization ID missing or not populated for employee:', employee._id);
         return res.status(500).json({ error: 'Internal server error: Organization details missing.' });
     }
@@ -96,7 +94,7 @@ export default async function handler(
       employeeId: employee._id.toString(),
       email: employee.email,
       role: employee.role,
-      organizationId: (employee.organizationId as any)._id.toString(),
+      organizationId: organization._id.toString(),
       name: employee.name,
     };
 
@@ -110,7 +108,8 @@ export default async function handler(
         name: employee.name,
         email: employee.email,
         role: employee.role,
-        organizationId: (employee.organizationId as any)._id.toString(),
+        organizationId: organization._id.toString(),
+        organizationStatus: organization.status,
       },
     });
   } catch (error: any) {

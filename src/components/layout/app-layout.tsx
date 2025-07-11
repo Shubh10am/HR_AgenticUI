@@ -1,5 +1,5 @@
 
-'use client'; // Required for hooks like usePathname, useRouter, useAuth
+'use client';
 
 import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
@@ -17,10 +17,11 @@ import SidebarNav from './sidebar-nav';
 import UserNav from './user-nav';
 import Logo from '@/components/icons/logo';
 import Link from 'next/link';
-import { Loader2, MessageSquare } from 'lucide-react'; // Added MessageSquare
-import CopilotSidebar from './copilot-sidebar'; // Added import
-import { useState } from 'react'; // Added import for useState
-import { Button } from '@/components/ui/button'; // Added Button import
+import { Loader2, MessageSquare } from 'lucide-react';
+import CopilotSidebar from './copilot-sidebar';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import AccountStatusOverlay from '@/components/account-status-overlay'; // Import the new overlay
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -28,10 +29,9 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
-  const { isLoading, isAuthenticated } = useAuth();
-  const [isCopilotOpen, setIsCopilotOpen] = useState(false); // Added state for copilot
+  const { user, isLoading, isAuthenticated } = useAuth();
+  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
 
-  // Define routes that are public and should not use the dashboard AppLayout
   const publicPages = ['/login', '/register', '/', '/contact', '/book-a-demo'];
   const isAdminPage = pathname.startsWith('/admin');
   const isLegalPage = pathname.startsWith('/legal');
@@ -40,7 +40,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const isPublicPage = publicPages.includes(pathname) || isLegalPage || isBlogPage || isDocsPage;
 
   if (isPublicPage || isAdminPage) {
-    return <>{children}</>; // Render children directly for public and admin pages
+    return <>{children}</>;
   }
   
   if (isLoading) {
@@ -62,6 +62,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   const logoHref = pathname === '/dashboard' ? '/' : '/dashboard';
 
+  const orgStatus = user?.organizationStatus;
+
   return (
     <SidebarProvider defaultOpen>
       <Sidebar variant="sidebar" collapsible="icon">
@@ -81,12 +83,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
+        {(orgStatus === 'Hold' || orgStatus === 'Suspended') && (
+          <AccountStatusOverlay status={orgStatus} />
+        )}
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-md">
           <div className="flex items-center">
             <SidebarTrigger />
-            {/* Breadcrumbs or page title could go here */}
           </div>
-          <div className="flex items-center gap-2"> {/* Wrapper for UserNav and Copilot trigger */}
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
@@ -105,7 +109,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
             {children}
           </div>
         </main>
-        <CopilotSidebar isOpen={isCopilotOpen} onOpenChange={setIsCopilotOpen} /> {/* Added CopilotSidebar */}
+        <CopilotSidebar isOpen={isCopilotOpen} onOpenChange={setIsCopilotOpen} />
       </SidebarInset>
     </SidebarProvider>
   );

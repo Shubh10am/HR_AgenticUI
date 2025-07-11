@@ -3,6 +3,7 @@
 
 import type { EmployeeRole } from '@/models/Employee';
 import type { AdminRole } from '@/models/Admin';
+import type { OrganizationStatus } from '@/models/Organization'; // Import OrganizationStatus
 import { useRouter, usePathname } from 'next/navigation';
 import type { ReactNode} from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
@@ -12,8 +13,9 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: EmployeeRole | AdminRole; // Combined roles
-  organizationId: string | null; // Can be null for SuperAdmins
+  role: EmployeeRole | AdminRole;
+  organizationId: string | null;
+  organizationStatus: OrganizationStatus | null; // Add organization status
 }
 
 interface AuthContextType {
@@ -173,11 +175,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('authUser', JSON.stringify(data.user));
       setToken(data.token);
       setUser(data.user);
+      
       if (data.user.role !== 'SuperAdmin') {
         await fetchAndSetUserApiKey(data.token);
       }
+      
       toast({ title: 'Login Successful', description: 'Welcome back!' });
-      router.push('/dashboard'); 
+
+      if (data.user.role === 'SuperAdmin') {
+        localStorage.setItem('adminAuthToken', data.token); // Set token for admin panel
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/dashboard'); 
+      }
+      
       setIsLoading(false);
       return true;
     } catch (error) {
@@ -231,6 +242,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email: 'guest@hrstreamline.ai',
       role: 'Employee' as EmployeeRole, 
       organizationId: 'guest-org-id',
+      organizationStatus: 'Active', // Guests are always active
     };
     const guestToken = 'guest-auth-token-' + Date.now(); 
 
@@ -241,15 +253,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     toast({ title: 'Continuing as Guest', description: 'Welcome! Some features may be limited.' });
     
-    // Instead of pushing directly, let the useEffect handle the redirection
-    // after the state has been properly set.
     router.push('/dashboard', { scroll: false });
     
-    // Allow state to update and useEffect to run before resetting flags
     setTimeout(() => {
         isGuestTransitioning = false;
         setIsLoading(false);
-    }, 50); // A small delay is usually sufficient
+    }, 50);
 
     return true;
   };
