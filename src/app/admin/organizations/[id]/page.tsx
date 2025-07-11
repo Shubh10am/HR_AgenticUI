@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MoreHorizontal, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, Activity, PauseCircle } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, Activity, PauseCircle, List, LayoutGrid, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { OrganizationDetailData } from '@/pages/api/admin/organizations/[id]';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
@@ -22,6 +22,7 @@ const mockActivityLog = [
     { id: 'act-3', description: "API Key was updated.", timestamp: new Date(new Date().setDate(new Date().getDate() - 2)) },
 ];
 
+const ITEMS_PER_PAGE = 10;
 
 export default function OrganizationDetailsPage() {
   const params = useParams();
@@ -31,6 +32,17 @@ export default function OrganizationDetailsPage() {
   const [orgDetails, setOrgDetails] = useState<OrganizationDetailData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  const totalPages = orgDetails ? Math.ceil(orgDetails.employees.length / ITEMS_PER_PAGE) : 0;
+  const paginatedEmployees = orgDetails
+    ? orgDetails.employees.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+      )
+    : [];
+
 
   useEffect(() => {
     if (!id) return;
@@ -142,53 +154,91 @@ export default function OrganizationDetailsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
             <Card>
-                <CardHeader>
-                <CardTitle>Employees</CardTitle>
-                <CardDescription>A list of all employees in this organization.</CardDescription>
+                <CardHeader className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                    <div>
+                        <CardTitle>Employees ({orgDetails.employees.length})</CardTitle>
+                        <CardDescription>A list of all employees in this organization.</CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                        <Button variant={viewMode === 'table' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('table')}><List className="h-4 w-4" /></Button>
+                        <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('grid')}><LayoutGrid className="h-4 w-4" /></Button>
+                    </div>
                 </CardHeader>
                 <CardContent>
-                <div className="rounded-md border overflow-x-auto">
-                    <Table>
-                    <TableHeader>
-                        <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Department</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {orgDetails.employees.map((user) => (
-                        <TableRow key={user._id}>
-                            <TableCell className="font-medium">
-                            <div className="flex items-center gap-3">
-                                <Avatar>
-                                <AvatarImage src={`https://placehold.co/40x40.png?text=${user.name.charAt(0).toUpperCase()}`} alt={user.name} />
-                                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                <p>{user.name}</p>
-                                <p className="text-sm text-muted-foreground">{user.email}</p>
-                                </div>
-                            </div>
-                            </TableCell>
-                            <TableCell>
-                            <Badge variant={getRoleVariant(user.role)}>
-                                {user.role}
-                            </Badge>
-                            </TableCell>
-                            <TableCell>{user.department || 'N/A'}</TableCell>
-                            <TableCell className="text-right">
-                                <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-                                    <span className="sr-only">Open menu</span>
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </TableCell>
-                        </TableRow>
-                        ))}
-                    </TableBody>
-                    </Table>
-                </div>
+                 {viewMode === 'table' ? (
+                  <>
+                    <div className="rounded-md border overflow-x-auto">
+                      <Table>
+                      <TableHeader>
+                          <TableRow>
+                          <TableHead>User</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Department</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                          {paginatedEmployees.map((user) => (
+                          <TableRow key={user._id}>
+                              <TableCell className="font-medium">
+                              <div className="flex items-center gap-3">
+                                  <Avatar>
+                                  <AvatarImage src={`https://placehold.co/40x40.png?text=${user.name.charAt(0).toUpperCase()}`} alt={user.name} />
+                                  <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                  <p>{user.name}</p>
+                                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                                  </div>
+                              </div>
+                              </TableCell>
+                              <TableCell>
+                              <Badge variant={getRoleVariant(user.role)}>
+                                  {user.role}
+                              </Badge>
+                              </TableCell>
+                              <TableCell>{user.department || 'N/A'}</TableCell>
+                              <TableCell className="text-right">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                                      <span className="sr-only">Open menu</span>
+                                      <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                              </TableCell>
+                          </TableRow>
+                          ))}
+                      </TableBody>
+                      </Table>
+                    </div>
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between mt-4">
+                        <span className="text-sm text-muted-foreground">Page {currentPage} of {totalPages}</span>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>
+                            <ChevronLeft className="mr-2 h-4 w-4"/> Previous
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages}>
+                            Next <ChevronRight className="ml-2 h-4 w-4"/>
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {orgDetails.employees.map((user) => (
+                          <Card key={user._id} className="p-4 flex flex-col items-center text-center">
+                              <Avatar className="h-16 w-16 mb-2">
+                                  <AvatarImage src={`https://placehold.co/64x64.png?text=${user.name.charAt(0).toUpperCase()}`} alt={user.name} />
+                                  <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                              <p className="font-semibold truncate w-full">{user.name}</p>
+                              <p className="text-xs text-muted-foreground truncate w-full">{user.email}</p>
+                              <p className="text-xs text-muted-foreground truncate w-full mt-1">{user.department || 'No Department'}</p>
+                              <Badge variant={getRoleVariant(user.role)} className="mt-2">{user.role}</Badge>
+                          </Card>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
             </Card>
         </div>
