@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import type { EmployeeRole } from '@/models/Employee';
-import { Loader2, UserPlus, Users, Trash2, Edit3 } from 'lucide-react';
+import { Loader2, UserPlus, Users, Trash2, Edit3, UploadCloud } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +26,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import Papa from 'papaparse';
+
 
 interface ClientEmployee {
   _id: string;
@@ -63,6 +66,11 @@ export default function ManageEmployeesPage() {
   const [editDepartment, setEditDepartment] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // State for bulk upload
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [isBulkSubmitting, setIsBulkSubmitting] = useState(false);
+
 
   const handleEditEmployee = async () => {
     if (!employeeToEdit || !token) return;
@@ -93,8 +101,6 @@ export default function ManageEmployeesPage() {
       setIsUpdating(false);
     }
   };
-
-
 
   const fetchEmployees = useCallback(async () => {
     if (!adminUser || !token || adminUser.role !== 'Admin') return;
@@ -205,8 +211,69 @@ export default function ManageEmployeesPage() {
       toast({ title: 'Deletion Error', description: error.message, variant: 'destructive' });
     } finally {
       setIsDeleteAlertOpen(false);
-      // setEmployeeToDelete(null); // This is handled by onOpenChange on AlertDialog
     }
+  };
+
+  const handleBulkUpload = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!csvFile) {
+        toast({ title: 'No File Selected', description: 'Please select a CSV file to upload.', variant: 'destructive' });
+        return;
+    }
+    setIsBulkSubmitting(true);
+    Papa.parse(csvFile, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (results) => {
+            const employees = results.data;
+            if (employees.length === 0) {
+                toast({ title: 'Empty CSV', description: 'The selected CSV file is empty or invalid.', variant: 'destructive' });
+                setIsBulkSubmitting(false);
+                return;
+            }
+
+            try {
+              const response = await fetch('/api/employees/bulk', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({ employees }),
+              });
+              const data = await response.json();
+
+              if (!response.ok) {
+                throw new Error(data.error || 'Failed to process bulk registration.');
+              }
+
+              toast({
+                title: 'Bulk Registration Processed',
+                description: `Successfully created ${data.createdCount} employees. Failed: ${data.failedCount}.`,
+              });
+              if (data.failedCount > 0) {
+                console.error("Failed registrations:", data.errors);
+                 toast({
+                  title: 'Some Registrations Failed',
+                  description: 'Check the browser console for a list of errors.',
+                  variant: 'destructive',
+                  duration: 10000,
+                });
+              }
+              fetchEmployees(); // Refresh the employee list
+              setIsBulkUploadOpen(false);
+              setCsvFile(null);
+            } catch (error: any) {
+              toast({ title: 'Bulk Upload Error', description: error.message, variant: 'destructive' });
+            } finally {
+              setIsBulkSubmitting(false);
+            }
+        },
+        error: (error: any) => {
+            toast({ title: 'CSV Parsing Error', description: error.message, variant: 'destructive' });
+            setIsBulkSubmitting(false);
+        }
+    });
   };
 
   if (authLoading) {
@@ -230,17 +297,50 @@ export default function ManageEmployeesPage() {
   }
 
   return (
-    // AlertDialog now wraps the entire section that might contain triggers and the content
     <AlertDialog open={isDeleteAlertOpen} onOpenChange={(open) => {
       setIsDeleteAlertOpen(open);
-      if (!open) {
-        setEmployeeToDelete(null); // Reset employee to delete when dialog is closed
-      }
+      if (!open) setEmployeeToDelete(null);
     }}>
       <PageHeader
         title="Manage Employees"
         description={`Oversee and add employees for ${adminUser?.name}'s organization.`}
-      />
+      >
+        <div className="flex items-center gap-2">
+            <Dialog open={isBulkUploadOpen} onOpenChange={setIsBulkUploadOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline">
+                        <UploadCloud className="mr-2 h-4 w-4" /> Bulk Register from CSV
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Bulk Employee Registration</DialogTitle>
+                        <DialogDescription>
+                            Upload a CSV file to register multiple employees at once.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-2 text-sm text-muted-foreground bg-secondary/50 p-3 rounded-md">
+                        <p className="font-semibold text-foreground mb-1">CSV Format Requirements:</p>
+                        <p>The file must contain a header row with the following columns: <code className="bg-muted px-1 py-0.5 rounded">name</code>, <code className="bg-muted px-1 py-0.5 rounded">email</code>, <code className="bg-muted px-1 py-0.5 rounded">password</code>, <code className="bg-muted px-1 py-0.5 rounded">role</code>, <code className="bg-muted px-1 py-0.5 rounded">department</code> (optional).</p>
+                        <p className="mt-2">Sample Row: <code className="bg-muted px-1 py-0.5 rounded">John Doe,john@yourdomain.com,password123,Employee,Engineering</code></p>
+                    </div>
+                    <form id="bulk-upload-form" onSubmit={handleBulkUpload}>
+                        <div className="grid gap-4 py-4">
+                            <Label htmlFor="csvFile">CSV File</Label>
+                            <Input id="csvFile" type="file" accept=".csv" onChange={(e) => setCsvFile(e.target.files ? e.target.files[0] : null)} required disabled={isBulkSubmitting}/>
+                        </div>
+                    </form>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setIsBulkUploadOpen(false)} disabled={isBulkSubmitting}>Cancel</Button>
+                        <Button type="submit" form="bulk-upload-form" disabled={isBulkSubmitting || !csvFile}>
+                            {isBulkSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                            Upload and Register
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div>
+      </PageHeader>
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         <Card className="lg:col-span-1 shadow-lg">
           <CardHeader>
@@ -398,7 +498,6 @@ export default function ManageEmployeesPage() {
                             <Edit3 className="h-4 w-4" />
                             <span className="sr-only">Edit</span>
                           </Button>
-                          {/* Ensure this AlertDialogTrigger is a child of the main AlertDialog */}
                           {adminUser?._id !== employee._id && adminUser?.id !== employee._id && (
                             <AlertDialogTrigger asChild>
                               <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/80 h-8 w-8" onClick={() => openDeleteConfirmation(employee)}>
@@ -471,7 +570,6 @@ export default function ManageEmployeesPage() {
         </AlertDialog>
       )}
 
-      {/* AlertDialogContent is a sibling to the main grid, but still a child of the root AlertDialog */}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
