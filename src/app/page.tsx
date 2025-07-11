@@ -222,10 +222,10 @@ export default function LandingPage() {
       { name: 'Gmail', hint: 'gmail logo', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg' },
       { name: 'Team', hint: 'msteam logo', logoUrl: 'https://www.microsoft.com/favicon.ico' },
       { name: 'Slack', hint: 'slack logo', logoUrl: 'https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png' },
-      { name: 'Asana', hint: 'asana logo', logoUrl: 'https://cdn-icons-png.flaticon.com/512/3536/3536482.png' },
+      { name: 'Zoom', hint: 'zoom logo', logoUrl: 'https://st2.zoom.us/static/6.3.38697/image/new/topNav/Zoom_logo.svg' },
       { name: 'Jira', hint: 'jira logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/atlassian_jira_logo_icon_170511.png' },
-      { name: 'Trello', hint: 'trello logo', logoUrl: 'https://cdn-icons-png.flaticon.com/512/5968/5968812.png' },
-      { name: 'Figma', hint: 'figma logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/figma_logo_icon_170157.png' },
+      { name: 'Outlook', hint: 'outlook logo', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg/512px-Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg.png' },
+      { name: 'Github', hint: 'github logo', logoUrl: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png' },
       { name: 'Notion', hint: 'notion logo', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png' },
   ];
 
