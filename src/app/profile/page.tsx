@@ -170,7 +170,7 @@ export default function ProfilePage() {
           <CardContent className="text-sm text-muted-foreground">
             <div className="space-y-2">
               <p><strong>Role:</strong> {clientUser.role}</p>
-              <p><strong>Organization ID:</strong> {clientUser.organizationId.substring(0,8)}...</p>
+              <p><strong>Organization ID:</strong> {clientUser.organizationId ? `${clientUser.organizationId.substring(0,8)}...` : 'N/A'}</p>
               <p><strong>Joined:</strong> January 1, 2024 (Mock)</p>
               <p><strong>Last Login:</strong> {new Date().toLocaleDateString()} (Mock)</p>
             </div>
