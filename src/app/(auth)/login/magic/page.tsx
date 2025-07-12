@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
@@ -12,7 +11,6 @@ import Link from 'next/link';
 export default function MagicLoginPage() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const { login } = useAuth(); // We'll use the main auth context to set the user state
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
@@ -40,17 +38,17 @@ export default function MagicLoginPage() {
           throw new Error(data.error || 'Failed to process magic link.');
         }
 
-        // Manually set auth state from response data
+        // Set the session token and user data in local storage.
+        // The AuthProvider will pick this up on the next page load.
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('authUser', JSON.stringify(data.user));
         
         toast({ title: 'Magic Login Successful', description: 'Welcome!' });
         setStatus('success');
         
-        // Redirect to dashboard after a short delay
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 1000);
+        // Immediately perform a hard redirect to the dashboard.
+        // This forces the app to reload and the AuthProvider to re-check authentication.
+        window.location.href = '/dashboard';
 
       } catch (error: any) {
         setErrorMessage(error.message);
@@ -81,6 +79,7 @@ export default function MagicLoginPage() {
           )}
           {status === 'success' && (
              <div className="flex flex-col items-center justify-center p-8">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
               <p>You will be redirected to your dashboard shortly.</p>
             </div>
           )}
