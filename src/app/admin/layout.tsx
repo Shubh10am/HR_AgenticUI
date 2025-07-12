@@ -25,8 +25,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       return;
     }
     
-    // Check if the user is authenticated and has the SuperAdmin or Admin role
-    if (user?.role !== 'SuperAdmin' && user?.role !== 'Admin') {
+    // A platform admin must have role 'Admin' or 'SuperAdmin' AND a null organizationId.
+    const isPlatformAdmin = (user?.role === 'SuperAdmin' || user?.role === 'Admin') && user?.organizationId === null;
+    
+    if (!isPlatformAdmin) {
       // If not, redirect to the main dashboard or login page
       toast({ title: "Access Denied", description: "You do not have permission to access the admin panel.", variant: "destructive" });
       router.push('/dashboard');
