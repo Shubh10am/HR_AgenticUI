@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MoreHorizontal, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, Activity, PauseCircle, List, LayoutGrid, ChevronLeft, ChevronRight, Download, Search } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, Activity, PauseCircle, List, LayoutGrid, ChevronLeft, ChevronRight, Download, Search, Link as LinkIcon, Copy } from 'lucide-react';
 import type { OrganizationDetailData } from '@/pages/api/admin/organizations/[id]';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
@@ -18,6 +18,7 @@ import type { OrganizationStatus } from '@/models/Organization';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const mockActivityLog = [
     { id: 'act-1', description: "Admin 'Shubham' registered new employee 'John Doe'.", timestamp: new Date() },
@@ -50,6 +51,12 @@ export default function OrganizationDetailsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
   const [departmentFilter, setDepartmentFilter] = useState('');
+
+  // Magic Link State
+  const [isMagicLinkDialogOpen, setIsMagicLinkDialogOpen] = useState(false);
+  const [magicLink, setMagicLink] = useState('');
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const [magicLinkForUser, setMagicLinkForUser] = useState<OrgEmployee | null>(null);
 
   const filteredEmployees = useMemo(() => {
     if (!orgDetails) return [];
@@ -125,6 +132,39 @@ export default function OrganizationDetailsPage() {
     };
     fetchOrgDetails();
   }, [id, toast]);
+
+  const handleGenerateMagicLink = async (user: OrgEmployee) => {
+    setMagicLinkForUser(user);
+    setIsGeneratingLink(true);
+    setMagicLink('');
+    setIsMagicLinkDialogOpen(true);
+    
+    try {
+      const token = localStorage.getItem('adminAuthToken');
+      const response = await fetch('/api/admin/magic-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ employeeId: user._id }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      setMagicLink(data.magicLink);
+    } catch (e: any) {
+      toast({ title: 'Magic Link Error', description: e.message, variant: 'destructive' });
+      setIsMagicLinkDialogOpen(false);
+    } finally {
+      setIsGeneratingLink(false);
+    }
+  };
+
+  const handleCopyMagicLink = () => {
+    navigator.clipboard.writeText(magicLink);
+    toast({ title: 'Copied', description: 'Magic link copied to clipboard.' });
+  };
+
 
   const getRoleVariant = (role: string) => {
     if (role === 'Admin') return 'default';
@@ -312,10 +352,10 @@ export default function OrganizationDetailsPage() {
                               </TableCell>
                               <TableCell>{user.department || 'N/A'}</TableCell>
                               <TableCell className="text-right">
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-                                      <span className="sr-only">Open menu</span>
-                                      <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 p-0" onClick={() => handleGenerateMagicLink(user)}>
+                                  <LinkIcon className="h-4 w-4" />
+                                  <span className="sr-only">Generate Magic Link</span>
+                                </Button>
                               </TableCell>
                           </TableRow>
                           ))}
@@ -361,6 +401,9 @@ export default function OrganizationDetailsPage() {
                                     <p className="text-xs text-muted-foreground truncate w-full">{user.email}</p>
                                     <p className="text-xs text-muted-foreground truncate w-full mt-1">{user.department || 'No Department'}</p>
                                     <Badge variant={getRoleVariant(user.role)} className="mt-2">{user.role}</Badge>
+                                    <Button variant="outline" size="sm" className="mt-4 w-full" onClick={() => handleGenerateMagicLink(user)}>
+                                      <LinkIcon className="mr-2 h-4 w-4" /> Magic Link
+                                    </Button>
                                 </Card>
                             ))}
                         </div>
@@ -409,6 +452,31 @@ export default function OrganizationDetailsPage() {
             </Card>
         </div>
       </div>
+
+       <Dialog open={isMagicLinkDialogOpen} onOpenChange={setIsMagicLinkDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Magic Login Link for {magicLinkForUser?.name}</DialogTitle>
+            <DialogDescription>
+              This is a single-use login link that expires in 15 minutes. Share it with the user to provide temporary access.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {isGeneratingLink ? (
+              <div className="flex items-center justify-center h-20">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : (
+              <div className="relative">
+                <Input value={magicLink} readOnly className="pr-10" />
+                <Button size="icon" variant="ghost" className="absolute right-1 top-1/2 -translate-y-1/2" onClick={handleCopyMagicLink}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -1,6 +1,6 @@
 
 import mongoose, { Schema, Document, models, Model } from 'mongoose';
-import type { IOrganization } from './Organization';
+import './Organization'; // Ensure Organization model is registered
 
 export type EmployeeRole = string;
 
@@ -11,6 +11,8 @@ export interface IEmployee extends Document {
   role: EmployeeRole;
   organizationId: mongoose.Types.ObjectId | IOrganization;
   department?: string; // Added department
+  magicLinkToken?: string;
+  magicLinkExpires?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,6 +52,14 @@ const EmployeeSchema: Schema<IEmployee> = new Schema(
       type: String,
       trim: true,
     },
+    magicLinkToken: {
+      type: String,
+      unique: true,
+      sparse: true, // Allows multiple null values but unique if set
+    },
+    magicLinkExpires: {
+      type: Date,
+    }
   },
   {
     timestamps: true, // Adds createdAt and updatedAt automatically
