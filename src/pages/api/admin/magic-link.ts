@@ -44,7 +44,9 @@ export default async function handler(
     employee.magicLinkExpires = expires;
     await employee.save();
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const protocol = req.headers['x-forwarded-proto'] || 'http';
+    const host = req.headers.host;
+    const appUrl = `${protocol}://${host}`;
     const magicLink = `${appUrl}/login/magic?token=${magicToken}`;
 
     return res.status(200).json({ magicLink });
