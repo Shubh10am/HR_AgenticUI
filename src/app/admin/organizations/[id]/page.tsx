@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, type ChangeEvent } from 'react';
+import { useState, useEffect, useMemo, type ChangeEvent, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,16 +9,17 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MoreHorizontal, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, Activity, PauseCircle, List, LayoutGrid, ChevronLeft, ChevronRight, Download, Search, Link as LinkIcon, Copy } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, Activity, PauseCircle, List, LayoutGrid, ChevronLeft, ChevronRight, Download, Search, Link as LinkIcon, Copy, MessageSquare } from 'lucide-react';
 import type { OrganizationDetailData } from '@/pages/api/admin/organizations/[id]';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import type { OrganizationStatus } from '@/models/Organization';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const mockActivityLog = [
     { id: 'act-1', description: "Admin 'Shubham' registered new employee 'John Doe'.", timestamp: new Date() },
@@ -29,6 +30,13 @@ const mockActivityLog = [
 const ITEMS_PER_PAGE = 10;
 
 type OrgEmployee = OrganizationDetailData['employees'][0];
+
+interface OrgPost {
+  _id: string;
+  subject: string;
+  authorName: string;
+  createdAt: string;
+}
 
 const roleSortOrder = {
   'Admin': 1,
@@ -44,6 +52,11 @@ export default function OrganizationDetailsPage() {
   const [orgDetails, setOrgDetails] = useState<OrganizationDetailData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const [orgPosts, setOrgPosts] = useState<OrgPost[]>([]);
+  const [isPostsLoading, setIsPostsLoading] = useState(true);
+  const [postsError, setPostsError] = useState<string | null>(null);
+  
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [currentPage, setCurrentPage] = useState(1);
   
@@ -92,6 +105,31 @@ export default function OrganizationDetailsPage() {
     );
   }, [filteredEmployees, currentPage]);
 
+  const fetchOrgPosts = useCallback(async () => {
+    if (!id) return;
+    setIsPostsLoading(true);
+    setPostsError(null);
+    try {
+        const token = localStorage.getItem('adminAuthToken');
+        if (!token) throw new Error('Admin token not found.');
+        
+        const response = await fetch(`/api/admin/organizations/${id}/posts`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch posts');
+        }
+        const data = await response.json();
+        setOrgPosts(data);
+    } catch(e: any) {
+        setPostsError(e.message);
+    } finally {
+        setIsPostsLoading(false);
+    }
+  }, [id]);
+
+
   useEffect(() => {
     // Reset page to 1 whenever filters change
     setCurrentPage(1);
@@ -131,7 +169,8 @@ export default function OrganizationDetailsPage() {
       }
     };
     fetchOrgDetails();
-  }, [id, toast]);
+    fetchOrgPosts();
+  }, [id, toast, fetchOrgPosts]);
 
   const handleGenerateMagicLink = async (user: OrgEmployee) => {
     setMagicLinkForUser(user);
@@ -427,7 +466,7 @@ export default function OrganizationDetailsPage() {
             </Card>
         </div>
         
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 flex flex-col gap-6">
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center">
@@ -448,6 +487,38 @@ export default function OrganizationDetailsPage() {
                         </div>
                     ))}
                     </div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center">
+                        <MessageSquare className="mr-2 h-5 w-5 text-primary" />
+                        Community Posts
+                    </CardTitle>
+                    <CardDescription>Recent posts from this organization.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ScrollArea className="h-64 pr-3">
+                        {isPostsLoading ? (
+                            <div className="flex justify-center items-center h-full">
+                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                            </div>
+                        ) : postsError ? (
+                            <div className="text-destructive text-sm text-center">{postsError}</div>
+                        ) : orgPosts.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center">No community posts from this organization.</p>
+                        ) : (
+                            <ul className="space-y-3">
+                                {orgPosts.map(post => (
+                                    <li key={post._id} className="border-b pb-2">
+                                        <p className="font-semibold truncate">{post.subject}</p>
+                                        <p className="text-xs text-muted-foreground">by {post.authorName}</p>
+                                        <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</p>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </ScrollArea>
                 </CardContent>
             </Card>
         </div>
