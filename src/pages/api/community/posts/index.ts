@@ -67,7 +67,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         await newPost.save();
         
         // Populate the author details for the response
-        const populatedPost = await Post.findById(newPost._id).populate('author', 'name').lean();
+        const populatedPost = await Post.findById(newPost._id)
+            .populate({ path: 'author', select: 'name', model: Employee })
+            .populate({
+                path: 'comments',
+                populate: { path: 'author', select: 'name', model: Employee },
+            })
+            .lean();
         
         res.status(201).json(populatedPost);
       } catch (error) {
