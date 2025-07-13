@@ -24,7 +24,7 @@ export default async function handler(
   const token = authHeader.split(' ')[1];
   const decodedToken = verifyToken(token);
 
-  if (!decodedToken || decodedToken.role !== 'SuperAdmin') {
+  if (!decodedToken || decodedToken.role !== 'SuperAdmin' && decodedToken.role !== 'Admin') {
     return res.status(403).json({ error: 'Forbidden: Access restricted to SuperAdmins.' });
   }
 
