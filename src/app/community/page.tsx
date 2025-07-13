@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageCircle, ThumbsUp, Share2, Send, Loader2, Image as ImageIcon } from 'lucide-react';
+import { MessageCircle, ThumbsUp, Share2, Send, Loader2, Image as ImageIcon, Lock } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
@@ -15,6 +15,8 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 
 interface Author {
   _id: string;
@@ -39,8 +41,34 @@ interface Post {
   createdAt: string;
 }
 
+const mockPost: Post = {
+    _id: 'mock-post-1',
+    author: { _id: 'admin-id', name: 'Admin-X' },
+    topic: 'Company Updates',
+    subject: 'Exciting Times Ahead!',
+    content: "Hi Team!\nWe’ve been working hard behind the scenes, and we’re excited to roll out some great updates soon. From improved workflows to new tools that will make your day smoother—we’re just getting started.\nStay tuned and keep an eye on this space! 👀\n#CompanyUpdates #TeamWork",
+    likes: Array.from({ length: 12 }, (_, i) => `user-${i}`), // 12 fake likes
+    comments: [
+        {
+            _id: 'comment-1',
+            author: { _id: 'user-a', name: 'Jane Doe' },
+            content: "This is great news! Looking forward to the updates.",
+            createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 mins ago
+        },
+        {
+            _id: 'comment-2',
+            author: { _id: 'user-b', name: 'John Smith' },
+            content: "Can't wait to see what you've been working on!",
+            createdAt: new Date(Date.now() - 1000 * 60 * 2).toISOString(), // 2 mins ago
+        },
+    ],
+    createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 mins ago
+};
+
+
 export default function CommunityPage() {
   const { user, token } = useAuth();
+  const isGuest = !token || token.startsWith('guest-');
   const { toast } = useToast();
   const [posts, setPosts] = useState<Post[]>([]);
   const [newPostTopic, setNewPostTopic] = useState('');
@@ -50,10 +78,13 @@ export default function CommunityPage() {
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
 
-  const canPost = user?.role === 'Admin' || user?.role === 'HR' || user?.role === 'Manager';
+  const canPost = user?.role === 'Admin' || user?.role === 'HR' || user?.role === 'Manager' || user?.role === 'SuperAdmin';
 
   const fetchPosts = useCallback(async () => {
-    if (!token) return;
+    if (!token || isGuest) {
+      setIsLoadingPosts(false);
+      return;
+    }
     setIsLoadingPosts(true);
     try {
       const response = await fetch('/api/community/posts', {
@@ -67,7 +98,7 @@ export default function CommunityPage() {
     } finally {
       setIsLoadingPosts(false);
     }
-  }, [token, toast]);
+  }, [token, toast, isGuest]);
 
   useEffect(() => {
     fetchPosts();
@@ -78,7 +109,6 @@ export default function CommunityPage() {
     if (!newPostTopic.trim() || !newPostSubject.trim() || !newPostContent.trim()) return;
     setIsSubmittingPost(true);
     try {
-      console.log(newPostContent, newPostSubject, newPostTopic);
       const response = await fetch('/api/community/posts', {
         method: 'POST',
         headers: {
@@ -108,7 +138,7 @@ export default function CommunityPage() {
   };
 
   const handleLike = async (postId: string) => {
-    if (!token) return;
+    if (!token || isGuest) return;
     try {
         const response = await fetch(`/api/community/posts/${postId}/like`, {
             method: 'POST',
@@ -124,7 +154,7 @@ export default function CommunityPage() {
   
   const handleCommentSubmit = async (postId: string) => {
     const content = commentInputs[postId];
-    if (!content || !content.trim() || !token) return;
+    if (!content || !content.trim() || !token || isGuest) return;
 
     try {
         const response = await fetch(`/api/community/posts/${postId}/comment`, {
@@ -145,15 +175,136 @@ export default function CommunityPage() {
     }
   };
 
+  const renderPost = (post: Post, isMock: boolean) => (
+    <Card key={post._id} className="shadow-lg">
+      <CardHeader>
+        <div className="flex items-center gap-3">
+          <Avatar>
+            <AvatarImage src={`https://placehold.co/40x40.png?text=${post.author.name.charAt(0)}`} />
+            <AvatarFallback>{post.author.name.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="font-semibold">{post.author.name}</p>
+            <p className="text-xs text-muted-foreground">
+              {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+            </p>
+          </div>
+        </div>
+         <div className="pt-4">
+            <Badge variant="secondary">{post.topic}</Badge>
+            <CardTitle className="text-xl mt-2">{post.subject}</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="whitespace-pre-wrap text-sm">{post.content}</p>
+      </CardContent>
+      <CardContent className="border-t pt-2 pb-2">
+         <div className="flex justify-between items-center text-xs text-muted-foreground">
+            <span>{post.likes.length > 0 && `${post.likes.length} Likes`}</span>
+            <span>{post.comments.length > 0 && `${post.comments.length} Comments`}</span>
+         </div>
+      </CardContent>
+      <CardContent className="border-t pt-2 pb-4">
+        <div className="flex justify-around">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" className="flex-1" onClick={() => !isMock && handleLike(post._id)} disabled={isMock}>
+                <ThumbsUp className={`mr-2 h-4 w-4 ${post.likes.includes(user?.id || '') && !isMock ? 'text-primary fill-current' : ''}`} />
+                Like
+              </Button>
+            </TooltipTrigger>
+            {isMock && <TooltipContent>Login to like posts</TooltipContent>}
+          </Tooltip>
+           <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" className="flex-1" disabled={isMock}>
+                <MessageCircle className="mr-2 h-4 w-4" />
+                Comment
+              </Button>
+            </TooltipTrigger>
+            {isMock && <TooltipContent>Login to comment</TooltipContent>}
+          </Tooltip>
+           <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" className="flex-1" disabled={isMock}>
+                <Share2 className="mr-2 h-4 w-4" />
+                Share
+              </Button>
+            </TooltipTrigger>
+            {isMock && <TooltipContent>Login to share posts</TooltipContent>}
+          </Tooltip>
+        </div>
+      </CardContent>
+       <CardContent className="border-t px-4 pt-4 pb-4 bg-secondary/30">
+         {post.comments.map(comment => (
+            <div key={comment._id} className="flex items-start gap-2 mb-3">
+                 <Avatar className="h-8 w-8">
+                    <AvatarImage src={`https://placehold.co/40x40.png?text=${comment.author.name.charAt(0)}`} />
+                    <AvatarFallback>{comment.author.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="bg-background/50 rounded-lg p-2 text-sm flex-grow">
+                    <div className="flex justify-between items-baseline">
+                        <span className="font-semibold">{comment.author.name}</span>
+                        <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}</span>
+                    </div>
+                    <p>{comment.content}</p>
+                </div>
+            </div>
+         ))}
+         <div className="flex items-center gap-2 mt-4">
+            <Avatar className="h-8 w-8">
+                 <AvatarImage src={`https://placehold.co/40x40.png?text=${isGuest ? 'G' : user?.name.charAt(0)}`} />
+                 <AvatarFallback>{isGuest ? 'G' : user?.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <Input
+                placeholder="Write a comment..."
+                className="h-9"
+                value={commentInputs[post._id] || ''}
+                onChange={(e) => setCommentInputs({...commentInputs, [post._id]: e.target.value})}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        !isMock && handleCommentSubmit(post._id);
+                    }
+                }}
+                disabled={isMock}
+            />
+             <Button size="icon" className="h-9 w-9 flex-shrink-0" onClick={() => !isMock && handleCommentSubmit(post._id)} disabled={isMock || !commentInputs[post._id]}>
+                <Send className="h-4 w-4"/>
+             </Button>
+         </div>
+       </CardContent>
+    </Card>
+  );
+
   return (
-    <>
+    <TooltipProvider>
       <PageHeader
         title="Community Hub"
         description="Connect with your team, share updates, and stay engaged."
       />
       <div className="grid gap-8 md:grid-cols-3">
         <div className="md:col-span-2 space-y-6">
-          {canPost && (
+          {isGuest ? (
+            <Card className="shadow-lg relative overflow-hidden">
+                <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 text-center">
+                    <Lock className="h-12 w-12 text-primary mb-4"/>
+                    <h3 className="text-xl font-bold">Feature Locked in Guest Mode</h3>
+                    <p className="text-muted-foreground mt-2">Log in or register to create posts and interact with the community.</p>
+                </div>
+                <CardHeader>
+                    <CardTitle>Create a New Post</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 blur-sm">
+                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                        <div><Label>Topic</Label><Input disabled /></div>
+                        <div><Label>Subject</Label><Input disabled /></div>
+                    </div>
+                    <div><Label>Post Content</Label><Textarea className="min-h-[100px]" disabled /></div>
+                    <div className="flex justify-end"><Button disabled>Post</Button></div>
+                </CardContent>
+            </Card>
+          ) : canPost && (
             <Card className="shadow-lg">
               <CardHeader>
                 <CardTitle>Create a New Post</CardTitle>
@@ -214,104 +365,22 @@ export default function CommunityPage() {
             </Card>
           )}
           
-          {isLoadingPosts ? (
-             <div className="flex justify-center items-center py-16">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-             </div>
-          ) : posts.length > 0 ? (
-            <div className="space-y-6">
-              {posts.map((post) => (
-                <Card key={post._id} className="shadow-lg">
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={`https://placehold.co/40x40.png?text=${post.author.name.charAt(0)}`} />
-                        <AvatarFallback>{post.author.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold">{post.author.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
-                        </p>
-                      </div>
-                    </div>
-                     <div className="pt-4">
-                        <Badge variant="secondary">{post.topic}</Badge>
-                        <CardTitle className="text-xl mt-2">{post.subject}</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="whitespace-pre-wrap text-sm">{post.content}</p>
-                  </CardContent>
-                  <CardContent className="border-t pt-2 pb-2">
-                     <div className="flex justify-between items-center text-xs text-muted-foreground">
-                        <span>{post.likes.length > 0 && `${post.likes.length} Likes`}</span>
-                        <span>{post.comments.length > 0 && `${post.comments.length} Comments`}</span>
-                     </div>
-                  </CardContent>
-                  <CardContent className="border-t pt-2 pb-4">
-                    <div className="flex justify-around">
-                      <Button variant="ghost" className="flex-1" onClick={() => handleLike(post._id)}>
-                        <ThumbsUp className={`mr-2 h-4 w-4 ${post.likes.includes(user?.id || '') ? 'text-primary fill-current' : ''}`} />
-                        Like
-                      </Button>
-                      <Button variant="ghost" className="flex-1">
-                        <MessageCircle className="mr-2 h-4 w-4" />
-                        Comment
-                      </Button>
-                      <Button variant="ghost" className="flex-1">
-                        <Share2 className="mr-2 h-4 w-4" />
-                        Share
-                      </Button>
-                    </div>
-                  </CardContent>
-                   <CardContent className="border-t px-4 pt-4 pb-4 bg-secondary/30">
-                     {post.comments.map(comment => (
-                        <div key={comment._id} className="flex items-start gap-2 mb-3">
-                             <Avatar className="h-8 w-8">
-                                <AvatarImage src={`https://placehold.co/40x40.png?text=${comment.author.name.charAt(0)}`} />
-                                <AvatarFallback>{comment.author.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div className="bg-background/50 rounded-lg p-2 text-sm flex-grow">
-                                <div className="flex justify-between items-baseline">
-                                    <span className="font-semibold">{comment.author.name}</span>
-                                    <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}</span>
-                                </div>
-                                <p>{comment.content}</p>
-                            </div>
-                        </div>
-                     ))}
-                     <div className="flex items-center gap-2 mt-4">
-                        <Avatar className="h-8 w-8">
-                             <AvatarImage src={`https://placehold.co/40x40.png?text=${user?.name.charAt(0)}`} />
-                             <AvatarFallback>{user?.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <Input
-                            placeholder="Write a comment..."
-                            className="h-9"
-                            value={commentInputs[post._id] || ''}
-                            onChange={(e) => setCommentInputs({...commentInputs, [post._id]: e.target.value})}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleCommentSubmit(post._id);
-                                }
-                            }}
-                        />
-                         <Button size="icon" className="h-9 w-9 flex-shrink-0" onClick={() => handleCommentSubmit(post._id)} disabled={!commentInputs[post._id]}>
-                            <Send className="h-4 w-4"/>
-                         </Button>
-                     </div>
-                   </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16 text-muted-foreground">
-                <p>No community posts yet.</p>
-                {canPost ? <p>Be the first to share something!</p> : <p>Check back later for updates.</p>}
-            </div>
-          )}
+          <div className="space-y-6">
+            {isGuest ? (
+                renderPost(mockPost, true)
+            ) : isLoadingPosts ? (
+                <div className="flex justify-center items-center py-16">
+                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                </div>
+            ) : posts.length > 0 ? (
+                posts.map((post) => renderPost(post, false))
+            ) : (
+                <div className="text-center py-16 text-muted-foreground">
+                    <p>No community posts yet.</p>
+                    {canPost ? <p>Be the first to share something!</p> : <p>Check back later for updates.</p>}
+                </div>
+            )}
+           </div>
         </div>
 
         <div className="md:col-span-1 space-y-6">
@@ -333,6 +402,6 @@ export default function CommunityPage() {
           </Card>
         </div>
       </div>
-    </>
+    </TooltipProvider>
   );
 }
