@@ -6,7 +6,7 @@ import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowRight, Mail, Users, FileText, MessageSquare, ListChecks, CalendarDays, GitFork, BarChart3, Plug, Briefcase, Library, LifeBuoy } from 'lucide-react';
+import { ArrowRight, Mail, Users, FileText, MessageSquare, ListChecks, CalendarDays, GitFork, BarChart3, Plug, Briefcase, Library, LifeBuoy, DollarSign } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
@@ -96,6 +96,7 @@ export default function DashboardPage() {
     { title: 'Smart Drafting', description: 'Generate emails from prompts.', href: '/smart-drafting', icon: FileText },
     { title: 'Unified Comms', description: 'Aggregated communication logs.', href: '/unified-communications', icon: MessageSquare },
     { title: 'Attendance', description: 'Clock in/out and view reports.', href: '/attendance-reporting', icon: CalendarDays },
+    { title: 'Payroll', description: 'Run payroll and manage compensation.', href: '/payroll', icon: DollarSign },
     { title: 'Knowledge Base', description: 'Manage documents and sources.', href: '/knowledge-base', icon: Library },
     { title: 'Integrations', description: 'Connect to other services.', href: '/integrations', icon: Plug },
     { title: 'Get Support', description: 'Raise a ticket for assistance.', href: '/support', icon: LifeBuoy },
