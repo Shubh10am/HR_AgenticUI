@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -17,13 +18,14 @@ import {
   Inbox,
   FileSignature,
   ListChecks, 
-  Users, // Added Users icon
-  Library, // Added Library icon
+  Users,
+  Library,
   LifeBuoy,
+  MessageCircle, // Added icon
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar'; 
-import { useAuth } from '@/contexts/auth-context'; // Import useAuth
+import { useAuth } from '@/contexts/auth-context';
 
 interface NavItem {
   href: string;
@@ -35,6 +37,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
+  { href: '/community', label: 'Community', icon: MessageCircle, tooltip: 'Community Hub' }, // Added Community link
   { href: '/email-assistance', label: 'Email Assistance', icon: MailPlus, tooltip: 'Email Assistance' },
   { href: '/gmail-inbox', label: 'Gmail Inbox', icon: Inbox, tooltip: 'Gmail Inbox' },
   { href: '/attendance-reporting', label: 'Attendance', icon: CalendarCheck, tooltip: 'Attendance & Reporting' },
@@ -43,7 +46,7 @@ const navItems: NavItem[] = [
   { href: '/smart-drafting', label: 'Smart Drafting', icon: FileSignature, tooltip: 'Smart Email Drafting' },
   { href: '/tasks', label: 'Tasks', icon: ListChecks, tooltip: 'Task Management' },
   { href: '/knowledge-base', label: 'Knowledge Base', icon: Library, tooltip: 'Knowledge Base' },
-  { href: '/manage-employees', label: 'Manage Employees', icon: Users, tooltip: 'Manage Employees', adminOnly: true }, // New Manage Employees link
+  { href: '/manage-employees', label: 'Manage Employees', icon: Users, tooltip: 'Manage Employees', adminOnly: true },
   { href: '/integrations', label: 'Integrations', icon: Plug, tooltip: 'Manage Integrations' },
   { href: '/support', label: 'Get Support', icon: LifeBuoy, tooltip: 'Get Support' },
 ];

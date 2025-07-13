@@ -12,7 +12,8 @@ import './../models/CompanyPolicy';
 import './../models/LeaveRequest';
 import './../models/SupportTicket';
 import './../models/TokenUsageLog';
-
+import './../models/Post'; // Added Post model
+import './../models/Comment'; // Added Comment model
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
