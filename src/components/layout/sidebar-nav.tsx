@@ -21,7 +21,8 @@ import {
   Users,
   Library,
   LifeBuoy,
-  MessageCircle, // Added icon
+  MessageCircle,
+  DollarSign, // Added icon
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar'; 
@@ -37,10 +38,11 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
-  { href: '/community', label: 'Community', icon: MessageCircle, tooltip: 'Community Hub' }, // Added Community link
+  { href: '/community', label: 'Community', icon: MessageCircle, tooltip: 'Community Hub' },
   { href: '/email-assistance', label: 'Email Assistance', icon: MailPlus, tooltip: 'Email Assistance' },
   { href: '/gmail-inbox', label: 'Gmail Inbox', icon: Inbox, tooltip: 'Gmail Inbox' },
   { href: '/attendance-reporting', label: 'Attendance', icon: CalendarCheck, tooltip: 'Attendance & Reporting' },
+  { href: '/payroll', label: 'Payroll', icon: DollarSign, tooltip: 'Payroll Management' },
   { href: '/unified-communications', label: 'Communications', icon: MessagesSquare, tooltip: 'Unified Communications' },
   { href: '/recruitment', label: 'Recruitment', icon: GitFork, tooltip: 'AI Recruitment' },
   { href: '/smart-drafting', label: 'Smart Drafting', icon: FileSignature, tooltip: 'Smart Email Drafting' },
