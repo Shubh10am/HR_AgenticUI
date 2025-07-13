@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  web:
+    # Build the Docker image using the Dockerfile in the current directory
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hr_streamline_ai_web
+    # Map port 3000 on the host to port 3000 in the container
+    ports:
+      - "3000:3000"
+    # Mount the source code for development (optional, useful for hot-reloading)
+    # For production, you would typically not mount the source code.
+    volumes:
+      - .:/app
+      # Exclude node_modules from being overwritten by the volume mount
+      - /app/node_modules
+      - /app/.next
+    # Load environment variables from a .env.local file
+    env_file:
+      - .env.local
+    # Ensure the container restarts if it crashes
+    restart: unless-stopped
