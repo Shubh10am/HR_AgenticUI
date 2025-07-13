@@ -52,6 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(403).json({ error: 'Forbidden: You do not have permission to create a post.' });
       }
       const { topic, subject, content } = req.body;
+      console.log(topic, subject, content)
       if (!topic || !subject || !content || !topic.trim() || !subject.trim() || !content.trim()) {
         return res.status(400).json({ error: 'Topic, subject, and content are required.' });
       }

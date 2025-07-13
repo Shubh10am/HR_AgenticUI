@@ -78,6 +78,7 @@ export default function CommunityPage() {
     if (!newPostTopic.trim() || !newPostSubject.trim() || !newPostContent.trim()) return;
     setIsSubmittingPost(true);
     try {
+      console.log(newPostContent, newPostSubject, newPostTopic);
       const response = await fetch('/api/community/posts', {
         method: 'POST',
         headers: {
