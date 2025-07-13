@@ -13,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 
 interface Author {
   _id: string;
@@ -29,6 +31,8 @@ interface Comment {
 interface Post {
   _id: string;
   author: Author;
+  topic: string;
+  subject: string;
   content: string;
   likes: string[]; // Array of employee IDs
   comments: Comment[];
@@ -39,6 +43,8 @@ export default function CommunityPage() {
   const { user, token } = useAuth();
   const { toast } = useToast();
   const [posts, setPosts] = useState<Post[]>([]);
+  const [newPostTopic, setNewPostTopic] = useState('');
+  const [newPostSubject, setNewPostSubject] = useState('');
   const [newPostContent, setNewPostContent] = useState('');
   const [isSubmittingPost, setIsSubmittingPost] = useState(false);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
@@ -69,7 +75,7 @@ export default function CommunityPage() {
 
   const handlePostSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!newPostContent.trim()) return;
+    if (!newPostTopic.trim() || !newPostSubject.trim() || !newPostContent.trim()) return;
     setIsSubmittingPost(true);
     try {
       const response = await fetch('/api/community/posts', {
@@ -78,12 +84,18 @@ export default function CommunityPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ content: newPostContent }),
+        body: JSON.stringify({ 
+          topic: newPostTopic,
+          subject: newPostSubject,
+          content: newPostContent 
+        }),
       });
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Failed to create post.');
       }
+      setNewPostTopic('');
+      setNewPostSubject('');
       setNewPostContent('');
       await fetchPosts(); // Refresh posts list
       toast({ title: 'Success', description: 'Your post has been published.' });
@@ -147,13 +159,44 @@ export default function CommunityPage() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handlePostSubmit} className="space-y-4">
-                  <Textarea
-                    placeholder={`What's on your mind, ${user?.name}?`}
-                    value={newPostContent}
-                    onChange={(e) => setNewPostContent(e.target.value)}
-                    className="min-h-[100px]"
-                    disabled={isSubmittingPost}
-                  />
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                     <div>
+                      <Label htmlFor="postTopic">Topic</Label>
+                      <Input
+                        id="postTopic"
+                        placeholder="e.g., Announcement"
+                        value={newPostTopic}
+                        onChange={(e) => setNewPostTopic(e.target.value)}
+                        className="mt-1"
+                        disabled={isSubmittingPost}
+                        required
+                      />
+                    </div>
+                     <div>
+                      <Label htmlFor="postSubject">Subject</Label>
+                      <Input
+                        id="postSubject"
+                        placeholder="e.g., Q3 All-Hands Meeting"
+                        value={newPostSubject}
+                        onChange={(e) => setNewPostSubject(e.target.value)}
+                        className="mt-1"
+                        disabled={isSubmittingPost}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="postContent">Post Content</Label>
+                    <Textarea
+                      id="postContent"
+                      placeholder={`What's on your mind, ${user?.name}?`}
+                      value={newPostContent}
+                      onChange={(e) => setNewPostContent(e.target.value)}
+                      className="mt-1 min-h-[100px]"
+                      disabled={isSubmittingPost}
+                      required
+                    />
+                  </div>
                   <div className="flex justify-between items-center">
                     <div className="flex gap-2">
                        <Button type="button" variant="ghost" size="icon" disabled>
@@ -191,9 +234,13 @@ export default function CommunityPage() {
                         </p>
                       </div>
                     </div>
+                     <div className="pt-4">
+                        <Badge variant="secondary">{post.topic}</Badge>
+                        <CardTitle className="text-xl mt-2">{post.subject}</CardTitle>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="whitespace-pre-wrap">{post.content}</p>
+                    <p className="whitespace-pre-wrap text-sm">{post.content}</p>
                   </CardContent>
                   <CardContent className="border-t pt-2 pb-2">
                      <div className="flex justify-between items-center text-xs text-muted-foreground">

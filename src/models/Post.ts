@@ -7,6 +7,8 @@ import './Comment'; // Ensure Comment model is registered for population
 export interface IPost extends Document {
   organizationId: mongoose.Types.ObjectId | IOrganization;
   author: mongoose.Types.ObjectId | IEmployee;
+  topic: string;
+  subject: string;
   content: string;
   likes: mongoose.Types.ObjectId[];
   comments: mongoose.Types.ObjectId[]; // This will now store references to Comment documents
@@ -26,6 +28,16 @@ const PostSchema: Schema<IPost> = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'Employee',
       required: true,
+    },
+    topic: {
+      type: String,
+      required: [true, 'Post topic is required.'],
+      trim: true,
+    },
+    subject: {
+      type: String,
+      required: [true, 'Post subject is required.'],
+      trim: true,
     },
     content: {
       type: String,

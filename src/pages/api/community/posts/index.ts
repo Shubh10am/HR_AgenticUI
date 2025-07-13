@@ -51,15 +51,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (role !== 'Admin' && role !== 'HR' && role !== 'Manager') {
         return res.status(403).json({ error: 'Forbidden: You do not have permission to create a post.' });
       }
-      const { content } = req.body;
-      if (!content || !content.trim()) {
-        return res.status(400).json({ error: 'Post content cannot be empty.' });
+      const { topic, subject, content } = req.body;
+      if (!topic || !subject || !content || !topic.trim() || !subject.trim() || !content.trim()) {
+        return res.status(400).json({ error: 'Topic, subject, and content are required.' });
       }
 
       try {
         const newPost = new Post({
           organizationId,
           author: employeeId,
+          topic,
+          subject,
           content,
         });
         await newPost.save();
