@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document, models, Model } from 'mongoose';
 import type { IEmployee } from './Employee';
 import type { IOrganization } from './Organization';
+import type { IAdmin } from './Admin'; // Import IAdmin
 
 export type TicketStatus = 'Open' | 'In Progress' | 'Closed' | 'Resolved';
 export type TicketPriority = 'Low' | 'Medium' | 'High';
@@ -12,7 +13,7 @@ export interface ISupportTicket extends Document {
   description: string;
   priority: TicketPriority;
   status: TicketStatus;
-  assignedTo?: mongoose.Types.ObjectId | IEmployee;
+  assignedTo?: mongoose.Types.ObjectId | IAdmin; // Changed to IAdmin
   resolution?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -54,7 +55,7 @@ const SupportTicketSchema: Schema<ISupportTicket> = new Schema(
     },
     assignedTo: {
       type: Schema.Types.ObjectId,
-      ref: 'Employee',
+      ref: 'Admin', // Changed ref to 'Admin'
     },
     resolution: {
       type: String,

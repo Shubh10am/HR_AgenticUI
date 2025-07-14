@@ -5,6 +5,7 @@ import SupportTicket, { type ISupportTicket } from '@/models/SupportTicket';
 import Employee, { type IEmployee } from '@/models/Employee';
 import Organization, { type IOrganization } from '@/models/Organization';
 import { verifyToken } from '@/lib/jwt';
+import Admin from '@/models/Admin'; // Ensure Admin model is registered
 
 interface PopulatedTicket extends Omit<ISupportTicket, 'submittedBy' | 'organizationId'> {
   submittedBy: IEmployee;
@@ -29,8 +30,8 @@ export default async function handler(
   const token = authHeader.split(' ')[1];
   const decodedToken = verifyToken(token);
 
-  if (!decodedToken || decodedToken.role !== 'SuperAdmin') {
-    return res.status(403).json({ error: 'Forbidden: Access restricted to SuperAdmins.' });
+  if (!decodedToken || (decodedToken.role !== 'SuperAdmin' && decodedToken.role !== 'Admin')) {
+    return res.status(403).json({ error: 'Forbidden: Access restricted to platform administrators.' });
   }
 
   try {
