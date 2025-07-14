@@ -1,43 +1,77 @@
+
 'use client';
 
+import { useState, useEffect } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle, Filter } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Filter, Loader2, AlertTriangle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/auth-context';
+import { useToast } from '@/hooks/use-toast';
+import { formatDistanceToNow } from 'date-fns';
 
-type TicketStatus = 'Open' | 'In Progress' | 'Closed';
+type TicketStatus = 'Open' | 'In Progress' | 'Closed' | 'Resolved';
 type TicketPriority = 'High' | 'Medium' | 'Low';
 
 interface SupportTicket {
-  id: string;
+  _id: string;
   subject: string;
-  customer: string;
-  organization: string;
+  customerName: string;
+  organizationName: string;
   status: TicketStatus;
   priority: TicketPriority;
-  lastUpdated: string;
+  updatedAt: string;
 }
 
-const mockTickets: SupportTicket[] = [
-  { id: 'TKT-001', subject: 'API Key not working', customer: 'Alice Johnson', organization: 'Innovate Inc.', status: 'Open', priority: 'High', lastUpdated: '2 hours ago' },
-  { id: 'TKT-002', subject: 'Billing question', customer: 'Bob Williams', organization: 'Data Corp', status: 'In Progress', priority: 'Medium', lastUpdated: '1 day ago' },
-  { id: 'TKT-003', subject: 'Feature request: Dark mode for dashboard', customer: 'Charlie Brown', organization: 'Creative LLC', status: 'Closed', priority: 'Low', lastUpdated: '3 days ago' },
-  { id: 'TKT-004', subject: 'Unable to add new user', customer: 'Diana Prince', organization: 'Solutions Co.', status: 'Open', priority: 'Medium', lastUpdated: '5 minutes ago' },
-  { id: 'TKT-005', subject: 'Integration with Slack failed', customer: 'Eve Adams', organization: 'Connectify', status: 'In Progress', priority: 'High', lastUpdated: 'Yesterday' },
-];
-
 export default function AdminSupportTicketsPage() {
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { token } = useAuth();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchTickets = async () => {
+      if (!token) {
+        setError("Authentication token not found.");
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch('/api/admin/support-tickets', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch tickets.');
+        }
+        setTickets(data);
+      } catch (e: any) {
+        setError(e.message);
+        toast({ title: "Error", description: e.message, variant: "destructive" });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTickets();
+  }, [token, toast]);
 
   const getStatusBadgeVariant = (status: TicketStatus) => {
     switch (status) {
       case 'Open': return 'destructive';
       case 'In Progress': return 'secondary';
-      case 'Closed': return 'default';
+      case 'Closed':
+      case 'Resolved':
+        return 'default';
       default: return 'outline';
     }
   };
@@ -104,57 +138,76 @@ export default function AdminSupportTicketsPage() {
         </CardHeader>
         <CardContent>
           <div className="rounded-md border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Ticket ID</TableHead>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Last Updated</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {mockTickets.map((ticket) => (
-                  <TableRow key={ticket.id}>
-                    <TableCell className="font-mono">{ticket.id}</TableCell>
-                    <TableCell className="font-medium">{ticket.subject}</TableCell>
-                    <TableCell>
-                        <div>
-                            <p>{ticket.customer}</p>
-                            <p className="text-xs text-muted-foreground">{ticket.organization}</p>
-                        </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusBadgeVariant(ticket.status)}>{ticket.status}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getPriorityBadgeVariant(ticket.priority)}>{ticket.priority}</Badge>
-                    </TableCell>
-                     <TableCell>{ticket.lastUpdated}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>View Ticket</DropdownMenuItem>
-                          <DropdownMenuItem>Assign to Agent</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem>Close Ticket</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="ml-2">Loading support tickets...</p>
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center h-64 bg-destructive/10 rounded-lg">
+                <AlertTriangle className="h-8 w-8 text-destructive" />
+                <p className="mt-2 text-destructive font-semibold">Failed to load tickets</p>
+                <p className="text-sm text-destructive/80">{error}</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Subject</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Last Updated</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {tickets.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center">
+                        No support tickets found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    tickets.map((ticket) => (
+                      <TableRow key={ticket._id}>
+                        <TableCell>
+                            <div>
+                                <p className="font-medium">{ticket.customerName}</p>
+                                <p className="text-xs text-muted-foreground">{ticket.organizationName}</p>
+                            </div>
+                        </TableCell>
+                        <TableCell className="font-medium max-w-xs truncate">{ticket.subject}</TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusBadgeVariant(ticket.status)}>{ticket.status}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getPriorityBadgeVariant(ticket.priority)}>{ticket.priority}</Badge>
+                        </TableCell>
+                        <TableCell>{formatDistanceToNow(new Date(ticket.updatedAt), { addSuffix: true })}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem>View Ticket</DropdownMenuItem>
+                              <DropdownMenuItem>Assign to Agent</DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem>Close Ticket</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </CardContent>
       </Card>
