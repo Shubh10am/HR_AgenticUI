@@ -35,7 +35,31 @@ export default async function handler(
   }
 
   try {
-    const tickets = await SupportTicket.find({})
+    const { search, status, priority } = req.query;
+    const filter: any = {};
+
+    if (search && typeof search === 'string') {
+      const searchRegex = { $regex: search, $options: 'i' };
+      
+      const matchingEmployees = await Employee.find({ name: searchRegex }).select('_id');
+      const employeeIds = matchingEmployees.map(e => e._id);
+      
+      filter.$or = [
+        { subject: searchRegex },
+        { submittedBy: { $in: employeeIds } },
+      ];
+    }
+
+    if (status && typeof status === 'string' && status !== 'all') {
+      filter.status = status;
+    }
+
+    if (priority && typeof priority === 'string' && priority !== 'all') {
+      filter.priority = priority;
+    }
+
+
+    const tickets = await SupportTicket.find(filter)
       .sort({ updatedAt: -1 })
       .populate<{ submittedBy: IEmployee }>({
         path: 'submittedBy',

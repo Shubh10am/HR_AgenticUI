@@ -1,13 +1,13 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, type FormEvent } from 'react';
+import { useState, useEffect, useCallback, type FormEvent, useMemo } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle, Filter, Loader2, AlertTriangle, MessageSquare, User, Building, Calendar, Edit, X } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Filter, Loader2, AlertTriangle, MessageSquare, User, Building, Calendar, Edit, X, Search as SearchIcon } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -60,6 +60,11 @@ export default function AdminSupportTicketsPage() {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [assignedAdminId, setAssignedAdminId] = useState<string | undefined>('');
   const [isUpdating, setIsUpdating] = useState(false);
+  
+  // State for filters
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
 
   const { token } = useAuth();
   const { toast } = useToast();
@@ -68,8 +73,14 @@ export default function AdminSupportTicketsPage() {
     if (!token) return;
     setIsLoading(true);
     setError(null);
+
+    const params = new URLSearchParams();
+    if (searchQuery) params.append('search', searchQuery);
+    if (statusFilter !== 'all') params.append('status', statusFilter);
+    if (priorityFilter !== 'all') params.append('priority', priorityFilter);
+
     try {
-      const response = await fetch('/api/admin/support-tickets', {
+      const response = await fetch(`/api/admin/support-tickets?${params.toString()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -81,11 +92,25 @@ export default function AdminSupportTicketsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [token, toast]);
+  }, [token, toast, searchQuery, statusFilter, priorityFilter]);
 
   useEffect(() => {
     fetchTickets();
-  }, [fetchTickets]);
+  }, []); // Initial fetch without filters
+
+  const handleApplyFilters = () => {
+    fetchTickets();
+  };
+  
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setPriorityFilter('all');
+    // We need to fetch again after clearing. A useEffect will handle this if fetchTickets is its dependency.
+    // Let's call it manually for clarity
+    setTimeout(fetchTickets, 0); // Use timeout to allow state to update before fetching
+  };
+
 
   const handleOpenViewDialog = async (ticketId: string) => {
     setIsLoading(true);
@@ -114,7 +139,7 @@ export default function AdminSupportTicketsPage() {
         if (!ticketRes.ok || !adminsRes.ok) throw new Error('Failed to load data for assignment.');
         
         const ticketData: TicketDetails = await ticketRes.json();
-        const adminData: AdminUser[] = await adminsRes.json();
+        const adminData: AdminUser[] = (await adminsRes.json()).filter((u:any) => u.role === 'SuperAdmin' || u.role === 'Admin');
 
         setSelectedTicket(ticketData);
         setAdmins(adminData);
@@ -194,31 +219,49 @@ export default function AdminSupportTicketsPage() {
        <Card className="shadow-lg mb-6">
         <CardHeader>
           <CardTitle>Filters</CardTitle>
-          <CardDescription>Refine the list of support tickets. (Mock)</CardDescription>
+          <CardDescription>Refine the list of support tickets.</CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Input placeholder="Search by subject or customer..." />
-            <Select defaultValue="all">
-              <SelectTrigger><SelectValue placeholder="Filter by status" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="open">Open</SelectItem>
-                <SelectItem value="in-progress">In Progress</SelectItem>
-                <SelectItem value="closed">Closed</SelectItem>
-              </SelectContent>
-            </Select>
-             <Select defaultValue="all">
-              <SelectTrigger><SelectValue placeholder="Filter by priority" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Priorities</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button>
-                <Filter className="mr-2 h-4 w-4" /> Apply Filters
-            </Button>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+             <div className="lg:col-span-2">
+                <Label htmlFor="searchQuery">Search by Subject/Customer</Label>
+                <div className="relative mt-1">
+                    <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input id="searchQuery" placeholder="Search..." className="pl-9" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                </div>
+            </div>
+            <div>
+              <Label htmlFor="statusFilter">Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger id="statusFilter" className="mt-1"><SelectValue placeholder="Filter by status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="Open">Open</SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
+                  <SelectItem value="Closed">Closed</SelectItem>
+                  <SelectItem value="Resolved">Resolved</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+                <Label htmlFor="priorityFilter">Priority</Label>
+                <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger id="priorityFilter" className="mt-1"><SelectValue placeholder="Filter by priority" /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">All Priorities</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="Low">Low</SelectItem>
+                </SelectContent>
+                </Select>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleApplyFilters} className="w-full">
+                  <Filter className="mr-2 h-4 w-4" /> Apply
+              </Button>
+               <Button onClick={handleClearFilters} variant="outline" className="w-full">
+                  <X className="mr-2 h-4 w-4" /> Clear
+              </Button>
+            </div>
         </CardContent>
       </Card>
 
@@ -256,7 +299,7 @@ export default function AdminSupportTicketsPage() {
                   {tickets.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="h-24 text-center">
-                        No support tickets found.
+                        No support tickets found matching your criteria.
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -380,4 +423,3 @@ export default function AdminSupportTicketsPage() {
 
     </>
   );
-}
