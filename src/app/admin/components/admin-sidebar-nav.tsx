@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
-import { LayoutDashboard, Users, BarChart2, Settings, Shield, Briefcase, FileText, Server, LifeBuoy, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart2, Settings, Shield, Briefcase, FileText, Server, LifeBuoy, MessageSquare, Handshake } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 
@@ -20,6 +20,7 @@ const navItems: NavItem[] = [
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart2, tooltip: 'View Analytics' },
   { href: '/admin/users', label: 'User Management', icon: Users, tooltip: 'Manage Users' },
   { href: '/admin/organizations', label: 'Organizations', icon: Briefcase, tooltip: 'Manage Organizations' },
+  { href: '/admin/customer-inquiries', label: 'Customer Inquiries', icon: Handshake, tooltip: 'View Customer Inquiries' },
   { href: '/admin/community-posts', label: 'Community Posts', icon: MessageSquare, tooltip: 'Manage Community Posts' },
   { href: '/admin/support-tickets', label: 'Support', icon: LifeBuoy, tooltip: 'Support Tickets' },
   { href: '/admin/content-management', label: 'Content', icon: FileText, tooltip: 'Content Management' },

@@ -31,17 +31,23 @@ export default function BookDemoPage() {
     await loginAsGuest();
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
 
-    // Mock submission
-    console.log('Demo request submitted:', { name, companyName, email, companySize, message });
+    try {
+      const response = await fetch('/api/demo-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, companyName, email, companySize, message }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit demo request.');
+      }
 
-    setTimeout(() => {
-      setIsSubmitting(false);
       toast({
-        title: 'Demo Request Sent (Mock)',
+        title: 'Demo Request Sent!',
         description: 'Thank you for your interest! Our team will reach out shortly to schedule your demo.',
       });
       // Clear form
@@ -50,7 +56,15 @@ export default function BookDemoPage() {
       setEmail('');
       setCompanySize('');
       setMessage('');
-    }, 1000);
+    } catch (error: any) {
+      toast({
+        title: 'Submission Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -217,6 +231,7 @@ export default function BookDemoPage() {
         <footer className="border-t border-border bg-background text-foreground">
           <div className="container mx-auto px-4 sm:px-6 py-16">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+              {/* Column 1: Branding & Features */}
               <div className="col-span-2 lg:col-span-2">
                 <Link href="/" className="flex items-center gap-2 mb-4">
                   <Logo className="h-8 w-8 text-primary" />
@@ -229,6 +244,8 @@ export default function BookDemoPage() {
                   <li><Link href="/unified-communications" className="text-muted-foreground hover:text-foreground">For Communication</Link></li>
                 </ul>
               </div>
+
+              {/* Column 2: Integrations */}
               <div>
                 <h3 className="font-semibold text-foreground mb-4">Integrations</h3>
                 <ul className="space-y-2">
@@ -238,6 +255,8 @@ export default function BookDemoPage() {
                   <li><Link href="/integrations" className="text-muted-foreground hover:text-foreground">GitHub</Link></li>
                 </ul>
               </div>
+
+              {/* Column 3: Company */}
               <div>
                 <h3 className="font-semibold text-foreground mb-4">Company</h3>
                 <ul className="space-y-2">
@@ -246,6 +265,8 @@ export default function BookDemoPage() {
                   <li><Link href="/docs" className="text-muted-foreground hover:text-foreground">Docs</Link></li>
                 </ul>
               </div>
+
+              {/* Column 4: Legal */}
               <div>
                 <h3 className="font-semibold text-foreground mb-4">Legal</h3>
                 <ul className="space-y-2">

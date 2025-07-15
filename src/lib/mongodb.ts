@@ -14,6 +14,8 @@ import './../models/SupportTicket';
 import './../models/TokenUsageLog';
 import './../models/Post';
 import './../models/Comment';
+import './../models/ContactSubmission';
+import './../models/DemoRequest';
 
 
 const MONGODB_URI = process.env.MONGODB_URI;

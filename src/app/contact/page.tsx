@@ -29,25 +29,41 @@ export default function ContactPage() {
     await loginAsGuest();
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
 
-    // Mock submission
-    console.log('Contact form submitted:', { name, email, subject, message });
+    try {
+      const response = await fetch('/api/contact-submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, subject, message }),
+      });
 
-    setTimeout(() => {
-      setIsSubmitting(false);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Something went wrong.');
+      }
+
       toast({
-        title: 'Message Sent (Mock)',
-        description: 'Thank you for contacting us! We will get back to you shortly.',
+        title: 'Message Sent!',
+        description: 'Thank you for contacting us. We will get back to you shortly.',
       });
       // Clear form
       setName('');
       setEmail('');
       setSubject('');
       setMessage('');
-    }, 1000);
+    } catch (error: any) {
+      toast({
+        title: 'Submission Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
