@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, Users, Mail, Phone, MapPin, Send, Loader2, Hash, Linkedin, X, Instagram, Youtube } from 'lucide-react';
+import { Calendar, Users, Mail, Phone, Send, Loader2, Hash, Linkedin, X, Instagram, Youtube } from 'lucide-react';
 import Link from 'next/link';
 import Logo from '@/components/icons/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -20,6 +20,7 @@ export default function BookDemoPage() {
   const [name, setName] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [companySize, setCompanySize] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,7 +40,7 @@ export default function BookDemoPage() {
       const response = await fetch('/api/demo-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, companyName, email, companySize, message }),
+        body: JSON.stringify({ name, companyName, email, phone, companySize, message }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -54,6 +55,7 @@ export default function BookDemoPage() {
       setName('');
       setCompanyName('');
       setEmail('');
+      setPhone('');
       setCompanySize('');
       setMessage('');
     } catch (error: any) {
@@ -131,18 +133,32 @@ export default function BookDemoPage() {
                               />
                           </div>
                       </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="email">Work Email</Label>
-                          <Input
-                              id="email"
-                              type="email"
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              placeholder="you@company.com"
-                              required
-                              disabled={isSubmitting}
-                              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
-                          />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                              <Label htmlFor="email">Work Email</Label>
+                              <Input
+                                  id="email"
+                                  type="email"
+                                  value={email}
+                                  onChange={(e) => setEmail(e.target.value)}
+                                  placeholder="you@company.com"
+                                  required
+                                  disabled={isSubmitting}
+                                  className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                              />
+                          </div>
+                           <div className="space-y-2">
+                              <Label htmlFor="phone">Phone Number (Optional)</Label>
+                              <Input
+                                  id="phone"
+                                  type="tel"
+                                  value={phone}
+                                  onChange={(e) => setPhone(e.target.value)}
+                                  placeholder="+1 (555) 123-4567"
+                                  disabled={isSubmitting}
+                                  className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                              />
+                          </div>
                       </div>
                        <div className="space-y-2">
                           <Label htmlFor="companySize">Company Size</Label>

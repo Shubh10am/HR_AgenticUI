@@ -18,6 +18,7 @@ export default function ContactPage() {
   const { toast } = useToast();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,7 +38,7 @@ export default function ContactPage() {
       const response = await fetch('/api/contact-submissions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, subject, message }),
+        body: JSON.stringify({ name, email, phone, subject, message }),
       });
 
       const data = await response.json();
@@ -53,6 +54,7 @@ export default function ContactPage() {
       // Clear form
       setName('');
       setEmail('');
+      setPhone('');
       setSubject('');
       setMessage('');
     } catch (error: any) {
@@ -117,7 +119,20 @@ export default function ContactPage() {
                           className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                           />
                       </div>
-                      <div className="space-y-2">
+                       <div className="space-y-2">
+                          <Label htmlFor="phone">Phone Number (Optional)</Label>
+                          <Input
+                          id="phone"
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="+1 (555) 123-4567"
+                          disabled={isSubmitting}
+                          className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                          />
+                      </div>
+                      </div>
+                       <div className="space-y-2">
                           <Label htmlFor="email">Email Address</Label>
                           <Input
                           id="email"
@@ -129,7 +144,6 @@ export default function ContactPage() {
                           disabled={isSubmitting}
                           className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                           />
-                      </div>
                       </div>
                       <div className="space-y-2">
                       <Label htmlFor="subject">Subject</Label>

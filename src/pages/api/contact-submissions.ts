@@ -12,15 +12,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   await dbConnect();
 
   try {
-    const { name, email, subject, message } = req.body;
+    const { name, email, phone, subject, message } = req.body;
 
     if (!name || !email || !subject || !message) {
-      return res.status(400).json({ error: 'All fields are required.' });
+      return res.status(400).json({ error: 'Name, email, subject, and message are required fields.' });
     }
 
     const newSubmission = new ContactSubmission({
       name,
       email,
+      phone: phone || '',
       subject,
       message,
     });

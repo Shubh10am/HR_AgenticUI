@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   await dbConnect();
 
   try {
-    const { name, companyName, email, companySize, message } = req.body;
+    const { name, companyName, email, phone, companySize, message } = req.body;
 
     if (!name || !companyName || !email || !companySize) {
       return res.status(400).json({ error: 'Name, company name, email, and company size are required.' });
@@ -22,6 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       name,
       companyName,
       email,
+      phone: phone || '',
       companySize,
       message: message || '',
     });

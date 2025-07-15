@@ -5,6 +5,7 @@ export interface IDemoRequest extends Document {
   name: string;
   companyName: string;
   email: string;
+  phone?: string;
   companySize: string;
   message?: string;
 }
@@ -26,6 +27,10 @@ const DemoRequestSchema: Schema<IDemoRequest> = new Schema(
       required: [true, 'Email is required.'],
       trim: true,
       lowercase: true,
+    },
+    phone: {
+      type: String,
+      trim: true,
     },
     companySize: {
       type: String,
