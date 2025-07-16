@@ -2,23 +2,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
 import Post from '@/models/Post';
-import { verifyToken } from '@/lib/jwt';
+import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
 import Employee from '@/models/Employee';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  await dbConnect();
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Authorization token required' });
-  }
-  const token = authHeader.split(' ')[1];
-  const decodedToken = verifyToken(token);
-
-  if (!decodedToken) {
-    return res.status(401).json({ error: 'Invalid or expired token' });
-  }
-
-  const { employeeId, organizationId, role } = decodedToken;
+async function handler(req: NextApiRequestWithAuth, res: NextApiResponse) {
+  const { id: employeeId, organizationId, role } = req.user;
 
   switch (req.method) {
     case 'GET':
@@ -67,7 +55,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
         await newPost.save();
         
-        // Populate the author details for the response
         const populatedPost = await Post.findById(newPost._id)
             .populate({ path: 'author', select: 'name', model: Employee })
             .populate({
@@ -87,3 +74,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+
+export default withAuth(handler);

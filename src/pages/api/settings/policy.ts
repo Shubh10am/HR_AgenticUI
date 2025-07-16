@@ -1,8 +1,8 @@
 
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
 import CompanyPolicy, { type PolicyType } from '@/models/CompanyPolicy';
-import { verifyToken } from '@/lib/jwt';
+import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
 
 const defaultPolicies: Record<PolicyType, string> = {
     attendance: `Working Hours: Standard working hours are 9:00 AM to 5:30 PM, Monday to Friday.
@@ -14,24 +14,11 @@ This is a summary. Please refer to the employee handbook for the complete attend
     codeOfConduct: `This is the default code of conduct. Please update it.`,
 };
 
-export default async function handler(
-  req: NextApiRequest,
+async function handler(
+  req: NextApiRequestWithAuth,
   res: NextApiResponse
 ) {
-  await dbConnect();
-
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Authorization token required' });
-  }
-  const token = authHeader.split(' ')[1];
-  const decodedToken = verifyToken(token);
-
-  if (!decodedToken) {
-    return res.status(401).json({ error: 'Invalid or expired token' });
-  }
-
-  const { organizationId, role, employeeId } = decodedToken;
+  const { organizationId, id: employeeId } = req.user;
 
   if (req.method === 'GET') {
     const { type } = req.query;
@@ -45,18 +32,15 @@ export default async function handler(
       if (policy) {
         return res.status(200).json({ content: policy.content });
       } else {
-        // Return default policy if none is found
         return res.status(200).json({ content: defaultPolicies[policyType] });
       }
     } catch (error) {
       console.error('Error fetching policy:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
-  } else if (req.method === 'PUT') {
-    if (role !== 'Admin' && role !== 'HR') {
-      return res.status(403).json({ error: 'Forbidden: Only Admins or HR can update policies.' });
-    }
-    
+  } 
+  
+  if (req.method === 'PUT') {
     const { policyType, content } = req.body;
     if (!policyType || !content || typeof policyType !== 'string' || !['attendance', 'leave', 'codeOfConduct'].includes(policyType)) {
       return res.status(400).json({ error: 'Policy type and content are required.' });
@@ -73,8 +57,19 @@ export default async function handler(
       console.error('Error updating policy:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
-  } else {
-    res.setHeader('Allow', ['GET', 'PUT']);
-    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
-  }
+  } 
+  
+  res.setHeader('Allow', ['GET', 'PUT']);
+  return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
 }
+
+// Any authenticated user can GET, but only Admin/HR can PUT
+export default withAuth((req, res) => {
+    if (req.method === 'PUT') {
+        const { role } = (req as NextApiRequestWithAuth).user;
+        if (role !== 'Admin' && role !== 'HR') {
+            return res.status(403).json({ error: 'Forbidden: Only Admins or HR can update policies.' });
+        }
+    }
+    return handler(req as NextApiRequestWithAuth, res);
+});

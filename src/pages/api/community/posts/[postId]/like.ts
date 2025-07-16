@@ -1,29 +1,13 @@
 
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
 import Post from '@/models/Post';
-import { verifyToken } from '@/lib/jwt';
+import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
 import mongoose from 'mongoose';
 import Employee from '@/models/Employee';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
-
-  await dbConnect();
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Authorization token required' });
-  }
-  const token = authHeader.split(' ')[1];
-  const decodedToken = verifyToken(token);
-
-  if (!decodedToken) {
-    return res.status(401).json({ error: 'Invalid or expired token' });
-  }
-
-  const { employeeId } = decodedToken;
+async function handler(req: NextApiRequestWithAuth, res: NextApiResponse) {
+  const { id: employeeId } = req.user;
   const { postId } = req.query;
 
   if (!postId || typeof postId !== 'string' || !mongoose.Types.ObjectId.isValid(postId)) {
@@ -36,14 +20,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'Post not found.' });
     }
 
+    // Optional: Check if the user belongs to the same organization as the post
+    if (post.organizationId.toString() !== req.user.organizationId) {
+        return res.status(403).json({ error: 'Forbidden: You cannot like posts outside your organization.' });
+    }
+
     const userId = new mongoose.Types.ObjectId(employeeId);
     const likeIndex = post.likes.findIndex(id => id.equals(userId));
 
     if (likeIndex > -1) {
-      // User has already liked, so unlike
       post.likes.splice(likeIndex, 1);
     } else {
-      // User has not liked, so like
       post.likes.push(userId);
     }
 
@@ -63,3 +50,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
+export default withAuth(handler);

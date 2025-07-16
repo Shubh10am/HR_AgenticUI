@@ -2,42 +2,22 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
 import Employee, { type EmployeeRole, type IEmployee } from '@/models/Employee';
-import Organization, { type IOrganization } from '@/models/Organization';
+import Organization from '@/models/Organization';
 import bcrypt from 'bcryptjs';
-import { verifyToken, type JwtPayload } from '@/lib/jwt';
+import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
 
-// Helper to exclude passwordHash from employee object
-// Ensure this utility is accurate and secure.
 const sanitizeEmployee = (employee: IEmployee) => {
   const { passwordHash, ...sanitized } = employee.toObject ? employee.toObject() : employee;
   return sanitized;
 };
 
-
-export default async function handler(
-  req: NextApiRequest,
+async function handler(
+  req: NextApiRequestWithAuth,
   res: NextApiResponse
 ) {
-  await dbConnect();
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Authorization token required' });
-  }
-  const token = authHeader.split(' ')[1];
-  const decodedToken = verifyToken(token);
-
-  if (!decodedToken) {
-    return res.status(401).json({ error: 'Invalid or expired token' });
-  }
-
-  const { employeeId: currentUserId, organizationId: currentUserOrgId, role: currentUserRole } = decodedToken;
+  const { organizationId: currentUserOrgId } = req.user;
 
   if (req.method === 'GET') {
-    // Allow Admin or HR to view employees of their organization
-    if (currentUserRole !== 'Admin' && currentUserRole !== 'HR') {
-        return res.status(403).json({ error: 'Forbidden: Insufficient permissions to view employees.' });
-    }
     try {
       const employees = await Employee.find({ organizationId: currentUserOrgId }).select('-passwordHash');
       return res.status(200).json(employees.map(emp => sanitizeEmployee(emp as IEmployee)));
@@ -45,12 +25,9 @@ export default async function handler(
       console.error('Error fetching employees:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
-  } else if (req.method === 'POST') {
-    // Only Admins can create new employees
-    if (currentUserRole !== 'Admin') {
-      return res.status(403).json({ error: 'Forbidden: Only Admins can register new employees.' });
-    }
-
+  } 
+  
+  if (req.method === 'POST') {
     const { name, email, password, role, department } = req.body;
 
     if (!name || !email || !password || !role) {
@@ -60,7 +37,6 @@ export default async function handler(
     if (typeof role !== 'string' || !role.trim()) {
         return res.status(400).json({ error: 'Role must be a non-empty string.' });
     }
-
 
     try {
       const organization = await Organization.findById(currentUserOrgId);
@@ -98,8 +74,10 @@ export default async function handler(
       }
       return res.status(500).json({ error: 'Internal Server Error' });
     }
-  } else {
-    res.setHeader('Allow', ['GET', 'POST']);
-    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
-  }
+  } 
+  
+  res.setHeader('Allow', ['GET', 'POST']);
+  return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
 }
+
+export default withAuth(handler, 'Admin');

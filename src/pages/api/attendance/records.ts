@@ -1,9 +1,9 @@
 
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
 import AttendanceRecord, { type IAttendanceRecord } from '@/models/AttendanceRecord';
-import Employee, { type IEmployee } from '@/models/Employee'; // Ensure Employee is imported
-import { verifyToken, type JwtPayload } from '@/lib/jwt';
+import Employee, { type IEmployee } from '@/models/Employee';
+import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
 import { format } from 'date-fns';
 
 interface PopulatedAttendanceRecord extends Omit<IAttendanceRecord, 'employeeId'> {
@@ -23,28 +23,11 @@ export interface TransformedAttendanceRecord {
   notes?: string;
 }
 
-export default async function handler(
-  req: NextApiRequest,
+async function handler(
+  req: NextApiRequestWithAuth,
   res: NextApiResponse<TransformedAttendanceRecord[] | { error: string }>
 ) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
-
-  await dbConnect();
-
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Authorization token required' });
-  }
-  const token = authHeader.split(' ')[1];
-  const decodedToken = verifyToken(token);
-
-  if (!decodedToken) {
-    return res.status(401).json({ error: 'Invalid or expired token' });
-  }
-
-  const { employeeId: currentUserId, organizationId, role } = decodedToken;
+  const { id: currentUserId, organizationId, role } = req.user;
 
   try {
     let query: any = {};
@@ -53,20 +36,14 @@ export default async function handler(
     } else {
       query.employeeId = currentUserId;
     }
-
-    // Add date range filtering if provided (optional for now, can be added later)
-    // const { startDate, endDate } = req.query;
-    // if (startDate && endDate) {
-    //   query.date = { $gte: new Date(startDate as string), $lte: new Date(endDate as string) };
-    // }
     
     const records: PopulatedAttendanceRecord[] = await AttendanceRecord.find(query)
       .populate<{ employeeId: IEmployee }>({
         path: 'employeeId',
-        model: Employee, // Explicitly providing model can also help
-        select: 'name department', // Select name and department from Employee
+        model: Employee,
+        select: 'name department',
       })
-      .sort({ date: -1, clockInTime: -1 }) // Sort by date desc, then clockInTime desc
+      .sort({ date: -1, clockInTime: -1 })
       .lean();
 
     const transformedRecords: TransformedAttendanceRecord[] = records.map(record => {
@@ -77,14 +54,12 @@ export default async function handler(
         hoursWorkedDisplay = `${hours}h ${minutes}m`;
       }
       
-      // Basic status from record, can be enhanced
       let displayStatus: TransformedAttendanceRecord['status'] = 'Unknown';
       if (record.clockInTime && record.clockOutTime) {
         displayStatus = record.status || 'Present';
       } else if (record.clockInTime) {
-        displayStatus = record.status || 'Present'; // Still clocked in
+        displayStatus = record.status || 'Present';
       }
-
 
       return {
         id: record._id.toString(),
@@ -106,3 +81,5 @@ export default async function handler(
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
+export default withAuth(handler); // Open to any authenticated user

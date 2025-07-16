@@ -1,39 +1,20 @@
 
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
 import Employee, { IEmployee } from '@/models/Employee';
-import { verifyToken, type JwtPayload } from '@/lib/jwt';
+import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
 import mongoose from 'mongoose';
 
-// Sanitize employee object to remove passwordHash
 const sanitizeEmployee = (employee: IEmployee) => {
   const { passwordHash, ...sanitized } = employee.toObject();
   return sanitized;
 };
 
-export default async function handler(
-  req: NextApiRequest,
+async function handler(
+  req: NextApiRequestWithAuth,
   res: NextApiResponse
 ) {
-  if (req.method !== 'PUT') {
-    res.setHeader('Allow', ['PUT']);
-    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
-  }
-
-  await dbConnect();
-
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Authorization token required' });
-  }
-  const token = authHeader.split(' ')[1];
-  const decodedToken = verifyToken(token);
-
-  if (!decodedToken) {
-    return res.status(401).json({ error: 'Invalid or expired token' });
-  }
-
-  const { employeeId } = decodedToken;
+  const { id: employeeId } = req.user;
   const { name } = req.body;
 
   if (!name || typeof name !== 'string' || !name.trim()) {
@@ -49,7 +30,6 @@ export default async function handler(
     employeeToUpdate.name = name.trim();
     await employeeToUpdate.save();
 
-    // After saving, re-create the user object that matches the one in AuthContext
     const updatedUser = {
         id: employeeToUpdate._id.toString(),
         name: employeeToUpdate.name,
@@ -64,3 +44,5 @@ export default async function handler(
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
+export default withAuth(handler);

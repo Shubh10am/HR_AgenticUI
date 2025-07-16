@@ -1,7 +1,8 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+
+import type { NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
 import TokenUsageLog from '@/models/TokenUsageLog';
-import { verifyToken } from '@/lib/jwt';
+import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
 import { startOfMonth, endOfMonth, formatISO } from 'date-fns';
 import mongoose from 'mongoose';
 
@@ -16,28 +17,11 @@ type UsageResponse = {
 
 const MOCK_TOKEN_LIMIT = 500000;
 
-export default async function handler(
-  req: NextApiRequest,
+async function handler(
+  req: NextApiRequestWithAuth,
   res: NextApiResponse<UsageResponse | { error: string }>
 ) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
-
-  await dbConnect();
-
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Authorization token required' });
-  }
-  const token = authHeader.split(' ')[1];
-  const decodedToken = verifyToken(token);
-
-  if (!decodedToken) {
-    return res.status(401).json({ error: 'Invalid or expired token' });
-  }
-
-  const { organizationId } = decodedToken;
+  const { organizationId } = req.user;
 
   try {
     const now = new Date();
@@ -47,7 +31,7 @@ export default async function handler(
     const result = await TokenUsageLog.aggregate([
       {
         $match: {
-          organizationId: new mongoose.Types.ObjectId(organizationId),
+          organizationId: new mongoose.Types.ObjectId(organizationId as string), // Cast to prevent TS error
           createdAt: {
             $gte: cycleStartDate,
             $lte: cycleEndDate,
@@ -75,3 +59,5 @@ export default async function handler(
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
+export default withAuth(handler);
