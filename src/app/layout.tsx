@@ -8,11 +8,11 @@ import { ThemeProvider } from '@/components/theme-provider';
 
 const siteConfig = {
   name: 'HR Streamline AI',
-  url: 'https://hrstreamline.ai', // Replace with your actual domain
-  description: 'HR Streamline AI: The leading Agentic HR platform for email automation, recruitment automation, attendance tracking, and more. Streamline your HR operations with the power of AI.',
-  ogImage: 'https://hrstreamline.ai/og-image.png', // Replace with a link to your open graph image
+  url: 'https://agentic-hr.in',
+  description: 'HR Streamline AI: The leading Agentic HR platform for email automation, recruitment automation, attendance tracking, and more. Streamline your HR operations with the power of AI Agents.',
+  ogImage: '	https://www.agentic-hr.in/_next/image?url=%2Fimages%2Frecruitment.jpg&w=1200&q=75',
   links: {
-    twitter: 'https://twitter.com/your-company', // Replace with your Twitter handle
+    linkedin: 'https://www.linkedin.com/company/agentic-hr',
   },
   keywords: [
     'Agentic HR',
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     title: siteConfig.name,
     description: siteConfig.description,
     images: [siteConfig.ogImage],
-    creator: '@your-company', // Replace with your Twitter handle
+    creator: '@agentic-hr', // Replace with your Twitter handle
   },
   
   // Icons
