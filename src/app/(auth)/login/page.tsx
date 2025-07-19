@@ -11,6 +11,16 @@ import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import Logo from '@/components/icons/logo';
 import { Separator } from '@/components/ui/separator';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Login | HR Streamline AI',
+  description: 'Log in to your HR Streamline AI account.',
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 export default function LoginPage() {
   const [email, setEmail] = useState(''); 
