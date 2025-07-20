@@ -4,6 +4,8 @@ import dbConnect from '@/lib/mongodb';
 import Employee, { EmployeeRole, IEmployee } from '@/models/Employee';
 import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
 import mongoose from 'mongoose';
+import Organization from '@/models/Organization';
+import AttendanceRecord from '@/models/AttendanceRecord';
 
 
 const sanitizeEmployee = (employee: IEmployee) => {
@@ -22,6 +24,39 @@ async function handler(
   }
   
   const { id: currentUserId, organizationId: currentUserOrgId } = req.user;
+
+  if (req.method === 'GET') {
+    try {
+      const employee = await Employee.findById(id).populate('organizationId', 'name status');
+      if (!employee) {
+        return res.status(404).json({ error: 'Employee not found.' });
+      }
+
+      if (employee.organizationId._id.toString() !== currentUserOrgId) {
+        return res.status(403).json({ error: 'Forbidden: Employee does not belong to your organization.' });
+      }
+      
+      const attendanceRecords = await AttendanceRecord.find({ employeeId: id }).sort({ date: -1 });
+
+      const response = {
+        employee: {
+          ...sanitizeEmployee(employee),
+          organization: employee.organizationId
+        },
+        attendance: attendanceRecords.map(r => ({
+          date: r.date.toISOString(),
+          status: r.status || 'Present',
+          hoursWorked: r.hoursWorked || 0
+        })),
+      };
+
+      return res.status(200).json(response);
+
+    } catch(error) {
+       console.error('Error fetching employee details:', error);
+       return res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
 
   if (req.method === 'DELETE') {
     if (currentUserId === id) {
@@ -80,7 +115,7 @@ async function handler(
     }
   }
   
-  res.setHeader('Allow', ['DELETE', 'PUT']);
+  res.setHeader('Allow', ['GET', 'DELETE', 'PUT']);
   return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
 }
 

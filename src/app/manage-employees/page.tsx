@@ -28,6 +28,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Papa from 'papaparse';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useRouter } from 'next/navigation';
 
 
 interface ClientEmployee {
@@ -44,6 +45,7 @@ interface ClientEmployee {
 export default function ManageEmployeesPage() {
   const { toast } = useToast();
   const { user: adminUser, token, isLoading: authLoading } = useAuth();
+  const router = useRouter();
 
   const [employeeName, setEmployeeName] = useState('');
   const [employeeEmail, setEmployeeEmail] = useState('');
@@ -586,7 +588,11 @@ export default function ManageEmployeesPage() {
                   </TableHeader>
                   <TableBody>
                     {currentEmployees.map((employee) => (
-                      <TableRow key={employee._id}>
+                      <TableRow 
+                        key={employee._id}
+                        onClick={() => router.push(`/manage-employees/${employee._id}`)}
+                        className="cursor-pointer"
+                      >
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
                             <Avatar className="h-8 w-8">
@@ -603,7 +609,7 @@ export default function ManageEmployeesPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>{employee.department || 'N/A'}</TableCell>
-                        <TableCell className="text-right space-x-1">
+                        <TableCell className="text-right space-x-1" onClick={(e) => e.stopPropagation()}>
                           <Button variant="ghost" size="icon" className="h-8 w-8"
                             onClick={() => {
                               setEmployeeToEdit(employee);
