@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, parse, isAfter, isBefore, isEqual, startOfDay, startOfMonth, startOfWeek, endOfWeek, endOfMonth } from 'date-fns';
+import { format, parse, isAfter, isBefore, isEqual, startOfDay, startOfMonth, startOfWeek, endOfWeek, endOfMonth, isSameMonth } from 'date-fns';
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput } from '@/ai/flows/draft-email-response';
 import { useAuth } from '@/contexts/auth-context';
 import type { TransformedAttendanceRecord } from '@/pages/api/attendance/records';
@@ -233,6 +233,34 @@ export default function AttendanceReportingPage() {
     
     return filteredData;
   }, [allFetchedAttendanceRecords, isGuest, canAdminister, filterEmployeeName, filterStartDate, filterEndDate, employeeTimeFilter]);
+  
+  const monthlyStats = useMemo(() => {
+    if (isGuest || !user) {
+      return { present: 0, late: 0, absent: 0, onLeave: 0 };
+    }
+    
+    const now = new Date();
+    
+    const userRecords = allFetchedAttendanceRecords.filter(
+        (record) => record.employee === user.name
+    );
+
+    const stats = userRecords.reduce(
+      (acc, record) => {
+        const recordDate = parse(record.date, 'yyyy-MM-dd', new Date());
+        if (isSameMonth(now, recordDate)) {
+          if (record.status === 'Present') acc.present++;
+          else if (record.status === 'Late') acc.late++;
+          else if (record.status === 'Absent') acc.absent++;
+          else if (record.status === 'On Leave') acc.onLeave++;
+        }
+        return acc;
+      },
+      { present: 0, late: 0, absent: 0, onLeave: 0 }
+    );
+    
+    return stats;
+  }, [allFetchedAttendanceRecords, user, isGuest]);
 
 
   useEffect(() => {
@@ -830,26 +858,28 @@ export default function AttendanceReportingPage() {
            <CardHeader>
             <CardTitle className="flex items-center text-xl">
               <BarChartHorizontalBig className="mr-2 h-6 w-6 text-primary" />
-              {user?.name || 'My'}'s Monthly Snapshot
+              My Monthly Snapshot
             </CardTitle>
-            <CardDescription>Your attendance summary for July 2024 (Mock).</CardDescription>
+            <CardDescription>
+                Your attendance summary for {format(new Date(), 'MMMM yyyy')}.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center p-3 bg-secondary/30 rounded-md">
               <span className="font-medium">Total Present</span>
-              <Badge variant="default" className="bg-green-500 text-white">20 Days</Badge>
+              <Badge variant="default" className="bg-green-500 text-white">{monthlyStats.present} Days</Badge>
             </div>
             <div className="flex justify-between items-center p-3 bg-secondary/30 rounded-md">
               <span className="font-medium">Total Absent</span>
-              <Badge variant="destructive">2 Days</Badge>
+              <Badge variant="destructive">{monthlyStats.absent} Days</Badge>
             </div>
              <div className="flex justify-between items-center p-3 bg-secondary/30 rounded-md">
               <span className="font-medium">Late Marks</span>
-              <Badge variant="secondary" className="bg-yellow-500 text-black">3 Occasions</Badge>
+              <Badge variant="secondary" className="bg-yellow-500 text-black">{monthlyStats.late} Occasions</Badge>
             </div>
             <div className="flex justify-between items-center p-3 bg-secondary/30 rounded-md">
               <span className="font-medium">Leaves Taken</span>
-              <Badge variant="outline" className="bg-blue-500 text-white">1 Day (Sick)</Badge>
+              <Badge variant="outline" className="bg-blue-500 text-white">{monthlyStats.onLeave} Days</Badge>
             </div>
           </CardContent>
         </Card>
