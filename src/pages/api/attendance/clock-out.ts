@@ -4,7 +4,6 @@ import dbConnect from '@/lib/mongodb';
 import AttendanceRecord from '@/models/AttendanceRecord';
 import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
 import { differenceInMinutes } from 'date-fns';
-import { utcToZonedTime } from 'date-fns-tz';
 
 async function handler(
   req: NextApiRequestWithAuth,
@@ -13,20 +12,16 @@ async function handler(
   const { id: employeeId } = req.user;
   const now = new Date();
   
-  // We find the record based on the server's UTC date
-  const todayDate = utcToZonedTime(now, 'UTC');
-  todayDate.setUTCHours(0, 0, 0, 0);
-
-
   try {
+    // Find the most recent clock-in record for this employee that hasn't been clocked out yet.
+    // This is more robust than relying on matching the exact UTC date.
     const record = await AttendanceRecord.findOne({
       employeeId,
-      date: todayDate,
       clockOutTime: { $exists: false },
-    });
+    }).sort({ clockInTime: -1 }); // Get the latest one
 
     if (!record) {
-      return res.status(404).json({ error: 'No active clock-in record found for today to clock out.' });
+      return res.status(404).json({ error: 'No active clock-in record found to clock out.' });
     }
 
     record.clockOutTime = now;
