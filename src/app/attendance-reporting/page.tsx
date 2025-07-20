@@ -17,7 +17,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, parse, isAfter, isBefore, isEqual, startOfDay, startOfMonth, startOfWeek, endOfWeek, endOfMonth, isSameMonth } from 'date-fns';
+import { format as formatDateFn, parse, isAfter, isBefore, isEqual, startOfDay, startOfMonth, startOfWeek, endOfWeek, endOfMonth, isSameMonth, parseISO } from 'date-fns';
+import { format as formatTz, toZonedTime } from 'date-fns-tz';
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput } from '@/ai/flows/draft-email-response';
 import { useAuth } from '@/contexts/auth-context';
 import type { TransformedAttendanceRecord } from '@/pages/api/attendance/records';
@@ -81,7 +82,7 @@ export default function AttendanceReportingPage() {
   const [filterEndDate, setFilterEndDate] = useState<Date | undefined>();
   const [employeeTimeFilter, setEmployeeTimeFilter] = useState<'all' | 'week' | 'month'>('all');
   
-  const [allFetchedAttendanceRecords, setAllFetchedAttendanceRecords] = useState<AttendanceEntry[]>([]);
+  const [allFetchedAttendanceRecords, setAllFetchedAttendanceRecords] = useState<TransformedAttendanceRecord[]>([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
@@ -132,18 +133,7 @@ export default function AttendanceReportingPage() {
         }
       }
       const data: TransformedAttendanceRecord[] = await response.json();
-      
-      const mappedData: AttendanceEntry[] = data.map(record => ({
-        id: record.id,
-        employee: record.employeeName,
-        date: record.date,
-        status: record.status, 
-        clockIn: record.clockIn,
-        clockOut: record.clockOut,
-        hoursWorked: record.hoursWorked,
-        department: record.department,
-      }));
-      setAllFetchedAttendanceRecords(mappedData);
+      setAllFetchedAttendanceRecords(data);
 
     } catch (error: any) {
       console.error("Error fetching attendance records:", error);
@@ -197,7 +187,7 @@ export default function AttendanceReportingPage() {
     if (canAdminister) {
       if (filterEmployeeName.trim() !== '') {
         filteredData = filteredData.filter(entry =>
-          entry.employee.toLowerCase().includes(filterEmployeeName.trim().toLowerCase())
+          entry.employeeName.toLowerCase().includes(filterEmployeeName.trim().toLowerCase())
         );
       }
 
@@ -234,7 +224,7 @@ export default function AttendanceReportingPage() {
             const endOfThisMonth = endOfMonth(now);
             filteredData = filteredData.filter(entry => {
                 const entryDate = parse(entry.date, 'yyyy-MM-dd', new Date());
-                return isAfter(entryDate, startOfThisMonth) && isBefore(entryDate, endOfThisMonth);
+                return isSameMonth(now, entryDate);
             });
         }
     }
@@ -250,7 +240,7 @@ export default function AttendanceReportingPage() {
     const now = new Date();
     
     const userRecords = allFetchedAttendanceRecords.filter(
-        (record) => record.employee === user.name
+        (record) => record.employeeName === user.name
     );
 
     const stats = userRecords.reduce(
@@ -270,6 +260,7 @@ export default function AttendanceReportingPage() {
     return stats;
   }, [allFetchedAttendanceRecords, user, isGuest]);
 
+  const IST_TIMEZONE = 'Asia/Kolkata';
 
   useEffect(() => {
     const timerId = setInterval(() => {
@@ -283,7 +274,7 @@ export default function AttendanceReportingPage() {
           const time = new Date(storedClockInTime);
           setIsClockedIn(true);
           setClockInTime(time);
-          setLastClockInTimeDisplay(time.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' }));
+          setLastClockInTimeDisplay(time.toLocaleTimeString('en-IN', { timeZone: IST_TIMEZONE }));
         }
     } else {
         setIsClockedIn(false);
@@ -354,12 +345,12 @@ export default function AttendanceReportingPage() {
       const now = new Date(data.record.clockInTime);
       setIsClockedIn(true);
       setClockInTime(now);
-      setLastClockInTimeDisplay(now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' }));
+      setLastClockInTimeDisplay(now.toLocaleTimeString('en-IN', { timeZone: IST_TIMEZONE }));
       localStorage.setItem('hrStreamlineClockInStatus', 'true');
       localStorage.setItem('hrStreamlineClockInTime', now.toISOString());
       toast({
         title: "Clocked In",
-        description: `You clocked in at ${now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}.`,
+        description: `You clocked in at ${now.toLocaleTimeString('en-IN', { timeZone: IST_TIMEZONE })}.`,
       });
       fetchAttendanceRecords(); 
     } catch (error: any) {
@@ -404,7 +395,7 @@ export default function AttendanceReportingPage() {
       localStorage.removeItem('hrStreamlineClockInTime');
       toast({
         title: "Clocked Out",
-        description: `You clocked out at ${clockOutTime.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}.${durationMessage}`,
+        description: `You clocked out at ${clockOutTime.toLocaleTimeString('en-IN', { timeZone: IST_TIMEZONE })}.${durationMessage}`,
       });
       fetchAttendanceRecords(); 
     } catch (error: any) {
@@ -485,7 +476,7 @@ export default function AttendanceReportingPage() {
       
       toast({
         title: "Leave Request Submitted",
-        description: `Request for ${leaveRequest.leaveType} leave from ${format(leaveRequest.startDate as Date, 'PPP')} to ${format(leaveRequest.endDate as Date, 'PPP')} has been submitted.`,
+        description: `Request for ${leaveRequest.leaveType} leave from ${formatDateFn(leaveRequest.startDate as Date, 'PPP')} to ${formatDateFn(leaveRequest.endDate as Date, 'PPP')} has been submitted.`,
       });
       setLeaveRequest({
         employeeName: user?.name || '',
@@ -583,7 +574,7 @@ export default function AttendanceReportingPage() {
     }
     const header = "Employee,Date,Status,Clock In,Clock Out,Hours Worked,Department\n";
     const rows = displayedAttendanceData.map(entry => 
-      `"${entry.employee}","${entry.date}","${entry.status}","${entry.clockIn || '-'}","${entry.clockOut || '-'}","${entry.hoursWorked || '-'}","${entry.department || '-'}"`
+      `"${entry.employeeName}","${entry.date}","${entry.status}","${entry.clockIn || '-'}","${entry.clockOut || '-'}","${entry.hoursWorked || '-'}","${entry.department || '-'}"`
     ).join("\n");
     const csvContent = header + rows;
     triggerDownload(csvContent, 'attendance_report.csv', 'text/csv;charset=utf-8;');
@@ -598,7 +589,7 @@ export default function AttendanceReportingPage() {
     let textContent = "Attendance Report (Mock PDF - Text Version)\n";
     textContent += "===========================================\n\n";
     displayedAttendanceData.forEach(entry => {
-      textContent += `Employee: ${entry.employee}\n`;
+      textContent += `Employee: ${entry.employeeName}\n`;
       textContent += `Date: ${entry.date}\n`;
       textContent += `Status: ${entry.status}\n`;
       textContent += `Clock In: ${entry.clockIn || '-'}\n`;
@@ -771,7 +762,7 @@ export default function AttendanceReportingPage() {
                         disabled={isSubmittingLeave || isGuest}
                       >
                         <CalendarDays className="mr-2 h-4 w-4" />
-                        {leaveRequest.startDate ? format(leaveRequest.startDate, "PPP") : <span>Pick a date</span>}
+                        {leaveRequest.startDate ? formatDateFn(leaveRequest.startDate, "PPP") : <span>Pick a date</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -796,7 +787,7 @@ export default function AttendanceReportingPage() {
                         disabled={isSubmittingLeave || isGuest}
                       >
                         <CalendarDays className="mr-2 h-4 w-4" />
-                        {leaveRequest.endDate ? format(leaveRequest.endDate, "PPP") : <span>Pick a date</span>}
+                        {leaveRequest.endDate ? formatDateFn(leaveRequest.endDate, "PPP") : <span>Pick a date</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -869,7 +860,7 @@ export default function AttendanceReportingPage() {
               My Monthly Snapshot
             </CardTitle>
             <CardDescription>
-                Your attendance summary for {format(new Date(), 'MMMM yyyy')}.
+                Your attendance summary for {formatDateFn(new Date(), 'MMMM yyyy')}.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -995,7 +986,7 @@ export default function AttendanceReportingPage() {
                         <PopoverTrigger asChild>
                         <Button id="filterStartDate" variant={"outline"} className="w-full justify-start text-left font-normal mt-1">
                             <CalendarDays className="mr-2 h-4 w-4" />
-                            {filterStartDate ? format(filterStartDate, "PPP") : <span>Pick a start date</span>}
+                            {filterStartDate ? formatDateFn(filterStartDate, "PPP") : <span>Pick a start date</span>}
                         </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
@@ -1009,7 +1000,7 @@ export default function AttendanceReportingPage() {
                         <PopoverTrigger asChild>
                         <Button id="filterEndDate" variant={"outline"} className="w-full justify-start text-left font-normal mt-1">
                             <CalendarDays className="mr-2 h-4 w-4" />
-                            {filterEndDate ? format(filterEndDate, "PPP") : <span>Pick an end date</span>}
+                            {filterEndDate ? formatDateFn(filterEndDate, "PPP") : <span>Pick an end date</span>}
                         </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
@@ -1077,18 +1068,18 @@ export default function AttendanceReportingPage() {
                 <TableBody>
                   {displayedAttendanceData.length > 0 ? displayedAttendanceData.map((entry) => ( 
                     <TableRow key={entry.id}>
-                      {canAdminister && <TableCell className="font-medium">{entry.employee}</TableCell>}
+                      {canAdminister && <TableCell className="font-medium">{entry.employeeName}</TableCell>}
                       <TableCell>{entry.date}</TableCell>
                       <TableCell>
                         <Badge
-                          variant={getStatusBadgeVariant(entry.status)}
-                          className={getStatusBadgeClassName(entry.status)}
+                          variant={getStatusBadgeVariant(entry.status as any)}
+                          className={getStatusBadgeClassName(entry.status as any)}
                         >
                           {entry.status}
                         </Badge>
                       </TableCell>
-                      <TableCell>{entry.clockIn || '-'}</TableCell>
-                      <TableCell>{entry.clockOut || '-'}</TableCell>
+                      <TableCell>{entry.clockIn ? formatTz(parseISO(entry.clockIn), 'hh:mm a', { timeZone: IST_TIMEZONE }) : '-'}</TableCell>
+                      <TableCell>{entry.clockOut ? formatTz(parseISO(entry.clockOut), 'hh:mm a', { timeZone: IST_TIMEZONE }) : '-'}</TableCell>
                       <TableCell>{entry.hoursWorked || '-'}</TableCell>
                       {canAdminister && <TableCell>{entry.department || '-'}</TableCell>}
                     </TableRow>

@@ -4,7 +4,6 @@ import dbConnect from '@/lib/mongodb';
 import AttendanceRecord, { type IAttendanceRecord } from '@/models/AttendanceRecord';
 import Employee, { type IEmployee } from '@/models/Employee';
 import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
-import { format as formatTz } from 'date-fns-tz';
 import { format } from 'date-fns';
 
 interface PopulatedAttendanceRecord extends Omit<IAttendanceRecord, 'employeeId'> {
@@ -17,14 +16,12 @@ export interface TransformedAttendanceRecord {
   employeeId: string;
   department?: string;
   date: string; // YYYY-MM-DD
-  clockIn?: string; // HH:mm AM/PM
-  clockOut?: string; // HH:mm AM/PM
+  clockIn?: string; // ISO String
+  clockOut?: string; // ISO String
   hoursWorked?: string; // Xh Ym (display string)
   status: 'Present' | 'Late' | 'EarlyDeparture' | 'Unknown'; // Simplified status from record
   notes?: string;
 }
-
-const IST_TIMEZONE = 'Asia/Kolkata';
 
 async function handler(
   req: NextApiRequestWithAuth,
@@ -68,8 +65,8 @@ async function handler(
         employeeId: record.employeeId?._id?.toString() || 'N/A',
         department: record.employeeId?.department || 'N/A',
         date: format(new Date(record.date), 'yyyy-MM-dd'),
-        clockIn: record.clockInTime ? formatTz(new Date(record.clockInTime), 'hh:mm a', { timeZone: IST_TIMEZONE }) : undefined,
-        clockOut: record.clockOutTime ? formatTz(new Date(record.clockOutTime), 'hh:mm a', { timeZone: IST_TIMEZONE }) : undefined,
+        clockIn: record.clockInTime ? new Date(record.clockInTime).toISOString() : undefined,
+        clockOut: record.clockOutTime ? new Date(record.clockOutTime).toISOString() : undefined,
         hoursWorked: hoursWorkedDisplay,
         status: displayStatus,
         notes: record.notes,
