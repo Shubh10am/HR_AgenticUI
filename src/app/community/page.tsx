@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageCircle, ThumbsUp, Share2, Send, Loader2, Image as ImageIcon, Lock } from 'lucide-react';
+import { MessageCircle, ThumbsUp, Share2, Send, Loader2, Image as ImageIcon, Lock, MoreVertical, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
@@ -16,6 +16,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 
 interface Author {
@@ -77,6 +79,15 @@ export default function CommunityPage() {
   const [isSubmittingPost, setIsSubmittingPost] = useState(false);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
+
+  // State for editing comments
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentContent, setEditingCommentContent] = useState('');
+  
+  // State for deleting comments
+  const [commentToDelete, setCommentToDelete] = useState<{ postId: string; commentId: string } | null>(null);
+  const [isDeletingComment, setIsDeletingComment] = useState(false);
+
 
   const canPost = user?.role === 'Admin' || user?.role === 'HR' || user?.role === 'Manager' || user?.role === 'SuperAdmin';
 
@@ -175,6 +186,66 @@ export default function CommunityPage() {
     }
   };
 
+  const handleEditComment = async (postId: string, commentId: string) => {
+    if (!editingCommentContent.trim()) {
+      toast({ title: "Comment cannot be empty", variant: "destructive" });
+      return;
+    }
+    try {
+      const response = await fetch(`/api/community/posts/${postId}/comment/${commentId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ content: editingCommentContent }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to edit comment.');
+      }
+      const updatedPost = await response.json();
+      setPosts(posts.map(p => p._id === postId ? updatedPost : p));
+      setEditingCommentId(null);
+      setEditingCommentContent('');
+      toast({ title: "Comment Updated" });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteComment = async () => {
+    if (!commentToDelete || !token) return;
+    setIsDeletingComment(true);
+    try {
+      const { postId, commentId } = commentToDelete;
+      const response = await fetch(`/api/community/posts/${postId}/comment/${commentId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete comment.');
+      }
+      const updatedPost = await response.json();
+      setPosts(posts.map(p => p._id === postId ? updatedPost : p));
+      toast({ title: 'Comment Deleted' });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setCommentToDelete(null);
+      setIsDeletingComment(false);
+    }
+  };
+
+  const isWithin24Hours = (dateString: string) => {
+    const commentDate = new Date(dateString);
+    const now = new Date();
+    const diffHours = (now.getTime() - commentDate.getTime()) / (1000 * 60 * 60);
+    return diffHours < 24;
+  };
+
+
   const renderPost = (post: Post, isMock: boolean) => (
     <Card key={post._id} className="shadow-lg">
       <CardHeader>
@@ -236,8 +307,10 @@ export default function CommunityPage() {
         </div>
       </CardContent>
        <CardContent className="border-t px-4 pt-4 pb-4 bg-secondary/30">
-         {post.comments.map(comment => (
-            <div key={comment._id} className="flex items-start gap-2 mb-3">
+         {post.comments.map(comment => {
+          const userCanModify = !isMock && user && (user.role === 'Admin' || (user.id === comment.author._id && isWithin24Hours(comment.createdAt)));
+          return (
+            <div key={comment._id} className="flex items-start gap-2 mb-3 group">
                  <Avatar className="h-8 w-8">
                     <AvatarImage src={`https://placehold.co/40x40.png?text=${comment.author.name.charAt(0)}`} />
                     <AvatarFallback>{comment.author.name.charAt(0)}</AvatarFallback>
@@ -247,10 +320,43 @@ export default function CommunityPage() {
                         <span className="font-semibold">{comment.author.name}</span>
                         <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}</span>
                     </div>
-                    <p>{comment.content}</p>
+                    {editingCommentId === comment._id ? (
+                      <div className="mt-2 space-y-2">
+                        <Textarea value={editingCommentContent} onChange={(e) => setEditingCommentContent(e.target.value)} className="text-sm" />
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => setEditingCommentId(null)}>Cancel</Button>
+                          <Button size="sm" onClick={() => handleEditComment(post._id, comment._id)}>Save</Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p>{comment.content}</p>
+                    )}
                 </div>
+                {userCanModify && (
+                   <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      {user.id === comment.author._id && isWithin24Hours(comment.createdAt) && (
+                        <DropdownMenuItem onSelect={() => {
+                          setEditingCommentId(comment._id);
+                          setEditingCommentContent(comment.content);
+                        }}>
+                          <Edit className="mr-2 h-4 w-4" /> Edit
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem className="text-destructive" onSelect={() => setCommentToDelete({ postId: post._id, commentId: comment._id })}>
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
             </div>
-         ))}
+         )})}
          <div className="flex items-center gap-2 mt-4">
             <Avatar className="h-8 w-8">
                  <AvatarImage src={`https://placehold.co/40x40.png?text=${isGuest ? 'G' : user?.name.charAt(0)}`} />
@@ -402,6 +508,23 @@ export default function CommunityPage() {
           </Card>
         </div>
       </div>
+       <AlertDialog open={!!commentToDelete} onOpenChange={(open) => !open && setCommentToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the comment.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel disabled={isDeletingComment}>Cancel</AlertDialogCancel>
+                <Button variant="destructive" onClick={handleDeleteComment} disabled={isDeletingComment}>
+                    {isDeletingComment && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                    Yes, delete comment
+                </Button>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </TooltipProvider>
   );
 }
