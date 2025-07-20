@@ -4,8 +4,8 @@ import dbConnect from '@/lib/mongodb';
 import AttendanceRecord, { type IAttendanceRecord } from '@/models/AttendanceRecord';
 import Employee, { type IEmployee } from '@/models/Employee';
 import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
+import { format as formatTz } from 'date-fns-tz';
 import { format } from 'date-fns';
-import { utcToZonedTime } from 'date-fns-tz';
 
 interface PopulatedAttendanceRecord extends Omit<IAttendanceRecord, 'employeeId'> {
   employeeId: IEmployee;
@@ -51,16 +51,14 @@ async function handler(
 
     const transformedRecords: TransformedAttendanceRecord[] = records.map(record => {
       let hoursWorkedDisplay: string | undefined = undefined;
-      if (record.hoursWorked !== undefined) {
+      if (record.hoursWorked !== undefined && record.hoursWorked !== null) {
         const hours = Math.floor(record.hoursWorked / 60);
         const minutes = record.hoursWorked % 60;
         hoursWorkedDisplay = `${hours}h ${minutes}m`;
       }
       
       let displayStatus: TransformedAttendanceRecord['status'] = 'Unknown';
-      if (record.clockInTime && record.clockOutTime) {
-        displayStatus = record.status || 'Present';
-      } else if (record.clockInTime) {
+      if (record.clockInTime) {
         displayStatus = record.status || 'Present';
       }
 
@@ -69,9 +67,9 @@ async function handler(
         employeeName: record.employeeId?.name || 'N/A',
         employeeId: record.employeeId?._id?.toString() || 'N/A',
         department: record.employeeId?.department || 'N/A',
-        date: format(utcToZonedTime(new Date(record.date), IST_TIMEZONE), 'yyyy-MM-dd'),
-        clockIn: record.clockInTime ? format(utcToZonedTime(new Date(record.clockInTime), IST_TIMEZONE), 'hh:mm a') : undefined,
-        clockOut: record.clockOutTime ? format(utcToZonedTime(new Date(record.clockOutTime), IST_TIMEZONE), 'hh:mm a') : undefined,
+        date: format(new Date(record.date), 'yyyy-MM-dd'),
+        clockIn: record.clockInTime ? formatTz(new Date(record.clockInTime), 'hh:mm a', { timeZone: IST_TIMEZONE }) : undefined,
+        clockOut: record.clockOutTime ? formatTz(new Date(record.clockOutTime), 'hh:mm a', { timeZone: IST_TIMEZONE }) : undefined,
         hoursWorked: hoursWorkedDisplay,
         status: displayStatus,
         notes: record.notes,

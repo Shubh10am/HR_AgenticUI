@@ -120,8 +120,16 @@ export default function AttendanceReportingPage() {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch attendance records');
+        // Try to parse error as text, as it might be HTML
+        const errorText = await response.text();
+        try {
+          // Check if it's actually JSON
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.error || 'Failed to fetch attendance records');
+        } catch (e) {
+          // If parsing fails, it's likely HTML or plain text
+          throw new Error(errorText || 'Failed to fetch attendance records');
+        }
       }
       const data: TransformedAttendanceRecord[] = await response.json();
       
