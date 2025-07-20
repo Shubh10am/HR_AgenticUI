@@ -265,7 +265,7 @@ export default function AttendanceReportingPage() {
 
   useEffect(() => {
     const timerId = setInterval(() => {
-      setCurrentTime(new Date().toLocaleTimeString());
+      setCurrentTime(new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' }));
     }, 1000);
 
     if (!isGuest) {
@@ -275,7 +275,7 @@ export default function AttendanceReportingPage() {
           const time = new Date(storedClockInTime);
           setIsClockedIn(true);
           setClockInTime(time);
-          setLastClockInTimeDisplay(time.toLocaleTimeString());
+          setLastClockInTimeDisplay(time.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' }));
         }
     } else {
         setIsClockedIn(false);
@@ -346,12 +346,12 @@ export default function AttendanceReportingPage() {
       const now = new Date(data.record.clockInTime);
       setIsClockedIn(true);
       setClockInTime(now);
-      setLastClockInTimeDisplay(now.toLocaleTimeString());
+      setLastClockInTimeDisplay(now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' }));
       localStorage.setItem('hrStreamlineClockInStatus', 'true');
       localStorage.setItem('hrStreamlineClockInTime', now.toISOString());
       toast({
         title: "Clocked In",
-        description: `You clocked in at ${now.toLocaleTimeString()}.`,
+        description: `You clocked in at ${now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}.`,
       });
       fetchAttendanceRecords(); 
     } catch (error: any) {
@@ -396,7 +396,7 @@ export default function AttendanceReportingPage() {
       localStorage.removeItem('hrStreamlineClockInTime');
       toast({
         title: "Clocked Out",
-        description: `You clocked out at ${clockOutTime.toLocaleTimeString()}.${durationMessage}`,
+        description: `You clocked out at ${clockOutTime.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}.${durationMessage}`,
       });
       fetchAttendanceRecords(); 
     } catch (error: any) {
@@ -679,13 +679,13 @@ export default function AttendanceReportingPage() {
               <Clock className="mr-2 h-6 w-6 text-primary" />
               Clock In/Out
             </CardTitle>
-            <CardDescription>Your current time: {currentTime !== null ? currentTime : 'Loading...'}</CardDescription>
+            <CardDescription>Your current time: {currentTime !== null ? `${currentTime} (IST)` : 'Loading...'}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {isClockedIn && !isGuest ? (
               <div className="text-center p-4 bg-green-100 dark:bg-green-900/30 rounded-md">
                 <p className="font-semibold text-green-700 dark:text-green-400">You are Clocked In</p>
-                {lastClockInTimeDisplay && <p className="text-sm text-muted-foreground">Since: {lastClockInTimeDisplay}</p>}
+                {lastClockInTimeDisplay && <p className="text-sm text-muted-foreground">Since: {lastClockInTimeDisplay} (IST)</p>}
               </div>
             ) : (
               <div className={`text-center p-4 rounded-md ${isGuest ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30'}`}>

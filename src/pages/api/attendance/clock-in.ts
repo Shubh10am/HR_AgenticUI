@@ -3,15 +3,18 @@ import type { NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
 import AttendanceRecord from '@/models/AttendanceRecord';
 import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
-import { startOfDay } from 'date-fns';
+import { utcToZonedTime } from 'date-fns-tz';
 
 async function handler(
   req: NextApiRequestWithAuth,
   res: NextApiResponse
 ) {
   const { id: employeeId, organizationId } = req.user;
-  const now = new Date();
-  const todayDate = startOfDay(now);
+  const now = new Date(); // Current time on the server (usually UTC)
+  
+  // Normalize the date to the beginning of the day in UTC for consistent querying
+  const todayDate = utcToZonedTime(now, 'UTC');
+  todayDate.setUTCHours(0, 0, 0, 0);
 
   try {
     const existingRecord = await AttendanceRecord.findOne({

@@ -5,6 +5,7 @@ import AttendanceRecord, { type IAttendanceRecord } from '@/models/AttendanceRec
 import Employee, { type IEmployee } from '@/models/Employee';
 import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
 import { format } from 'date-fns';
+import { utcToZonedTime } from 'date-fns-tz';
 
 interface PopulatedAttendanceRecord extends Omit<IAttendanceRecord, 'employeeId'> {
   employeeId: IEmployee;
@@ -22,6 +23,8 @@ export interface TransformedAttendanceRecord {
   status: 'Present' | 'Late' | 'EarlyDeparture' | 'Unknown'; // Simplified status from record
   notes?: string;
 }
+
+const IST_TIMEZONE = 'Asia/Kolkata';
 
 async function handler(
   req: NextApiRequestWithAuth,
@@ -66,9 +69,9 @@ async function handler(
         employeeName: record.employeeId?.name || 'N/A',
         employeeId: record.employeeId?._id?.toString() || 'N/A',
         department: record.employeeId?.department || 'N/A',
-        date: format(new Date(record.date), 'yyyy-MM-dd'),
-        clockIn: record.clockInTime ? format(new Date(record.clockInTime), 'hh:mm a') : undefined,
-        clockOut: record.clockOutTime ? format(new Date(record.clockOutTime), 'hh:mm a') : undefined,
+        date: format(utcToZonedTime(new Date(record.date), IST_TIMEZONE), 'yyyy-MM-dd'),
+        clockIn: record.clockInTime ? format(utcToZonedTime(new Date(record.clockInTime), IST_TIMEZONE), 'hh:mm a') : undefined,
+        clockOut: record.clockOutTime ? format(utcToZonedTime(new Date(record.clockOutTime), IST_TIMEZONE), 'hh:mm a') : undefined,
         hoursWorked: hoursWorkedDisplay,
         status: displayStatus,
         notes: record.notes,

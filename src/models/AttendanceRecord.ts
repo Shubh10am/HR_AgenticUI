@@ -11,7 +11,7 @@ export type AttendanceStatus = 'Present' | 'Late' | 'EarlyDeparture';
 export interface IAttendanceRecord extends Document {
   employeeId: mongoose.Types.ObjectId | IEmployee;
   organizationId: mongoose.Types.ObjectId | IOrganization;
-  date: Date; // Stores the specific date of the record, normalized to start of day
+  date: Date; // Stores the specific date of the record, normalized to start of day in UTC
   clockInTime: Date;
   clockOutTime?: Date;
   hoursWorked?: number; // in minutes, calculated on clock-out
@@ -35,8 +35,8 @@ const AttendanceRecordSchema: Schema<IAttendanceRecord> = new Schema(
       required: true,
     },
     date: {
-      // Represents the calendar date for which this record applies (e.g., 2024-07-25T00:00:00.000Z)
-      // This helps in querying records for a specific day regardless of exact clock-in/out times.
+      // Represents the calendar date for which this record applies, normalized to the start of the UTC day.
+      // This helps in querying records for a specific day regardless of exact clock-in/out times or timezones.
       type: Date,
       required: true,
       index: true,
