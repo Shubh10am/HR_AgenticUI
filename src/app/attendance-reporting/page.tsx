@@ -74,7 +74,7 @@ export default function AttendanceReportingPage() {
   const { user, token } = useAuth();
 
   const isGuest = user?.organizationId === 'guest-org-id' || (token && token.startsWith('guest-'));
-  const canEditPolicy = user?.role === 'Admin' || user?.role === 'HR';
+  const canAdminister = user?.role === 'Admin' || user?.role === 'HR';
 
   const [filterEmployeeName, setFilterEmployeeName] = useState('');
   const [filterStartDate, setFilterStartDate] = useState<Date | undefined>();
@@ -840,7 +840,7 @@ export default function AttendanceReportingPage() {
                     </CardTitle>
                     <CardDescription>Key highlights of our attendance policy.</CardDescription>
                 </div>
-                {canEditPolicy && !isGuest && (
+                {canAdminister && !isGuest && (
                     <div className="flex gap-2">
                         {isEditingPolicy ? (
                             <>
@@ -898,38 +898,16 @@ export default function AttendanceReportingPage() {
 
       <Card className="mt-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader>
-          <CardTitle className="flex items-center text-xl">
-            <CalendarDays className="mr-2 h-6 w-6 text-primary" />
-            Attendance Calendar
-          </CardTitle>
-          <CardDescription>
-            Visual overview of attendance for {format(currentCalendarMonth, 'MMMM yyyy')}. (Mock Data for Calendar)
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex justify-center p-4">
-          <Calendar
-            month={currentCalendarMonth}
-            onMonthChange={setCurrentCalendarMonth}
-            modifiers={dayModifiers} 
-            modifiersClassNames={dayModifiersClassNames}
-            className="rounded-md border shadow-sm"
-            numberOfMonths={1}
-          />
-        </CardContent>
-      </Card>
-      
-      <Card className="mt-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader>
            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center mb-4 sm:mb-0">
                 <UserCircle className="h-10 w-10 text-primary mr-3" />
                 <div>
-                  <CardTitle className="text-xl">Employee Attendance Overview</CardTitle>
-                  <CardDescription>Monthly attendance summary for employees in your organization.</CardDescription>
+                  <CardTitle className="text-xl">{canAdminister ? 'Employee Attendance Overview' : 'My Attendance History'}</CardTitle>
+                  <CardDescription>{canAdminister ? 'Monthly attendance summary for employees in your organization.' : 'A log of your personal attendance records.'}</CardDescription>
                 </div>
               </div>
             </div>
-            {!isGuest && (
+            {!isGuest && canAdminister && (
                 <div className="mt-4 pt-4 border-t">
                 <CardTitle className="text-lg mb-2 flex items-center"><Filter className="mr-2 h-5 w-5" /> Filter Records</CardTitle>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
@@ -1019,19 +997,19 @@ export default function AttendanceReportingPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Employee</TableHead>
+                    {canAdminister && <TableHead>Employee</TableHead>}
                     <TableHead>Date</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Clock In</TableHead>
                     <TableHead>Clock Out</TableHead>
                     <TableHead>Hours Worked</TableHead>
-                    <TableHead>Department</TableHead>
+                    {canAdminister && <TableHead>Department</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {displayedAttendanceData.length > 0 ? displayedAttendanceData.map((entry) => ( 
                     <TableRow key={entry.id}>
-                      <TableCell className="font-medium">{entry.employee}</TableCell>
+                      {canAdminister && <TableCell className="font-medium">{entry.employee}</TableCell>}
                       <TableCell>{entry.date}</TableCell>
                       <TableCell>
                         <Badge
@@ -1044,11 +1022,11 @@ export default function AttendanceReportingPage() {
                       <TableCell>{entry.clockIn || '-'}</TableCell>
                       <TableCell>{entry.clockOut || '-'}</TableCell>
                       <TableCell>{entry.hoursWorked || '-'}</TableCell>
-                      <TableCell>{entry.department || '-'}</TableCell>
+                      {canAdminister && <TableCell>{entry.department || '-'}</TableCell>}
                     </TableRow>
                   )) : (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground">
+                      <TableCell colSpan={canAdminister ? 7 : 5} className="text-center text-muted-foreground">
                         No attendance records match your filters or no data available.
                       </TableCell>
                     </TableRow>
