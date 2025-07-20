@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, type FormEvent, useCallback } from 'react';
+import { useState, useEffect, type FormEvent, useCallback, useMemo } from 'react';
 import Link from 'next/link'; // Added Link
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, parse, isAfter, isBefore, isEqual, startOfDay, startOfMonth } from 'date-fns';
+import { format, parse, isAfter, isBefore, isEqual, startOfDay, startOfMonth, startOfWeek, endOfWeek, endOfMonth } from 'date-fns';
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput } from '@/ai/flows/draft-email-response';
 import { useAuth } from '@/contexts/auth-context';
 import type { TransformedAttendanceRecord } from '@/pages/api/attendance/records';
@@ -79,9 +79,9 @@ export default function AttendanceReportingPage() {
   const [filterEmployeeName, setFilterEmployeeName] = useState('');
   const [filterStartDate, setFilterStartDate] = useState<Date | undefined>();
   const [filterEndDate, setFilterEndDate] = useState<Date | undefined>();
+  const [employeeTimeFilter, setEmployeeTimeFilter] = useState<'all' | 'week' | 'month'>('all');
   
   const [allFetchedAttendanceRecords, setAllFetchedAttendanceRecords] = useState<AttendanceEntry[]>([]);
-  const [displayedAttendanceData, setDisplayedAttendanceData] = useState<AttendanceEntry[]>([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
@@ -136,14 +136,12 @@ export default function AttendanceReportingPage() {
         department: record.department,
       }));
       setAllFetchedAttendanceRecords(mappedData);
-      setDisplayedAttendanceData(mappedData); 
 
     } catch (error: any) {
       console.error("Error fetching attendance records:", error);
       toast({ title: "Fetch Error", description: error.message, variant: "destructive" });
       setFetchError(error.message);
       setAllFetchedAttendanceRecords([]);
-      setDisplayedAttendanceData([]);
     } finally {
       setIsLoadingRecords(false);
     }
@@ -177,12 +175,64 @@ export default function AttendanceReportingPage() {
       setIsLoadingRecords(false);
       setFetchError(null);
       setAllFetchedAttendanceRecords([]);
-      setDisplayedAttendanceData([]);
     } else {
       fetchAttendanceRecords();
     }
     fetchPolicy();
   }, [fetchAttendanceRecords, fetchPolicy, isGuest]);
+
+  const displayedAttendanceData = useMemo(() => {
+    if (isGuest) return [];
+    
+    let filteredData = [...allFetchedAttendanceRecords];
+
+    if (canAdminister) {
+      if (filterEmployeeName.trim() !== '') {
+        filteredData = filteredData.filter(entry =>
+          entry.employee.toLowerCase().includes(filterEmployeeName.trim().toLowerCase())
+        );
+      }
+
+      if (filterStartDate) {
+        const sDate = startOfDay(filterStartDate);
+        filteredData = filteredData.filter(entry => {
+          try {
+            const entryDate = parse(entry.date, 'yyyy-MM-dd', new Date());
+            return isEqual(entryDate, sDate) || isAfter(entryDate, sDate);
+          } catch (e) { return true; } 
+        });
+      }
+
+      if (filterEndDate) {
+        const eDate = startOfDay(filterEndDate);
+        filteredData = filteredData.filter(entry => {
+          try {
+            const entryDate = parse(entry.date, 'yyyy-MM-dd', new Date());
+            return isEqual(entryDate, eDate) || isBefore(entryDate, eDate);
+          } catch (e) { return true; }
+        });
+      }
+    } else { // Regular employee filtering
+        const now = new Date();
+        if (employeeTimeFilter === 'week') {
+            const startOfThisWeek = startOfWeek(now, { weekStartsOn: 1 });
+            const endOfThisWeek = endOfWeek(now, { weekStartsOn: 1 });
+            filteredData = filteredData.filter(entry => {
+                const entryDate = parse(entry.date, 'yyyy-MM-dd', new Date());
+                return isAfter(entryDate, startOfThisWeek) && isBefore(entryDate, endOfThisWeek);
+            });
+        } else if (employeeTimeFilter === 'month') {
+            const startOfThisMonth = startOfMonth(now);
+            const endOfThisMonth = endOfMonth(now);
+            filteredData = filteredData.filter(entry => {
+                const entryDate = parse(entry.date, 'yyyy-MM-dd', new Date());
+                return isAfter(entryDate, startOfThisMonth) && isBefore(entryDate, endOfThisMonth);
+            });
+        }
+    }
+    
+    return filteredData;
+  }, [allFetchedAttendanceRecords, isGuest, canAdminister, filterEmployeeName, filterStartDate, filterEndDate, employeeTimeFilter]);
 
 
   useEffect(() => {
@@ -458,48 +508,21 @@ export default function AttendanceReportingPage() {
   };
 
 
-  const handleApplyFilters = () => {
+  const handleApplyAdminFilters = () => {
+    // This function is just to satisfy the button's onClick. 
+    // The actual filtering for admins is live via useMemo.
     if (isGuest) return;
-    let filteredData = [...allFetchedAttendanceRecords];
-
-    if (filterEmployeeName.trim() !== '') {
-      filteredData = filteredData.filter(entry =>
-        entry.employee.toLowerCase().includes(filterEmployeeName.trim().toLowerCase())
-      );
-    }
-
-    if (filterStartDate) {
-      const sDate = startOfDay(filterStartDate);
-      filteredData = filteredData.filter(entry => {
-        try {
-          const entryDate = parse(entry.date, 'yyyy-MM-dd', new Date());
-          return isEqual(entryDate, sDate) || isAfter(entryDate, sDate);
-        } catch (e) { return true; } 
-      });
-    }
-
-    if (filterEndDate) {
-      const eDate = startOfDay(filterEndDate);
-      filteredData = filteredData.filter(entry => {
-        try {
-          const entryDate = parse(entry.date, 'yyyy-MM-dd', new Date());
-          return isEqual(entryDate, eDate) || isBefore(entryDate, eDate);
-        } catch (e) { return true; }
-      });
-    }
-    setDisplayedAttendanceData(filteredData);
     toast({
       title: "Filters Applied",
-      description: `Showing ${filteredData.length} matching records.`,
+      description: `Showing ${displayedAttendanceData.length} matching records.`,
     });
   };
 
-  const handleClearFilters = () => {
+  const handleClearAdminFilters = () => {
     if (isGuest) return;
     setFilterEmployeeName('');
     setFilterStartDate(undefined);
     setFilterEndDate(undefined);
-    setDisplayedAttendanceData(allFetchedAttendanceRecords);
     toast({
         title: "Filters Cleared",
         description: "Showing all attendance records."
@@ -906,6 +929,13 @@ export default function AttendanceReportingPage() {
                   <CardDescription>{canAdminister ? 'Monthly attendance summary for employees in your organization.' : 'A log of your personal attendance records.'}</CardDescription>
                 </div>
               </div>
+              {!isGuest && !canAdminister && (
+                <div className="flex items-center gap-1 bg-muted p-1 rounded-md">
+                    <Button size="sm" variant={employeeTimeFilter === 'all' ? 'secondary' : 'ghost'} onClick={() => setEmployeeTimeFilter('all')}>All Time</Button>
+                    <Button size="sm" variant={employeeTimeFilter === 'week' ? 'secondary' : 'ghost'} onClick={() => setEmployeeTimeFilter('week')}>This Week</Button>
+                    <Button size="sm" variant={employeeTimeFilter === 'month' ? 'secondary' : 'ghost'} onClick={() => setEmployeeTimeFilter('month')}>This Month</Button>
+                </div>
+              )}
             </div>
             {!isGuest && canAdminister && (
                 <div className="mt-4 pt-4 border-t">
@@ -950,10 +980,10 @@ export default function AttendanceReportingPage() {
                     </Popover>
                     </div>
                     <div className="flex space-x-2">
-                        <Button onClick={handleApplyFilters} className="flex-1">
+                        <Button onClick={handleApplyAdminFilters} className="flex-1">
                         <UserSearch className="mr-2 h-4 w-4" /> Apply
                         </Button>
-                        <Button onClick={handleClearFilters} variant="outline" className="flex-1">
+                        <Button onClick={handleClearAdminFilters} variant="outline" className="flex-1">
                         <XCircle className="mr-2 h-4 w-4" /> Clear
                         </Button>
                     </div>
