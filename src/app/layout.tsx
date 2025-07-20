@@ -5,6 +5,7 @@ import AppLayout from '@/components/layout/app-layout';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/contexts/auth-context';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Analytics } from '@vercel/analytics/react';
 
 const siteConfig = {
   name: 'HR Streamline AI',
@@ -111,6 +112,7 @@ export default function RootLayout({
             <Toaster />
           </AuthProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
