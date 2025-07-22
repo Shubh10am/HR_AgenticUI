@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format as formatDateFn, parse, isAfter, isBefore, isEqual, startOfDay, startOfMonth, startOfWeek, endOfWeek, endOfMonth, isSameMonth, parseISO } from 'date-fns';
-import { format as formatTz, toZonedTime } from 'date-fns-tz';
+import { format as formatTz } from 'date-fns-tz';
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput } from '@/ai/flows/draft-email-response';
 import { useAuth } from '@/contexts/auth-context';
 import type { TransformedAttendanceRecord } from '@/pages/api/attendance/records';
@@ -156,10 +156,12 @@ export default function AttendanceReportingPage() {
         const response = await fetch(`/api/settings/policy?type=attendance`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (!response.ok) throw new Error('Failed to fetch policy');
         const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to fetch policy');
+        }
         setPolicyText(data.content);
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error fetching policy:", error);
         toast({ title: "Policy Error", description: "Could not load company policy. Displaying default.", variant: "destructive" });
         setPolicyText(fallbackPolicyText); // Fallback to default
