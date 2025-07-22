@@ -41,11 +41,15 @@ export function withAuth(handler: ApiHandler, requiredRole: Role | Role[] = 'Any
 
     if (decodedToken.organizationId === null && (decodedToken.role === 'SuperAdmin' || decodedToken.role === 'Admin')) {
         user = await Admin.findById(decodedToken.employeeId).lean();
-    } else {
+        // A platform admin has no organization, so their status check is effectively bypassed.
+    } else if (decodedToken.organizationId) {
         user = await Employee.findById(decodedToken.employeeId).populate('organizationId', 'status').lean();
         if (user && user.organizationId) {
             organizationStatus = (user.organizationId as any).status;
         }
+    } else {
+        // This case handles users that are neither platform admins nor have an org ID, which is invalid.
+        return res.status(403).json({ error: 'Forbidden: Invalid user configuration.' });
     }
     
     if (!user) {
