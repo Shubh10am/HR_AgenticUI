@@ -4,7 +4,7 @@ import dbConnect from '@/lib/mongodb';
 import AttendanceRecord, { type IAttendanceRecord } from '@/models/AttendanceRecord';
 import Employee, { type IEmployee } from '@/models/Employee';
 import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
-import { format } from 'date-fns';
+import { format } from 'date-fns-tz'; // Correctly import the format function
 
 interface PopulatedAttendanceRecord extends Omit<IAttendanceRecord, 'employeeId'> {
   employeeId: IEmployee;
