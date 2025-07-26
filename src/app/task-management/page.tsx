@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -51,7 +52,7 @@ export default function TaskManagementPage() {
   const [tasks] = useState<Task[]>(initialTasks);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-10rem)]">
+    <div className="flex flex-col h-full">
       <PageHeader
         title="Task Management Board"
         description="Visualize your team's workflow and track progress on tasks."
