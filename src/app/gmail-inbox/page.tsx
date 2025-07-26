@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, type GenerateDraftEmailResponsesOutput } from '@/ai/flows/draft-email-response';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { format } from 'date-fns';
 
 
 interface Email {
@@ -234,6 +235,19 @@ export default function GmailCalendarPage() {
     }
   };
 
+  const formatEventTime = (eventTime: { dateTime?: string, date?: string } | undefined) => {
+    if (!eventTime) return 'N/A';
+    // All-day event
+    if (eventTime.date) {
+        return format(new Date(eventTime.date), 'MMM d, yyyy');
+    }
+    // Specific time event
+    if (eventTime.dateTime) {
+        return format(new Date(eventTime.dateTime), 'MMM d, h:mm a');
+    }
+    return 'N/A';
+  };
+
   return (
     <>
       <PageHeader
@@ -344,7 +358,17 @@ export default function GmailCalendarPage() {
                 <Card className="shadow-lg h-full">
                   <CardHeader className="p-4 border-b"><CardTitle className="text-lg">Calendar Events</CardTitle></CardHeader>
                   <CardContent className="p-4 space-y-4">
-                      {calendarEvents.map((event) => (<Card key={event.id} className="p-3"><p className="text-sm font-semibold">{event.summary}</p><p className="text-xs text-muted-foreground">Start: {new Date(event.start?.dateTime || event.start?.date || '').toLocaleString()}</p><p className="text-xs text-muted-foreground">End: {new Date(event.end?.dateTime || event.end?.date || '').toLocaleString()}</p></Card>))}
+                      {calendarEvents.map((event) => (
+                        <Card key={event.id} className="p-3">
+                            <p className="text-sm font-semibold">{event.summary}</p>
+                            <div className="text-xs text-muted-foreground mt-2 grid grid-cols-[auto,1fr] gap-x-2">
+                                <span className="font-medium">From:</span>
+                                <span>{formatEventTime(event.start)}</span>
+                                <span className="font-medium">To:</span>
+                                <span>{formatEventTime(event.end)}</span>
+                            </div>
+                        </Card>
+                      ))}
                       {calendarEvents.length === 0 && <p className="text-center text-muted-foreground">No upcoming events.</p>}
                   </CardContent>
                 </Card>
