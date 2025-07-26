@@ -2,19 +2,23 @@
 'use client';
 
 import { useState, useRef, useEffect, type FormEvent } from 'react';
+import Link from 'next/link';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Home, MessageSquare, HelpCircle, Search, ExternalLink, ChevronRight, Send, ChevronDown, Bot, User, Loader2, Lock } from 'lucide-react';
-import Logo from '@/components/icons/logo';
-import { cn } from '@/lib/utils';
-import Link from 'next/link';
-import { ScrollArea } from './ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Loader2, MessageSquare, Send, User, Bot, Lock } from 'lucide-react';
 import { chatWithCopilot, type CopilotChatInput, type CopilotChatOutput } from '@/ai/flows/copilot-chat-flow';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import { Popover, PopoverContent, PopoverTrigger, PopoverAnchor } from '@/components/ui/popover';
 import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
+
+interface CopilotSidebarProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+}
 
 interface ChatMessage {
   id: string;
@@ -30,19 +34,7 @@ interface MentionableUser {
     name: string;
 }
 
-const guestWelcomeMessage: ChatMessage = {
-    id: 'ai-guest-welcome',
-    sender: 'ai',
-    text: "Welcome to HR Streamline AI! I'm the copilot, here to help. This is an all-in-one platform to assist with recruitment, email drafting, attendance, and more. Feel free to ask me anything about the platform's features!",
-    avatarUrl: 'https://placehold.co/40x40.png?text=AI',
-    avatarFallback: 'AI',
-    dataAiHint: 'robot avatar'
-};
-
-
-export default function ChatWidget() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('home');
+export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarProps) {
   const [userInput, setUserInput] = useState('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,7 +42,7 @@ export default function ChatWidget() {
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user, token } = useAuth();
-  const isGuest = !user || user.organizationId === 'guest-org-id';
+  const isGuest = user?.organizationId === 'guest-org-id';
 
   // State for @mentions
   const [isMentionPopoverOpen, setIsMentionPopoverOpen] = useState(false);
@@ -61,15 +53,11 @@ export default function ChatWidget() {
 
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      const timer = setTimeout(() => {
-        if (activeTab === 'messages') {
-            inputRef.current?.focus();
-        }
-      }, 150);
+    if (isOpen && !isGuest && inputRef.current) {
+      const timer = setTimeout(() => inputRef.current?.focus(), 150);
       return () => clearTimeout(timer);
     }
-  }, [isOpen, activeTab]);
+  }, [isOpen, isGuest]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -85,33 +73,39 @@ export default function ChatWidget() {
       setIsMentionLoading(true);
       const timer = setTimeout(async () => {
         try {
-          if (!token) return;
+          if (!token || isGuest) return;
           const response = await fetch(`/api/employees/search?name=${mentionQuery}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (response.ok) {
             const data = await response.json();
             setMentionSuggestions(data);
+          } else {
+             setMentionSuggestions([]);
           }
         } catch (error) {
           console.error("Failed to fetch mention suggestions", error);
+          setMentionSuggestions([]);
         } finally {
           setIsMentionLoading(false);
         }
       }, 300); // Debounce API calls
       return () => clearTimeout(timer);
+    } else {
+      setMentionSuggestions([]);
     }
-  }, [mentionQuery, token]);
-
-  const handleOpenMessagesTab = () => {
-    setActiveTab('messages');
-    if (chatHistory.length === 0) {
-        setChatHistory([guestWelcomeMessage]);
-    }
-  }
+  }, [mentionQuery, token, isGuest]);
 
   const handleSendMessage = async (event?: FormEvent<HTMLFormElement>) => {
     if (event) event.preventDefault();
+    
+    if (isGuest) {
+      toast({
+        title: "Feature Locked",
+        description: "Please log in or register to use the Copilot.",
+      });
+      return;
+    }
 
     const trimmedInput = userInput.trim();
     if (!trimmedInput) return;
@@ -131,7 +125,7 @@ export default function ChatWidget() {
     try {
       const userApiKey = localStorage.getItem('userApiKey');
       const aiInput: CopilotChatInput = { 
-        userInput: isGuest ? `The user is a guest. Please answer their question about the platform: "${trimmedInput}"` : trimmedInput,
+        userInput: trimmedInput, 
         apiKey: userApiKey,
         userId: user?.id,
         organizationId: user?.organizationId,
@@ -154,7 +148,7 @@ export default function ChatWidget() {
         description: 'Could not get a response from the copilot. Please try again.',
         variant: 'destructive',
       });
-      const errorAiMessage: ChatMessage = {
+       const errorAiMessage: ChatMessage = {
         id: `ai-error-${Date.now()}`,
         sender: 'ai',
         text: "Sorry, I encountered an issue while trying to respond. Please try again.",
@@ -176,10 +170,18 @@ export default function ChatWidget() {
     setUserInput(value);
 
     const cursorPosition = e.target.selectionStart || 0;
-    const atIndex = value.lastIndexOf('@', cursorPosition - 1);
+    const textUpToCursor = value.substring(0, cursorPosition);
+    const atIndex = textUpToCursor.lastIndexOf('@');
 
     if (atIndex !== -1 && (atIndex === 0 || /\s/.test(value[atIndex - 1]))) {
-      const query = value.substring(atIndex + 1, cursorPosition);
+      const query = textUpToCursor.substring(atIndex + 1);
+      
+      // Check for space after query, if so, close popover
+      if (/\s/.test(query)) {
+        setIsMentionPopoverOpen(false);
+        return;
+      }
+      
       setMentionQuery(query);
       setIsMentionPopoverOpen(true);
       currentMentionStartIndex.current = atIndex;
@@ -191,144 +193,165 @@ export default function ChatWidget() {
   const handleSelectMention = (user: MentionableUser) => {
     if (currentMentionStartIndex.current !== null) {
       const start = userInput.substring(0, currentMentionStartIndex.current);
+      // The substring to replace is from '@' up to the current mention query length
       const end = userInput.substring(currentMentionStartIndex.current + 1 + mentionQuery.length);
       const newText = `${start}@${user.name} ${end}`;
+      
       setUserInput(newText);
       setIsMentionPopoverOpen(false);
       setMentionQuery('');
       setMentionSuggestions([]);
-      setTimeout(() => inputRef.current?.focus(), 0);
+      
+      // Focus and move cursor to end of inserted name
+      setTimeout(() => {
+        const newCursorPos = (start + `@${user.name} `).length;
+        inputRef.current?.focus();
+        inputRef.current?.setSelectionRange(newCursorPos, newCursorPos);
+      }, 0);
     }
   };
 
 
-  const renderHomeContent = () => (
-    <div className="space-y-2">
-        <div className="bg-card rounded-lg p-4 flex justify-between items-center shadow-sm border border-border/80">
-            <div>
-                <p className="font-semibold text-card-foreground">Send us a message</p>
-                <p className="text-sm text-muted-foreground">We typically reply in a few minutes</p>
-            </div>
-            <Button size="icon" className="h-9 w-9 bg-primary hover:bg-primary/90 rounded-full flex-shrink-0" onClick={handleOpenMessagesTab}>
-                <Send className="h-4 w-4" />
-            </Button>
-        </div>
-        
-        <div className="bg-card rounded-lg p-4 shadow-sm border border-border/80 space-y-3">
-            <p className="font-semibold text-card-foreground">Search for help</p>
-            <div className="relative">
-                <Input placeholder="Search..." className="pr-10 bg-secondary/50 dark:bg-secondary/30" />
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            </div>
-             <Link href="#" className="flex justify-between items-center text-sm text-card-foreground hover:text-primary">
-                <span>How to add a new employee?</span>
-                <ChevronRight className="h-4 w-4" />
-            </Link>
-        </div>
-
-        <Link href="#" className="bg-card rounded-lg p-4 flex justify-between items-center shadow-sm border border-border/80 text-card-foreground hover:text-primary">
-            <span className="font-semibold">Docs</span>
-            <ExternalLink className="h-5 w-5" />
-        </Link>
-
-        <Link href="#" className="bg-card rounded-lg p-4 flex justify-between items-center shadow-sm border border-border/80 text-card-foreground hover:text-primary">
-            <span className="font-semibold">Install Videos</span>
-            <ExternalLink className="h-5 w-5" />
-        </Link>
-
-         <Link href="/book-a-demo" className="bg-card rounded-lg p-4 flex justify-between items-center shadow-sm border border-border/80 text-card-foreground hover:text-primary">
-            <span className="font-semibold">Book Demo</span>
-            <ExternalLink className="h-5 w-5" />
-        </Link>
-    </div>
-  );
-
-  const renderMessagesContent = () => (
-      <div className="flex flex-col h-full">
-        <ScrollArea className="flex-grow p-1 pr-4 -mr-3" ref={scrollAreaRef}>
-          <div className="space-y-4">
-            {chatHistory.length === 0 && !isLoading && (
-              <div className="text-center text-muted-foreground py-10">
-                <MessageSquare className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No messages yet. Start a conversation!</p>
-              </div>
-            )}
-            {chatHistory.map(message => (
-              <div key={message.id} className={`flex items-end gap-2.5 ${message.sender === 'user' ? 'justify-end' : ''}`}>
-                {message.sender === 'ai' && (
-                  <Avatar className="h-7 w-7 border flex-shrink-0"><AvatarImage src={message.avatarUrl} alt="AI Avatar" data-ai-hint={message.dataAiHint} /><AvatarFallback><Bot className="h-3 w-3" /></AvatarFallback></Avatar>
-                )}
-                <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm shadow-sm ${message.sender === 'user' ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-card text-card-foreground rounded-bl-none'}`}>
-                  {message.text}
-                </div>
-                {message.sender === 'user' && (
-                  <Avatar className="h-7 w-7 border flex-shrink-0"><AvatarImage src={message.avatarUrl} alt="User Avatar" data-ai-hint={message.dataAiHint} /><AvatarFallback><User className="h-3 w-3" /></AvatarFallback></Avatar>
-                )}
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex items-end gap-2.5">
-                <Avatar className="h-7 w-7 border flex-shrink-0"><AvatarImage src="https://placehold.co/40x40.png?text=AI" alt="AI Avatar" data-ai-hint="robot avatar" /><AvatarFallback><Bot className="h-3 w-3" /></AvatarFallback></Avatar>
-                <div className="max-w-[80%] rounded-lg px-3 py-2 text-sm bg-card text-card-foreground rounded-bl-none shadow-sm"><Loader2 className="h-4 w-4 animate-spin" /></div>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-        <Popover open={isMentionPopoverOpen} onOpenChange={setIsMentionPopoverOpen}>
-          <PopoverAnchor asChild>
-            <form onSubmit={handleSendMessage} className="flex-shrink-0 pt-3 mt-auto">
-              <div className="relative">
-                <Input ref={inputRef} type="text" placeholder="Type your message..." value={userInput} onChange={handleInputChange} disabled={isLoading} className="pr-12 text-card-foreground" />
-                <Button type="submit" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" disabled={isLoading || !userInput.trim()}><Send className="h-4 w-4" /></Button>
-              </div>
-            </form>
-          </PopoverAnchor>
-          <PopoverContent className="w-[300px] p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
-            <Command>
-              <CommandList>
-                {isMentionLoading && <div className="p-2 text-center text-sm text-muted-foreground">Loading...</div>}
-                {!isMentionLoading && mentionSuggestions.length === 0 && (
-                  <div className="p-2 text-center text-sm text-muted-foreground">No users found.</div>
-                )}
-                <CommandGroup>
-                  {mentionSuggestions.map((suggestion) => (
-                    <CommandItem key={suggestion._id} onSelect={() => handleSelectMention(suggestion)} value={suggestion.name}>
-                      {suggestion.name}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-      </div>
-  );
-
   return (
-    <div className={cn("fixed bottom-4 right-4 z-50 flex flex-col items-end", !isOpen && "pointer-events-none")}>
-      <div className={cn("transition-[opacity,transform] duration-300 ease-in-out origin-bottom-right", isOpen ? "opacity-100 translate-y-0 scale-100 pointer-events-auto" : "opacity-0 translate-y-4 scale-95")}>
-        <div className="w-[350px] h-[calc(100vh-100px)] max-h-[700px] bg-neutral-50 dark:bg-neutral-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden mb-2 border border-border">
-            <div className="flex-shrink-0 h-48 bg-gradient-to-br from-primary to-accent p-6 flex flex-col justify-between text-primary-foreground">
-                <div><div className="w-10 h-10 bg-black/20 rounded-full flex items-center justify-center"><Logo className="h-6 w-6 text-white" /></div></div>
-                <div><h2 className="text-3xl font-bold leading-tight">Hi there 👋,</h2><h2 className="text-3xl font-bold leading-tight">How can we help?</h2></div>
+    <Sheet open={isOpen} onOpenChange={onOpenChange}>
+      <SheetContent className="sm:max-w-md w-full flex flex-col p-0" side="right">
+        <SheetHeader className="p-4 pb-2 border-b">
+          <SheetTitle className="flex items-center text-lg">
+            <MessageSquare className="mr-2 h-5 w-5 text-primary" />
+            HR Streamline Copilot
+          </SheetTitle>
+          <SheetDescription className="text-xs">
+            Ask questions or get assistance.
+          </SheetDescription>
+        </SheetHeader>
+        
+        <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
+          {isGuest ? (
+             <div className="text-center text-muted-foreground py-10 h-full flex flex-col items-center justify-center">
+              <Lock className="h-10 w-10 text-primary mb-4" />
+              <p className="font-semibold text-lg mb-2">Feature Locked</p>
+              <p className="text-sm mb-4">
+                Please log in or register to use the HR Copilot.
+              </p>
+              <div className="flex gap-4">
+                <Button asChild size="sm" onClick={() => onOpenChange(false)}>
+                  <Link href="/login">Log In</Link>
+                </Button>
+                <Button asChild variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+                  <Link href="/register">Register</Link>
+                </Button>
+              </div>
             </div>
-
-            <div className="flex-grow overflow-y-auto p-3 bg-secondary/30 dark:bg-secondary/20">
-              {activeTab === 'home' && renderHomeContent()}
-              {activeTab === 'messages' && renderMessagesContent()}
-              {activeTab === 'help' && <div className="text-center text-muted-foreground p-6">Help content goes here.</div>}
+          ) : (
+            <div className="space-y-4">
+              {chatHistory.length === 0 && !isLoading && (
+                <div className="text-center text-muted-foreground py-10">
+                  <MessageSquare className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">
+                    No messages yet. Start a conversation!
+                  </p>
+                </div>
+              )}
+              {chatHistory.map(message => (
+                <div
+                  key={message.id}
+                  className={`flex items-end gap-2.5 ${
+                    message.sender === 'user' ? 'justify-end' : ''
+                  }`}
+                >
+                  {message.sender === 'ai' && (
+                    <Avatar className="h-7 w-7 border flex-shrink-0">
+                      <AvatarImage src={message.avatarUrl} alt="AI Avatar" data-ai-hint={message.dataAiHint} />
+                      <AvatarFallback><Bot className="h-3 w-3" /></AvatarFallback>
+                    </Avatar>
+                  )}
+                  <div
+                    className={`max-w-[80%] rounded-lg px-3 py-2 text-sm shadow-sm ${
+                      message.sender === 'user'
+                        ? 'bg-primary text-primary-foreground rounded-br-none'
+                        : 'bg-secondary text-secondary-foreground rounded-bl-none'
+                    }`}
+                  >
+                    {message.text.split('\n').map((line, i, arr) => (
+                      <span key={i}>
+                        {line}
+                        {i < arr.length - 1 && <br />}
+                      </span>
+                    ))}
+                  </div>
+                  {message.sender === 'user' && (
+                    <Avatar className="h-7 w-7 border flex-shrink-0">
+                       <AvatarImage src={message.avatarUrl} alt="User Avatar" data-ai-hint={message.dataAiHint} />
+                      <AvatarFallback><User className="h-3 w-3" /></AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
+              ))}
+              {isLoading && (
+                <div className="flex items-end gap-2.5">
+                  <Avatar className="h-7 w-7 border flex-shrink-0">
+                    <AvatarImage src="https://placehold.co/40x40.png?text=AI" alt="AI Avatar" data-ai-hint="robot avatar" />
+                    <AvatarFallback><Bot className="h-3 w-3" /></AvatarFallback>
+                  </Avatar>
+                  <div className="max-w-[80%] rounded-lg px-3 py-2 text-sm bg-secondary text-secondary-foreground rounded-bl-none shadow-sm">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  </div>
+                </div>
+              )}
             </div>
-
-            <div className="flex-shrink-0 border-t flex justify-around items-center p-2 bg-card">
-                <button onClick={() => setActiveTab('home')} className={cn("flex flex-col items-center gap-1 p-2 rounded-lg w-20 transition-colors", activeTab === 'home' ? 'text-primary' : 'text-muted-foreground hover:bg-secondary')}><Home className="h-6 w-6" /><span className="text-xs font-semibold">Home</span></button>
-                <button onClick={handleOpenMessagesTab} className={cn("flex flex-col items-center gap-1 p-2 rounded-lg w-20 transition-colors", activeTab === 'messages' ? 'text-primary' : 'text-muted-foreground hover:bg-secondary')}><MessageSquare className="h-6 w-6" /><span className="text-xs font-semibold">Messages</span></button>
-                <button onClick={() => setActiveTab('help')} className={cn("flex flex-col items-center gap-1 p-2 rounded-lg w-20 transition-colors", activeTab === 'help' ? 'text-primary' : 'text-muted-foreground hover:bg-secondary')}><HelpCircle className="h-6 w-6" /><span className="text-xs font-semibold">Help</span></button>
-            </div>
-        </div>
-      </div>
-      <Button size="icon" className="rounded-full h-14 w-14 bg-primary hover:bg-primary/90 shadow-lg pointer-events-auto" onClick={() => setIsOpen(!isOpen)}>
-        {isOpen ? <ChevronDown className="h-7 w-7" /> : <MessageSquare className="h-7 w-7" />}
-      </Button>
-    </div>
+          )}
+        </ScrollArea>
+        
+        <SheetFooter className="p-4 border-t bg-background">
+          <Popover open={isMentionPopoverOpen} onOpenChange={setIsMentionPopoverOpen}>
+            <PopoverTrigger asChild>
+                <form onSubmit={handleSendMessage} className="flex w-full items-center space-x-2">
+                    <Input
+                    ref={inputRef}
+                    type="text"
+                    placeholder={isGuest ? "Log in to use Copilot" : "Ask Copilot..."}
+                    value={userInput}
+                    onChange={handleInputChange}
+                    className="flex-1 h-9"
+                    disabled={isLoading || isGuest}
+                    autoComplete="off"
+                    />
+                    <Button 
+                    type="submit" 
+                    size="icon" 
+                    className="h-9 w-9" 
+                    disabled={isLoading || !userInput.trim() || isGuest}
+                    >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    <span className="sr-only">Send</span>
+                    </Button>
+                </form>
+            </PopoverTrigger>
+            <PopoverContent 
+                className="w-[300px] p-0" 
+                onOpenAutoFocus={(e) => e.preventDefault()}
+                side="top"
+                align="start"
+            >
+                <Command>
+                <CommandList>
+                    {isMentionLoading && <div className="p-2 text-center text-sm text-muted-foreground">Loading...</div>}
+                    {!isMentionLoading && mentionSuggestions.length === 0 && (
+                    <div className="p-2 text-center text-sm text-muted-foreground">No users found.</div>
+                    )}
+                    <CommandGroup>
+                    {mentionSuggestions.map((suggestion) => (
+                        <CommandItem key={suggestion._id} onSelect={() => handleSelectMention(suggestion)} value={suggestion.name}>
+                        {suggestion.name}
+                        </CommandItem>
+                    ))}
+                    </CommandGroup>
+                </CommandList>
+                </Command>
+            </PopoverContent>
+          </Popover>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
