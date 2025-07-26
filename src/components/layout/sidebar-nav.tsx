@@ -23,7 +23,7 @@ import {
   LifeBuoy,
   MessageCircle,
   DollarSign, // Added icon
-  ClipboardUser, // Added icon
+  ClipboardList, // Corrected icon
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar'; 
@@ -50,7 +50,7 @@ const navItems: NavItem[] = [
   { href: '/tasks', label: 'Tasks', icon: ListChecks, tooltip: 'Task Management' },
   { href: '/knowledge-base', label: 'Knowledge Base', icon: Library, tooltip: 'Knowledge Base' },
   { href: '/manage-employees', label: 'Manage Employees', icon: Users, tooltip: 'Manage Employees', adminOnly: true },
-  { href: '/attendance-management', label: 'Attendance Mgmt', icon: ClipboardUser, tooltip: 'Attendance Management', adminOnly: true },
+  { href: '/attendance-management', label: 'Attendance Mgmt', icon: ClipboardList, tooltip: 'Attendance Management', adminOnly: true },
   { href: '/integrations', label: 'Integrations', icon: Plug, tooltip: 'Manage Integrations' },
   { href: '/support', label: 'Get Support', icon: LifeBuoy, tooltip: 'Get Support' },
 ];
