@@ -40,11 +40,18 @@ const generateDraftEmailResponsesFlow = ai.defineFlow(
     
     const runner = apiKey ? genkit({plugins: [googleAI({apiKey})]}) : ai;
 
-    const promptText = `You are an HR assistant tasked with drafting emails. Generate multiple distinct draft email options based on the following query/prompt. For each option, provide both a relevant subject line and the full email body.
+    // Updated prompt to handle different tones for email replies
+    const promptText = `You are an HR assistant tasked with drafting emails. 
+    
+    Based on the following query, generate multiple distinct draft email options.
+    If the query appears to be an email that needs a reply, generate responses in various tones (e.g., Formal, Casual, Concise, Inquisitive).
+    For each option, provide both a relevant subject line and the full email body.
 
-Query/Prompt: ${promptData.query}
+    Query/Prompt: """
+    ${promptData.query}
+    """
 
-Format your response as a JSON object. The 'drafts' field in the JSON should contain an array of objects, where each object has a 'subject' (string) and a 'body' (string) field.
+    Format your response as a JSON object that adheres to the GenerateDraftEmailResponsesOutputSchemaDef. The 'drafts' field in the JSON should contain an array of objects, where each object has a 'subject' (string) and a 'body' (string) field.
 `;
 
     const response = await runner.generate({

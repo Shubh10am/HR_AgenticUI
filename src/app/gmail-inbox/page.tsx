@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, type FormEvent, useCallback } from 'react';
@@ -11,10 +10,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Wand2, Send, Reply, ChevronRight, MailOpen, RefreshCw, Trash2, FileWarning, Link as LinkIcon, Calendar, File } from 'lucide-react';
+import { Loader2, Wand2, Send, Reply, ChevronRight, MailOpen, RefreshCw, Trash2, FileWarning, Link as LinkIcon, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { format } from 'date-fns';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, type GenerateDraftEmailResponsesOutput } from '@/ai/flows/draft-email-response';
 
 interface Email {
   id: string;
@@ -26,27 +26,18 @@ interface Email {
   date?: string;
   to?: string;
   category?: string;
-  attachments?: Array<{
-    filename: string;
-    attachmentId: string;
-    size: number;
-    mimeType: string;
-  }>;
 }
 
 interface CalendarEvent {
   id: string;
   summary: string;
-  description: string;
-  start: string;
-  end: string;
-  location: string;
-  status: string;
-  created: string;
-  updated: string;
-  attendees: Array<{ email: string }>;
-  organizer: { email: string };
-  calendar_id: string;
+  start: { dateTime?: string; date?: string };
+  end: { dateTime?: string; date?: string };
+}
+
+interface EmailDraft {
+    subject: string;
+    body: string;
 }
 
 export default function GmailCalendarPage() {
@@ -54,13 +45,19 @@ export default function GmailCalendarPage() {
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [activeSection, setActiveSection] = useState('inbox');
+  const [activeMailbox, setActiveMailbox] = useState('inbox');
   
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { toast } = useToast();
-  const { token } = useAuth();
+  
+  const [replyBody, setReplyBody] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedDrafts, setGeneratedDrafts] = useState<EmailDraft[]>([]);
+  const [isDraftsModalOpen, setIsDraftsModalOpen] = useState(false);
 
+  const { toast } = useToast();
+  const { token, user } = useAuth();
 
   const checkAuthStatus = useCallback(async () => {
     if (!token) {
@@ -73,11 +70,7 @@ export default function GmailCalendarPage() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
-        if (response.ok && data.isAuthenticated) {
-            setIsAuthenticated(true);
-        } else {
-            setIsAuthenticated(false);
-        }
+        setIsAuthenticated(response.ok && data.isAuthenticated);
     } catch (error) {
         setIsAuthenticated(false);
     } finally {
@@ -88,22 +81,21 @@ export default function GmailCalendarPage() {
   const fetchData = useCallback(async () => {
     if (!isAuthenticated || !token) return;
     setIsLoading(true);
+    setSelectedEmail(null);
     try {
         const [emailsRes, eventsRes] = await Promise.all([
-            fetch(`/api/google/emails?mailbox=${activeSection}`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`/api/google/emails?mailbox=${activeMailbox}`, { headers: { 'Authorization': `Bearer ${token}` } }),
             fetch(`/api/google/calendars/primary/events`, { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
         
         if (emailsRes.ok) {
-            const emailsData = await emailsRes.json();
-            setEmails(emailsData);
+            setEmails(await emailsRes.json());
         } else {
             toast({ title: "Error fetching emails", variant: "destructive" });
         }
 
         if (eventsRes.ok) {
-            const eventsData = await eventsRes.json();
-            setCalendarEvents(eventsData);
+            setCalendarEvents(await eventsRes.json());
         } else {
             toast({ title: "Error fetching calendar events", variant: "destructive" });
         }
@@ -113,7 +105,7 @@ export default function GmailCalendarPage() {
     } finally {
         setIsLoading(false);
     }
-  }, [isAuthenticated, token, activeSection, toast]);
+  }, [isAuthenticated, token, activeMailbox, toast]);
 
   useEffect(() => {
     checkAuthStatus();
@@ -130,24 +122,90 @@ export default function GmailCalendarPage() {
         toast({ title: "Please log in first", variant: "destructive" });
         return;
     }
-    // Pass token via cookie or state parameter for the backend to use after redirect
     document.cookie = `authToken=${token}; path=/; max-age=300`;
     window.location.href = `/api/google-auth/connect`;
   };
 
   const handleSelectEmail = (email: Email) => {
     setSelectedEmail(email);
+    setReplyBody(''); // Clear reply body when a new email is selected
     setShowCalendar(false);
   };
-  
-  const handleSelectCalendarView = () => {
-    setSelectedEmail(null);
-    setShowCalendar(true);
+
+  const handleDeleteEmail = async () => {
+    if (!selectedEmail) return;
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/google/emails/${selectedEmail.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete email.');
+      }
+      toast({ title: 'Email Deleted' });
+      setSelectedEmail(null);
+      await fetchData();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
   };
-  
-  const formatEmailBody = (body: string) => {
-    return body.replace(/\r\n/g, '\n');
+
+  const handleGenerateReplies = async () => {
+    if (!selectedEmail) return;
+    setIsGenerating(true);
+    setGeneratedDrafts([]);
+    try {
+        const userApiKey = localStorage.getItem('userApiKey');
+        const input: GenerateDraftEmailResponsesInput = { 
+            query: `From: ${selectedEmail.from}\nSubject: ${selectedEmail.subject}\n\n${selectedEmail.body}`,
+            apiKey: userApiKey,
+            userId: user?.id,
+            organizationId: user?.organizationId,
+        };
+        const result: GenerateDraftEmailResponsesOutput = await generateDraftEmailResponses(input);
+        if (result.drafts?.length) {
+            setGeneratedDrafts(result.drafts);
+            setIsDraftsModalOpen(true);
+        } else {
+            toast({ title: "No replies generated", description: "The AI could not generate replies for this email.", variant: "destructive" });
+        }
+    } catch(error: any) {
+        toast({ title: 'Error', description: 'Failed to generate AI replies.', variant: 'destructive' });
+    } finally {
+        setIsGenerating(false);
+    }
   };
+
+  const handleSendReply = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!selectedEmail || !replyBody.trim()) return;
+    setIsSending(true);
+    try {
+        const response = await fetch('/api/google/emails/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({
+                to: selectedEmail.from,
+                subject: `Re: ${selectedEmail.subject}`,
+                message: replyBody,
+                threadId: selectedEmail.threadId,
+            })
+        });
+        if (!response.ok) {
+            throw new Error('Failed to send reply.');
+        }
+        toast({ title: 'Reply Sent' });
+        setReplyBody('');
+    } catch (error: any) {
+        toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } finally {
+        setIsSending(false);
+    }
+  };
+
 
   const mainGridClasses = "grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-12rem)]";
   const detailCardClasses = "md:col-span-2 shadow-lg flex flex-col h-full min-h-0";
@@ -186,7 +244,6 @@ export default function GmailCalendarPage() {
         </Card>
       )}
 
-
       {isAuthenticated && (
         <div className={mainGridClasses}>
             <Card className="md:col-span-1 shadow-lg flex flex-col h-full min-h-0">
@@ -198,15 +255,14 @@ export default function GmailCalendarPage() {
                 <ScrollArea className="h-full">
                 <div className="p-4 space-y-3">
                     <Button
-                    variant={showCalendar ? "secondary" : "outline"}
-                    className="w-full justify-start py-2"
-                    onClick={handleSelectCalendarView}
+                        variant={showCalendar ? "secondary" : "outline"}
+                        className="w-full justify-start py-2"
+                        onClick={() => { setShowCalendar(true); setSelectedEmail(null); }}
                     >
-                    <Calendar className="mr-2 h-4 w-4" />
-                    Calendar Events
+                        <Calendar className="mr-2 h-4 w-4" /> Calendar Events
                     </Button>
                     <Separator />
-                    <Select onValueChange={setActiveSection} defaultValue="inbox">
+                    <Select onValueChange={setActiveMailbox} defaultValue={activeMailbox}>
                         <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select a mailbox" />
                         </SelectTrigger>
@@ -217,32 +273,18 @@ export default function GmailCalendarPage() {
                         </SelectContent>
                     </Select>
                     <div className="space-y-2">
-                    {isLoading && (
-                        <div className="text-center py-4">
-                        <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
-                        </div>
+                    {isLoading && <div className="text-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" /></div>}
+                    {!isLoading && emails.length === 0 && (
+                        <div className="text-center text-muted-foreground p-6"><FileWarning className="h-12 w-12 mx-auto mb-2" /><p>No emails in {activeMailbox}.</p></div>
                     )}
                     {emails.map((email) => (
-                        <Card
-                        key={email.id}
-                        className={`p-3 hover:shadow-md transition-shadow cursor-pointer ${selectedEmail?.id === email.id ? 'bg-secondary' : 'bg-card'} mb-2`}
-                        onClick={() => handleSelectEmail(email)}
-                        >
-                        <div className="flex justify-between items-start w-full gap-2">
-                            <p className="text-sm font-semibold line-clamp-1 min-w-0">{email.from || email.to}</p>
-                            <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        </div>
-                        <p className="text-sm line-clamp-1">{email.subject}</p>
-                        <p className="text-xs text-muted-foreground line-clamp-1">{email.snippet}</p>
-                        {email.date && <p className="text-xs text-muted-foreground mt-1">{new Date(email.date).toLocaleString()}</p>}
+                        <Card key={email.id} className={`p-3 hover:shadow-md transition-shadow cursor-pointer ${selectedEmail?.id === email.id ? 'bg-secondary' : 'bg-card'} mb-2`} onClick={() => handleSelectEmail(email)}>
+                            <div className="flex justify-between items-start w-full gap-2"><p className="text-sm font-semibold line-clamp-1 min-w-0">{email.from || email.to}</p><ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" /></div>
+                            <p className="text-sm line-clamp-1">{email.subject}</p>
+                            <p className="text-xs text-muted-foreground line-clamp-1">{email.snippet}</p>
+                            {email.date && <p className="text-xs text-muted-foreground mt-1">{new Date(email.date).toLocaleString()}</p>}
                         </Card>
                     ))}
-                    {!isLoading && emails.length === 0 && (
-                        <div className="text-center text-muted-foreground p-6">
-                        <FileWarning className="h-12 w-12 mx-auto mb-2" />
-                        <p>No emails to display in {activeSection}.</p>
-                        </div>
-                    )}
                     </div>
                 </div>
                 </ScrollArea>
@@ -250,53 +292,47 @@ export default function GmailCalendarPage() {
             </Card>
 
             <Card className={detailCardClasses}>
-            {!selectedEmail && !showCalendar ? (
-                <div className="flex-grow flex flex-col items-center justify-center text-center p-6">
-                <MailOpen className="h-24 w-24 text-muted-foreground mb-4" />
-                <p className="text-xl font-semibold text-muted-foreground">Select an email or calendar view</p>
-                </div>
-            ) : showCalendar ? (
-                <>
-                <CardHeader className="p-4">
-                    <CardTitle className="text-lg">Calendar Events</CardTitle>
-                </CardHeader>
-                <ScrollArea className="flex-grow p-0 min-h-0">
-                    <CardContent className="p-4 space-y-4">
-                    {calendarEvents.map((event) => (
-                        <Card key={event.id} className="p-3">
-                        <p className="text-sm font-semibold">{event.summary}</p>
-                        <p className="text-xs text-muted-foreground">Start: {new Date(event.start).toLocaleString()}</p>
-                        <p className="text-xs text-muted-foreground">End: {new Date(event.end).toLocaleString()}</p>
-                        </Card>
-                    ))}
+            {!selectedEmail && !showCalendar && (
+                <div className="flex-grow flex flex-col items-center justify-center text-center p-6"><MailOpen className="h-24 w-24 text-muted-foreground mb-4" /><p className="text-xl font-semibold text-muted-foreground">Select an email or calendar view</p></div>
+            )}
+            {showCalendar && (
+                <><CardHeader className="p-4"><CardTitle className="text-lg">Calendar Events</CardTitle></CardHeader>
+                <ScrollArea className="flex-grow p-0 min-h-0"><CardContent className="p-4 space-y-4">
+                    {calendarEvents.map((event) => (<Card key={event.id} className="p-3"><p className="text-sm font-semibold">{event.summary}</p><p className="text-xs text-muted-foreground">Start: {new Date(event.start.dateTime || event.start.date!).toLocaleString()}</p><p className="text-xs text-muted-foreground">End: {new Date(event.end.dateTime || event.end.date!).toLocaleString()}</p></Card>))}
                     {calendarEvents.length === 0 && <p className="text-center text-muted-foreground">No upcoming events.</p>}
-                    </CardContent>
-                </ScrollArea>
-                </>
-            ) : (
-                <>
-                <CardHeader className="p-4">
-                    <CardTitle className="text-lg">{selectedEmail.subject}</CardTitle>
-                     <div className="flex justify-between items-center gap-2">
-                        <CardDescription className="line-clamp-1">From: {selectedEmail.from}</CardDescription>
-                        <CardDescription className="line-clamp-1">To: {selectedEmail.to || 'You'}</CardDescription>
+                </CardContent></ScrollArea></>
+            )}
+            {selectedEmail && (
+                <><CardHeader className="p-4 flex-row items-center justify-between"><div><CardTitle className="text-lg">{selectedEmail.subject}</CardTitle><CardDescription className="line-clamp-1">From: {selectedEmail.from} | To: {selectedEmail.to || 'You'}</CardDescription></div><Button variant="destructive" size="sm" onClick={handleDeleteEmail}><Trash2 className="mr-2 h-4 w-4"/>Delete</Button></CardHeader>
+                <ScrollArea className="flex-grow p-0 min-h-0 border-t border-b"><CardContent className="p-4 space-y-4"><pre className="text-sm whitespace-pre-wrap font-sans">{selectedEmail.body}</pre></CardContent></ScrollArea>
+                <div className="p-4 border-t bg-background space-y-4"><h3 className="text-md font-semibold flex items-center"><Reply className="mr-2 h-4 w-4"/>Respond</h3>
+                    <div className="flex gap-2">
+                        <Button onClick={handleGenerateReplies} disabled={isGenerating}>{isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Wand2 className="mr-2 h-4 w-4"/>} Generate AI Reply Options</Button>
                     </div>
-                </CardHeader>
-                <ScrollArea className="flex-grow p-0 min-h-0 border-t border-b">
-                    <CardContent className="p-4 space-y-4">
-                    <pre className="text-sm whitespace-pre-wrap">{formatEmailBody(selectedEmail.body)}</pre>
-                    </CardContent>
-                </ScrollArea>
-                <div className="p-4 border-t bg-background">
-                    <p className="text-muted-foreground">Actions placeholder</p>
-                </div>
-                </>
+                    <form onSubmit={handleSendReply}>
+                        <Textarea placeholder="Manually compose your reply..." value={replyBody} onChange={(e) => setReplyBody(e.target.value)} className="min-h-[100px] mb-2"/>
+                        <Button type="submit" disabled={isSending || !replyBody.trim()}>{isSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Send className="mr-2 h-4 w-4"/>} Send Reply</Button>
+                    </form>
+                </div></>
             )}
             </Card>
         </div>
       )}
+
+      <Dialog open={isDraftsModalOpen} onOpenChange={setIsDraftsModalOpen}>
+        <DialogContent className="sm:max-w-xl">
+            <DialogHeader><DialogTitle>AI Generated Reply Options</DialogTitle><DialogDescription>Select a draft to use as your reply.</DialogDescription></DialogHeader>
+            <ScrollArea className="max-h-[60vh] p-1"><div className="p-4 space-y-4">
+                {generatedDrafts.map((draft, index) => (
+                    <Card key={index}><CardHeader className="pb-2"><CardTitle className="text-base">{draft.subject}</CardTitle></CardHeader>
+                    <CardContent>
+                        <pre className="text-sm whitespace-pre-wrap font-sans bg-secondary p-2 rounded-md max-h-40 overflow-y-auto">{draft.body}</pre>
+                        <Button className="mt-2 w-full" onClick={() => { setReplyBody(draft.body); setIsDraftsModalOpen(false); }}>Use this draft</Button>
+                    </CardContent></Card>
+                ))}
+            </div></ScrollArea>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
-
-    
