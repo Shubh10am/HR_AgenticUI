@@ -426,7 +426,7 @@ export default function ManageEmployeesPage() {
         title="Manage Employees"
         description={`Oversee and add employees for ${adminUser?.name}'s organization.`}
       >
-        <div className="flex flex-col sm:flex-row items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
             <Dialog open={isBulkUploadOpen} onOpenChange={setIsBulkUploadOpen}>
                 <DialogTrigger asChild>
                     <Button variant="outline" className="w-full sm:w-auto">
@@ -830,5 +830,3 @@ export default function ManageEmployeesPage() {
     </AlertDialog>
   );
 }
-
-    
