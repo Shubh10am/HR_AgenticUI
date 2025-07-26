@@ -426,7 +426,7 @@ export default function ManageEmployeesPage() {
         title="Manage Employees"
         description={`Oversee and add employees for ${adminUser?.name}'s organization.`}
       >
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <div className="flex flex-col sm:flex-row flex-wrap items-center gap-2">
             <Dialog open={isBulkUploadOpen} onOpenChange={setIsBulkUploadOpen}>
                 <DialogTrigger asChild>
                     <Button variant="outline" className="w-full sm:w-auto">
@@ -707,8 +707,8 @@ export default function ManageEmployeesPage() {
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                     {paginatedEmployees.map((employee) => (
-                        <Card key={employee._id} className="shadow-md hover:shadow-lg transition-shadow cursor-pointer flex flex-col" onClick={() => router.push(`/manage-employees/${employee._id}`)}>
-                            <div className="p-4 flex flex-col items-center text-center flex-grow">
+                        <Card key={employee._id} className="shadow-md hover:shadow-lg transition-shadow flex flex-col">
+                            <div className="p-4 flex flex-col items-center text-center flex-grow cursor-pointer" onClick={() => router.push(`/manage-employees/${employee._id}`)}>
                                 <Avatar className="h-16 w-16 mb-2">
                                     <AvatarImage src={employee.avatarUrl} alt={employee.name} data-ai-hint={employee.dataAiHint} />
                                     <AvatarFallback>{employee.name.charAt(0).toUpperCase()}</AvatarFallback>
@@ -720,7 +720,7 @@ export default function ManageEmployeesPage() {
                                     <p className="text-xs text-muted-foreground mt-1">{employee.department || 'No Department'}</p>
                                 </div>
                             </div>
-                            <div className="mt-auto border-t p-2 flex justify-center gap-1" onClick={(e) => e.stopPropagation()}>
+                            <div className="mt-auto border-t p-2 flex justify-center gap-1">
                                 <Button variant="ghost" size="icon" className="h-7 w-7"
                                     onClick={() => {
                                     setEmployeeToEdit(employee);
