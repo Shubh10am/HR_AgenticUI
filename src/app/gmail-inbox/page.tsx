@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Wand2, Send, Reply, ChevronRight, MailOpen, RefreshCw, Trash2, FileWarning, Link as LinkIcon, Calendar } from 'lucide-react';
+import { Loader2, Wand2, Send, Reply, ChevronRight, MailOpen, RefreshCw, Trash2, FileWarning, Link as LinkIcon, Calendar, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -16,7 +16,7 @@ import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, typ
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
-
+import Link from 'next/link';
 
 interface Email {
   id: string;
@@ -63,9 +63,10 @@ export default function GmailCalendarPage() {
 
   const { toast } = useToast();
   const { token, user } = useAuth();
+  const isGuest = user?.organizationId === 'guest-org-id';
 
   const checkAuthStatus = useCallback(async () => {
-    if (!token) {
+    if (!token || isGuest) {
         setIsLoading(false);
         setIsAuthenticated(false);
         return;
@@ -81,7 +82,7 @@ export default function GmailCalendarPage() {
     } finally {
         setIsLoading(false);
     }
-  }, [token]);
+  }, [token, isGuest]);
 
   const fetchData = useCallback(async (isInitialLoad = true, pageToken: string | null = null) => {
     if (!isAuthenticated || !token) return;
@@ -247,6 +248,34 @@ export default function GmailCalendarPage() {
     }
     return 'N/A';
   };
+  
+  if (isGuest) {
+    return (
+      <>
+        <PageHeader
+          title="Gmail & Calendar"
+          description="This feature is unavailable in guest mode."
+          className="mb-4"
+        />
+        <Card className="text-center p-8 flex flex-col items-center justify-center min-h-[500px]">
+          <Lock className="h-16 w-16 text-primary mb-4" />
+          <CardHeader>
+            <CardTitle>Feature Locked</CardTitle>
+            <CardDescription>Connect your Google account and manage emails and calendars after logging in or registering.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex gap-4">
+             <Button asChild>
+                <Link href="/login">Log In</Link>
+             </Button>
+             <Button asChild variant="outline">
+                <Link href="/register">Register</Link>
+             </Button>
+          </CardContent>
+        </Card>
+      </>
+    );
+  }
+
 
   return (
     <>
