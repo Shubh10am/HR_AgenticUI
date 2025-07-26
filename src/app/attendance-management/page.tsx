@@ -56,8 +56,6 @@ export default function AttendanceManagementPage() {
       }
       const data = await response.json();
       setDashboardData(data);
-    } catch (e: any)      const data = await response.json();
-      setDashboardData(data);
     } catch (e: any) {
       setError(e.message);
       toast({ title: "Error", description: e.message, variant: "destructive" });
