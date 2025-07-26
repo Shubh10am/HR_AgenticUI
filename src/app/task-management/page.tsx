@@ -52,7 +52,7 @@ export default function TaskManagementPage() {
   const [tasks] = useState<Task[]>(initialTasks);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-[calc(100vh-8rem)]">
       <PageHeader
         title="Task Management Board"
         description="Visualize your team's workflow and track progress on tasks."
@@ -62,11 +62,11 @@ export default function TaskManagementPage() {
         </Button>
       </PageHeader>
       
-      <div className="flex-1 -mx-6 px-6 overflow-hidden">
-        <ScrollArea className="w-full h-full whitespace-nowrap">
-            <div className="flex gap-4 pb-4 h-full">
+      <div className="flex-1 overflow-x-auto">
+        <ScrollArea className="w-full h-full pb-4">
+            <div className="flex gap-4">
                 {columns.map(status => (
-                <div key={status} className="w-80 flex-shrink-0 h-full">
+                <div key={status} className="w-80 flex-shrink-0">
                     <Card className="h-full flex flex-col bg-muted/50">
                     <CardHeader className="flex flex-row items-center justify-between p-4 border-b">
                         <CardTitle className="text-base font-semibold">{status} ({tasks.filter(t => t.status === status).length})</CardTitle>
