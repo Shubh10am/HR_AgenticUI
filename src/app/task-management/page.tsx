@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -33,14 +32,17 @@ const initialTasks: Task[] = [
   { id: 'task-7', title: 'Research new analytics tools', status: 'Todo', priority: 'Medium', assignees: [{ name: 'Frank', avatarUrl: 'https://randomuser.me/api/portraits/men/3.jpg' }], attachments: 0, comments: 0 },
   { id: 'task-8', title: 'User testing for the new feature', status: 'In Review', priority: 'High', assignees: [{ name: 'Grace', avatarUrl: 'https://randomuser.me/api/portraits/women/4.jpg' }, { name: 'Heidi', avatarUrl: 'https://randomuser.me/api/portraits/women/5.jpg' }], attachments: 3, comments: 11 },
   { id: 'task-9', title: 'Update the company website', status: 'Done', priority: 'Low', assignees: [{ name: 'Ivan', avatarUrl: 'https://randomuser.me/api/portraits/men/4.jpg' }], attachments: 0, comments: 0 },
+  { id: 'task-10', title: 'Onboard new marketing intern', status: 'In Progress', priority: 'Medium', assignees: [{ name: 'Alice', avatarUrl: 'https://randomuser.me/api/portraits/women/1.jpg' }], attachments: 1, comments: 1 },
+  { id: 'task-11', title: 'Prepare Q3 financial report', status: 'Todo', priority: 'High', assignees: [{ name: 'Bob', avatarUrl: 'https://randomuser.me/api/portraits/men/1.jpg' }], attachments: 0, comments: 0 },
+  { id: 'task-12', title: 'Migrate database to new server', status: 'Todo', priority: 'High', assignees: [{ name: 'Diana', avatarUrl: 'https://randomuser.me/api/portraits/women/2.jpg' }, { name: 'Bob', avatarUrl: 'https://randomuser.me/api/portraits/men/1.jpg' }], attachments: 0, comments: 0 },
 ];
 
 const columns: TaskStatus[] = ['Todo', 'In Progress', 'In Review', 'Done'];
 
 const getPriorityBadgeClass = (priority: 'Low' | 'Medium' | 'High') => {
   switch (priority) {
-    case 'High': return 'bg-destructive text-destructive-foreground';
-    case 'Medium': return 'bg-yellow-500 text-black';
+    case 'High': return 'bg-red-500 hover:bg-red-600 text-white';
+    case 'Medium': return 'bg-yellow-500 hover:bg-yellow-600 text-black';
     case 'Low': return 'bg-secondary text-secondary-foreground';
   }
 };
@@ -49,7 +51,7 @@ export default function TaskManagementPage() {
   const [tasks] = useState<Task[]>(initialTasks);
 
   return (
-    <>
+    <div className="flex flex-col h-[calc(100vh-10rem)]">
       <PageHeader
         title="Task Management Board"
         description="Visualize your team's workflow and track progress on tasks."
@@ -59,23 +61,23 @@ export default function TaskManagementPage() {
         </Button>
       </PageHeader>
       
-      <div className="flex-1 -mx-6 px-6">
-        <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex gap-4 pb-4">
+      <div className="flex-1 -mx-6 px-6 overflow-hidden">
+        <ScrollArea className="w-full h-full whitespace-nowrap">
+            <div className="flex gap-4 pb-4 h-full">
                 {columns.map(status => (
-                <div key={status} className="w-80 flex-shrink-0">
+                <div key={status} className="w-80 flex-shrink-0 h-full">
                     <Card className="h-full flex flex-col bg-muted/50">
                     <CardHeader className="flex flex-row items-center justify-between p-4 border-b">
                         <CardTitle className="text-base font-semibold">{status} ({tasks.filter(t => t.status === status).length})</CardTitle>
                         <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <ScrollArea className="flex-grow">
-                        <CardContent className="p-2 space-y-2 h-[calc(100vh-22rem)]">
+                        <CardContent className="p-2 space-y-2">
                         {tasks.filter(task => task.status === status).map(task => (
                             <Card key={task.id} className="bg-card shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing">
                             <CardContent className="p-3 space-y-2">
-                                <p className="font-semibold text-sm">{task.title}</p>
-                                {task.description && <p className="text-xs text-muted-foreground">{task.description}</p>}
+                                <p className="font-semibold text-sm whitespace-normal">{task.title}</p>
+                                {task.description && <p className="text-xs text-muted-foreground whitespace-normal">{task.description}</p>}
                                 <Badge variant="outline" className={getPriorityBadgeClass(task.priority)}>{task.priority}</Badge>
                                 <div className="flex justify-between items-center pt-2 border-t mt-2">
                                 <div className="flex items-center space-x-2 text-xs text-muted-foreground">
@@ -103,6 +105,6 @@ export default function TaskManagementPage() {
             <ScrollBar orientation="horizontal" />
         </ScrollArea>
       </div>
-    </>
+    </div>
   );
 }
