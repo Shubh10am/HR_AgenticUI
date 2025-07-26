@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { Loader2, AlertTriangle, User, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns-tz';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation'; // Import useRouter
 
 interface PresentEmployee {
   _id: string;
@@ -35,6 +36,7 @@ interface DashboardData {
 export default function AttendanceManagementPage() {
   const { toast } = useToast();
   const { token, user } = useAuth();
+  const router = useRouter(); // Initialize router
 
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,6 +56,8 @@ export default function AttendanceManagementPage() {
       }
       const data = await response.json();
       setDashboardData(data);
+    } catch (e: any)      const data = await response.json();
+      setDashboardData(data);
     } catch (e: any) {
       setError(e.message);
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -65,6 +69,10 @@ export default function AttendanceManagementPage() {
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
+
+  const handleRowClick = (employeeId: string) => {
+    router.push(`/manage-employees/${employeeId}`);
+  };
 
   const IST_TIMEZONE = 'Asia/Kolkata';
 
@@ -126,7 +134,7 @@ export default function AttendanceManagementPage() {
                     </TableRow>
                   ) : (
                     dashboardData?.presentEmployees.map(emp => (
-                      <TableRow key={emp._id}>
+                      <TableRow key={emp._id} onClick={() => handleRowClick(emp._id)} className="cursor-pointer">
                         <TableCell>
                            <div className="flex items-center gap-2">
                             <Avatar className="h-8 w-8">
@@ -171,7 +179,7 @@ export default function AttendanceManagementPage() {
                     </TableRow>
                   ) : (
                     dashboardData?.absentEmployees.map(emp => (
-                      <TableRow key={emp._id}>
+                      <TableRow key={emp._id} onClick={() => handleRowClick(emp._id)} className="cursor-pointer">
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Avatar className="h-8 w-8">
