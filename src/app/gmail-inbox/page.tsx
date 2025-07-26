@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, type FormEvent, useCallback } from 'react';
@@ -208,7 +209,6 @@ export default function GmailCalendarPage() {
 
 
   const mainGridClasses = "grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-12rem)]";
-  const detailCardClasses = "md:col-span-2 shadow-lg flex flex-col h-full min-h-0";
 
   return (
     <>
@@ -247,74 +247,90 @@ export default function GmailCalendarPage() {
       {isAuthenticated && (
         <div className={mainGridClasses}>
             <Card className="md:col-span-1 shadow-lg flex flex-col h-full min-h-0">
-            <CardHeader className="p-4">
-                <CardTitle className="text-lg">Inbox & Calendar</CardTitle>
-                <CardDescription>View emails or calendar events.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0 flex-grow overflow-hidden">
-                <ScrollArea className="h-full">
-                <div className="p-4 space-y-3">
-                    <Button
-                        variant={showCalendar ? "secondary" : "outline"}
-                        className="w-full justify-start py-2"
-                        onClick={() => { setShowCalendar(true); setSelectedEmail(null); }}
-                    >
-                        <Calendar className="mr-2 h-4 w-4" /> Calendar Events
-                    </Button>
-                    <Separator />
-                    <Select onValueChange={setActiveMailbox} defaultValue={activeMailbox}>
-                        <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select a mailbox" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="inbox">Inbox</SelectItem>
-                            <SelectItem value="sent">Sent</SelectItem>
-                            <SelectItem value="spam">Spam</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <div className="space-y-2">
-                    {isLoading && <div className="text-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" /></div>}
-                    {!isLoading && emails.length === 0 && (
-                        <div className="text-center text-muted-foreground p-6"><FileWarning className="h-12 w-12 mx-auto mb-2" /><p>No emails in {activeMailbox}.</p></div>
-                    )}
-                    {emails.map((email) => (
-                        <Card key={email.id} className={`p-3 hover:shadow-md transition-shadow cursor-pointer ${selectedEmail?.id === email.id ? 'bg-secondary' : 'bg-card'} mb-2`} onClick={() => handleSelectEmail(email)}>
-                            <div className="flex justify-between items-start w-full gap-2"><p className="text-sm font-semibold line-clamp-1 min-w-0">{email.from || email.to}</p><ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" /></div>
-                            <p className="text-sm line-clamp-1">{email.subject}</p>
-                            <p className="text-xs text-muted-foreground line-clamp-1">{email.snippet}</p>
-                            {email.date && <p className="text-xs text-muted-foreground mt-1">{new Date(email.date).toLocaleString()}</p>}
-                        </Card>
-                    ))}
-                    </div>
-                </div>
-                </ScrollArea>
-            </CardContent>
+                <CardHeader className="p-4 border-b">
+                    <CardTitle className="text-lg">Inbox & Calendar</CardTitle>
+                    <CardDescription>View emails or calendar events.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-0 flex-grow overflow-hidden">
+                    <ScrollArea className="h-full">
+                        <div className="p-4 space-y-3">
+                            <Button
+                                variant={showCalendar ? "secondary" : "outline"}
+                                className="w-full justify-start py-2"
+                                onClick={() => { setShowCalendar(true); setSelectedEmail(null); }}
+                            >
+                                <Calendar className="mr-2 h-4 w-4" /> Calendar Events
+                            </Button>
+                            <Separator />
+                            <Select onValueChange={setActiveMailbox} defaultValue={activeMailbox}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select a mailbox" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="inbox">Inbox</SelectItem>
+                                    <SelectItem value="sent">Sent</SelectItem>
+                                    <SelectItem value="spam">Spam</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <div className="space-y-2">
+                            {isLoading && <div className="text-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" /></div>}
+                            {!isLoading && emails.length === 0 && (
+                                <div className="text-center text-muted-foreground p-6"><FileWarning className="h-12 w-12 mx-auto mb-2" /><p>No emails in {activeMailbox}.</p></div>
+                            )}
+                            {emails.map((email) => (
+                                <Card key={email.id} className={`p-3 hover:shadow-md transition-shadow cursor-pointer ${selectedEmail?.id === email.id ? 'bg-secondary' : 'bg-card'} mb-2`} onClick={() => handleSelectEmail(email)}>
+                                    <div className="flex justify-between items-start w-full gap-2"><p className="text-sm font-semibold line-clamp-1 min-w-0">{email.from || email.to}</p><ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" /></div>
+                                    <p className="text-sm line-clamp-1">{email.subject}</p>
+                                    <p className="text-xs text-muted-foreground line-clamp-1">{email.snippet}</p>
+                                    {email.date && <p className="text-xs text-muted-foreground mt-1">{new Date(email.date).toLocaleString()}</p>}
+                                </Card>
+                            ))}
+                            </div>
+                        </div>
+                    </ScrollArea>
+                </CardContent>
             </Card>
 
-            <Card className={detailCardClasses}>
-            {!selectedEmail && !showCalendar && (
-                <div className="flex-grow flex flex-col items-center justify-center text-center p-6"><MailOpen className="h-24 w-24 text-muted-foreground mb-4" /><p className="text-xl font-semibold text-muted-foreground">Select an email or calendar view</p></div>
-            )}
-            {showCalendar && (
-                <><CardHeader className="p-4"><CardTitle className="text-lg">Calendar Events</CardTitle></CardHeader>
-                <ScrollArea className="flex-grow p-0 min-h-0"><CardContent className="p-4 space-y-4">
-                    {calendarEvents.map((event) => (<Card key={event.id} className="p-3"><p className="text-sm font-semibold">{event.summary}</p><p className="text-xs text-muted-foreground">Start: {new Date(event.start.dateTime || event.start.date!).toLocaleString()}</p><p className="text-xs text-muted-foreground">End: {new Date(event.end.dateTime || event.end.date!).toLocaleString()}</p></Card>))}
-                    {calendarEvents.length === 0 && <p className="text-center text-muted-foreground">No upcoming events.</p>}
-                </CardContent></ScrollArea></>
-            )}
-            {selectedEmail && (
-                <><CardHeader className="p-4 flex-row items-center justify-between"><div><CardTitle className="text-lg">{selectedEmail.subject}</CardTitle><CardDescription className="line-clamp-1">From: {selectedEmail.from} | To: {selectedEmail.to || 'You'}</CardDescription></div><Button variant="destructive" size="sm" onClick={handleDeleteEmail}><Trash2 className="mr-2 h-4 w-4"/>Delete</Button></CardHeader>
-                <ScrollArea className="flex-grow p-0 min-h-0 border-t border-b"><CardContent className="p-4 space-y-4"><pre className="text-sm whitespace-pre-wrap font-sans">{selectedEmail.body}</pre></CardContent></ScrollArea>
-                <div className="p-4 border-t bg-background space-y-4"><h3 className="text-md font-semibold flex items-center"><Reply className="mr-2 h-4 w-4"/>Respond</h3>
-                    <div className="flex gap-2">
-                        <Button onClick={handleGenerateReplies} disabled={isGenerating}>{isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Wand2 className="mr-2 h-4 w-4"/>} Generate AI Reply Options</Button>
-                    </div>
-                    <form onSubmit={handleSendReply}>
-                        <Textarea placeholder="Manually compose your reply..." value={replyBody} onChange={(e) => setReplyBody(e.target.value)} className="min-h-[100px] mb-2"/>
-                        <Button type="submit" disabled={isSending || !replyBody.trim()}>{isSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Send className="mr-2 h-4 w-4"/>} Send Reply</Button>
-                    </form>
-                </div></>
-            )}
+            <Card className="md:col-span-2 shadow-lg flex flex-col h-full min-h-0">
+                <ScrollArea className="h-full">
+                    {!selectedEmail && !showCalendar && (
+                        <div className="flex-grow flex flex-col items-center justify-center text-center p-6 h-full"><MailOpen className="h-24 w-24 text-muted-foreground mb-4" /><p className="text-xl font-semibold text-muted-foreground">Select an email or calendar view</p></div>
+                    )}
+                    {showCalendar && (
+                        <>
+                        <CardHeader className="p-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b"><CardTitle className="text-lg">Calendar Events</CardTitle></CardHeader>
+                        <CardContent className="p-4 space-y-4">
+                            {calendarEvents.map((event) => (<Card key={event.id} className="p-3"><p className="text-sm font-semibold">{event.summary}</p><p className="text-xs text-muted-foreground">Start: {new Date(event.start.dateTime || event.start.date!).toLocaleString()}</p><p className="text-xs text-muted-foreground">End: {new Date(event.end.dateTime || event.end.date!).toLocaleString()}</p></Card>))}
+                            {calendarEvents.length === 0 && <p className="text-center text-muted-foreground">No upcoming events.</p>}
+                        </CardContent>
+                        </>
+                    )}
+                    {selectedEmail && (
+                        <>
+                            <CardHeader className="p-4 flex-row items-center justify-between sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
+                                <div>
+                                    <CardTitle className="text-lg">{selectedEmail.subject}</CardTitle>
+                                    <CardDescription className="line-clamp-1">From: {selectedEmail.from} | To: {selectedEmail.to || 'You'}</CardDescription>
+                                </div>
+                                <Button variant="destructive" size="sm" onClick={handleDeleteEmail}><Trash2 className="mr-2 h-4 w-4"/>Delete</Button>
+                            </CardHeader>
+                            <CardContent className="p-4 space-y-4">
+                                <pre className="text-sm whitespace-pre-wrap font-sans">{selectedEmail.body}</pre>
+                                <Separator />
+                                <div className="space-y-4">
+                                    <h3 className="text-md font-semibold flex items-center"><Reply className="mr-2 h-4 w-4"/>Respond</h3>
+                                    <div className="flex gap-2">
+                                        <Button onClick={handleGenerateReplies} disabled={isGenerating}>{isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Wand2 className="mr-2 h-4 w-4"/>} Generate AI Reply Options</Button>
+                                    </div>
+                                    <form onSubmit={handleSendReply}>
+                                        <Textarea placeholder="Manually compose your reply..." value={replyBody} onChange={(e) => setReplyBody(e.target.value)} className="min-h-[100px] mb-2"/>
+                                        <Button type="submit" disabled={isSending || !replyBody.trim()}>{isSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Send className="mr-2 h-4 w-4"/>} Send Reply</Button>
+                                    </form>
+                                </div>
+                            </CardContent>
+                        </>
+                    )}
+                </ScrollArea>
             </Card>
         </div>
       )}
@@ -336,3 +352,4 @@ export default function GmailCalendarPage() {
     </>
   );
 }
+
