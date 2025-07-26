@@ -1,6 +1,6 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { oauth2Client } from './connect'; // Import the configured OAuth2 client
+import { getGoogleAuthClient } from './connect'; // Import the configured OAuth2 client
 import { verifyToken, type JwtPayload } from '@/lib/jwt';
 import dbConnect from '@/lib/mongodb';
 import GoogleApiCredential from '@/models/GoogleApiCredential';
@@ -23,13 +23,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    const oauth2Client = getGoogleAuthClient();
     const { tokens } = await oauth2Client.getToken(code);
-    oauth2Client.setCredentials(tokens);
-
-    // Save the tokens to the database, linked to the user
+    
     await dbConnect();
     
-    if (!tokens.access_token || !tokens.expiry_date || !tokens.scope) {
+    if (!tokens.access_token || !tokens.expiry_date || !tokens.scope || !tokens.token_type) {
       throw new Error('Incomplete token data received from Google.');
     }
 
@@ -47,7 +46,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       { upsert: true, new: true }
     );
 
-    // Redirect user back to the integrations page with a success flag
     res.redirect('/integrations?connect=success');
 
   } catch (error: any) {
@@ -55,3 +53,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(500).send(`Authentication failed: ${error.message}`);
   }
 }
+
+    

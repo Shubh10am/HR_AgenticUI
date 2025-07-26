@@ -2,21 +2,31 @@
 import { google } from 'googleapis';
 import dbConnect from '@/lib/mongodb';
 import GoogleApiCredential from '@/models/GoogleApiCredential';
-import { oauth2Client } from '@/pages/api/google-auth/connect';
 import mongoose from 'mongoose';
 
 const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, NEXT_PUBLIC_BASE_URL } = process.env;
 
+// This function creates a new OAuth2 client. It is configured once and can be reused.
+function getGoogleAuthClient() {
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !NEXT_PUBLIC_BASE_URL) {
+      throw new Error('Google OAuth credentials or base URL are missing from environment variables.');
+  }
+  return new google.auth.OAuth2(
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    `${NEXT_PUBLIC_BASE_URL}/api/google-auth/callback`
+  );
+}
+
 
 /**
- * Creates and returns an authenticated Gmail service instance for a specific user.
- * It retrieves the user's tokens from the database, refreshes them if necessary,
- * and configures the OAuth2 client.
+ * Retrieves an authenticated Google API client (like Gmail or Calendar) for a specific user.
+ * It fetches the user's tokens from the database and refreshes them if necessary.
  * 
  * @param employeeId The ID of the employee for whom to get the service.
- * @returns An authenticated Gmail API client instance, or null if credentials are not found or invalid.
+ * @returns An authenticated OAuth2 client instance, or null if credentials are not found or invalid.
  */
-export async function getGmailService(employeeId: string) {
+export async function getAuthenticatedClient(employeeId: string) {
   await dbConnect();
   
   if (!mongoose.Types.ObjectId.isValid(employeeId)) {
@@ -28,11 +38,7 @@ export async function getGmailService(employeeId: string) {
     return null; // User has not authenticated with Google
   }
   
-  const client = new google.auth.OAuth2(
-    GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET,
-    `${NEXT_PUBLIC_BASE_URL}/api/google-auth/callback`
-  );
+  const client = getGoogleAuthClient();
 
   client.setCredentials({
     access_token: credentials.accessToken,
@@ -64,49 +70,31 @@ export async function getGmailService(employeeId: string) {
     }
   }
 
-  return google.gmail({ version: 'v1', auth: client });
+  return client;
+}
+
+
+/**
+ * Creates and returns an authenticated Gmail service instance for a specific user.
+ * @param employeeId The ID of the employee for whom to get the service.
+ * @returns An authenticated Gmail API client instance, or null if credentials are not found or invalid.
+ */
+export async function getGmailService(employeeId: string) {
+    const authClient = await getAuthenticatedClient(employeeId);
+    if (!authClient) return null;
+    return google.gmail({ version: 'v1', auth: authClient });
 }
 
 
 /**
  * Creates and returns an authenticated Google Calendar service instance.
- * Reuses the same logic as getGmailService to handle token retrieval and refresh.
- * 
  * @param employeeId The ID of the employee.
  * @returns An authenticated Calendar API client, or null if credentials fail.
  */
 export async function getCalendarService(employeeId: string) {
-    // This logic is identical to getGmailService, demonstrating token reusability.
-    // In a real-world app, you might refactor this into a single `getGoogleAuthClient` function.
-    await dbConnect();
-    
-    if (!mongoose.Types.ObjectId.isValid(employeeId)) {
-      throw new Error("Invalid employee ID format for Google service.");
-  }
-
-    const credentials = await GoogleApiCredential.findOne({ employeeId });
-    if (!credentials) return null;
-
-    const client = new google.auth.OAuth2(
-        GOOGLE_CLIENT_ID,
-        GOOGLE_CLIENT_SECRET,
-        `${NEXT_PUBLIC_BASE_URL}/api/google-auth/callback`
-    );
-    
-    client.setCredentials({
-        access_token: credentials.accessToken,
-        refresh_token: credentials.refreshToken,
-        expiry_date: credentials.expiryDate
-    });
-
-    if (new Date(credentials.expiryDate) < new Date()) {
-        const { credentials: newCredentials } = await client.refreshAccessToken();
-        client.setCredentials(newCredentials);
-        await GoogleApiCredential.updateOne({ employeeId }, {
-            accessToken: newCredentials.access_token,
-            expiryDate: newCredentials.expiry_date,
-        });
-    }
-
-    return google.calendar({ version: 'v3', auth: client });
+    const authClient = await getAuthenticatedClient(employeeId);
+    if (!authClient) return null;
+    return google.calendar({ version: 'v3', auth: authClient });
 }
+
+    
