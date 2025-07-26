@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, type FormEvent, useEffect, useCallback } from 'react';
+import { useState, type FormEvent, useEffect, useCallback, useMemo } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import type { EmployeeRole } from '@/models/Employee';
-import { Loader2, UserPlus, Users, Trash2, Edit3, UploadCloud } from 'lucide-react';
+import { Loader2, UserPlus, Users, Trash2, Edit3, UploadCloud, List, LayoutGrid, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +42,8 @@ interface ClientEmployee {
   department?: string;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export default function ManageEmployeesPage() {
   const { toast } = useToast();
   const { user: adminUser, token, isLoading: authLoading } = useAuth();
@@ -68,53 +70,58 @@ export default function ManageEmployeesPage() {
   const [editDepartment, setEditDepartment] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // State for bulk upload
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [isBulkSubmitting, setIsBulkSubmitting] = useState(false);
 
-  // State for bulk delete
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [deleteCsvFile, setDeleteCsvFile] = useState<File | null>(null);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
-
-
-  const handleEditEmployee = async () => {
-    if (!employeeToEdit || !token) return;
-
-    setIsUpdating(true);
-    try {
-      const response = await fetch(`/api/employees/${employeeToEdit._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name: editName, role: editRole, department: editDepartment }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update employee');
-      }
-
-      toast({ title: 'Employee Updated', description: `${data.name}'s profile has been updated.` });
-      setIsEditDialogOpen(false);
-      fetchEmployees(); // Refresh list
-    } catch (error: any) {
-      toast({ title: 'Update Error', description: error.message, variant: 'destructive' });
-    } finally {
-      setIsUpdating(false);
-    }
-  };
   
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('All');
+  const [departmentFilter, setDepartmentFilter] = useState('');
+
   const roleSortOrder: Record<EmployeeRole, number> = {
     'Admin': 1,
     'HR': 2,
     'Manager': 3,
     'Employee': 4,
   };
+  
+  const filteredEmployees = useMemo(() => {
+    const sorted = [...currentEmployees].sort((a, b) => {
+        const roleA = roleSortOrder[a.role] || 99;
+        const roleB = roleSortOrder[b.role] || 99;
+        if (roleA !== roleB) return roleA - roleB;
+        return a.name.localeCompare(b.name);
+    });
+    
+    return sorted.filter(employee => {
+      const searchLower = searchQuery.toLowerCase();
+      const deptLower = departmentFilter.toLowerCase();
+      
+      const matchesSearch = !searchQuery || employee.name.toLowerCase().includes(searchLower) || employee.email.toLowerCase().includes(searchLower);
+      const matchesRole = roleFilter === 'All' || employee.role === roleFilter;
+      const matchesDept = !departmentFilter || (employee.department && employee.department.toLowerCase().includes(deptLower));
+      
+      return matchesSearch && matchesRole && matchesDept;
+    });
+  }, [currentEmployees, searchQuery, roleFilter, departmentFilter]);
+  
+  const totalPages = Math.ceil(filteredEmployees.length / ITEMS_PER_PAGE);
+  const paginatedEmployees = useMemo(() => {
+    return filteredEmployees.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+  }, [filteredEmployees, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, roleFilter, departmentFilter]);
 
   const fetchEmployees = useCallback(async () => {
     if (!adminUser || !token || adminUser.role !== 'Admin') return;
@@ -128,17 +135,7 @@ export default function ManageEmployeesPage() {
         throw new Error(errorData.error || 'Failed to fetch employees');
       }
       const data: ClientEmployee[] = await response.json();
-
-      const sortedData = data.sort((a, b) => {
-          const roleA = roleSortOrder[a.role] || 99;
-          const roleB = roleSortOrder[b.role] || 99;
-          if (roleA !== roleB) {
-              return roleA - roleB;
-          }
-          return a.name.localeCompare(b.name);
-      });
-
-      setCurrentEmployees(sortedData.map(emp => ({
+      setCurrentEmployees(data.map(emp => ({
         ...emp,
         avatarUrl: `https://placehold.co/40x40.png?text=${emp.name.charAt(0).toUpperCase()}`,
         dataAiHint: `${emp.role.toLowerCase()} avatar`
@@ -237,6 +234,37 @@ export default function ManageEmployeesPage() {
       setIsDeleteAlertOpen(false);
     }
   };
+
+  const handleEditEmployee = async () => {
+    if (!employeeToEdit || !token) return;
+
+    setIsUpdating(true);
+    try {
+      const response = await fetch(`/api/employees/${employeeToEdit._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: editName, role: editRole, department: editDepartment }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update employee');
+      }
+
+      toast({ title: 'Employee Updated', description: `${data.name}'s profile has been updated.` });
+      setIsEditDialogOpen(false);
+      fetchEmployees(); // Refresh list
+    } catch (error: any) {
+      toast({ title: 'Update Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
 
   const handleBulkUpload = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -560,11 +588,49 @@ export default function ManageEmployeesPage() {
 
         <Card className="lg:col-span-2 shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Users className="mr-2 h-6 w-6 text-primary" />
-              Current Employees
-            </CardTitle>
-            <CardDescription>List of employees in your organization.</CardDescription>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                <div>
+                  <CardTitle className="flex items-center">
+                    <Users className="mr-2 h-6 w-6 text-primary" />
+                    Current Employees ({filteredEmployees.length})
+                  </CardTitle>
+                  <CardDescription>List of employees in your organization.</CardDescription>
+                </div>
+                 <div className="flex items-center gap-2 self-start sm:self-center">
+                    <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('list')}><List className="h-4 w-4" /></Button>
+                    <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('grid')}><LayoutGrid className="h-4 w-4" /></Button>
+                </div>
+            </div>
+             <div className="mt-4 border-t pt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <Label htmlFor="searchName">Search by Name/Email</Label>
+                        <div className="relative mt-1">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input id="searchName" placeholder="e.g., John Doe" className="pl-9" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                        </div>
+                    </div>
+                     <div>
+                        <Label htmlFor="filterRole">Filter by Role</Label>
+                        <Select value={roleFilter} onValueChange={setRoleFilter}>
+                            <SelectTrigger id="filterRole" className="mt-1">
+                                <SelectValue placeholder="Select a role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="All">All Roles</SelectItem>
+                                <SelectItem value="Admin">Admin</SelectItem>
+                                <SelectItem value="HR">HR</SelectItem>
+                                <SelectItem value="Manager">Manager</SelectItem>
+                                <SelectItem value="Employee">Employee</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                     <div>
+                        <Label htmlFor="searchDept">Search by Department</Label>
+                        <Input id="searchDept" placeholder="e.g., Engineering" className="mt-1" value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)}/>
+                    </div>
+                </div>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoadingEmployees ? (
@@ -572,70 +638,121 @@ export default function ManageEmployeesPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 <p className="ml-2">Loading employees...</p>
               </div>
-            ) : currentEmployees.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">No employees registered yet.</p>
+            ) : paginatedEmployees.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">No employees match your criteria.</p>
+            ) : viewMode === 'list' ? (
+                <>
+                    <div className="rounded-md border overflow-x-auto">
+                        <Table>
+                        <TableHeader>
+                            <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead>Department</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {paginatedEmployees.map((employee) => (
+                            <TableRow 
+                                key={employee._id}
+                                onClick={() => router.push(`/manage-employees/${employee._id}`)}
+                                className="cursor-pointer"
+                            >
+                                <TableCell className="font-medium">
+                                <div className="flex items-center gap-2">
+                                    <Avatar className="h-8 w-8">
+                                    <AvatarImage src={employee.avatarUrl} alt={employee.name} data-ai-hint={employee.dataAiHint} />
+                                    <AvatarFallback>{employee.name.charAt(0).toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                    {employee.name}
+                                </div>
+                                </TableCell>
+                                <TableCell>{employee.email}</TableCell>
+                                <TableCell>
+                                <Badge variant={employee.role === 'Admin' ? 'default' : employee.role === 'HR' ? 'secondary' : 'outline'}>
+                                    {employee.role}
+                                </Badge>
+                                </TableCell>
+                                <TableCell>{employee.department || 'N/A'}</TableCell>
+                                <TableCell className="text-right space-x-1" onClick={(e) => e.stopPropagation()}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8"
+                                    onClick={() => {
+                                    setEmployeeToEdit(employee);
+                                    setEditName(employee.name);
+                                    setEditRole(employee.role);
+                                    setEditDepartment(employee.department || '');
+                                    setIsEditDialogOpen(true);
+                                    }}
+                                >
+                                    <Edit3 className="h-4 w-4" />
+                                    <span className="sr-only">Edit</span>
+                                </Button>
+                                {adminUser?._id !== employee._id && adminUser?.id !== employee._id && (
+                                    <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/80 h-8 w-8" onClick={() => openDeleteConfirmation(employee)}>
+                                        <Trash2 className="h-4 w-4" />
+                                        <span className="sr-only">Delete</span>
+                                    </Button>
+                                    </AlertDialogTrigger>
+                                )}
+                                </TableCell>
+                            </TableRow>
+                            ))}
+                        </TableBody>
+                        </Table>
+                    </div>
+                </>
             ) : (
-              <div className="rounded-md border overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Department</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {currentEmployees.map((employee) => (
-                      <TableRow 
-                        key={employee._id}
-                        onClick={() => router.push(`/manage-employees/${employee._id}`)}
-                        className="cursor-pointer"
-                      >
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={employee.avatarUrl} alt={employee.name} data-ai-hint={employee.dataAiHint} />
-                              <AvatarFallback>{employee.name.charAt(0).toUpperCase()}</AvatarFallback>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {paginatedEmployees.map((employee) => (
+                        <Card key={employee._id} className="p-4 flex flex-col text-center shadow-md hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push(`/manage-employees/${employee._id}`)}>
+                            <Avatar className="h-16 w-16 mb-2 self-center">
+                                <AvatarImage src={employee.avatarUrl} alt={employee.name} data-ai-hint={employee.dataAiHint} />
+                                <AvatarFallback>{employee.name.charAt(0).toUpperCase()}</AvatarFallback>
                             </Avatar>
-                            {employee.name}
-                          </div>
-                        </TableCell>
-                        <TableCell>{employee.email}</TableCell>
-                        <TableCell>
-                          <Badge variant={employee.role === 'Admin' ? 'default' : employee.role === 'HR' ? 'secondary' : 'outline'}>
-                            {employee.role}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{employee.department || 'N/A'}</TableCell>
-                        <TableCell className="text-right space-x-1" onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" className="h-8 w-8"
-                            onClick={() => {
-                              setEmployeeToEdit(employee);
-                              setEditName(employee.name);
-                              setEditRole(employee.role);
-                              setEditDepartment(employee.department || '');
-                              setIsEditDialogOpen(true);
-                            }}
-                          >
-
-                            <Edit3 className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
-                          </Button>
-                          {adminUser?._id !== employee._id && adminUser?.id !== employee._id && (
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/80 h-8 w-8" onClick={() => openDeleteConfirmation(employee)}>
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Delete</span>
-                              </Button>
-                            </AlertDialogTrigger>
-                          )}
-                        </TableCell>
-                      </TableRow>
+                            <p className="font-semibold truncate w-full">{employee.name}</p>
+                            <p className="text-xs text-muted-foreground truncate w-full">{employee.email}</p>
+                            <div className="mt-2 flex-grow flex flex-col justify-center">
+                                <Badge variant={employee.role === 'Admin' ? 'default' : employee.role === 'HR' ? 'secondary' : 'outline'} className="self-center">{employee.role}</Badge>
+                                <p className="text-xs text-muted-foreground mt-1">{employee.department || 'No Department'}</p>
+                            </div>
+                            <div className="mt-4 flex justify-center gap-1 border-t pt-2" onClick={(e) => e.stopPropagation()}>
+                                <Button variant="ghost" size="icon" className="h-7 w-7"
+                                    onClick={() => {
+                                    setEmployeeToEdit(employee);
+                                    setEditName(employee.name);
+                                    setEditRole(employee.role);
+                                    setEditDepartment(employee.department || '');
+                                    setIsEditDialogOpen(true);
+                                    }}
+                                >
+                                    <Edit3 className="h-4 w-4" />
+                                </Button>
+                                {adminUser?._id !== employee._id && adminUser?.id !== employee._id && (
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/80 h-7 w-7" onClick={() => openDeleteConfirmation(employee)}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                )}
+                            </div>
+                        </Card>
                     ))}
-                  </TableBody>
-                </Table>
+                </div>
+            )}
+             {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4">
+                <span className="text-sm text-muted-foreground">Page {currentPage} of {totalPages}</span>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>
+                    <ChevronLeft className="mr-2 h-4 w-4"/> Previous
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages}>
+                    Next <ChevronRight className="ml-2 h-4 w-4"/>
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
