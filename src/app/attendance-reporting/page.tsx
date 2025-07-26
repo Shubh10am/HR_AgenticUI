@@ -416,11 +416,47 @@ export default function AttendanceReportingPage() {
     }
   };
 
-  const handleRequestCorrection = () => {
+  const handleRequestCorrection = async () => {
+    if (isGuest || !token) {
+        toast({ title: 'Feature Unavailable', description: 'Please register to request corrections.', variant: 'destructive' });
+        return;
+    }
+
     toast({
-        title: "Correction Request Sent (Mock)",
-        description: "Your request has been sent to HR/Admin. They will review it shortly.",
+        title: "Submitting Request...",
+        description: "Please wait while we create a support ticket for your request.",
     });
+
+    try {
+        const response = await fetch('/api/support/tickets', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                subject: `Attendance Correction Request - ${formatDateFn(new Date(), 'yyyy-MM-dd')}`,
+                description: `User ${user?.name} (${user?.email}) has requested a correction for their attendance record on ${formatDateFn(new Date(), 'PPP')}. This may be due to an accidental clock-in/out. Please review their record and take appropriate action (e.g., delete the day's record to allow a fresh clock-in).`,
+                priority: 'High',
+            }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to submit support ticket.');
+        }
+
+        toast({
+            title: 'Correction Request Sent',
+            description: 'Your request has been sent to HR/Admin as a high-priority support ticket. They will review it shortly.',
+        });
+    } catch (error: any) {
+        toast({
+            title: 'Request Failed',
+            description: error.message,
+            variant: 'destructive',
+        });
+    }
   };
 
   const getStatusBadgeVariant = (status?: AttendanceEntry['status']) => {
