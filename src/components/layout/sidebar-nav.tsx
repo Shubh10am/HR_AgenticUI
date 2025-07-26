@@ -23,6 +23,7 @@ import {
   LifeBuoy,
   MessageCircle,
   DollarSign, // Added icon
+  ClipboardUser, // Added icon
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar'; 
@@ -41,7 +42,7 @@ const navItems: NavItem[] = [
   { href: '/community', label: 'Community', icon: MessageCircle, tooltip: 'Community Hub' },
   { href: '/email-assistance', label: 'Email Assistance', icon: MailPlus, tooltip: 'Email Assistance' },
   { href: '/gmail-inbox', label: 'Gmail Inbox', icon: Inbox, tooltip: 'Gmail Inbox' },
-  { href: '/attendance-reporting', label: 'Attendance', icon: CalendarCheck, tooltip: 'Attendance & Reporting' },
+  { href: '/attendance-reporting', label: 'My Attendance', icon: CalendarCheck, tooltip: 'My Attendance & Reporting' },
   { href: '/payroll', label: 'Payroll', icon: DollarSign, tooltip: 'Payroll Management' },
   { href: '/unified-communications', label: 'Communications', icon: MessagesSquare, tooltip: 'Unified Communications' },
   { href: '/recruitment', label: 'Recruitment', icon: GitFork, tooltip: 'AI Recruitment' },
@@ -49,6 +50,7 @@ const navItems: NavItem[] = [
   { href: '/tasks', label: 'Tasks', icon: ListChecks, tooltip: 'Task Management' },
   { href: '/knowledge-base', label: 'Knowledge Base', icon: Library, tooltip: 'Knowledge Base' },
   { href: '/manage-employees', label: 'Manage Employees', icon: Users, tooltip: 'Manage Employees', adminOnly: true },
+  { href: '/attendance-management', label: 'Attendance Mgmt', icon: ClipboardUser, tooltip: 'Attendance Management', adminOnly: true },
   { href: '/integrations', label: 'Integrations', icon: Plug, tooltip: 'Manage Integrations' },
   { href: '/support', label: 'Get Support', icon: LifeBuoy, tooltip: 'Get Support' },
 ];
@@ -66,7 +68,8 @@ export default function SidebarNav() {
 
   const filteredNavItems = navItems.filter(item => {
     if (item.adminOnly) {
-      return user?.role === 'Admin';
+      // Show adminOnly items if user role is Admin or HR
+      return user?.role === 'Admin' || user?.role === 'HR';
     }
     return true;
   });
