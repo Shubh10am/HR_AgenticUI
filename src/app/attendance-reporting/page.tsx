@@ -1026,7 +1026,7 @@ export default function AttendanceReportingPage() {
                 <UserCircle className="h-10 w-10 text-primary mr-3" />
                 <div>
                   <CardTitle className="text-xl">{canAdminister ? 'Employee Attendance Overview' : 'My Attendance History'}</CardTitle>
-                  <CardDescription>{canAdminister ? 'Monthly attendance summary for employees in your organization.' : 'A log of your personal attendance records.'}</CardDescription>
+                  <CardDescription>{canAdminister ? 'View attendance records for employees in your organization.' : 'A log of your personal attendance records.'}</CardDescription>
                 </div>
               </div>
               {!isGuest && !canAdminister && (
