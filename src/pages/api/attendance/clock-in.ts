@@ -3,7 +3,7 @@ import type { NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
 import AttendanceRecord from '@/models/AttendanceRecord';
 import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
-import { utcToZonedTime } from 'date-fns-tz';
+import { toZonedTime } from 'date-fns-tz';
 
 async function handler(
   req: NextApiRequestWithAuth,
@@ -13,7 +13,7 @@ async function handler(
   const now = new Date(); // Current time on the server (usually UTC)
   
   // Normalize the date to the beginning of the day in UTC for consistent querying
-  const todayDate = utcToZonedTime(now, 'UTC');
+  const todayDate = toZonedTime(now, 'UTC');
   todayDate.setUTCHours(0, 0, 0, 0);
 
   try {
