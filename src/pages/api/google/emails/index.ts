@@ -37,7 +37,7 @@ function decodeEmailBody(payload: any): string {
 
 
 async function handler(req: NextApiRequestWithAuth, res: NextApiResponse) {
-    const { mailbox = 'inbox', limit = 10 } = req.query;
+    const { mailbox = 'inbox', limit = 20, pageToken } = req.query;
 
     try {
         const gmail = await getGmailService(req.user.id);
@@ -54,11 +54,14 @@ async function handler(req: NextApiRequestWithAuth, res: NextApiResponse) {
             userId: 'me',
             maxResults: Number(limit),
             labelIds: labelIds.length > 0 ? labelIds : undefined,
+            pageToken: pageToken as string | undefined,
         });
 
         const messages = listRes.data.messages || [];
+        const nextPageToken = listRes.data.nextPageToken || null;
+
         if (messages.length === 0) {
-            return res.status(200).json([]);
+            return res.status(200).json({ emails: [], nextPageToken });
         }
 
         const emailPromises = messages.map(async (message) => {
@@ -87,7 +90,7 @@ async function handler(req: NextApiRequestWithAuth, res: NextApiResponse) {
         });
 
         const emails = (await Promise.all(emailPromises)).filter(Boolean);
-        res.status(200).json(emails);
+        res.status(200).json({ emails, nextPageToken });
 
     } catch (error: any) {
         console.error('Error fetching emails:', error.response?.data || error.message);

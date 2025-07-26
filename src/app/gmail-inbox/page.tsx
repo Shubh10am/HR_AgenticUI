@@ -49,6 +49,8 @@ export default function GmailCalendarPage() {
   const [activeMailbox, setActiveMailbox] = useState('inbox');
   
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   const [replyBody, setReplyBody] = useState('');
@@ -79,32 +81,46 @@ export default function GmailCalendarPage() {
     }
   }, [token]);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (isInitialLoad = true, pageToken: string | null = null) => {
     if (!isAuthenticated || !token) return;
-    setIsLoading(true);
-    setSelectedEmail(null);
+
+    if (isInitialLoad) {
+      setIsLoading(true);
+      setSelectedEmail(null);
+      setEmails([]);
+    } else {
+      setIsLoadingMore(true);
+    }
+    
     try {
+        const emailsUrl = `/api/google/emails?mailbox=${activeMailbox}${pageToken ? `&pageToken=${pageToken}` : ''}`;
         const [emailsRes, eventsRes] = await Promise.all([
-            fetch(`/api/google/emails?mailbox=${activeMailbox}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(`/api/google/calendars/primary/events`, { headers: { 'Authorization': `Bearer ${token}` } })
+            fetch(emailsUrl, { headers: { 'Authorization': `Bearer ${token}` } }),
+            isInitialLoad ? fetch(`/api/google/calendars/primary/events`, { headers: { 'Authorization': `Bearer ${token}` } }) : Promise.resolve(null)
         ]);
         
         if (emailsRes.ok) {
-            setEmails(await emailsRes.json());
+            const data = await emailsRes.json();
+            setEmails(prev => isInitialLoad ? data.emails : [...prev, ...data.emails]);
+            setNextPageToken(data.nextPageToken || null);
         } else {
             toast({ title: "Error fetching emails", variant: "destructive" });
         }
 
-        if (eventsRes.ok) {
+        if (eventsRes && eventsRes.ok) {
             setCalendarEvents(await eventsRes.json());
-        } else {
+        } else if (eventsRes && !eventsRes.ok) {
             toast({ title: "Error fetching calendar events", variant: "destructive" });
         }
         
     } catch (error) {
         toast({ title: "Error fetching data", variant: "destructive" });
     } finally {
-        setIsLoading(false);
+        if (isInitialLoad) {
+          setIsLoading(false);
+        } else {
+          setIsLoadingMore(false);
+        }
     }
   }, [isAuthenticated, token, activeMailbox, toast]);
 
@@ -114,9 +130,16 @@ export default function GmailCalendarPage() {
   
   useEffect(() => {
       if(isAuthenticated) {
-          fetchData();
+          fetchData(true); // Initial load
       }
-  }, [isAuthenticated, fetchData]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, activeMailbox]); // Re-fetch when mailbox changes
+
+  const handleLoadMore = () => {
+    if (nextPageToken && !isLoadingMore) {
+      fetchData(false, nextPageToken);
+    }
+  };
 
   const handleConnectGoogleAccount = () => {
     if (!token) {
@@ -146,7 +169,7 @@ export default function GmailCalendarPage() {
       }
       toast({ title: 'Email Deleted' });
       setSelectedEmail(null);
-      await fetchData();
+      await fetchData(true); // Full refresh
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
@@ -207,9 +230,6 @@ export default function GmailCalendarPage() {
     }
   };
 
-
-  const mainGridClasses = "grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-12rem)]";
-
   return (
     <>
       <PageHeader
@@ -223,7 +243,7 @@ export default function GmailCalendarPage() {
             Connect Google Account
           </Button>
         )}
-        <Button variant="outline" onClick={fetchData} disabled={isLoading || !isAuthenticated}>
+        <Button variant="outline" onClick={() => fetchData(true)} disabled={isLoading || !isAuthenticated}>
           {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
           Refresh
         </Button>
@@ -245,7 +265,7 @@ export default function GmailCalendarPage() {
       )}
 
       {isAuthenticated && (
-        <div className={mainGridClasses}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="md:col-span-1 shadow-lg flex flex-col h-full min-h-0">
                 <CardHeader className="p-4 border-b">
                     <CardTitle className="text-lg">Inbox & Calendar</CardTitle>
@@ -285,53 +305,60 @@ export default function GmailCalendarPage() {
                                     {email.date && <p className="text-xs text-muted-foreground mt-1">{new Date(email.date).toLocaleString()}</p>}
                                 </Card>
                             ))}
+                            {nextPageToken && (
+                              <Button variant="outline" className="w-full" onClick={handleLoadMore} disabled={isLoadingMore}>
+                                {isLoadingMore ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Load More'}
+                              </Button>
+                            )}
                             </div>
                         </div>
                     </ScrollArea>
                 </CardContent>
             </Card>
 
-            <Card className="md:col-span-2 shadow-lg flex flex-col h-full min-h-0">
-                <ScrollArea className="h-full">
-                    {!selectedEmail && !showCalendar && (
-                        <div className="flex-grow flex flex-col items-center justify-center text-center p-6 h-full"><MailOpen className="h-24 w-24 text-muted-foreground mb-4" /><p className="text-xl font-semibold text-muted-foreground">Select an email or calendar view</p></div>
-                    )}
-                    {showCalendar && (
-                        <>
-                        <CardHeader className="p-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b"><CardTitle className="text-lg">Calendar Events</CardTitle></CardHeader>
-                        <CardContent className="p-4 space-y-4">
-                            {calendarEvents.map((event) => (<Card key={event.id} className="p-3"><p className="text-sm font-semibold">{event.summary}</p><p className="text-xs text-muted-foreground">Start: {new Date(event.start.dateTime || event.start.date!).toLocaleString()}</p><p className="text-xs text-muted-foreground">End: {new Date(event.end.dateTime || event.end.date!).toLocaleString()}</p></Card>))}
-                            {calendarEvents.length === 0 && <p className="text-center text-muted-foreground">No upcoming events.</p>}
-                        </CardContent>
-                        </>
-                    )}
-                    {selectedEmail && (
-                        <>
-                            <CardHeader className="p-4 flex-row items-center justify-between sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
-                                <div>
-                                    <CardTitle className="text-lg">{selectedEmail.subject}</CardTitle>
-                                    <CardDescription className="line-clamp-1">From: {selectedEmail.from} | To: {selectedEmail.to || 'You'}</CardDescription>
-                                </div>
-                                <Button variant="destructive" size="sm" onClick={handleDeleteEmail}><Trash2 className="mr-2 h-4 w-4"/>Delete</Button>
-                            </CardHeader>
-                            <CardContent className="p-4 space-y-4">
-                                <pre className="text-sm whitespace-pre-wrap font-sans">{selectedEmail.body}</pre>
-                                <Separator />
-                                <div className="space-y-4">
-                                    <h3 className="text-md font-semibold flex items-center"><Reply className="mr-2 h-4 w-4"/>Respond</h3>
-                                    <div className="flex gap-2">
-                                        <Button onClick={handleGenerateReplies} disabled={isGenerating}>{isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Wand2 className="mr-2 h-4 w-4"/>} Generate AI Reply Options</Button>
-                                    </div>
-                                    <form onSubmit={handleSendReply}>
-                                        <Textarea placeholder="Manually compose your reply..." value={replyBody} onChange={(e) => setReplyBody(e.target.value)} className="min-h-[100px] mb-2"/>
-                                        <Button type="submit" disabled={isSending || !replyBody.trim()}>{isSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Send className="mr-2 h-4 w-4"/>} Send Reply</Button>
-                                    </form>
-                                </div>
-                            </CardContent>
-                        </>
-                    )}
-                </ScrollArea>
-            </Card>
+            <div className="md:col-span-2">
+              {!selectedEmail && !showCalendar && (
+                  <Card className="shadow-lg flex items-center justify-center min-h-[500px] md:min-h-full">
+                      <div className="text-center p-6"><MailOpen className="h-24 w-24 text-muted-foreground mx-auto mb-4" /><p className="text-xl font-semibold text-muted-foreground">Select an email or calendar view</p></div>
+                  </Card>
+              )}
+              {showCalendar && (
+                <Card className="shadow-lg h-full">
+                  <CardHeader className="p-4 border-b"><CardTitle className="text-lg">Calendar Events</CardTitle></CardHeader>
+                  <CardContent className="p-4 space-y-4">
+                      {calendarEvents.map((event) => (<Card key={event.id} className="p-3"><p className="text-sm font-semibold">{event.summary}</p><p className="text-xs text-muted-foreground">Start: {new Date(event.start?.dateTime || event.start?.date || '').toLocaleString()}</p><p className="text-xs text-muted-foreground">End: {new Date(event.end?.dateTime || event.end?.date || '').toLocaleString()}</p></Card>))}
+                      {calendarEvents.length === 0 && <p className="text-center text-muted-foreground">No upcoming events.</p>}
+                  </CardContent>
+                </Card>
+              )}
+              {selectedEmail && (
+                <Card className="shadow-lg">
+                    <CardHeader className="p-4 flex-row items-center justify-between sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
+                        <div>
+                            <CardTitle className="text-lg">{selectedEmail.subject}</CardTitle>
+                            <CardDescription className="line-clamp-1">From: {selectedEmail.from} | To: {selectedEmail.to || 'You'}</CardDescription>
+                        </div>
+                        <Button variant="destructive" size="sm" onClick={handleDeleteEmail}><Trash2 className="mr-2 h-4 w-4"/>Delete</Button>
+                    </CardHeader>
+                    <CardContent className="p-4 space-y-4">
+                        <ScrollArea className="h-64 border rounded-md p-3">
+                          <pre className="text-sm whitespace-pre-wrap font-sans">{selectedEmail.body}</pre>
+                        </ScrollArea>
+                        <Separator />
+                        <div className="space-y-4">
+                            <h3 className="text-md font-semibold flex items-center"><Reply className="mr-2 h-4 w-4"/>Respond</h3>
+                            <div className="flex gap-2">
+                                <Button onClick={handleGenerateReplies} disabled={isGenerating}>{isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Wand2 className="mr-2 h-4 w-4"/>} Generate AI Reply Options</Button>
+                            </div>
+                            <form onSubmit={handleSendReply}>
+                                <Textarea placeholder="Manually compose your reply..." value={replyBody} onChange={(e) => setReplyBody(e.target.value)} className="min-h-[100px] mb-2"/>
+                                <Button type="submit" disabled={isSending || !replyBody.trim()}>{isSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Send className="mr-2 h-4 w-4"/>} Send Reply</Button>
+                            </form>
+                        </div>
+                    </CardContent>
+                </Card>
+              )}
+            </div>
         </div>
       )}
 
@@ -352,4 +379,3 @@ export default function GmailCalendarPage() {
     </>
   );
 }
-
