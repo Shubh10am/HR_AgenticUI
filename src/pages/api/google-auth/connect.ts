@@ -13,7 +13,7 @@ export function getGoogleAuthClient() {
   return new google.auth.OAuth2(
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
-    `https://6000-firebase-studio-1747735061156.cluster-6dx7corvpngoivimwvvljgokdw.cloudworkstations.dev/api/google-auth/callback`
+    `${NEXT_PUBLIC_BASE_URL}/api/google-auth/callback`
   );
 }
 
