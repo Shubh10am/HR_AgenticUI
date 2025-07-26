@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, type FormEvent, useCallback } from 'react';
@@ -8,16 +7,15 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Wand2, Send, Reply, ChevronRight, MailOpen, RefreshCw, Trash2, FileWarning, Link as LinkIcon, Calendar, Lock } from 'lucide-react';
+import { Loader2, Wand2, Send, Reply, ChevronRight, MailOpen, RefreshCw, Trash2, FileWarning, Link as LinkIcon, Calendar, Lock, AlertCircle, File as FileIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, type GenerateDraftEmailResponsesOutput } from '@/ai/flows/draft-email-response';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import Link from 'next/link';
-import { JSDOM } from 'jsdom';
 
 interface Email {
   id: string;
@@ -65,6 +63,8 @@ export default function GmailCalendarPage() {
   const { toast } = useToast();
   const { token, user } = useAuth();
   const isGuest = user?.organizationId === 'guest-org-id';
+  const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
+
 
   const checkAuthStatus = useCallback(async () => {
     if (!token || isGuest) {
@@ -149,6 +149,10 @@ export default function GmailCalendarPage() {
   };
 
   const handleConnectGoogleAccount = () => {
+    if (isGuest) {
+        setIsLoginPromptOpen(true);
+        return;
+    }
     if (!token) {
         toast({ title: "Please log in first", variant: "destructive" });
         return;
@@ -249,67 +253,69 @@ export default function GmailCalendarPage() {
   };
   
   if (isGuest) {
-    const mockEmails = [
-        { id: '1', from: 'Lensa Job Alerts', subject: 'New opportunities in your area', snippet: 'We found new jobs for you at top companies...' },
-        { id: '2', from: 'Slack', subject: 'You have a new message from Shubham', snippet: 'Hey, can you take a look at the latest designs...' },
-        { id: '3', from: 'Google Calendar', subject: 'Invitation: Project Sync @ 11am', snippet: 'You have been invited to the following event...' },
-    ];
-    
     return (
         <>
         <PageHeader
             title="Gmail & Calendar"
-            description="Connect your Google account to manage emails and calendars."
+            description="Manage your emails and calendar events with AI assistance."
             className="mb-4"
-        />
-        <div className="relative">
-            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 text-center">
-                <Lock className="h-16 w-16 text-primary mb-4"/>
-                <h3 className="text-2xl font-bold">Unlock Your Gmail & Calendar Hub</h3>
-                <p className="text-muted-foreground mt-2 mb-6 max-w-md">
-                    Connect your Google account to manage emails, get AI-powered reply suggestions, and view your calendar events all in one place.
-                </p>
-                <div className="flex gap-4">
-                    <Button asChild><Link href="/login">Log In</Link></Button>
-                    <Button asChild variant="outline"><Link href="/register">Register</Link></Button>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 blur-sm select-none pointer-events-none">
-                <Card className="md:col-span-1 shadow-lg">
-                    <CardHeader className="p-4 border-b">
-                        <CardTitle className="text-lg">Inbox</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 space-y-2">
-                        {mockEmails.map(email => (
-                            <Card key={email.id} className="p-3 bg-card">
-                                <p className="text-sm font-semibold truncate">{email.from}</p>
-                                <p className="text-sm truncate">{email.subject}</p>
-                                <p className="text-xs text-muted-foreground truncate">{email.snippet}</p>
-                            </Card>
-                        ))}
-                    </CardContent>
-                </Card>
-                <Card className="md:col-span-2 shadow-lg">
-                    <CardHeader className="p-4 border-b">
-                        <CardTitle className="text-lg">{mockEmails[0].subject}</CardTitle>
-                        <CardDescription>From: {mockEmails[0].from}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-4 space-y-4">
-                        <div className="space-y-2 text-sm text-muted-foreground">
-                            <div className="h-4 bg-muted rounded w-full"></div>
-                            <div className="h-4 bg-muted rounded w-5/6"></div>
-                            <div className="h-4 bg-muted rounded w-full"></div>
-                            <div className="h-4 bg-muted rounded w-3/4"></div>
+        >
+            <Button onClick={handleConnectGoogleAccount}>
+                <LinkIcon className="mr-2 h-4 w-4" />
+                Connect Google Account
+            </Button>
+        </PageHeader>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="md:col-span-1 shadow-lg flex flex-col h-full min-h-0">
+                <CardHeader className="p-4 border-b">
+                    <CardTitle className="text-lg">Inbox & Calendar</CardTitle>
+                    <CardDescription>View emails or calendar events.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-0 flex-grow overflow-hidden">
+                    <div className="p-4 space-y-3">
+                        <Button
+                            variant="outline"
+                            className="w-full justify-start py-2"
+                            disabled
+                        >
+                            <Calendar className="mr-2 h-4 w-4" /> Calendar Events
+                        </Button>
+                        <div className="space-y-2">
+                           <Label>Inbox</Label>
+                           <Select disabled>
+                               <SelectTrigger>
+                                   <SelectValue placeholder="Inbox"/>
+                               </SelectTrigger>
+                           </Select>
                         </div>
-                        <Separator />
-                        <h3 className="text-md font-semibold">Respond</h3>
-                        <Textarea placeholder="Reply..." disabled/>
-                        <Button disabled>Send Reply</Button>
-                    </CardContent>
-                </Card>
+                        <div className="text-center text-muted-foreground p-6">
+                            <FileIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                            <p>Please connect your Google account to view emails.</p>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+            <div className="md:col-span-2">
+                 <Card className="shadow-lg flex items-center justify-center min-h-[500px] md:min-h-full">
+                      <div className="text-center p-6"><MailOpen className="h-24 w-24 text-muted-foreground mx-auto mb-4" /><p className="text-xl font-semibold text-muted-foreground">Select an email or calendar view</p><p className="text-sm text-muted-foreground">Content will appear here.</p></div>
+                  </Card>
             </div>
         </div>
+
+        <Dialog open={isLoginPromptOpen} onOpenChange={setIsLoginPromptOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Connect Your Account</DialogTitle>
+                    <DialogDescription>
+                        Please log in or register to connect your Google account and use this feature.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="gap-2">
+                    <Button asChild variant="outline" onClick={() => setIsLoginPromptOpen(false)}><Link href="/register">Register</Link></Button>
+                    <Button asChild onClick={() => setIsLoginPromptOpen(false)}><Link href="/login">Log In</Link></Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
         </>
     );
   }
@@ -450,7 +456,7 @@ export default function GmailCalendarPage() {
                     </CardHeader>
                     <CardContent className="p-4 space-y-4">
                         <ScrollArea className="h-64 border rounded-md p-3">
-                          <div className="text-sm whitespace-pre-wrap font-sans" dangerouslySetInnerHTML={{ __html: selectedEmail.body.replace(/(<style.*?>.*?<\/style>)/g, '') }} />
+                          <div className="text-sm whitespace-pre-wrap font-sans" dangerouslySetInnerHTML={{ __html: selectedEmail.body }} />
                         </ScrollArea>
                         <Separator />
                         <div className="space-y-4">
