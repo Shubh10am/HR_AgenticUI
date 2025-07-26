@@ -13,6 +13,8 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { chatWithCopilot, type CopilotChatInput, type CopilotChatOutput } from '@/ai/flows/copilot-chat-flow';
 import { useAuth } from '@/contexts/auth-context';
+import { Popover, PopoverContent, PopoverTrigger, PopoverAnchor } from '@/components/ui/popover';
+import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 
 interface ChatMessage {
   id: string;
@@ -21,6 +23,11 @@ interface ChatMessage {
   avatarUrl?: string;
   avatarFallback: string;
   dataAiHint?: string;
+}
+
+interface MentionableUser {
+    _id: string;
+    name: string;
 }
 
 const guestWelcomeMessage: ChatMessage = {
@@ -42,8 +49,16 @@ export default function ChatWidget() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const isGuest = !user || user.organizationId === 'guest-org-id';
+
+  // State for @mentions
+  const [isMentionPopoverOpen, setIsMentionPopoverOpen] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionSuggestions, setMentionSuggestions] = useState<MentionableUser[]>([]);
+  const [isMentionLoading, setIsMentionLoading] = useState(false);
+  const currentMentionStartIndex = useRef<number | null>(null);
+
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -64,6 +79,29 @@ export default function ChatWidget() {
       });
     }
   }, [chatHistory]);
+  
+  useEffect(() => {
+    if (mentionQuery) {
+      setIsMentionLoading(true);
+      const timer = setTimeout(async () => {
+        try {
+          if (!token) return;
+          const response = await fetch(`/api/employees/search?name=${mentionQuery}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setMentionSuggestions(data);
+          }
+        } catch (error) {
+          console.error("Failed to fetch mention suggestions", error);
+        } finally {
+          setIsMentionLoading(false);
+        }
+      }, 300); // Debounce API calls
+      return () => clearTimeout(timer);
+    }
+  }, [mentionQuery, token]);
 
   const handleOpenMessagesTab = () => {
     setActiveTab('messages');
@@ -132,6 +170,37 @@ export default function ChatWidget() {
       }
     }
   };
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setUserInput(value);
+
+    const cursorPosition = e.target.selectionStart || 0;
+    const atIndex = value.lastIndexOf('@', cursorPosition - 1);
+
+    if (atIndex !== -1 && (atIndex === 0 || /\s/.test(value[atIndex - 1]))) {
+      const query = value.substring(atIndex + 1, cursorPosition);
+      setMentionQuery(query);
+      setIsMentionPopoverOpen(true);
+      currentMentionStartIndex.current = atIndex;
+    } else {
+      setIsMentionPopoverOpen(false);
+    }
+  };
+
+  const handleSelectMention = (user: MentionableUser) => {
+    if (currentMentionStartIndex.current !== null) {
+      const start = userInput.substring(0, currentMentionStartIndex.current);
+      const end = userInput.substring(currentMentionStartIndex.current + 1 + mentionQuery.length);
+      const newText = `${start}@${user.name} ${end}`;
+      setUserInput(newText);
+      setIsMentionPopoverOpen(false);
+      setMentionQuery('');
+      setMentionSuggestions([]);
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
+  };
+
 
   const renderHomeContent = () => (
     <div className="space-y-2">
@@ -205,12 +274,33 @@ export default function ChatWidget() {
             )}
           </div>
         </ScrollArea>
-        <form onSubmit={handleSendMessage} className="flex-shrink-0 pt-3 mt-auto">
-          <div className="relative">
-            <Input ref={inputRef} type="text" placeholder="Type your message..." value={userInput} onChange={(e) => setUserInput(e.target.value)} disabled={isLoading} className="pr-12 text-card-foreground" />
-            <Button type="submit" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" disabled={isLoading || !userInput.trim()}><Send className="h-4 w-4" /></Button>
-          </div>
-        </form>
+        <Popover open={isMentionPopoverOpen} onOpenChange={setIsMentionPopoverOpen}>
+          <PopoverAnchor asChild>
+            <form onSubmit={handleSendMessage} className="flex-shrink-0 pt-3 mt-auto">
+              <div className="relative">
+                <Input ref={inputRef} type="text" placeholder="Type your message..." value={userInput} onChange={handleInputChange} disabled={isLoading} className="pr-12 text-card-foreground" />
+                <Button type="submit" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" disabled={isLoading || !userInput.trim()}><Send className="h-4 w-4" /></Button>
+              </div>
+            </form>
+          </PopoverAnchor>
+          <PopoverContent className="w-[300px] p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+            <Command>
+              <CommandList>
+                {isMentionLoading && <div className="p-2 text-center text-sm text-muted-foreground">Loading...</div>}
+                {!isMentionLoading && mentionSuggestions.length === 0 && (
+                  <div className="p-2 text-center text-sm text-muted-foreground">No users found.</div>
+                )}
+                <CommandGroup>
+                  {mentionSuggestions.map((suggestion) => (
+                    <CommandItem key={suggestion._id} onSelect={() => handleSelectMention(suggestion)} value={suggestion.name}>
+                      {suggestion.name}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
   );
 
