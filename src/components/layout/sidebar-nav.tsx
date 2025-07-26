@@ -43,6 +43,7 @@ const navItems: NavItem[] = [
   { href: '/gmail-inbox', label: 'Gmail Inbox', icon: Inbox, tooltip: 'Gmail Inbox' },
   { href: '/attendance-reporting', label: 'My Attendance', icon: CalendarCheck, tooltip: 'My Attendance & Reporting' },
   { href: '/payroll', label: 'Payroll', icon: DollarSign, tooltip: 'Payroll Management' },
+  { href: '/task-management', label: 'Task Management', icon: ClipboardList, tooltip: 'Task Management Board' },
   { href: '/unified-communications', label: 'Communications', icon: MessagesSquare, tooltip: 'Unified Communications' },
   { href: '/recruitment', label: 'Recruitment', icon: GitFork, tooltip: 'AI Recruitment' },
   { href: '/smart-drafting', label: 'Smart Drafting', icon: FileSignature, tooltip: 'Smart Email Drafting' },
