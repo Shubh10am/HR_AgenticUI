@@ -5,17 +5,16 @@ import { useState, useEffect, type FormEvent, useCallback } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Wand2, Send, Reply, ChevronRight, MailOpen, RefreshCw, Trash2, FileWarning, Link as LinkIcon, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, type GenerateDraftEmailResponsesOutput } from '@/ai/flows/draft-email-response';
+import { Textarea } from '@/components/ui/textarea';
+
 
 interface Email {
   id: string;
@@ -47,6 +46,7 @@ export default function GmailCalendarPage() {
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [showCalendar, setShowCalendar] = useState(false);
   const [activeMailbox, setActiveMailbox] = useState('inbox');
+  const [activeCategory, setActiveCategory] = useState('all');
   
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -93,7 +93,10 @@ export default function GmailCalendarPage() {
     }
     
     try {
-        const emailsUrl = `/api/google/emails?mailbox=${activeMailbox}${pageToken ? `&pageToken=${pageToken}` : ''}`;
+        let emailsUrl = `/api/google/emails?mailbox=${activeMailbox}`;
+        if (pageToken) emailsUrl += `&pageToken=${pageToken}`;
+        if (activeCategory !== 'all') emailsUrl += `&category=${activeCategory}`;
+        
         const [emailsRes, eventsRes] = await Promise.all([
             fetch(emailsUrl, { headers: { 'Authorization': `Bearer ${token}` } }),
             isInitialLoad ? fetch(`/api/google/calendars/primary/events`, { headers: { 'Authorization': `Bearer ${token}` } }) : Promise.resolve(null)
@@ -122,7 +125,7 @@ export default function GmailCalendarPage() {
           setIsLoadingMore(false);
         }
     }
-  }, [isAuthenticated, token, activeMailbox, toast]);
+  }, [isAuthenticated, token, activeMailbox, activeCategory, toast]);
 
   useEffect(() => {
     checkAuthStatus();
@@ -130,10 +133,10 @@ export default function GmailCalendarPage() {
   
   useEffect(() => {
       if(isAuthenticated) {
-          fetchData(true); // Initial load
+          fetchData(true);
       }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, activeMailbox]); // Re-fetch when mailbox changes
+  }, [isAuthenticated, activeMailbox, activeCategory]);
 
   const handleLoadMore = () => {
     if (nextPageToken && !isLoadingMore) {
@@ -152,7 +155,7 @@ export default function GmailCalendarPage() {
 
   const handleSelectEmail = (email: Email) => {
     setSelectedEmail(email);
-    setReplyBody(''); // Clear reply body when a new email is selected
+    setReplyBody('');
     setShowCalendar(false);
   };
 
@@ -249,7 +252,7 @@ export default function GmailCalendarPage() {
         </Button>
       </PageHeader>
       
-       {!isAuthenticated && !isLoading && (
+      {!isAuthenticated && !isLoading && (
         <Card className="text-center p-8">
           <CardHeader>
             <CardTitle>Connect Your Google Account</CardTitle>
@@ -282,16 +285,30 @@ export default function GmailCalendarPage() {
                                 <Calendar className="mr-2 h-4 w-4" /> Calendar Events
                             </Button>
                             <Separator />
-                            <Select onValueChange={setActiveMailbox} defaultValue={activeMailbox}>
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select a mailbox" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="inbox">Inbox</SelectItem>
-                                    <SelectItem value="sent">Sent</SelectItem>
-                                    <SelectItem value="spam">Spam</SelectItem>
-                                </SelectContent>
-                            </Select>
+                             <div className="space-y-2">
+                                <Label>Mailbox</Label>
+                                <Select onValueChange={setActiveMailbox} defaultValue={activeMailbox}>
+                                    <SelectTrigger><SelectValue placeholder="Select a mailbox" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="inbox">Inbox</SelectItem>
+                                        <SelectItem value="sent">Sent</SelectItem>
+                                        <SelectItem value="spam">Spam</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                             <div className="space-y-2">
+                                <Label>Category</Label>
+                                <Select onValueChange={setActiveCategory} defaultValue={activeCategory}>
+                                    <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All</SelectItem>
+                                        <SelectItem value="social">Social</SelectItem>
+                                        <SelectItem value="promotions">Promotions</SelectItem>
+                                        <SelectItem value="updates">Updates</SelectItem>
+                                        <SelectItem value="forums">Forums</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             <div className="space-y-2">
                             {isLoading && <div className="text-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" /></div>}
                             {!isLoading && emails.length === 0 && (
@@ -338,17 +355,17 @@ export default function GmailCalendarPage() {
                             <CardTitle className="text-lg">{selectedEmail.subject}</CardTitle>
                             <CardDescription className="line-clamp-1">From: {selectedEmail.from} | To: {selectedEmail.to || 'You'}</CardDescription>
                         </div>
-                        <Button variant="destructive" size="sm" onClick={handleDeleteEmail}><Trash2 className="mr-2 h-4 w-4"/>Delete</Button>
                     </CardHeader>
                     <CardContent className="p-4 space-y-4">
                         <ScrollArea className="h-64 border rounded-md p-3">
-                          <pre className="text-sm whitespace-pre-wrap font-sans">{selectedEmail.body}</pre>
+                          <div className="text-sm whitespace-pre-wrap font-sans" dangerouslySetInnerHTML={{ __html: selectedEmail.body.replace(/(<style.*?>.*?<\/style>)/g, '') }} />
                         </ScrollArea>
                         <Separator />
                         <div className="space-y-4">
                             <h3 className="text-md font-semibold flex items-center"><Reply className="mr-2 h-4 w-4"/>Respond</h3>
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-2">
                                 <Button onClick={handleGenerateReplies} disabled={isGenerating}>{isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Wand2 className="mr-2 h-4 w-4"/>} Generate AI Reply Options</Button>
+                                 <Button variant="destructive" size="sm" onClick={handleDeleteEmail}><Trash2 className="mr-2 h-4 w-4"/>Delete Email</Button>
                             </div>
                             <form onSubmit={handleSendReply}>
                                 <Textarea placeholder="Manually compose your reply..." value={replyBody} onChange={(e) => setReplyBody(e.target.value)} className="min-h-[100px] mb-2"/>
@@ -364,7 +381,10 @@ export default function GmailCalendarPage() {
 
       <Dialog open={isDraftsModalOpen} onOpenChange={setIsDraftsModalOpen}>
         <DialogContent className="sm:max-w-xl">
-            <DialogHeader><DialogTitle>AI Generated Reply Options</DialogTitle><DialogDescription>Select a draft to use as your reply.</DialogDescription></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>AI Generated Reply Options</DialogTitle>
+            <DialogDescription>Select a draft to use as your reply.</DialogDescription>
+          </DialogHeader>
             <ScrollArea className="max-h-[60vh] p-1"><div className="p-4 space-y-4">
                 {generatedDrafts.map((draft, index) => (
                     <Card key={index}><CardHeader className="pb-2"><CardTitle className="text-base">{draft.subject}</CardTitle></CardHeader>

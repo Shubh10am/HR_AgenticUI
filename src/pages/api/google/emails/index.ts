@@ -2,32 +2,43 @@
 import type { NextApiResponse } from 'next';
 import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
 import { getGmailService } from '@/services/google';
+import { JSDOM } from 'jsdom';
 
 // Helper function to decode email body
 function decodeEmailBody(payload: any): string {
     try {
-        if (payload.parts) {
-            for (const part of payload.parts) {
-                if (part.mimeType === 'text/plain' && part.body.data) {
-                    return Buffer.from(part.body.data, 'base64').toString('utf-8');
-                }
-            }
-            // Fallback to finding HTML or nested parts
-            for (const part of payload.parts) {
-                 if (part.mimeType === 'text/html' && part.body.data) {
-                    // Basic stripping of HTML tags for plain text view
-                    const html = Buffer.from(part.body.data, 'base64').toString('utf-8');
-                    return html.replace(/<[^>]*>/g, '');
-                }
-                if (part.parts) {
-                    const nestedBody = decodeEmailBody(part);
-                    if (nestedBody) return nestedBody;
-                }
-            }
+        if (payload.mimeType === 'text/plain' && payload.body?.data) {
+            return Buffer.from(payload.body.data, 'base64').toString('utf-8');
         }
+
+        if (payload.parts) {
+            // Prefer plain text part
+            const plainTextPart = payload.parts.find((p: any) => p.mimeType === 'text/plain' && p.body.data);
+            if (plainTextPart) {
+                return Buffer.from(plainTextPart.body.data, 'base64').toString('utf-8');
+            }
+
+            // Fallback to HTML part and clean it
+            const htmlPart = payload.parts.find((p: any) => p.mimeType === 'text/html' && p.body.data);
+            if (htmlPart) {
+                const html = Buffer.from(htmlPart.body.data, 'base64').toString('utf-8');
+                const dom = new JSDOM(html);
+                // Attempt to get text, falling back to stripping tags if textContent is null
+                return dom.window.document.body.textContent || html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+            }
+
+            // Recursively search in multipart/alternative
+             const multipartAlternative = payload.parts.find((p: any) => p.mimeType === 'multipart/alternative' && p.parts);
+             if (multipartAlternative) {
+                 return decodeEmailBody(multipartAlternative);
+             }
+        }
+        
+        // Final fallback for top-level body data
         if (payload.body?.data) {
             return Buffer.from(payload.body.data, 'base64').toString('utf-8');
         }
+
         return '';
     } catch (e) {
         console.error("Error decoding email body part", e);
@@ -37,7 +48,7 @@ function decodeEmailBody(payload: any): string {
 
 
 async function handler(req: NextApiRequestWithAuth, res: NextApiResponse) {
-    const { mailbox = 'inbox', limit = 20, pageToken } = req.query;
+    const { mailbox = 'inbox', limit = 20, pageToken, category } = req.query;
 
     try {
         const gmail = await getGmailService(req.user.id);
@@ -49,11 +60,18 @@ async function handler(req: NextApiRequestWithAuth, res: NextApiResponse) {
         if (mailbox === 'inbox') labelIds.push('INBOX');
         if (mailbox === 'sent') labelIds.push('SENT');
         if (mailbox === 'spam') labelIds.push('SPAM');
+        if (category && typeof category === 'string') {
+            const categoryLabel = `CATEGORY_${category.toUpperCase()}`;
+            if (['CATEGORY_SOCIAL', 'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS'].includes(categoryLabel)) {
+                labelIds.push(categoryLabel);
+            }
+        }
         
         const listRes = await gmail.users.messages.list({
             userId: 'me',
             maxResults: Number(limit),
             labelIds: labelIds.length > 0 ? labelIds : undefined,
+            q: category ? `category:${category}` : '', // Use query for categories as well
             pageToken: pageToken as string | undefined,
         });
 
@@ -66,14 +84,14 @@ async function handler(req: NextApiRequestWithAuth, res: NextApiResponse) {
 
         const emailPromises = messages.map(async (message) => {
             if (!message.id) return null;
-            const msg = await gmail.users.messages.get({ userId: 'me', id: message.id });
+            const msg = await gmail.users.messages.get({ userId: 'me', id: message.id, format: 'full' });
             const headers = msg.data.payload?.headers;
             if (!headers) return null;
 
-            const fromHeader = headers.find(h => h.name === 'From')?.value || '';
-            const toHeader = headers.find(h => h.name === 'To')?.value || '';
-            const subjectHeader = headers.find(h => h.name === 'Subject')?.value || '';
-            const dateHeader = headers.find(h => h.name === 'Date')?.value || '';
+            const fromHeader = headers.find(h => h.name?.toLowerCase() === 'from')?.value || '';
+            const toHeader = headers.find(h => h.name?.toLowerCase() === 'to')?.value || '';
+            const subjectHeader = headers.find(h => h.name?.toLowerCase() === 'subject')?.value || '';
+            const dateHeader = headers.find(h => h.name?.toLowerCase() === 'date')?.value || '';
 
             const body = msg.data.payload ? decodeEmailBody(msg.data.payload) : '';
 

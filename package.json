@@ -50,6 +50,7 @@
     "genkit": "^1.8.0",
     "googleapis": "^142.0.0",
     "js-base64": "^3.7.7",
+    "jsdom": "^24.1.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.475.0",
     "mammoth": "^1.9.1",
@@ -71,6 +72,7 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/js-base64": "^3.3.1",
+    "@types/jsdom": "^21.1.7",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/mongoose": "^5.11.97",
     "@types/node": "^20",
