@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import { JSDOM } from 'jsdom';
 
 interface Email {
   id: string;
@@ -238,11 +239,9 @@ export default function GmailCalendarPage() {
 
   const formatEventTime = (eventTime: { dateTime?: string, date?: string } | undefined) => {
     if (!eventTime) return 'N/A';
-    // All-day event
     if (eventTime.date) {
         return format(new Date(eventTime.date), 'MMM d, yyyy');
     }
-    // Specific time event
     if (eventTime.dateTime) {
         return format(new Date(eventTime.dateTime), 'MMM d, h:mm a');
     }
@@ -250,29 +249,68 @@ export default function GmailCalendarPage() {
   };
   
   if (isGuest) {
+    const mockEmails = [
+        { id: '1', from: 'Lensa Job Alerts', subject: 'New opportunities in your area', snippet: 'We found new jobs for you at top companies...' },
+        { id: '2', from: 'Slack', subject: 'You have a new message from Shubham', snippet: 'Hey, can you take a look at the latest designs...' },
+        { id: '3', from: 'Google Calendar', subject: 'Invitation: Project Sync @ 11am', snippet: 'You have been invited to the following event...' },
+    ];
+    
     return (
-      <>
+        <>
         <PageHeader
-          title="Gmail & Calendar"
-          description="This feature is unavailable in guest mode."
-          className="mb-4"
+            title="Gmail & Calendar"
+            description="Connect your Google account to manage emails and calendars."
+            className="mb-4"
         />
-        <Card className="text-center p-8 flex flex-col items-center justify-center min-h-[500px]">
-          <Lock className="h-16 w-16 text-primary mb-4" />
-          <CardHeader>
-            <CardTitle>Feature Locked</CardTitle>
-            <CardDescription>Connect your Google account and manage emails and calendars after logging in or registering.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex gap-4">
-             <Button asChild>
-                <Link href="/login">Log In</Link>
-             </Button>
-             <Button asChild variant="outline">
-                <Link href="/register">Register</Link>
-             </Button>
-          </CardContent>
-        </Card>
-      </>
+        <div className="relative">
+            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 text-center">
+                <Lock className="h-16 w-16 text-primary mb-4"/>
+                <h3 className="text-2xl font-bold">Unlock Your Gmail & Calendar Hub</h3>
+                <p className="text-muted-foreground mt-2 mb-6 max-w-md">
+                    Connect your Google account to manage emails, get AI-powered reply suggestions, and view your calendar events all in one place.
+                </p>
+                <div className="flex gap-4">
+                    <Button asChild><Link href="/login">Log In</Link></Button>
+                    <Button asChild variant="outline"><Link href="/register">Register</Link></Button>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 blur-sm select-none pointer-events-none">
+                <Card className="md:col-span-1 shadow-lg">
+                    <CardHeader className="p-4 border-b">
+                        <CardTitle className="text-lg">Inbox</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 space-y-2">
+                        {mockEmails.map(email => (
+                            <Card key={email.id} className="p-3 bg-card">
+                                <p className="text-sm font-semibold truncate">{email.from}</p>
+                                <p className="text-sm truncate">{email.subject}</p>
+                                <p className="text-xs text-muted-foreground truncate">{email.snippet}</p>
+                            </Card>
+                        ))}
+                    </CardContent>
+                </Card>
+                <Card className="md:col-span-2 shadow-lg">
+                    <CardHeader className="p-4 border-b">
+                        <CardTitle className="text-lg">{mockEmails[0].subject}</CardTitle>
+                        <CardDescription>From: {mockEmails[0].from}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-4 space-y-4">
+                        <div className="space-y-2 text-sm text-muted-foreground">
+                            <div className="h-4 bg-muted rounded w-full"></div>
+                            <div className="h-4 bg-muted rounded w-5/6"></div>
+                            <div className="h-4 bg-muted rounded w-full"></div>
+                            <div className="h-4 bg-muted rounded w-3/4"></div>
+                        </div>
+                        <Separator />
+                        <h3 className="text-md font-semibold">Respond</h3>
+                        <Textarea placeholder="Reply..." disabled/>
+                        <Button disabled>Send Reply</Button>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+        </>
     );
   }
 
