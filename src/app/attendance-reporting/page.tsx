@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, UserCircle, Clock, LogIn, LogOut, Briefcase, CalendarDays, Send, FileText, BarChartHorizontalBig, Edit, Filter, UserSearch, XCircle, Wand2, Loader2 as LoaderIcon, AlertTriangle, UserPlus, ShieldQuestion } from 'lucide-react'; // Added UserPlus, ShieldQuestion
+import { Download, UserCircle, Clock, LogIn, LogOut, Briefcase, CalendarDays, Send, FileText, BarChartHorizontalBig, Edit, Filter, UserSearch, XCircle, Wand2, Loader2 as LoaderIcon, AlertTriangle, UserPlus, ShieldQuestion, HelpCircle } from 'lucide-react'; // Added UserPlus, ShieldQuestion
 import { Progress } from '@/components/ui/progress';
 import { useToast } from "@/hooks/use-toast";
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format as formatDateFn, parse, isAfter, isBefore, isEqual, startOfDay, startOfMonth, startOfWeek, endOfWeek, endOfMonth, isSameMonth, parseISO } from 'date-fns';
+import { format as formatDateFn, parse, isAfter, isBefore, isEqual, startOfDay, startOfMonth, startOfWeek, endOfWeek, endOfMonth, isSameMonth, parseISO, isToday } from 'date-fns';
 import { format as formatTz } from 'date-fns-tz';
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput } from '@/ai/flows/draft-email-response';
 import { useAuth } from '@/contexts/auth-context';
@@ -111,6 +111,15 @@ export default function AttendanceReportingPage() {
   const [currentCalendarMonth, setCurrentCalendarMonth] = useState<Date>(startOfMonth(new Date()));
   const [dayModifiers, setDayModifiers] = useState<Record<string, Date[]>>({});
   const [dayModifiersClassNames, setDayModifiersClassNames] = useState<Record<string, string>>({});
+
+  const hasClockedOutToday = useMemo(() => {
+    if (isGuest || !user) return false;
+    return allFetchedAttendanceRecords.some(record => 
+      isToday(parseISO(record.date)) &&
+      record.employeeId === user.id &&
+      record.clockOut
+    );
+  }, [allFetchedAttendanceRecords, user, isGuest]);
 
   const fetchAttendanceRecords = useCallback(async () => {
     if (!token || isGuest) return; // Do not fetch for guests
@@ -407,6 +416,13 @@ export default function AttendanceReportingPage() {
     }
   };
 
+  const handleRequestCorrection = () => {
+    toast({
+        title: "Correction Request Sent (Mock)",
+        description: "Your request has been sent to HR/Admin. They will review it shortly.",
+    });
+  };
+
   const getStatusBadgeVariant = (status?: AttendanceEntry['status']) => {
     if (!status) return 'outline';
     switch (status.toLowerCase()) {
@@ -644,6 +660,43 @@ export default function AttendanceReportingPage() {
     setIsEditingPolicy(false);
   };
 
+  const renderClockInButton = () => {
+    if (isGuest) {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button onClick={handleClockIn} className="w-full" size="lg" disabled>
+              <LogIn className="mr-2 h-5 w-5" /> Clock In
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent><p>Login to use this feature.</p></TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    if (hasClockedOutToday) {
+      return (
+        <Button onClick={handleRequestCorrection} className="w-full" size="lg" variant="secondary">
+          <HelpCircle className="mr-2 h-5 w-5" /> Request Correction
+        </Button>
+      );
+    }
+
+    if (isClockedIn) {
+      return (
+        <Button onClick={handleClockOut} variant="destructive" className="w-full" size="lg" disabled={isClocking}>
+          {isClocking ? <LoaderIcon className="mr-2 h-5 w-5 animate-spin" /> : <LogOut className="mr-2 h-5 w-5" />} Clock Out
+        </Button>
+      );
+    }
+
+    return (
+      <Button onClick={handleClockIn} className="w-full" size="lg" disabled={isClocking}>
+        {isClocking ? <LoaderIcon className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />} Clock In
+      </Button>
+    );
+  };
+
 
   return (
     <TooltipProvider>
@@ -697,27 +750,7 @@ export default function AttendanceReportingPage() {
                  {isGuest && <p className="text-sm text-muted-foreground">Clock-in/out disabled.</p>}
               </div>
             )}
-            {!isClockedIn || isGuest ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button onClick={handleClockIn} className="w-full" size="lg" disabled={isClocking || isGuest}>
-                    {isClocking ? <LoaderIcon className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
-                    Clock In
-                  </Button>
-                </TooltipTrigger>
-                {isGuest && <TooltipContent><p>Login to use this feature.</p></TooltipContent>}
-              </Tooltip>
-            ) : (
-               <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button onClick={handleClockOut} variant="destructive" className="w-full" size="lg" disabled={isClocking || isGuest}>
-                        {isClocking ? <LoaderIcon className="mr-2 h-5 w-5 animate-spin" /> : <LogOut className="mr-2 h-5 w-5" />}
-                        Clock Out
-                    </Button>
-                </TooltipTrigger>
-                {isGuest && <TooltipContent><p>Login to use this feature.</p></TooltipContent>}
-              </Tooltip>
-            )}
+            {renderClockInButton()}
              <p className="text-xs text-muted-foreground text-center">
               {isGuest ? "Login to manage your work hours." : "Remember to clock in when you start and clock out when you finish your workday."}
             </p>
