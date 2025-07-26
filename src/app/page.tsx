@@ -814,7 +814,6 @@ export default function LandingPage() {
               </Link>
               <ul className="space-y-2">
                 <li><Link href="/recruitment" className="text-neutral-400 hover:text-white">For Recruitment</Link></li>
-                <li><Link href="/tasks" className="text-neutral-400 hover:text-white">For Onboarding</Link></li>
                 <li><Link href="/attendance-reporting" className="text-neutral-400 hover:text-white">For Reporting</Link></li>
                 <li><Link href="/unified-communications" className="text-neutral-400 hover:text-white">For Communication</Link></li>
               </ul>

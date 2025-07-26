@@ -17,13 +17,12 @@ import {
   GitFork,
   Inbox,
   FileSignature,
-  ListChecks, 
   Users,
   Library,
   LifeBuoy,
   MessageCircle,
-  DollarSign, // Added icon
-  ClipboardList, // Corrected icon
+  DollarSign,
+  ClipboardList,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar'; 
@@ -47,7 +46,6 @@ const navItems: NavItem[] = [
   { href: '/unified-communications', label: 'Communications', icon: MessagesSquare, tooltip: 'Unified Communications' },
   { href: '/recruitment', label: 'Recruitment', icon: GitFork, tooltip: 'AI Recruitment' },
   { href: '/smart-drafting', label: 'Smart Drafting', icon: FileSignature, tooltip: 'Smart Email Drafting' },
-  { href: '/tasks', label: 'Tasks', icon: ListChecks, tooltip: 'Task Management' },
   { href: '/knowledge-base', label: 'Knowledge Base', icon: Library, tooltip: 'Knowledge Base' },
   { href: '/manage-employees', label: 'Manage Employees', icon: Users, tooltip: 'Manage Employees', adminOnly: true },
   { href: '/attendance-management', label: 'Attendance Mgmt', icon: ClipboardList, tooltip: 'Attendance Management', adminOnly: true },

@@ -56,7 +56,6 @@ export default function BlogLayout({ children }: { children: ReactNode }) {
               </Link>
               <ul className="space-y-2">
                 <li><Link href="/recruitment" className="text-muted-foreground hover:text-foreground">For Recruitment</Link></li>
-                <li><Link href="/tasks" className="text-muted-foreground hover:text-foreground">For Onboarding</Link></li>
                 <li><Link href="/attendance-reporting" className="text-muted-foreground hover:text-foreground">For Reporting</Link></li>
                 <li><Link href="/unified-communications" className="text-muted-foreground hover:text-foreground">For Communication</Link></li>
               </ul>
