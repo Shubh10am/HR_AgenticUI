@@ -426,10 +426,10 @@ export default function ManageEmployeesPage() {
         title="Manage Employees"
         description={`Oversee and add employees for ${adminUser?.name}'s organization.`}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center gap-2">
             <Dialog open={isBulkUploadOpen} onOpenChange={setIsBulkUploadOpen}>
                 <DialogTrigger asChild>
-                    <Button variant="outline">
+                    <Button variant="outline" className="w-full sm:w-auto">
                         <UploadCloud className="mr-2 h-4 w-4" /> Bulk Register
                     </Button>
                 </DialogTrigger>
@@ -461,7 +461,7 @@ export default function ManageEmployeesPage() {
             </Dialog>
              <Dialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>
                 <DialogTrigger asChild>
-                    <Button variant="destructive">
+                    <Button variant="destructive" className="w-full sm:w-auto">
                         <Trash2 className="mr-2 h-4 w-4" /> Bulk Delete
                     </Button>
                 </DialogTrigger>
@@ -493,7 +493,7 @@ export default function ManageEmployeesPage() {
             </Dialog>
         </div>
       </PageHeader>
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 lg:grid-cols-3">
         <Card className="lg:col-span-1 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -601,16 +601,16 @@ export default function ManageEmployeesPage() {
                     <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('grid')}><LayoutGrid className="h-4 w-4" /></Button>
                 </div>
             </div>
-             <div className="mt-4 border-t pt-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div>
+             <div className="mt-4 pt-4 border-t">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <div className="xl:col-span-1">
                         <Label htmlFor="searchName">Search by Name/Email</Label>
                         <div className="relative mt-1">
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input id="searchName" placeholder="e.g., John Doe" className="pl-9" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                         </div>
                     </div>
-                     <div>
+                     <div className="xl:col-span-1">
                         <Label htmlFor="filterRole">Filter by Role</Label>
                         <Select value={roleFilter} onValueChange={setRoleFilter}>
                             <SelectTrigger id="filterRole" className="mt-1">
@@ -625,7 +625,7 @@ export default function ManageEmployeesPage() {
                             </SelectContent>
                         </Select>
                     </div>
-                     <div>
+                     <div className="xl:col-span-1">
                         <Label htmlFor="searchDept">Search by Department</Label>
                         <Input id="searchDept" placeholder="e.g., Engineering" className="mt-1" value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)}/>
                     </div>
@@ -830,3 +830,5 @@ export default function ManageEmployeesPage() {
     </AlertDialog>
   );
 }
+
+    
