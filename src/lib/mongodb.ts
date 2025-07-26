@@ -16,6 +16,7 @@ import './../models/Post';
 import './../models/Comment';
 import './../models/ContactSubmission';
 import './../models/DemoRequest';
+import './../models/GoogleApiCredential';
 
 
 const MONGODB_URI = process.env.MONGODB_URI;

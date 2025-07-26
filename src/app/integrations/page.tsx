@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/auth-context';
 
 interface Integration {
   id: string;
@@ -198,54 +200,68 @@ const initialIntegrations: Integration[] = [
 export default function IntegrationsPage() {
   const [integrations, setIntegrations] = useState<Integration[]>(initialIntegrations);
   const { toast } = useToast();
+  const { token } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('connect') === 'success') {
+      toast({
+        title: 'Google Account Connected',
+        description: 'Successfully authenticated with Google. You can now use related integrations.',
+      });
+      // A mechanism to update the isConnected status would go here,
+      // possibly by refetching integration statuses from the backend.
+      // For now, we'll optimistically update the UI for Google integrations.
+      setIntegrations(prev =>
+        prev.map(int => 
+          int.id === 'gmail' || int.id === 'google-calendar' || int.id === 'google-meet' || int.id === 'google-workspace'
+          ? { ...int, isConnected: true }
+          : int
+        )
+      );
+      // Clean the URL
+      router.replace('/integrations');
+    }
+  }, [searchParams, toast, router]);
+
 
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const [requestedIntegrationName, setRequestedIntegrationName] = useState('');
   const [requestReason, setRequestReason] = useState('');
   const [contactEmail, setContactEmail] = useState('');
 
-
-  const toggleConnection = (id: string) => {
+  const handleConnect = async (id: string) => {
     const integrationToUpdate = integrations.find(int => int.id === id);
-    if (!integrationToUpdate) return;
+    if (!integrationToUpdate || !token) return;
 
-    if (!integrationToUpdate.isConnected && integrationToUpdate.requiresOAuth) {
-      // Simulate OAuth connection
-      setIntegrations(prev =>
-        prev.map(int =>
-          int.id === id ? { ...int, oauthConnecting: true } : int
-        )
-      );
-      toast({
-        title: `Connecting to ${integrationToUpdate.name}...`,
-        description: 'Simulating OAuth authentication flow.',
-      });
-      setTimeout(() => {
+    if (integrationToUpdate.requiresOAuth) {
         setIntegrations(prev =>
-          prev.map(int =>
-            int.id === id ? { ...int, isConnected: true, oauthConnecting: false } : int
-          )
+            prev.map(int => (int.id === id ? { ...int, oauthConnecting: true } : int))
+        );
+        try {
+            // The redirection will happen on the server side after this call
+            window.location.href = `/api/google-auth/connect`;
+        } catch (error) {
+            console.error("Failed to initiate connection:", error);
+            toast({ title: 'Connection Failed', description: 'Could not start the authentication process.', variant: 'destructive' });
+            setIntegrations(prev =>
+                prev.map(int => (int.id === id ? { ...int, oauthConnecting: false } : int))
+            );
+        }
+    } else {
+        // Handle simple toggle for non-OAuth integrations
+        setIntegrations(prev =>
+            prev.map(int => (int.id === id ? { ...int, isConnected: !int.isConnected } : int))
         );
         toast({
-            title: `${integrationToUpdate.name} Connected`,
-            description: `Successfully connected to ${integrationToUpdate.name} (mock).`,
-            variant: "default",
+            title: `${integrationToUpdate.name} ${!integrationToUpdate.isConnected ? 'Connected' : 'Disconnected'}`,
+            description: `Successfully ${!integrationToUpdate.isConnected ? 'connected to' : 'disconnected from'} ${integrationToUpdate.name}.`,
+            variant: !integrationToUpdate.isConnected ? "default" : "destructive",
         });
-      }, 1500);
-    } else {
-      // Regular toggle for non-OAuth or disconnection
-      setIntegrations(prev =>
-        prev.map(int =>
-          int.id === id ? { ...int, isConnected: !int.isConnected } : int
-        )
-      );
-      toast({
-          title: `${integrationToUpdate.name} ${!integrationToUpdate.isConnected ? 'Connected' : 'Disconnected'}`,
-          description: `Successfully ${!integrationToUpdate.isConnected ? 'connected to' : 'disconnected from'} ${integrationToUpdate.name}.`,
-          variant: !integrationToUpdate.isConnected ? "default" : "destructive",
-      });
     }
   };
+
 
   const handleIntegrationRequestSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -308,17 +324,8 @@ export default function IntegrationsPage() {
             </CardContent>
             <CardContent className="border-t pt-4 mt-auto">
               <div className="flex items-center justify-between gap-2">
-                <div className="flex min-w-0 items-center space-x-2 overflow-hidden"> {/* Added overflow-hidden */}
-                  <Switch
-                    id={`switch-${integration.id}`}
-                    checked={integration.isConnected}
-                    onCheckedChange={() => toggleConnection(integration.id)}
-                    aria-label={`Connect to ${integration.name}`}
-                    className="flex-shrink-0"
-                    disabled={integration.oauthConnecting}
-                  />
+                <div className="flex min-w-0 items-center space-x-2 overflow-hidden">
                   <Label
-                    htmlFor={`switch-${integration.id}`}
                     className={`inline-block truncate ${integration.isConnected ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
                   >
                     {integration.oauthConnecting ? 'Connecting...' : (integration.isConnected ? 'Connected' : 'Disconnected')}
@@ -330,7 +337,7 @@ export default function IntegrationsPage() {
                       <Settings className="mr-2 h-4 w-4" /> Configure
                     </Button>
                   ) : (
-                    <Button size="sm" onClick={() => toggleConnection(integration.id)} disabled={integration.oauthConnecting}>
+                    <Button size="sm" onClick={() => handleConnect(integration.id)} disabled={integration.oauthConnecting}>
                       {integration.oauthConnecting ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
@@ -341,11 +348,6 @@ export default function IntegrationsPage() {
                   )}
                 </div>
               </div>
-              {integration.requiresOAuth && !integration.isConnected && !integration.oauthConnecting && (
-                <p className="text-xs text-muted-foreground mt-3">
-                  Connecting {integration.name} requires OAuth authentication.
-                </p>
-              )}
             </CardContent>
           </Card>
         ))}
