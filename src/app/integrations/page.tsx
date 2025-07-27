@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, type FormEvent, useEffect } from 'react';
+import { useState, type FormEvent, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -28,8 +28,9 @@ interface Integration {
   isConnected: boolean;
   features: string[];
   requiresOAuth?: boolean;
+  isGoogleProduct?: boolean;
   oauthConnecting?: boolean;
-  isDisconnecting?: boolean; // New state for disconnect
+  isDisconnecting?: boolean;
 }
 
 const initialIntegrations: Integration[] = [
@@ -42,8 +43,9 @@ const initialIntegrations: Integration[] = [
     dataAiHint: 'gmail logo',
     category: 'Email',
     isConnected: false,
-    features: ['Fetch Emails', 'AI Reply Generation', 'Send Emails (Mock)'],
+    features: ['Fetch Emails', 'AI Reply Generation', 'Send Emails'],
     requiresOAuth: true,
+    isGoogleProduct: true,
   },
   {
     id: 'github',
@@ -79,6 +81,7 @@ const initialIntegrations: Integration[] = [
     isConnected: false,
     features: ['Meeting Scheduling', 'Availability Sync', 'Leave Management'],
     requiresOAuth: true,
+    isGoogleProduct: true,
   },
   {
     id: 'zoom',
@@ -102,6 +105,7 @@ const initialIntegrations: Integration[] = [
     isConnected: false,
     features: ['Start Meetings', 'Schedule Calls', 'Sync Recordings'],
     requiresOAuth: true,
+    isGoogleProduct: true,
   },
   {
     id: 'microsoft-teams',
@@ -125,6 +129,7 @@ const initialIntegrations: Integration[] = [
     isConnected: false,
     features: ['Drive Integration', 'Docs Collaboration', 'Sheet Automation'],
     requiresOAuth: true,
+    isGoogleProduct: true,
   },
   {
     id: 'docusign',
@@ -205,26 +210,44 @@ export default function IntegrationsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const checkAuthStatus = useCallback(async () => {
+    if (!token || token.startsWith('guest-')) return;
+    try {
+      const response = await fetch('/api/google-auth/status', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.isAuthenticated) {
+          setIntegrations(prev =>
+            prev.map(int => (int.isGoogleProduct ? { ...int, isConnected: true } : int))
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Failed to check Google auth status:', error);
+    }
+  }, [token]);
+
+
   useEffect(() => {
+    checkAuthStatus();
+    
     if (searchParams.get('connect') === 'success') {
       toast({
         title: 'Google Account Connected',
         description: 'Successfully authenticated with Google. You can now use related integrations.',
       });
-      // A mechanism to update the isConnected status would go here,
-      // possibly by refetching integration statuses from the backend.
-      // For now, we'll optimistically update the UI for Google integrations.
       setIntegrations(prev =>
         prev.map(int => 
-          int.id === 'gmail' || int.id === 'google-calendar' || int.id === 'google-meet' || int.id === 'google-workspace'
+          int.isGoogleProduct
           ? { ...int, isConnected: true }
           : int
         )
       );
-      // Clean the URL
       router.replace('/integrations');
     }
-  }, [searchParams, toast, router]);
+  }, [searchParams, toast, router, checkAuthStatus]);
 
 
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
@@ -237,21 +260,24 @@ export default function IntegrationsPage() {
     if (!integrationToUpdate || !token) return;
 
     if (integrationToUpdate.requiresOAuth) {
+        const idsToUpdate = integrationToUpdate.isGoogleProduct
+            ? integrations.filter(i => i.isGoogleProduct).map(i => i.id)
+            : [id];
+
         setIntegrations(prev =>
-            prev.map(int => (int.id === id ? { ...int, oauthConnecting: true } : int))
+            prev.map(int => (idsToUpdate.includes(int.id) ? { ...int, oauthConnecting: true } : int))
         );
+
         try {
-            // The redirection will happen on the server side after this call
             window.location.href = `/api/google-auth/connect`;
         } catch (error) {
             console.error("Failed to initiate connection:", error);
             toast({ title: 'Connection Failed', description: 'Could not start the authentication process.', variant: 'destructive' });
             setIntegrations(prev =>
-                prev.map(int => (int.id === id ? { ...int, oauthConnecting: false } : int))
+                prev.map(int => (idsToUpdate.includes(int.id) ? { ...int, oauthConnecting: false } : int))
             );
         }
     } else {
-        // Handle simple toggle for non-OAuth integrations
         setIntegrations(prev =>
             prev.map(int => (int.id === id ? { ...int, isConnected: !int.isConnected } : int))
         );
@@ -265,7 +291,16 @@ export default function IntegrationsPage() {
 
   const handleDisconnect = async (id: string) => {
     if (!token) return;
-    setIntegrations(prev => prev.map(int => int.id === id ? { ...int, isDisconnecting: true } : int));
+
+    const integrationToUpdate = integrations.find(int => int.id === id);
+    if (!integrationToUpdate) return;
+    
+    const idsToUpdate = integrationToUpdate.isGoogleProduct
+      ? integrations.filter(i => i.isGoogleProduct).map(i => i.id)
+      : [id];
+
+    setIntegrations(prev => prev.map(int => idsToUpdate.includes(int.id) ? { ...int, isDisconnecting: true } : int));
+    
     try {
         const response = await fetch('/api/google-auth/disconnect', {
             method: 'POST',
@@ -275,15 +310,14 @@ export default function IntegrationsPage() {
         if (!response.ok) throw new Error(data.error || 'Failed to disconnect.');
         
         toast({ title: 'Account Disconnected', description: 'Your Google account credentials have been removed.' });
-        // Update all Google integrations to disconnected
         setIntegrations(prev => prev.map(int => 
-            (int.id === 'gmail' || int.id === 'google-calendar' || int.id === 'google-meet' || int.id === 'google-workspace') 
-            ? { ...int, isConnected: false } : int
+            idsToUpdate.includes(int.id) 
+            ? { ...int, isConnected: false, isDisconnecting: false } 
+            : int
         ));
     } catch (error: any) {
         toast({ title: 'Disconnect Failed', description: error.message, variant: 'destructive' });
-    } finally {
-        setIntegrations(prev => prev.map(int => int.id === id ? { ...int, isDisconnecting: false } : int));
+        setIntegrations(prev => prev.map(int => idsToUpdate.includes(int.id) ? { ...int, isDisconnecting: false } : int));
     }
   };
 
