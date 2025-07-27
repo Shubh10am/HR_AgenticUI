@@ -274,6 +274,7 @@ export default function SettingsPage() {
         setShowApiKey(false);
         setApiKeyInContext(null);
         localStorage.removeItem('userApiKey');
+        setTokenUsage(0); // Reset token usage in UI
         toast({ title: 'API Key Removed', description: 'Your key has been removed. The application will now use the fallback key, if available.' });
       } else {
         toast({ title: 'Failed to remove API key', description: data.error || 'Could not remove API key from database.', variant: 'destructive' });
