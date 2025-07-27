@@ -18,6 +18,7 @@ import type { AdminUserData } from '@/pages/api/admin/users/index';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import ImageWithFallback from '@/components/image-with-fallback';
 
 export default function AdminUsersPage() {
   const [admins, setAdmins] = useState<AdminUserData[]>([]);
@@ -269,13 +270,13 @@ export default function AdminUsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {admins.map((user) => (
+                {admins.map((user, index) => (
                   <TableRow key={user._id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
                         <Avatar>
-                           <AvatarImage src={`https://placehold.co/40x40.png?text=${user.name.charAt(0).toUpperCase()}`} alt={user.name} />
-                          <AvatarFallback><Shield className="h-4 w-4 text-muted-foreground"/></AvatarFallback>
+                           <ImageWithFallback src={`https://randomuser.me/api/portraits/${index % 2 === 0 ? 'women' : 'men'}/${index}.jpg`} fallbackSrc="https://placehold.co/40x40.png" alt={user.name} width={40} height={40} className="rounded-full" data-ai-hint="person face" />
+                           <AvatarFallback><Shield className="h-4 w-4 text-muted-foreground"/></AvatarFallback>
                         </Avatar>
                         <div>
                           <p>{user.name}</p>

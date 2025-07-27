@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import ImageWithFallback from '@/components/image-with-fallback';
 
 const mockActivityLog = [
     { id: 'act-1', description: "Admin 'Shubham' registered new employee 'John Doe'.", timestamp: new Date() },
@@ -370,12 +371,12 @@ export default function OrganizationDetailsPage() {
                           </TableRow>
                       </TableHeader>
                       <TableBody>
-                          {paginatedEmployees.map((user) => (
+                          {paginatedEmployees.map((user, index) => (
                           <TableRow key={user._id}>
                               <TableCell className="font-medium">
                               <div className="flex items-center gap-3">
                                   <Avatar>
-                                  <AvatarImage src={`https://placehold.co/40x40.png?text=${user.name.charAt(0).toUpperCase()}`} alt={user.name} />
+                                  <AvatarImage src={`https://randomuser.me/api/portraits/${index % 2 === 0 ? 'women' : 'men'}/${index}.jpg`} alt={user.name} data-ai-hint="person face" />
                                   <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                                   </Avatar>
                                   <div>
@@ -430,10 +431,10 @@ export default function OrganizationDetailsPage() {
                             </div>
                         ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {paginatedEmployees.map((user) => (
+                            {paginatedEmployees.map((user, index) => (
                                 <Card key={user._id} className="p-4 flex flex-col items-center text-center">
                                     <Avatar className="h-16 w-16 mb-2">
-                                        <AvatarImage src={`https://placehold.co/64x64.png?text=${user.name.charAt(0).toUpperCase()}`} alt={user.name} />
+                                        <AvatarImage src={`https://randomuser.me/api/portraits/${index % 2 === 0 ? 'women' : 'men'}/${index}.jpg`} alt={user.name} data-ai-hint="person face" />
                                         <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <p className="font-semibold truncate w-full">{user.name}</p>
