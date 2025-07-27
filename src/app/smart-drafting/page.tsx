@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, type FormEvent, useEffect } from 'react';
@@ -7,11 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Send, Copy, FileText } from 'lucide-react';
+import { Loader2, Wand2, Send, Copy, FileText, AlertCircle } from 'lucide-react';
 import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput, type GenerateDraftEmailResponsesOutput } from '@/ai/flows/draft-email-response';
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/auth-context';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import Link from 'next/link';
 
 const NONE_TEAM_VALUE = "--none--";
 
@@ -24,24 +27,46 @@ export default function SmartDraftingPage() {
   const [prompt, setPrompt] = useState('');
   const [isGeneratingFromPrompt, setIsGeneratingFromPrompt] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+  const [isGoogleAuthenticated, setIsGoogleAuthenticated] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   // State for the composer
   const [recipients, setRecipients] = useState('');
   const [subject, setSubject] = useState('');
-  const [composerBody, setComposerBody] = useState(''); // Simplified state for the body
+  const [composerBody, setComposerBody] = useState('');
   const [selectedTeam, setSelectedTeam] = useState('');
+  const [isSending, setIsSending] = useState(false);
   
   // State for generated drafts
   const [promptGeneratedDrafts, setPromptGeneratedDrafts] = useState<EmailDraft[]>([]);
 
 
   useEffect(() => {
-    // This effect runs once on mount to check for a draft passed from the Email Assistance page.
+    // Check Google Auth status
+    const checkAuthStatus = async () => {
+        if (!token || token.startsWith('guest-')) {
+            setIsGoogleAuthenticated(false);
+            setIsAuthLoading(false);
+            return;
+        }
+        try {
+            const response = await fetch('/api/google-auth/status', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            setIsGoogleAuthenticated(response.ok && data.isAuthenticated);
+        } catch (error) {
+            setIsGoogleAuthenticated(false);
+        } finally {
+            setIsAuthLoading(false);
+        }
+    };
+    checkAuthStatus();
+    
     const draftBodyFromAssistance = localStorage.getItem('selectedEmailDraftForSmartDrafting');
     if (draftBodyFromAssistance) {
       setComposerBody(draftBodyFromAssistance);
-      // Subject and recipients must be filled manually by the user.
       setSubject(''); 
       setRecipients('');
       setPromptGeneratedDrafts([]); 
@@ -51,7 +76,7 @@ export default function SmartDraftingPage() {
         description: "Email body populated from Email Assistance. Please add recipients and a subject.",
       });
     }
-  }, [toast]);
+  }, [token, toast]);
 
   async function handleSubmitPrompt(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -66,7 +91,7 @@ export default function SmartDraftingPage() {
     setIsGeneratingFromPrompt(true);
     setPromptGeneratedDrafts([]); 
     setComposerBody(''); 
-    setSubject(''); // Clear subject when generating new options
+    setSubject('');
     
     try {
       const userApiKey = localStorage.getItem('userApiKey');
@@ -101,7 +126,7 @@ export default function SmartDraftingPage() {
   const handleUsePromptGeneratedDraft = (draft: EmailDraft) => {
     setSubject(draft.subject);
     setComposerBody(draft.body);
-    setPromptGeneratedDrafts([]); // Clear options after one is chosen
+    setPromptGeneratedDrafts([]);
     toast({
       title: "Draft Loaded into Composer",
       description: "Selected draft is now ready to be edited and sent.",
@@ -121,42 +146,47 @@ export default function SmartDraftingPage() {
     });
   };
 
-  const handleMockSend = () => {
-    if (!recipients && (!selectedTeam || selectedTeam === NONE_TEAM_VALUE)) {
-       toast({
-        title: "Recipient Missing",
-        description: "Please enter recipients or select a team.",
-        variant: "destructive",
-      });
-      return;
+  const handleSend = async () => {
+    const finalRecipients = selectedTeam && selectedTeam !== NONE_TEAM_VALUE ? selectedTeam : recipients;
+    if (!finalRecipients) {
+       toast({ title: "Recipient Missing", description: "Please enter recipients or select a team.", variant: "destructive" });
+       return;
     }
      if (!subject.trim()) {
-       toast({
-        title: "Subject Missing",
-        description: "Please enter a subject for the email.",
-        variant: "destructive",
-      });
-      return;
+       toast({ title: "Subject Missing", description: "Please enter a subject for the email.", variant: "destructive" });
+       return;
     }
     if (!composerBody.trim()) {
-        toast({
-        title: "Email Body Empty",
-        description: "Please ensure the email body is not empty.",
-        variant: "destructive",
-      });
-      return;
+        toast({ title: "Email Body Empty", description: "Please ensure the email body is not empty.", variant: "destructive" });
+        return;
     }
 
-    const finalRecipients = selectedTeam && selectedTeam !== NONE_TEAM_VALUE ? `Team: ${selectedTeam}` : recipients;
-    console.log("Mock Send:", {
-      to: finalRecipients,
-      subject,
-      body: composerBody,
-    });
-    toast({
-      title: "Email Sent (Mock)",
-      description: `Email to ${finalRecipients} with subject "${subject}" has been "sent".`,
-    });
+    setIsSending(true);
+    try {
+        const response = await fetch('/api/google/emails/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({
+                to: finalRecipients,
+                subject,
+                message: composerBody,
+            })
+        });
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to send email.');
+        }
+        toast({ title: 'Email Sent Successfully', description: `Your email to ${finalRecipients} has been sent.` });
+        // Optionally clear the form
+        setRecipients('');
+        setSubject('');
+        setComposerBody('');
+        setSelectedTeam('');
+    } catch (error: any) {
+        toast({ title: 'Send Error', description: error.message, variant: 'destructive' });
+    } finally {
+        setIsSending(false);
+    }
   };
 
   const mainGridClasses = promptGeneratedDrafts.length > 0 ? "grid gap-6 lg:grid-cols-2" : "grid gap-6 lg:grid-cols-3";
@@ -167,7 +197,7 @@ export default function SmartDraftingPage() {
     <>
       <PageHeader
         title="Smart Email Drafting & Composer"
-        description="Generate, compose, and (mock) send professional emails. Write manually or generate drafts with AI."
+        description="Generate, compose, and send professional emails. Write manually or generate drafts with AI."
       />
       <div className={mainGridClasses}>
         <div className="lg:col-span-1 space-y-6">
@@ -242,9 +272,18 @@ export default function SmartDraftingPage() {
         <Card className={composerColSpanClasses}>
           <CardHeader>
             <CardTitle>Compose Email</CardTitle>
-            <CardDescription>Review, edit, and prepare your email for sending.</CardDescription>
+            <CardDescription>Review, edit, and send your email.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {!isGoogleAuthenticated && !isAuthLoading && (
+                <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Google Account Not Connected</AlertTitle>
+                    <AlertDescription>
+                        Sending emails is disabled. Please <Link href="/integrations" className="font-semibold underline">connect your Google account</Link> to enable this feature.
+                    </AlertDescription>
+                </Alert>
+            )}
             <div>
               <Label htmlFor="recipients">To</Label>
               <Input 
@@ -303,8 +342,9 @@ export default function SmartDraftingPage() {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
-                <Button onClick={handleMockSend} disabled={isGeneratingFromPrompt}>
-                    <Send className="mr-2 h-4 w-4" /> Send Email (Mock)
+                <Button onClick={handleSend} disabled={isGeneratingFromPrompt || isSending || !isGoogleAuthenticated || isAuthLoading}>
+                    {isSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                     Send Email
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleCopy}>
                   <Copy className="mr-2 h-4 w-4" /> Copy Content
