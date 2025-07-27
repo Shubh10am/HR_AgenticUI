@@ -17,7 +17,7 @@ export const AiInterviewerInputSchemaDef = z.object({
     )
     .default(3),
   userId: z.string().optional().describe("The ID of the user making the request for logging."),
-  organizationId: z.string().optional().describe("The ID of the organization for logging."),
+  organizationId: z.string().optional().nullable().describe("The ID of the organization for logging."),
 });
 
 export const AiInterviewerOutputSchemaDef = z.object({

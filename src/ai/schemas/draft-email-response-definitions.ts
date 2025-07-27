@@ -5,7 +5,7 @@ import {z} from 'genkit';
 export const GenerateDraftEmailResponsesInputSchemaDef = z.object({
   query: z.string().describe('The employee inquiry or request, or a prompt for a new email.'),
   userId: z.string().optional().describe("The ID of the user making the request for logging."),
-  organizationId: z.string().optional().describe("The ID of the organization for logging."),
+  organizationId: z.string().optional().nullable().describe("The ID of the organization for logging."),
 });
 
 export const DraftEmailSchemaDef = z.object({

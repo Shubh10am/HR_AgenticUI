@@ -4,7 +4,7 @@ import {z} from 'genkit';
 export const AnalyzeResumeInputSchemaDef = z.object({
   resumeText: z.string().describe('The full text content of the candidate\'s resume.'),
   userId: z.string().optional().describe("The ID of the user making the request for logging."),
-  organizationId: z.string().optional().describe("The ID of the organization for logging."),
+  organizationId: z.string().optional().nullable().describe("The ID of the organization for logging."),
 });
 
 export const AnalyzeResumeOutputSchemaDef = z.object({
