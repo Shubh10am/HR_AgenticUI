@@ -107,7 +107,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             // Fetch API key only for real, non-SuperAdmin users.
             if (!storedToken.startsWith('guest-') && parsedUser.role !== 'SuperAdmin') {
-                await fetchAndSetUserApiKey(storedToken);
+                // Fire and forget - do not await
+                fetchAndSetUserApiKey(storedToken);
             } else {
                 localStorage.removeItem('userApiKey');
                 setUserApiKey(null);
@@ -179,7 +180,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(data.user);
       
       if (data.user.role !== 'SuperAdmin') {
-        await fetchAndSetUserApiKey(data.token);
+        // Fire and forget - do not await. Let this happen in the background.
+        fetchAndSetUserApiKey(data.token);
       }
       
       toast({ title: 'Login Successful', description: 'Welcome back!' });
@@ -191,7 +193,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         router.push('/dashboard'); 
       }
       
-      // No need to set loading to false here, as checkAuth will run from useEffect
+      // No need to set loading to false here, as the page transition will happen
       return true;
     } catch (error) {
       console.error('Login error:', error);
@@ -281,5 +283,3 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
-
-    
