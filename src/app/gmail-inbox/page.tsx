@@ -464,7 +464,7 @@ export default function GmailCalendarPage() {
                                  <Button variant="destructive" size="sm" onClick={handleDeleteEmail}><Trash2 className="mr-2 h-4 w-4"/>Delete Email</Button>
                             </div>
                             <form onSubmit={handleSendReply}>
-                                <Textarea placeholder="Manually compose your reply..." value={replyBody} onChange={(e) => setReplyBody(e.target.value)} className="min-h-[100px] mb-2"/>
+                                <Textarea placeholder="Manually compose your reply..." value={replyBody} onChange={(e) => setReplyBody(e.target.value)} className="mb-2" minRows={3}/>
                                 <Button type="submit" disabled={isSending || !replyBody.trim()}>{isSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Send className="mr-2 h-4 w-4"/>} Send Reply</Button>
                             </form>
                         </div>
@@ -495,5 +495,3 @@ export default function GmailCalendarPage() {
     </>
   );
 }
-
-    
