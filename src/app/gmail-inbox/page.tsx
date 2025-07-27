@@ -364,61 +364,57 @@ export default function GmailCalendarPage() {
                     <CardTitle className="text-lg">Inbox & Calendar</CardTitle>
                     <CardDescription>View emails or calendar events.</CardDescription>
                 </CardHeader>
-                <CardContent className="p-0 flex-grow overflow-hidden">
-                    <ScrollArea className="h-full">
-                        <div className="p-4 space-y-3">
-                            <Button
-                                variant={showCalendar ? "secondary" : "outline"}
-                                className="w-full justify-start py-2"
-                                onClick={() => { setShowCalendar(true); setSelectedEmail(null); }}
-                            >
-                                <Calendar className="mr-2 h-4 w-4" /> Calendar Events
-                            </Button>
-                            <Separator />
-                             <div className="space-y-2">
-                                <Label>Mailbox</Label>
-                                <Select onValueChange={setActiveMailbox} defaultValue={activeMailbox}>
-                                    <SelectTrigger><SelectValue placeholder="Select a mailbox" /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="inbox">Inbox</SelectItem>
-                                        <SelectItem value="sent">Sent</SelectItem>
-                                        <SelectItem value="spam">Spam</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                             <div className="space-y-2">
-                                <Label>Category</Label>
-                                <Select onValueChange={setActiveCategory} defaultValue={activeCategory}>
-                                    <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All</SelectItem>
-                                        <SelectItem value="social">Social</SelectItem>
-                                        <SelectItem value="promotions">Promotions</SelectItem>
-                                        <SelectItem value="updates">Updates</SelectItem>
-                                        <SelectItem value="forums">Forums</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                            {isLoading && <div className="text-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" /></div>}
-                            {!isLoading && emails.length === 0 && (
-                                <div className="text-center text-muted-foreground p-6"><FileWarning className="h-12 w-12 mx-auto mb-2" /><p>No emails in {activeMailbox}.</p></div>
-                            )}
-                            {emails.map((email) => (
-                                <Card key={email.id} className={`p-3 hover:shadow-md transition-shadow cursor-pointer ${selectedEmail?.id === email.id ? 'bg-secondary' : 'bg-card'} mb-2`} onClick={() => handleSelectEmail(email)}>
-                                    <div className="flex justify-between items-start w-full gap-2"><p className="text-sm font-semibold line-clamp-1 min-w-0">{email.from || email.to}</p><ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" /></div>
-                                    <p className="text-sm line-clamp-1">{email.subject}</p>
-                                    <p className="text-xs text-muted-foreground line-clamp-1">{email.snippet}</p>
-                                    {email.date && <p className="text-xs text-muted-foreground mt-1">{new Date(email.date).toLocaleString()}</p>}
-                                </Card>
-                            ))}
-                            {nextPageToken && (
-                              <Button variant="outline" className="w-full" onClick={handleLoadMore} disabled={isLoadingMore}>
-                                {isLoadingMore ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Load More'}
-                              </Button>
-                            )}
-                            </div>
-                        </div>
+                <CardContent className="p-4 flex-grow overflow-y-auto space-y-3">
+                    <Button
+                        variant={showCalendar ? "secondary" : "outline"}
+                        className="w-full justify-start py-2"
+                        onClick={() => { setShowCalendar(true); setSelectedEmail(null); }}
+                    >
+                        <Calendar className="mr-2 h-4 w-4" /> Calendar Events
+                    </Button>
+                    <Separator />
+                     <div className="space-y-2">
+                        <Label>Mailbox</Label>
+                        <Select onValueChange={setActiveMailbox} defaultValue={activeMailbox}>
+                            <SelectTrigger><SelectValue placeholder="Select a mailbox" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="inbox">Inbox</SelectItem>
+                                <SelectItem value="sent">Sent</SelectItem>
+                                <SelectItem value="spam">Spam</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                     <div className="space-y-2">
+                        <Label>Category</Label>
+                        <Select onValueChange={setActiveCategory} defaultValue={activeCategory}>
+                            <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All</SelectItem>
+                                <SelectItem value="social">Social</SelectItem>
+                                <SelectItem value="promotions">Promotions</SelectItem>
+                                <SelectItem value="updates">Updates</SelectItem>
+                                <SelectItem value="forums">Forums</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <ScrollArea className="h-[400px] space-y-2 pr-3 -mr-3">
+                        {isLoading && <div className="text-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" /></div>}
+                        {!isLoading && emails.length === 0 && (
+                            <div className="text-center text-muted-foreground p-6"><FileWarning className="h-12 w-12 mx-auto mb-2" /><p>No emails in {activeMailbox}.</p></div>
+                        )}
+                        {emails.map((email) => (
+                            <Card key={email.id} className={`p-3 hover:shadow-md transition-shadow cursor-pointer ${selectedEmail?.id === email.id ? 'bg-secondary' : 'bg-card'} mb-2`} onClick={() => handleSelectEmail(email)}>
+                                <div className="flex justify-between items-start w-full gap-2"><p className="text-sm font-semibold line-clamp-1 min-w-0">{email.from || email.to}</p><ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" /></div>
+                                <p className="text-sm line-clamp-1">{email.subject}</p>
+                                <p className="text-xs text-muted-foreground line-clamp-1">{email.snippet}</p>
+                                {email.date && <p className="text-xs text-muted-foreground mt-1">{new Date(email.date).toLocaleString()}</p>}
+                            </Card>
+                        ))}
+                        {nextPageToken && (
+                          <Button variant="outline" className="w-full mt-2" onClick={handleLoadMore} disabled={isLoadingMore}>
+                            {isLoadingMore ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Load More'}
+                          </Button>
+                        )}
                     </ScrollArea>
                 </CardContent>
             </Card>
