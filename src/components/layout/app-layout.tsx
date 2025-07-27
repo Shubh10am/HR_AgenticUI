@@ -104,7 +104,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <UserNav />
           </div>
         </header>
-        <main className="flex-1 p-6 overflow-x-hidden animated-background-gradient">
+        <main className="flex-1 p-6 overflow-x-hidden animated-background-gradient min-w-0">
           <div className="animate-fade-in" key={pathname}>
             {children}
           </div>
