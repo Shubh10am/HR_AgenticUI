@@ -11,7 +11,7 @@ interface OrgEmployee {
   _id: string;
   name: string;
   email: string;
-  role: 'Admin' | 'HR' | 'Employee';
+  role: 'Admin' | 'HR' | 'Employee' | 'Manager';
   department?: string;
   createdAt: string;
 }
@@ -22,6 +22,7 @@ export interface OrganizationDetailData {
   name: string;
   emailDomain: string;
   status: OrganizationStatus;
+  adminName: string; // Changed from admin to adminName
   employees: OrgEmployee[];
   createdAt: string;
 }
@@ -59,12 +60,14 @@ export default async function handler(
       }
 
       const employees = await Employee.find({ organizationId: orgId }).select('-passwordHash');
+      const admin = employees.find(e => e.role === 'Admin');
 
       const response: OrganizationDetailData = {
         _id: organization._id.toString(),
         name: organization.name,
         emailDomain: organization.emailDomain,
         status: organization.status,
+        adminName: admin ? admin.name : 'N/A', // Correctly assign the admin's name as a string
         employees: employees.map(e => ({
           _id: e._id.toString(),
           name: e.name,

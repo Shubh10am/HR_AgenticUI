@@ -42,7 +42,8 @@ interface OrgPost {
 const roleSortOrder = {
   'Admin': 1,
   'HR': 2,
-  'Employee': 3,
+  'Manager': 3,
+  'Employee': 4,
 };
 
 export default function OrganizationDetailsPage() {
@@ -305,7 +306,7 @@ export default function OrganizationDetailsPage() {
           </Card>
           <Card>
               <CardHeader><CardTitle>Admin</CardTitle></CardHeader>
-              <CardContent><p className="text-lg font-medium">{orgDetails.employees.find(e => e.role === 'Admin')?.name || 'N/A'}</p></CardContent>
+              <CardContent><p className="text-lg font-medium">{orgDetails.adminName}</p></CardContent>
           </Card>
            <Card>
               <CardHeader><CardTitle>Email Domain</CardTitle></CardHeader>
@@ -346,6 +347,7 @@ export default function OrganizationDetailsPage() {
                                         <SelectItem value="All">All Roles</SelectItem>
                                         <SelectItem value="Admin">Admin</SelectItem>
                                         <SelectItem value="HR">HR</SelectItem>
+                                        <SelectItem value="Manager">Manager</SelectItem>
                                         <SelectItem value="Employee">Employee</SelectItem>
                                     </SelectContent>
                                 </Select>
@@ -376,7 +378,7 @@ export default function OrganizationDetailsPage() {
                               <TableCell className="font-medium">
                               <div className="flex items-center gap-3">
                                   <Avatar>
-                                  <AvatarImage src={`https://randomuser.me/api/portraits/${index % 2 === 0 ? 'women' : 'men'}/${index}.jpg`} alt={user.name} data-ai-hint="person face" />
+                                  <ImageWithFallback src={`https://randomuser.me/api/portraits/${index % 2 === 0 ? 'women' : 'men'}/${index}.jpg`} fallbackSrc="https://placehold.co/40x40.png" alt={user.name} width={40} height={40} className="rounded-full" data-ai-hint="person face" />
                                   <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                                   </Avatar>
                                   <div>
@@ -434,7 +436,7 @@ export default function OrganizationDetailsPage() {
                             {paginatedEmployees.map((user, index) => (
                                 <Card key={user._id} className="p-4 flex flex-col items-center text-center">
                                     <Avatar className="h-16 w-16 mb-2">
-                                        <AvatarImage src={`https://randomuser.me/api/portraits/${index % 2 === 0 ? 'women' : 'men'}/${index}.jpg`} alt={user.name} data-ai-hint="person face" />
+                                        <ImageWithFallback src={`https://randomuser.me/api/portraits/${index % 2 === 0 ? 'women' : 'men'}/${index}.jpg`} fallbackSrc="https://placehold.co/40x40.png" alt={user.name} width={64} height={64} className="rounded-full" data-ai-hint="person face" />
                                         <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <p className="font-semibold truncate w-full">{user.name}</p>
@@ -552,5 +554,3 @@ export default function OrganizationDetailsPage() {
     </>
   );
 }
-
-    
