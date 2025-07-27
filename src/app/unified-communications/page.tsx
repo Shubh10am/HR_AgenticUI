@@ -52,12 +52,10 @@ export default function UnifiedCommunicationsPage() {
           <CardDescription>Your connected tools at a glance.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center pt-4">
-          {/* Speech bubble */}
           <div className="relative mb-4">
             <div className="bg-foreground text-background p-3 rounded-lg shadow-md">
               <p className="text-sm font-medium text-center">You are using {communicationPlatforms.length} tools to streamline your work!</p>
             </div>
-            {/* Triangle for speech bubble */}
             <div className="absolute left-1/2 transform -translate-x-1/2 top-full w-0 h-0
               border-l-[10px] border-l-transparent
               border-t-[10px] border-t-foreground
@@ -65,15 +63,14 @@ export default function UnifiedCommunicationsPage() {
             </div>
           </div>
 
-          {/* Icon bar */}
-          <div className="flex justify-center items-center space-x-2 p-4 bg-secondary rounded-xl shadow-lg mt-6 w-auto max-w-md">
+          <div className="flex justify-center items-center flex-wrap gap-2 sm:gap-4 p-4 bg-secondary rounded-xl shadow-lg mt-6 w-full max-w-lg">
             {communicationPlatforms.map((platform) => (
               <div key={platform.name} className="group relative" title={platform.name}>
                 <Image 
                   src={platform.logoUrl} 
                   alt={`${platform.name} logo`} 
-                  width={56} 
-                  height={56} 
+                  width={48} 
+                  height={48} 
                   className="rounded-lg transition-transform duration-200 ease-in-out group-hover:scale-110 cursor-pointer object-contain" 
                   data-ai-hint={platform.dataAiHint} 
                 />
@@ -92,7 +89,7 @@ export default function UnifiedCommunicationsPage() {
           <CardDescription>Overview of the latest interactions across all integrated platforms.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>

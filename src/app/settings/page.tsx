@@ -558,7 +558,7 @@ export default function SettingsPage() {
               <>
                 <div className="space-y-2">
                   <Label htmlFor="apiKeyInput">Google AI API Key for your Organization</Label>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 gap-2">
                     <Input
                       id="apiKeyInput"
                       type={showApiKey ? 'text' : 'password'}
@@ -568,13 +568,15 @@ export default function SettingsPage() {
                       className="flex-grow"
                       disabled={isKeySaving}
                     />
-                    <Button variant="ghost" size="icon" onClick={() => setShowApiKey(!showApiKey)} aria-label={showApiKey ? 'Hide API Key' : 'Show API Key'} disabled={isKeySaving}>
-                      {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                     <Button variant="outline" size="icon" onClick={handleCopyToClipboard} disabled={(!inputApiKey && !dbApiKey) || isKeyLoading}>
-                      <Copy className="h-4 w-4" />
-                      <span className="sr-only">Copy API Key</span>
-                    </Button>
+                    <div className="flex items-center gap-2 self-end sm:self-center">
+                        <Button variant="ghost" size="icon" onClick={() => setShowApiKey(!showApiKey)} aria-label={showApiKey ? 'Hide API Key' : 'Show API Key'} disabled={isKeySaving}>
+                        {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                        <Button variant="outline" size="icon" onClick={handleCopyToClipboard} disabled={(!inputApiKey && !dbApiKey) || isKeyLoading}>
+                        <Copy className="h-4 w-4" />
+                        <span className="sr-only">Copy API Key</span>
+                        </Button>
+                    </div>
                   </div>
                 </div>
                 {dbApiKey && (

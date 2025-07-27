@@ -316,7 +316,7 @@ export default function IntegrationsPage() {
         title="Manage Integrations"
         description="Connect and configure third-party services to enhance your HR workflow."
       />
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {integrations.map(integration => (
           <Card 
             key={integration.id} 
