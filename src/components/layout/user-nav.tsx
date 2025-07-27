@@ -43,7 +43,7 @@ export default function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={`https://placehold.co/100x100.png?text=${user?.name?.charAt(0).toUpperCase()}`} alt={user?.name || "User avatar"} data-ai-hint="user avatar" />
+            <AvatarImage src={`https://randomuser.me/api/portraits/men/78.jpg`} alt={user?.name || "User avatar"} data-ai-hint="user avatar" />
             <AvatarFallback>
               {user?.name ? user.name.charAt(0).toUpperCase() : <UserIcon />}
             </AvatarFallback>

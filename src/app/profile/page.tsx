@@ -120,7 +120,7 @@ export default function ProfilePage() {
           <CardHeader className="items-center text-center">
             <Avatar className="h-24 w-24 mb-4">
               <AvatarImage 
-                src={`https://placehold.co/100x100.png?text=${clientUser.name?.charAt(0).toUpperCase()}`} 
+                src={`https://randomuser.me/api/portraits/men/78.jpg`}
                 alt={clientUser.name || "User avatar"} 
                 data-ai-hint="user avatar" 
               />

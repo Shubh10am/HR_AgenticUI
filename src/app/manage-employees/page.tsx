@@ -135,10 +135,10 @@ export default function ManageEmployeesPage() {
         throw new Error(errorData.error || 'Failed to fetch employees');
       }
       const data: ClientEmployee[] = await response.json();
-      setCurrentEmployees(data.map(emp => ({
+      setCurrentEmployees(data.map((emp, index) => ({
         ...emp,
-        avatarUrl: `https://placehold.co/40x40.png?text=${emp.name.charAt(0).toUpperCase()}`,
-        dataAiHint: `${emp.role.toLowerCase()} avatar`
+        avatarUrl: `https://randomuser.me/api/portraits/${index % 2 === 0 ? 'women' : 'men'}/${index % 100}.jpg`,
+        dataAiHint: `person avatar`
       })));
     } catch (error: any) {
       toast({ title: 'Error Fetching Employees', description: error.message, variant: 'destructive' });

@@ -18,24 +18,24 @@ interface Task {
   description?: string;
   status: TaskStatus;
   priority: 'Low' | 'Medium' | 'High';
-  assignees: { name: string; avatarUrl: string }[];
+  assignees: { name: string; avatarUrl: string, dataAiHint: string }[];
   attachments: number;
   comments: number;
 }
 
 const initialTasks: Task[] = [
-  { id: 'task-1', title: 'Design the new dashboard layout', status: 'In Review', priority: 'High', assignees: [{ name: 'Alice', avatarUrl: 'https://randomuser.me/api/portraits/women/1.jpg' }], attachments: 2, comments: 5 },
-  { id: 'task-2', title: 'Develop the authentication API', status: 'In Progress', priority: 'High', assignees: [{ name: 'Bob', avatarUrl: 'https://randomuser.me/api/portraits/men/1.jpg' }], attachments: 0, comments: 8 },
-  { id: 'task-3', title: 'Write documentation for the API', status: 'Todo', priority: 'Medium', assignees: [{ name: 'Charlie', avatarUrl: 'https://randomuser.me/api/portraits/men/2.jpg' }], attachments: 0, comments: 0 },
-  { id: 'task-4', title: 'Fix the bug in the reporting module', status: 'In Progress', priority: 'High', assignees: [{ name: 'Diana', avatarUrl: 'https://randomuser.me/api/portraits/women/2.jpg' }], attachments: 1, comments: 3 },
-  { id: 'task-5', title: 'Set up the staging environment', status: 'Done', priority: 'Medium', assignees: [{ name: 'Eve', avatarUrl: 'https://randomuser.me/api/portraits/women/3.jpg' }], attachments: 0, comments: 1 },
+  { id: 'task-1', title: 'Design the new dashboard layout', status: 'In Review', priority: 'High', assignees: [{ name: 'Alice', avatarUrl: 'https://randomuser.me/api/portraits/women/1.jpg', dataAiHint: 'woman face' }], attachments: 2, comments: 5 },
+  { id: 'task-2', title: 'Develop the authentication API', status: 'In Progress', priority: 'High', assignees: [{ name: 'Bob', avatarUrl: 'https://randomuser.me/api/portraits/men/1.jpg', dataAiHint: 'man face' }], attachments: 0, comments: 8 },
+  { id: 'task-3', title: 'Write documentation for the API', status: 'Todo', priority: 'Medium', assignees: [{ name: 'Charlie', avatarUrl: 'https://randomuser.me/api/portraits/men/2.jpg', dataAiHint: 'man face' }], attachments: 0, comments: 0 },
+  { id: 'task-4', title: 'Fix the bug in the reporting module', status: 'In Progress', priority: 'High', assignees: [{ name: 'Diana', avatarUrl: 'https://randomuser.me/api/portraits/women/2.jpg', dataAiHint: 'woman face' }], attachments: 1, comments: 3 },
+  { id: 'task-5', title: 'Set up the staging environment', status: 'Done', priority: 'Medium', assignees: [{ name: 'Eve', avatarUrl: 'https://randomuser.me/api/portraits/women/3.jpg', dataAiHint: 'woman face' }], attachments: 0, comments: 1 },
   { id: 'task-6', title: 'Plan the Q4 marketing campaign', status: 'Todo', priority: 'Low', assignees: [], attachments: 5, comments: 2 },
-  { id: 'task-7', title: 'Research new analytics tools', status: 'Todo', priority: 'Medium', assignees: [{ name: 'Frank', avatarUrl: 'https://randomuser.me/api/portraits/men/3.jpg' }], attachments: 0, comments: 0 },
-  { id: 'task-8', title: 'User testing for the new feature', status: 'In Review', priority: 'High', assignees: [{ name: 'Grace', avatarUrl: 'https://randomuser.me/api/portraits/women/4.jpg' }, { name: 'Heidi', avatarUrl: 'https://randomuser.me/api/portraits/women/5.jpg' }], attachments: 3, comments: 11 },
-  { id: 'task-9', title: 'Update the company website', status: 'Done', priority: 'Low', assignees: [{ name: 'Ivan', avatarUrl: 'https://randomuser.me/api/portraits/men/4.jpg' }], attachments: 0, comments: 0 },
-  { id: 'task-10', title: 'Onboard new marketing intern', status: 'In Progress', priority: 'Medium', assignees: [{ name: 'Alice', avatarUrl: 'https://randomuser.me/api/portraits/women/1.jpg' }], attachments: 1, comments: 1 },
-  { id: 'task-11', title: 'Prepare Q3 financial report', status: 'Todo', priority: 'High', assignees: [{ name: 'Bob', avatarUrl: 'https://randomuser.me/api/portraits/men/1.jpg' }], attachments: 0, comments: 0 },
-  { id: 'task-12', title: 'Migrate database to new server', status: 'Todo', priority: 'High', assignees: [{ name: 'Diana', avatarUrl: 'https://randomuser.me/api/portraits/women/2.jpg' }, { name: 'Bob', avatarUrl: 'https://randomuser.me/api/portraits/men/1.jpg' }], attachments: 0, comments: 0 },
+  { id: 'task-7', title: 'Research new analytics tools', status: 'Todo', priority: 'Medium', assignees: [{ name: 'Frank', avatarUrl: 'https://randomuser.me/api/portraits/men/3.jpg', dataAiHint: 'man face' }], attachments: 0, comments: 0 },
+  { id: 'task-8', title: 'User testing for the new feature', status: 'In Review', priority: 'High', assignees: [{ name: 'Grace', avatarUrl: 'https://randomuser.me/api/portraits/women/4.jpg', dataAiHint: 'woman face' }, { name: 'Heidi', avatarUrl: 'https://randomuser.me/api/portraits/women/5.jpg', dataAiHint: 'woman face' }], attachments: 3, comments: 11 },
+  { id: 'task-9', title: 'Update the company website', status: 'Done', priority: 'Low', assignees: [{ name: 'Ivan', avatarUrl: 'https://randomuser.me/api/portraits/men/4.jpg', dataAiHint: 'man face' }], attachments: 0, comments: 0 },
+  { id: 'task-10', title: 'Onboard new marketing intern', status: 'In Progress', priority: 'Medium', assignees: [{ name: 'Alice', avatarUrl: 'https://randomuser.me/api/portraits/women/1.jpg', dataAiHint: 'woman face' }], attachments: 1, comments: 1 },
+  { id: 'task-11', title: 'Prepare Q3 financial report', status: 'Todo', priority: 'High', assignees: [{ name: 'Bob', avatarUrl: 'https://randomuser.me/api/portraits/men/1.jpg', dataAiHint: 'man face' }], attachments: 0, comments: 0 },
+  { id: 'task-12', title: 'Migrate database to new server', status: 'Todo', priority: 'High', assignees: [{ name: 'Diana', avatarUrl: 'https://randomuser.me/api/portraits/women/2.jpg', dataAiHint: 'woman face' }, { name: 'Bob', avatarUrl: 'https://randomuser.me/api/portraits/men/1.jpg', dataAiHint: 'man face' }], attachments: 0, comments: 0 },
 ];
 
 const columns: TaskStatus[] = ['Todo', 'In Progress', 'In Review', 'Done'];
@@ -89,7 +89,7 @@ export default function TaskManagementPage() {
                                 <div className="flex -space-x-2">
                                     {task.assignees.map(assignee => (
                                     <Avatar key={assignee.name} className="h-6 w-6 border-2 border-card">
-                                        <AvatarImage src={assignee.avatarUrl} alt={assignee.name} />
+                                        <AvatarImage src={assignee.avatarUrl} alt={assignee.name} data-ai-hint={assignee.dataAiHint} />
                                         <AvatarFallback>{assignee.name.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     ))}
