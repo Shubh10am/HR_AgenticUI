@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Github, Link as LinkIcon, CheckCircle, Settings, MessageSquare, CalendarDays, Webcam, Users, LayoutGrid, FileSignature, KanbanSquare, Video, Inbox, Loader2, Send, FileText } from 'lucide-react';
+import { Github, Link as LinkIcon, CheckCircle, Settings, MessageSquare, CalendarDays, Webcam, Users, LayoutGrid, FileSignature, KanbanSquare, Video, Inbox, Loader2, Send, FileText, Trash2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
@@ -29,6 +29,7 @@ interface Integration {
   features: string[];
   requiresOAuth?: boolean;
   oauthConnecting?: boolean;
+  isDisconnecting?: boolean; // New state for disconnect
 }
 
 const initialIntegrations: Integration[] = [
@@ -262,6 +263,30 @@ export default function IntegrationsPage() {
     }
   };
 
+  const handleDisconnect = async (id: string) => {
+    if (!token) return;
+    setIntegrations(prev => prev.map(int => int.id === id ? { ...int, isDisconnecting: true } : int));
+    try {
+        const response = await fetch('/api/google-auth/disconnect', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to disconnect.');
+        
+        toast({ title: 'Account Disconnected', description: 'Your Google account credentials have been removed.' });
+        // Update all Google integrations to disconnected
+        setIntegrations(prev => prev.map(int => 
+            (int.id === 'gmail' || int.id === 'google-calendar' || int.id === 'google-meet' || int.id === 'google-workspace') 
+            ? { ...int, isConnected: false } : int
+        ));
+    } catch (error: any) {
+        toast({ title: 'Disconnect Failed', description: error.message, variant: 'destructive' });
+    } finally {
+        setIntegrations(prev => prev.map(int => int.id === id ? { ...int, isDisconnecting: false } : int));
+    }
+  };
+
 
   const handleIntegrationRequestSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -328,14 +353,23 @@ export default function IntegrationsPage() {
                   <Label
                     className={`inline-block truncate ${integration.isConnected ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
                   >
-                    {integration.oauthConnecting ? 'Connecting...' : (integration.isConnected ? 'Connected' : 'Disconnected')}
+                    {integration.oauthConnecting ? 'Connecting...' : (integration.isDisconnecting ? 'Disconnecting...' : (integration.isConnected ? 'Connected' : 'Disconnected'))}
                   </Label>
                 </div>
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 flex gap-2">
                   {integration.isConnected ? (
-                    <Button variant="outline" size="sm">
-                      <Settings className="mr-2 h-4 w-4" /> Configure
-                    </Button>
+                    <>
+                      {integration.requiresOAuth ? (
+                        <Button variant="destructive" size="sm" onClick={() => handleDisconnect(integration.id)} disabled={integration.isDisconnecting}>
+                          {integration.isDisconnecting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Trash2 className="mr-2 h-4 w-4" />}
+                          Disconnect
+                        </Button>
+                      ) : (
+                        <Button variant="outline" size="sm">
+                          <Settings className="mr-2 h-4 w-4" /> Configure
+                        </Button>
+                      )}
+                    </>
                   ) : (
                     <Button size="sm" onClick={() => handleConnect(integration.id)} disabled={integration.oauthConnecting}>
                       {integration.oauthConnecting ? (
