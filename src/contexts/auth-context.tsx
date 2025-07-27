@@ -180,20 +180,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(data.user);
       
       if (data.user.role !== 'SuperAdmin') {
-        // Fire and forget - do not await. Let this happen in the background.
         fetchAndSetUserApiKey(data.token);
       }
       
       toast({ title: 'Login Successful', description: 'Welcome back!' });
 
+      setIsLoading(false); 
+
       if (data.user.role === 'SuperAdmin') {
-        localStorage.setItem('adminAuthToken', data.token); // Set token for admin panel
+        localStorage.setItem('adminAuthToken', data.token);
         router.push('/admin/dashboard');
       } else {
         router.push('/dashboard'); 
       }
       
-      // No need to set loading to false here, as the page transition will happen
       return true;
     } catch (error) {
       console.error('Login error:', error);
@@ -233,7 +233,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const loginAsGuest = async (): Promise<boolean> => {
-    isGuestTransitioning = true; // Set flag to pause routing logic
+    isGuestTransitioning = true;
     setIsLoading(true);
     
     clearAttendanceLocalStorage();
@@ -246,7 +246,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email: 'guest@hrstreamline.ai',
       role: 'Employee' as EmployeeRole, 
       organizationId: 'guest-org-id',
-      organizationStatus: 'Active', // Guests are always active
+      organizationStatus: 'Active',
     };
     const guestToken = 'guest-auth-token-' + Date.now(); 
 
