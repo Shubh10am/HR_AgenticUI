@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, type FormEvent, useCallback } from 'react';
@@ -72,6 +73,7 @@ export default function GmailCalendarPage() {
         setIsAuthenticated(false);
         return;
     }
+    setIsLoading(true);
     try {
         const response = await fetch('/api/google-auth/status', {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -497,3 +499,5 @@ export default function GmailCalendarPage() {
     </>
   );
 }
+
+    

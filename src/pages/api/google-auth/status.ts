@@ -13,20 +13,22 @@ async function handler(
   try {
     const credential = await GoogleApiCredential.findOne({ employeeId });
 
-    if (credential && credential.accessToken && credential.expiryDate > Date.now()) {
-      // Token exists and is not expired
+    if (credential && credential.accessToken) {
+      // The getAuthenticatedClient service handles token refreshes automatically.
+      // So, if a credential exists, we can consider the user authenticated for Google services.
+      // A more robust check might involve making a lightweight API call to Google to verify the token,
+      // but for this app's purpose, checking for existence is sufficient and faster.
       return res.status(200).json({ isAuthenticated: true });
     }
-    
-    // If token is expired but we have a refresh token, we could try refreshing it here.
-    // For simplicity, we'll just report as unauthenticated and let the user re-authorize.
     
     return res.status(200).json({ isAuthenticated: false });
 
   } catch (error) {
     console.error('Error checking Google API auth status:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: 'Internal Server Error', isAuthenticated: false });
   }
 }
 
 export default withAuth(handler);
+
+    

@@ -105,9 +105,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(parsedUser);
             setToken(storedToken);
 
+            // Fetch API key only for real, non-SuperAdmin users.
             if (!storedToken.startsWith('guest-') && parsedUser.role !== 'SuperAdmin') {
                 await fetchAndSetUserApiKey(storedToken);
             } else {
+                localStorage.removeItem('userApiKey');
                 setUserApiKey(null);
             }
         } catch (e) {
@@ -189,7 +191,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         router.push('/dashboard'); 
       }
       
-      setIsLoading(false);
+      // No need to set loading to false here, as checkAuth will run from useEffect
       return true;
     } catch (error) {
       console.error('Login error:', error);
@@ -279,3 +281,5 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+
+    
