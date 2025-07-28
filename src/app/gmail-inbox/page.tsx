@@ -537,7 +537,7 @@ export default function GmailCalendarPage() {
                 <DialogHeader>
                     <DialogTitle>Quick Reply with AI</DialogTitle>
                     <DialogDescription>
-                        Enter a short prompt (e.g., "ask for more details", "tell them I'll look into it", "ขอบคุณ บอกว่าเราจะตรวจสอบ") and the AI will generate a suitable reply in English.
+                        Give me a short instruction in any language, and I'll generate a suitable reply in English.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
@@ -563,3 +563,4 @@ export default function GmailCalendarPage() {
     </>
   );
 }
+
