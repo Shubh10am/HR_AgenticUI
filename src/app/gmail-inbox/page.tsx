@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Wand2, Send, Reply, ChevronRight, MailOpen, RefreshCw, Trash2, FileWarning, Link as LinkIcon, Calendar, Lock, AlertCircle, File as FileIcon } from 'lucide-react';
+import { Loader2, Wand2, Send, Reply, ChevronRight, MailOpen, RefreshCw, Trash2, FileWarning, Link as LinkIcon, Calendar, Lock, AlertCircle, File as FileIcon, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -60,6 +60,12 @@ export default function GmailCalendarPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedDrafts, setGeneratedDrafts] = useState<EmailDraft[]>([]);
   const [isDraftsModalOpen, setIsDraftsModalOpen] = useState(false);
+  
+  // State for quick reply
+  const [isQuickReplyOpen, setIsQuickReplyOpen] = useState(false);
+  const [quickReplyPrompt, setQuickReplyPrompt] = useState('');
+  const [isGeneratingQuickReply, setIsGeneratingQuickReply] = useState(false);
+
 
   const { toast } = useToast();
   const { token, user } = useAuth();
@@ -213,6 +219,37 @@ export default function GmailCalendarPage() {
         toast({ title: 'Error', description: 'Failed to generate AI replies.', variant: 'destructive' });
     } finally {
         setIsGenerating(false);
+    }
+  };
+
+  const handleQuickReply = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!selectedEmail || !quickReplyPrompt.trim()) return;
+
+    setIsGeneratingQuickReply(true);
+    try {
+        const userApiKey = localStorage.getItem('userApiKey');
+        const input: GenerateDraftEmailResponsesInput = { 
+            query: `From: ${selectedEmail.from}\nSubject: ${selectedEmail.subject}\n\n${selectedEmail.body}`,
+            prompt: quickReplyPrompt,
+            apiKey: userApiKey,
+            userId: user?.id,
+            organizationId: user?.organizationId,
+        };
+        const result: GenerateDraftEmailResponsesOutput = await generateDraftEmailResponses(input);
+        if (result.drafts && result.drafts.length > 0) {
+            setReplyBody(result.drafts[0].body);
+            if (!subject) setSubject(`Re: ${selectedEmail.subject}`);
+            toast({ title: 'Quick Reply Generated', description: 'The email body has been populated.' });
+            setIsQuickReplyOpen(false);
+            setQuickReplyPrompt('');
+        } else {
+            toast({ title: 'Generation Failed', description: 'Could not generate a reply from your prompt.', variant: 'destructive' });
+        }
+    } catch (error) {
+        toast({ title: 'Quick Reply Error', description: 'Failed to generate quick reply.', variant: 'destructive' });
+    } finally {
+        setIsGeneratingQuickReply(false);
     }
   };
 
@@ -461,7 +498,8 @@ export default function GmailCalendarPage() {
                             <h3 className="text-md font-semibold flex items-center"><Reply className="mr-2 h-4 w-4"/>Respond</h3>
                             <div className="flex flex-wrap gap-2">
                                 <Button onClick={handleGenerateReplies} disabled={isGenerating}>{isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Wand2 className="mr-2 h-4 w-4"/>} Generate AI Reply Options</Button>
-                                 <Button variant="destructive" size="sm" onClick={handleDeleteEmail}><Trash2 className="mr-2 h-4 w-4"/>Delete Email</Button>
+                                <Button variant="secondary" onClick={() => setIsQuickReplyOpen(true)} disabled={isGenerating}><Sparkles className="mr-2 h-4 w-4"/>Quick Reply with AI</Button>
+                                <Button variant="destructive" size="sm" onClick={handleDeleteEmail}><Trash2 className="mr-2 h-4 w-4"/>Delete Email</Button>
                             </div>
                             <form onSubmit={handleSendReply}>
                                 <Textarea placeholder="Manually compose your reply..." value={replyBody} onChange={(e) => setReplyBody(e.target.value)} className="mb-2" minRows={3}/>
@@ -490,6 +528,36 @@ export default function GmailCalendarPage() {
                     </CardContent></Card>
                 ))}
             </div></ScrollArea>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isQuickReplyOpen} onOpenChange={setIsQuickReplyOpen}>
+        <DialogContent>
+            <form onSubmit={handleQuickReply}>
+                <DialogHeader>
+                    <DialogTitle>Quick Reply with AI</DialogTitle>
+                    <DialogDescription>
+                        Enter a short prompt (e.g., "ask for more details", "tell them I'll look into it", "ขอบคุณ บอกว่าเราจะตรวจสอบ") and the AI will generate a suitable reply in English.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    <Label htmlFor="quickReplyPrompt" className="sr-only">Quick Reply Prompt</Label>
+                    <Textarea 
+                        id="quickReplyPrompt"
+                        value={quickReplyPrompt}
+                        onChange={(e) => setQuickReplyPrompt(e.target.value)}
+                        placeholder="Type your instruction here..."
+                        className="min-h-[80px]"
+                    />
+                </div>
+                <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsQuickReplyOpen(false)} disabled={isGeneratingQuickReply}>Cancel</Button>
+                    <Button type="submit" disabled={isGeneratingQuickReply || !quickReplyPrompt.trim()}>
+                        {isGeneratingQuickReply && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Generate Reply
+                    </Button>
+                </DialogFooter>
+            </form>
         </DialogContent>
       </Dialog>
     </>
