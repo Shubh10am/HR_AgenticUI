@@ -18,10 +18,9 @@ import {
 } from '@/ai/schemas/draft-email-response-definitions';
 import { logTokenUsage } from '@/services/usageService';
 
-// Extend original schema to include optional apiKey and an optional prompt
+// Extend original schema to include optional apiKey. The prompt field is now in the base schema.
 const GenerateDraftEmailResponsesInputSchemaDef = OriginalSchema.extend({
   apiKey: z.string().optional().nullable(),
-  prompt: z.string().optional().describe('A short, direct prompt for generating a specific reply.'),
 });
 
 export type GenerateDraftEmailResponsesInput = z.infer<typeof GenerateDraftEmailResponsesInputSchemaDef>;
@@ -38,7 +37,8 @@ const generateDraftEmailResponsesFlow = ai.defineFlow(
     outputSchema: GenerateDraftEmailResponsesOutputSchemaDef,
   },
   async (input) => {
-    const { apiKey, userId, organizationId, prompt, ...promptData } = input;
+    // Correctly destructure all properties, including the optional prompt
+    const { apiKey, userId, organizationId, prompt, query } = input;
     
     const runner = apiKey ? genkit({plugins: [googleAI({apiKey})]}) : ai;
 
@@ -57,7 +57,7 @@ ${prompt}
 """
 
 Original Email/Query to reply to: """
-${promptData.query}
+${query}
 """
 
 Generate one draft email object containing a relevant subject and the full email body.
@@ -71,7 +71,7 @@ If the query appears to be an email that needs a reply, generate responses in va
 For each option, provide both a relevant subject line and the full email body.
 
 Query/Prompt: """
-${promptData.query}
+${query}
 """
 `;
     }
