@@ -37,6 +37,34 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // A flag to manage the guest login transition and prevent race conditions.
 let isGuestTransitioning = false;
 
+// --- API Interceptor ---
+// We patch the global fetch to intercept 401 responses.
+// This is a simple way to handle token expiration globally.
+let isInterceptorSetup = false;
+
+const setupFetchInterceptor = (logoutCallback: () => void) => {
+    if (isInterceptorSetup || typeof window === 'undefined') return;
+
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+        const response = await originalFetch(...args);
+
+        if (response.status === 401) {
+            // Don't intercept the login endpoint itself on a 401, as that's expected for wrong passwords.
+            const url = typeof args[0] === 'string' ? args[0] : args[0].url;
+            if (!url.includes('/api/auth/login')) {
+                console.log('API interceptor: Detected 401, logging out.');
+                logoutCallback();
+                // Throw an error to prevent the original caller from processing a bad response
+                throw new Error('Session expired. Please log in again.');
+            }
+        }
+        return response;
+    };
+    isInterceptorSetup = true;
+};
+
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -93,6 +121,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
     router.push('/login');
   }, [router, toast]);
+
+  // Setup the global API interceptor on mount
+  useEffect(() => {
+    setupFetchInterceptor(logout);
+  }, [logout]);
+
 
   const checkAuth = useCallback(async () => {
     setIsLoading(true);
