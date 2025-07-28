@@ -239,7 +239,6 @@ export default function GmailCalendarPage() {
         const result: GenerateDraftEmailResponsesOutput = await generateDraftEmailResponses(input);
         if (result.drafts && result.drafts.length > 0) {
             setReplyBody(result.drafts[0].body);
-            if (!subject) setSubject(`Re: ${selectedEmail.subject}`);
             toast({ title: 'Quick Reply Generated', description: 'The email body has been populated.' });
             setIsQuickReplyOpen(false);
             setQuickReplyPrompt('');
@@ -563,4 +562,3 @@ export default function GmailCalendarPage() {
     </>
   );
 }
-
