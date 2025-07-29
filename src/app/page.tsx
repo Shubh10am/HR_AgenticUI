@@ -297,25 +297,24 @@ export default function LandingPage() {
           </div>
 
           {/* Workflow diagram */}
-           <div className="relative my-16 sm:my-24 grid w-full max-w-4xl mx-auto items-start grid-cols-4 gap-4 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-              <div className="absolute left-0 right-0 h-px bg-neutral-700 top-3 -z-10" />
-
-              <WorkflowStep icon={FileText} label="Plan" className="justify-self-center"/>
-
-              <div className="flex flex-col items-center gap-2 z-10 bg-black px-2 sm:text-center justify-self-center">
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse"></div>
-                  <div className="h-3 w-3 rounded-full bg-purple-500 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                  <div className="h-3 w-3 rounded-full bg-pink-500 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+           <div className="flex justify-center my-16 sm:my-24 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            <div className="relative grid w-full max-w-4xl items-start grid-cols-4 gap-4">
+                <div className="absolute left-0 right-0 h-px bg-neutral-700 top-3 -z-10" />
+                <WorkflowStep icon={FileText} label="Plan" className="justify-self-center"/>
+                <div className="flex flex-col items-center gap-2 z-10 bg-black px-2 sm:text-center justify-self-center">
+                    <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse"></div>
+                    <div className="h-3 w-3 rounded-full bg-purple-500 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="h-3 w-3 rounded-full bg-pink-500 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                    </div>
+                    <span className="text-xs sm:text-sm text-neutral-500 mt-1">Onboard</span>
+                    <div className="mt-2 bg-gradient-to-r from-blue-400/30 via-purple-500/30 to-pink-500/30 border border-purple-400/50 rounded-full px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm text-purple-200">
+                        HR Streamline AI
+                    </div>
                 </div>
-                <span className="text-xs sm:text-sm text-neutral-500 mt-1">Onboard</span>
-                <div className="mt-2 bg-gradient-to-r from-blue-400/30 via-purple-500/30 to-pink-500/30 border border-purple-400/50 rounded-full px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm text-purple-200">
-                    HR Streamline AI
-                </div>
-              </div>
-
-              <WorkflowStep icon={Users} label="Recruit" className="justify-self-center"/>
-              <WorkflowStep icon={BarChart3} label="Report" className="justify-self-center"/>
+                <WorkflowStep icon={Users} label="Recruit" className="justify-self-center"/>
+                <WorkflowStep icon={BarChart3} label="Report" className="justify-self-center"/>
+            </div>
           </div>
 
           {/* CTA Button */}
