@@ -29,6 +29,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/auth-context';
 
 interface NavItem {
+  id: string; // Unique ID for the tour
   href: string;
   label: string;
   icon: LucideIcon;
@@ -37,21 +38,21 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
-  { href: '/community', label: 'Community', icon: MessageCircle, tooltip: 'Community Hub' },
-  { href: '/email-assistance', label: 'Email Assistance', icon: MailPlus, tooltip: 'Email Assistance' },
-  { href: '/gmail-inbox', label: 'Gmail Inbox', icon: Inbox, tooltip: 'Gmail Inbox' },
-  { href: '/attendance-reporting', label: 'My Attendance', icon: CalendarCheck, tooltip: 'My Attendance & Reporting' },
-  { href: '/payroll', label: 'Payroll', icon: DollarSign, tooltip: 'Payroll Management' },
-  { href: '/tasks', label: 'Tasks', icon: ClipboardList, tooltip: 'Task Management Board' },
-  { href: '/unified-communications', label: 'Communications', icon: MessagesSquare, tooltip: 'Unified Communications' },
-  { href: '/recruitment', label: 'Recruitment', icon: GitFork, tooltip: 'AI Recruitment' },
-  { href: '/smart-drafting', label: 'Smart Drafting', icon: FileSignature, tooltip: 'Smart Email Drafting' },
-  { href: '/knowledge-base', label: 'Knowledge Base', icon: Library, tooltip: 'Knowledge Base' },
-  { href: '/manage-employees', label: 'Manage Employees', icon: Users, tooltip: 'Manage Employees', adminOnly: true },
-  { href: '/attendance-management', label: 'Attendance Mgmt', icon: ClipboardList, tooltip: 'Attendance Management', adminOnly: true },
-  { href: '/integrations', label: 'Integrations', icon: Plug, tooltip: 'Manage Integrations' },
-  { href: '/support', label: 'Get Support', icon: LifeBuoy, tooltip: 'Get Support' },
+  { id: 'dashboard', href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
+  { id: 'community', href: '/community', label: 'Community', icon: MessageCircle, tooltip: 'Community Hub' },
+  { id: 'email-assistance', href: '/email-assistance', label: 'Email Assistance', icon: MailPlus, tooltip: 'Email Assistance' },
+  { id: 'gmail-inbox', href: '/gmail-inbox', label: 'Gmail Inbox', icon: Inbox, tooltip: 'Gmail Inbox' },
+  { id: 'my-attendance', href: '/attendance-reporting', label: 'My Attendance', icon: CalendarCheck, tooltip: 'My Attendance & Reporting' },
+  { id: 'payroll', href: '/payroll', label: 'Payroll', icon: DollarSign, tooltip: 'Payroll Management' },
+  { id: 'tasks', href: '/tasks', label: 'Tasks', icon: ClipboardList, tooltip: 'Task Management Board' },
+  { id: 'communications', href: '/unified-communications', label: 'Communications', icon: MessagesSquare, tooltip: 'Unified Communications' },
+  { id: 'recruitment', href: '/recruitment', label: 'Recruitment', icon: GitFork, tooltip: 'AI Recruitment' },
+  { id: 'smart-drafting', href: '/smart-drafting', label: 'Smart Drafting', icon: FileSignature, tooltip: 'Smart Email Drafting' },
+  { id: 'knowledge-base', href: '/knowledge-base', label: 'Knowledge Base', icon: Library, tooltip: 'Knowledge Base' },
+  { id: 'manage-employees', href: '/manage-employees', label: 'Manage Employees', icon: Users, tooltip: 'Manage Employees', adminOnly: true },
+  { id: 'attendance-mgmt', href: '/attendance-management', label: 'Attendance Mgmt', icon: ClipboardList, tooltip: 'Attendance Management', adminOnly: true },
+  { id: 'integrations', href: '/integrations', label: 'Integrations', icon: Plug, tooltip: 'Manage Integrations' },
+  { id: 'support', href: '/support', label: 'Get Support', icon: LifeBuoy, tooltip: 'Get Support' },
 ];
 
 export default function SidebarNav() {
@@ -78,7 +79,7 @@ export default function SidebarNav() {
       {filteredNavItems.map((item) => (
         <SidebarMenuItem key={item.href}>
           <Link href={item.href} passHref legacyBehavior>
-            <a onClick={handleLinkClick} className="block w-full"> 
+            <a onClick={handleLinkClick} className="block w-full" data-tour-id={item.id}> 
               <SidebarMenuButton
                 isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
                 tooltip={item.tooltip}

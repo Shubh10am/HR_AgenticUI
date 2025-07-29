@@ -57,7 +57,7 @@ const AppTour = () => {
         id: 'community',
         title: 'Community Hub',
         text: 'Connect with your team, share updates, and see company-wide announcements here.',
-        attachTo: { element: '[href="/community"] > button', on: 'right' },
+        attachTo: { element: '[data-tour-id="community"]', on: 'right' },
         when: {
             show: () => { if (pathname !== '/dashboard') router.push('/dashboard'); },
         },
@@ -67,7 +67,7 @@ const AppTour = () => {
         id: 'recruitment',
         title: 'AI Recruitment Module',
         text: 'This module is your hub for hiring. Generate job descriptions, analyze resumes with ATS scoring, and even conduct initial AI interviews here.',
-        attachTo: { element: '[href="/recruitment"] > button', on: 'right' },
+        attachTo: { element: '[data-tour-id="recruitment"]', on: 'right' },
         when: {
             show: () => { if (pathname !== '/dashboard') router.push('/dashboard'); },
         },
@@ -77,7 +77,7 @@ const AppTour = () => {
         id: 'email-assistance',
         title: 'Email Assistance Module',
         text: 'Need to reply to an employee inquiry? This module uses AI to generate professional draft responses for you based on the employee\'s message.',
-        attachTo: { element: '[href="/email-assistance"] > button', on: 'right' },
+        attachTo: { element: '[data-tour-id="email-assistance"]', on: 'right' },
         when: {
             show: () => { if (pathname !== '/dashboard') router.push('/dashboard'); },
         },
@@ -87,7 +87,7 @@ const AppTour = () => {
         id: 'attendance',
         title: 'Attendance & Reporting',
         text: 'Clock in/out, view your attendance history, and apply for leave in this section.',
-        attachTo: { element: '[href="/attendance-reporting"] > button', on: 'right' },
+        attachTo: { element: '[data-tour-id="my-attendance"]', on: 'right' },
          when: {
             show: () => { if (pathname !== '/dashboard') router.push('/dashboard'); },
         },
@@ -97,7 +97,7 @@ const AppTour = () => {
         id: 'knowledge-base',
         title: 'Knowledge Base',
         text: 'Manage and access all your important company documents and knowledge sources here. The AI uses this for context.',
-        attachTo: { element: '[href="/knowledge-base"] > button', on: 'right' },
+        attachTo: { element: '[data-tour-id="knowledge-base"]', on: 'right' },
          when: {
             show: () => { if (pathname !== '/dashboard') router.push('/dashboard'); },
         },
