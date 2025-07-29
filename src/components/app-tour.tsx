@@ -44,19 +44,19 @@ const AppTour = () => {
         ],
       },
       {
-        id: 'dashboard',
-        title: 'Your Dashboard',
-        text: 'This is your main hub. It provides a quick overview and one-click access to all modules.',
-        attachTo: { element: '#dashboard-quick-actions', on: 'bottom' },
-        when: {
+        id: 'sidebar-nav',
+        title: 'Feature Modules',
+        text: 'This sidebar contains all the main modules of the application. Let\'s explore a few key ones.',
+        attachTo: { element: '[data-sidebar="content"]', on: 'right' },
+         when: {
             show: () => { if (pathname !== '/dashboard') router.push('/dashboard'); },
         },
         buttons: [{ text: 'Next', action: tour?.next }],
       },
       {
         id: 'recruitment',
-        title: 'AI Recruitment Hub',
-        text: 'Generate job descriptions, analyze resumes with ATS scoring, and even conduct initial AI interviews here.',
+        title: 'AI Recruitment Module',
+        text: 'This module is your hub for hiring. Generate job descriptions, analyze resumes with ATS scoring, and even conduct initial AI interviews here.',
         attachTo: { element: 'a[href="/recruitment"]', on: 'right' },
         when: {
             show: () => { if (pathname !== '/dashboard') router.push('/dashboard'); },
@@ -65,8 +65,8 @@ const AppTour = () => {
       },
       {
         id: 'email-assistance',
-        title: 'Email Assistance',
-        text: 'Need to reply to an employee inquiry? Paste their message here, and the AI will generate professional draft responses for you.',
+        title: 'Email Assistance Module',
+        text: 'Need to reply to an employee inquiry? This module uses AI to generate professional draft responses for you based on the employee\'s message.',
         attachTo: { element: 'a[href="/email-assistance"]', on: 'right' },
         when: {
             show: () => { if (pathname !== '/dashboard') router.push('/dashboard'); },
@@ -75,8 +75,8 @@ const AppTour = () => {
       },
        {
         id: 'copilot',
-        title: 'AI Copilot',
-        text: 'Have a quick question or need help? Your AI Copilot is always available here to assist you.',
+        title: 'Your AI Copilot',
+        text: 'Have a quick question or need help? Your AI Copilot is always available here to assist you with any task.',
         attachTo: { element: '#copilot-btn', on: 'bottom' },
         buttons: [{ text: 'Next', action: tour?.next }],
       },
@@ -89,7 +89,11 @@ const AppTour = () => {
           {
             text: 'Finish',
             action: () => {
-              localStorage.setItem(TOUR_STORAGE_KEY, 'true');
+              if (user?.organizationId === 'guest-org-id') {
+                // Don't set for guests so they see it again if they revisit
+              } else {
+                localStorage.setItem(TOUR_STORAGE_KEY, 'true');
+              }
               tour?.complete();
             },
           },
@@ -100,7 +104,7 @@ const AppTour = () => {
     if (tour) {
       tour.addSteps(steps);
     }
-  }, [tour, pathname, router]);
+  }, [tour, pathname, router, user]);
 
   return null; // This component does not render anything itself
 };
