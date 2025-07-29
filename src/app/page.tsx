@@ -414,7 +414,7 @@ export default function LandingPage() {
 
                     <div className="flex items-start gap-3">
                         <ImageWithFallback
-                            src="https://randomuser.me/api/portraits/men/75.jpg"
+                            src="https://randomuser.me/api/portraits/men/78.jpg"
                             fallbackSrc="https://placehold.co/32x32.png"
                             alt="Calvin F."
                             width={32}
@@ -484,7 +484,7 @@ export default function LandingPage() {
                 <div className="relative max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-6 sm:p-8 text-center text-black opacity-0 group-[.is-visible]:animate-fade-in-up transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.3s' }}>
                 <div className="relative inline-block mb-4">
                     <ImageWithFallback
-                        src="https://randomuser.me/api/portraits/men/73.jpg"
+                        src="https://randomuser.me/api/portraits/men/4.jpg"
                         fallbackSrc="https://placehold.co/80x80.png"
                         alt="Mike Mulligan"
                         width={80}
