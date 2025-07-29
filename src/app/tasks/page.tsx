@@ -52,7 +52,7 @@ export default function TaskManagementPage() {
   const [tasks] = useState<Task[]>(initialTasks);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)]">
+    <div className="flex flex-col h-[calc(100vh-8rem)]">
         <div className="flex-shrink-0">
             <PageHeader
                 title="Task Management Board"
@@ -64,48 +64,50 @@ export default function TaskManagementPage() {
             </PageHeader>
         </div>
       
-        <ScrollArea className="w-full flex-grow pb-4">
-            <div className="flex gap-4 h-full">
-                {columns.map(status => (
-                <div key={status} className="w-80 flex-shrink-0">
-                    <Card className="h-full flex flex-col bg-muted/50">
-                    <CardHeader className="flex flex-row items-center justify-between p-4 border-b">
-                        <CardTitle className="text-base font-semibold">{status} ({tasks.filter(t => t.status === status).length})</CardTitle>
-                        <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <ScrollArea className="flex-grow">
-                        <CardContent className="p-2 space-y-2">
-                        {tasks.filter(task => task.status === status).map(task => (
-                            <Card key={task.id} className="bg-card shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing">
-                            <CardContent className="p-3 space-y-2">
-                                <p className="font-semibold text-sm whitespace-normal">{task.title}</p>
-                                {task.description && <p className="text-xs text-muted-foreground whitespace-normal">{task.description}</p>}
-                                <Badge variant="outline" className={getPriorityBadgeClass(task.priority)}>{task.priority}</Badge>
-                                <div className="flex justify-between items-center pt-2 border-t mt-2">
-                                <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                                    {task.attachments > 0 && <span className="flex items-center gap-1"><Paperclip className="h-3 w-3" />{task.attachments}</span>}
-                                    {task.comments > 0 && <span className="flex items-center gap-1"><MessageSquare className="h-3 w-3" />{task.comments}</span>}
-                                </div>
-                                <div className="flex -space-x-2">
-                                    {task.assignees.map(assignee => (
-                                    <Avatar key={assignee.name} className="h-6 w-6 border-2 border-card">
-                                        <AvatarImage src={assignee.avatarUrl} alt={assignee.name} data-ai-hint={assignee.dataAiHint} />
-                                        <AvatarFallback>{assignee.name.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    ))}
-                                </div>
-                                </div>
+        <div className="flex-grow min-h-0">
+            <ScrollArea className="h-full w-full">
+                <div className="flex gap-4 h-full pb-4">
+                    {columns.map(status => (
+                    <div key={status} className="w-80 flex-shrink-0 h-full">
+                        <Card className="h-full flex flex-col bg-muted/50">
+                        <CardHeader className="flex flex-row items-center justify-between p-4 border-b flex-shrink-0">
+                            <CardTitle className="text-base font-semibold">{status} ({tasks.filter(t => t.status === status).length})</CardTitle>
+                            <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <ScrollArea className="flex-grow">
+                            <CardContent className="p-2 space-y-2">
+                            {tasks.filter(task => task.status === status).map(task => (
+                                <Card key={task.id} className="bg-card shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing">
+                                <CardContent className="p-3 space-y-2">
+                                    <p className="font-semibold text-sm whitespace-normal">{task.title}</p>
+                                    {task.description && <p className="text-xs text-muted-foreground whitespace-normal">{task.description}</p>}
+                                    <Badge variant="outline" className={getPriorityBadgeClass(task.priority)}>{task.priority}</Badge>
+                                    <div className="flex justify-between items-center pt-2 border-t mt-2">
+                                    <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                                        {task.attachments > 0 && <span className="flex items-center gap-1"><Paperclip className="h-3 w-3" />{task.attachments}</span>}
+                                        {task.comments > 0 && <span className="flex items-center gap-1"><MessageSquare className="h-3 w-3" />{task.comments}</span>}
+                                    </div>
+                                    <div className="flex -space-x-2">
+                                        {task.assignees.map(assignee => (
+                                        <Avatar key={assignee.name} className="h-6 w-6 border-2 border-card">
+                                            <AvatarImage src={assignee.avatarUrl} alt={assignee.name} data-ai-hint={assignee.dataAiHint} />
+                                            <AvatarFallback>{assignee.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        ))}
+                                    </div>
+                                    </div>
+                                </CardContent>
+                                </Card>
+                            ))}
                             </CardContent>
-                            </Card>
-                        ))}
-                        </CardContent>
-                    </ScrollArea>
-                    </Card>
+                        </ScrollArea>
+                        </Card>
+                    </div>
+                    ))}
                 </div>
-                ))}
-            </div>
-            <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+                <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+        </div>
     </div>
   );
 }
