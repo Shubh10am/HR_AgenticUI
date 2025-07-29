@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -62,20 +63,17 @@ export default function TaskManagementPage() {
         </PageHeader>
       </div>
 
-      {/* Scrollable columns horizontally */}
       <div className="flex-grow min-h-0 overflow-x-auto">
         <div className="flex gap-4 h-full pb-4 px-4 flex-nowrap">
           {columns.map((status) => (
             <div key={status} className="w-80 flex-shrink-0 h-full flex flex-col">
               <Card className="h-full flex flex-col bg-muted/50">
-                <CardHeader className="flex flex-row items-center justify-between p-4 border-b">
+                <CardHeader className="flex flex-row items-center justify-between p-4 border-b flex-shrink-0">
                   <CardTitle className="text-base font-semibold">
                     {status} ({tasks.filter((t) => t.status === status).length})
                   </CardTitle>
                   <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
-
-                {/* Vertical scroll inside column */}
                 <div className="flex-grow min-h-0 overflow-y-auto">
                   <CardContent className="p-2 space-y-2">
                     {tasks
