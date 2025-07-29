@@ -20,7 +20,6 @@ const AppTour = () => {
     const isGuest = user?.organizationId === 'guest-org-id';
 
     if ((!tourCompleted || isGuest) && tour && !hasTourStarted) {
-      // Small delay to ensure the page is fully rendered before starting the tour
       const timer = setTimeout(() => {
         if (tour && !tour.isActive()) {
           tour.start();
@@ -53,6 +52,16 @@ const AppTour = () => {
         },
         buttons: [{ text: 'Next', action: tour?.next }],
       },
+       {
+        id: 'community',
+        title: 'Community Hub',
+        text: 'Connect with your team, share updates, and see company-wide announcements here.',
+        attachTo: { element: 'a[href="/community"]', on: 'right' },
+        when: {
+            show: () => { if (pathname !== '/dashboard') router.push('/dashboard'); },
+        },
+        buttons: [{ text: 'Next', action: tour?.next }],
+      },
       {
         id: 'recruitment',
         title: 'AI Recruitment Module',
@@ -69,6 +78,26 @@ const AppTour = () => {
         text: 'Need to reply to an employee inquiry? This module uses AI to generate professional draft responses for you based on the employee\'s message.',
         attachTo: { element: 'a[href="/email-assistance"]', on: 'right' },
         when: {
+            show: () => { if (pathname !== '/dashboard') router.push('/dashboard'); },
+        },
+        buttons: [{ text: 'Next', action: tour?.next }],
+      },
+      {
+        id: 'attendance',
+        title: 'Attendance & Reporting',
+        text: 'Clock in/out, view your attendance history, and apply for leave in this section.',
+        attachTo: { element: 'a[href="/attendance-reporting"]', on: 'right' },
+         when: {
+            show: () => { if (pathname !== '/dashboard') router.push('/dashboard'); },
+        },
+        buttons: [{ text: 'Next', action: tour?.next }],
+      },
+        {
+        id: 'knowledge-base',
+        title: 'Knowledge Base',
+        text: 'Manage and access all your important company documents and knowledge sources here. The AI uses this for context.',
+        attachTo: { element: 'a[href="/knowledge-base"]', on: 'right' },
+         when: {
             show: () => { if (pathname !== '/dashboard') router.push('/dashboard'); },
         },
         buttons: [{ text: 'Next', action: tour?.next }],
@@ -106,7 +135,7 @@ const AppTour = () => {
     }
   }, [tour, pathname, router, user]);
 
-  return null; // This component does not render anything itself
+  return null;
 };
 
 export default AppTour;
