@@ -16,15 +16,19 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User as UserIcon, LogOut, Settings, UserCircle2, Sun, Moon, Laptop } from 'lucide-react';
+import { User as UserIcon, LogOut, Settings, UserCircle2, Sun, Moon, Laptop, Route } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation'; // Import useRouter
+import { useContext } from 'react';
+import { ShepherdTourContext } from 'react-shepherd';
+
 
 export default function UserNav() {
   const { user, logout, isAuthenticated } = useAuth();
   const { theme, setTheme } = useTheme();
   const router = useRouter(); // Initialize router
+  const tour = useContext(ShepherdTourContext);
 
   if (!isAuthenticated) {
     return null;
@@ -41,7 +45,7 @@ export default function UserNav() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full" id="user-nav-btn">
           <Avatar className="h-10 w-10">
             <AvatarImage src={`https://randomuser.me/api/portraits/men/78.jpg`} alt={user?.name || "User avatar"} data-ai-hint="user avatar" />
             <AvatarFallback>
@@ -68,6 +72,9 @@ export default function UserNav() {
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={handleSettingsClick} className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" />Settings
+          </DropdownMenuItem>
+           <DropdownMenuItem onSelect={() => tour?.start()} className="cursor-pointer">
+            <Route className="mr-2 h-4 w-4" />Start Tour
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

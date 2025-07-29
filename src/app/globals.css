@@ -118,6 +118,73 @@
   }
 }
 
+/* Shepherd.js Tour Styles */
+.shepherd-element {
+    background-color: hsl(var(--card));
+    border-radius: var(--radius);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    max-width: 400px;
+    border: 1px solid hsl(var(--border));
+}
+
+.shepherd-header {
+    background-color: hsl(var(--secondary));
+    padding: 1rem 1rem 0.5rem;
+    border-bottom: 1px solid hsl(var(--border));
+}
+
+.shepherd-title {
+    color: hsl(var(--card-foreground));
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.shepherd-text {
+    padding: 1rem;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.shepherd-button {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    padding: 0.5rem 1rem;
+    border-radius: calc(var(--radius) - 2px);
+    font-weight: 500;
+    transition: background-color 0.2s;
+    margin-right: 0.5rem;
+}
+.shepherd-button:not(.shepherd-button-secondary):hover {
+    background-color: hsl(var(--primary) / 0.9);
+}
+
+.shepherd-button.shepherd-button-secondary {
+    background-color: hsl(var(--secondary));
+    color: hsl(var(--secondary-foreground));
+}
+.shepherd-button.shepherd-button-secondary:hover {
+    background-color: hsl(var(--muted));
+}
+
+.shepherd-footer {
+    padding: 0 1rem 1rem;
+    border-top: none;
+}
+
+.shepherd-cancel-icon {
+    color: hsl(var(--muted-foreground));
+    font-size: 1.5rem;
+}
+.shepherd-cancel-icon:hover {
+    color: hsl(var(--foreground));
+}
+
+.shepherd-arrow, .shepherd-arrow:before {
+    background-color: hsl(var(--secondary));
+    border: 1px solid hsl(var(--border));
+}
+
 @layer utilities {
   .animated-background-gradient {
     background: linear-gradient(-45deg, 

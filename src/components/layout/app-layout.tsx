@@ -22,12 +22,15 @@ import CopilotSidebar from './copilot-sidebar';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import AccountStatusOverlay from '@/components/account-status-overlay'; // Import the new overlay
+import AppTour from '@/components/app-tour';
+import { ShepherdTour, ShepherdTourContext } from 'react-shepherd';
+
 
 interface AppLayoutProps {
   children: ReactNode;
 }
 
-export default function AppLayout({ children }: AppLayoutProps) {
+export default function AppLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user, isLoading, isAuthenticated } = useAuth();
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
@@ -65,6 +68,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const orgStatus = user?.organizationStatus;
 
   return (
+    <ShepherdTour steps={[]} tourOptions={{ useModalOverlay: true }}>
     <SidebarProvider defaultOpen>
       <Sidebar variant="sidebar" collapsible="icon">
         <SidebarHeader className="p-4">
@@ -98,6 +102,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               aria-label="Open Copilot Chat"
               title="Open Copilot Chat"
               className="h-9 w-9"
+              id="copilot-btn"
             >
               <MessageSquare className="h-5 w-5" />
             </Button>
@@ -111,6 +116,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </main>
         <CopilotSidebar isOpen={isCopilotOpen} onOpenChange={setIsCopilotOpen} />
       </SidebarInset>
+      <AppTour />
     </SidebarProvider>
+    </ShepherdTour>
   );
 }
