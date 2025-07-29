@@ -298,7 +298,7 @@ export default function LandingPage() {
 
           {/* Workflow diagram */}
            <div className="flex justify-center my-16 sm:my-24 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-            <div className="relative grid w-full max-w-4xl items-start grid-cols-4 gap-4">
+            <div className="relative grid max-w-4xl items-start grid-cols-4 gap-4">
                 <div className="absolute left-0 right-0 h-px bg-neutral-700 top-3 -z-10" />
                 <WorkflowStep icon={FileText} label="Plan" className="justify-self-center"/>
                 <div className="flex flex-col items-center gap-2 z-10 bg-black px-2 sm:text-center justify-self-center">
