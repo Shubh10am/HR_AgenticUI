@@ -297,13 +297,13 @@ export default function LandingPage() {
           </div>
 
           {/* Workflow diagram */}
-           <div className="relative my-16 sm:my-24 grid w-full max-w-4xl mx-auto items-start grid-cols-2 sm:grid-cols-4 gap-4 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+           <div className="relative my-16 sm:my-24 grid w-full max-w-4xl mx-auto items-start grid-cols-3 sm:grid-cols-4 gap-4 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
               <div className="absolute left-0 right-0 h-px bg-neutral-700 top-3 -z-10 hidden sm:block" />
 
               <WorkflowStep icon={FileText} label="Plan" className="justify-self-start"/>
               <WorkflowStep icon={Users} label="Recruit" className="justify-self-end sm:justify-self-center"/>
 
-              <div className="col-span-2 sm:col-span-1 flex flex-col items-center gap-2 z-10 bg-black px-2 sm:order-none justify-self-center sm:text-center">
+              <div className="col-span-1 sm:col-span-1 flex flex-col items-center gap-2 z-10 bg-black px-2 sm:order-none justify-self-center sm:text-center">
                 <div className="flex items-center gap-2">
                   <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse"></div>
                   <div className="h-3 w-3 rounded-full bg-purple-500 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
@@ -315,7 +315,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <WorkflowStep icon={BarChart3} label="Report" className="justify-self-start sm:justify-self-center"/>
+              <WorkflowStep icon={BarChart3} label="Report" className="justify-self-start sm:justify-self-center col-start-2 sm:col-start-auto"/>
           </div>
 
           {/* CTA Button */}
