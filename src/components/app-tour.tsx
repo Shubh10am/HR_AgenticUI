@@ -17,9 +17,10 @@ const AppTour = () => {
 
   useEffect(() => {
     const tourCompleted = localStorage.getItem(TOUR_STORAGE_KEY);
-    const isGuest = user?.organizationId === 'guest-org-id';
+    // Always show tour for guests, but check storage for real users
+    const shouldShowTour = user?.organizationId === 'guest-org-id' || !tourCompleted;
 
-    if ((!tourCompleted || isGuest) && tour && !hasTourStarted) {
+    if (shouldShowTour && tour && !hasTourStarted && pathname === '/dashboard') {
       const timer = setTimeout(() => {
         if (tour && !tour.isActive()) {
           tour.start();
@@ -29,7 +30,7 @@ const AppTour = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [tour, user, hasTourStarted]);
+  }, [tour, user, hasTourStarted, pathname]);
 
   useEffect(() => {
     const steps = [
@@ -56,7 +57,7 @@ const AppTour = () => {
         id: 'community',
         title: 'Community Hub',
         text: 'Connect with your team, share updates, and see company-wide announcements here.',
-        attachTo: { element: 'a[href="/community"]', on: 'right' },
+        attachTo: { element: '[href="/community"] > button', on: 'right' },
         when: {
             show: () => { if (pathname !== '/dashboard') router.push('/dashboard'); },
         },
@@ -66,7 +67,7 @@ const AppTour = () => {
         id: 'recruitment',
         title: 'AI Recruitment Module',
         text: 'This module is your hub for hiring. Generate job descriptions, analyze resumes with ATS scoring, and even conduct initial AI interviews here.',
-        attachTo: { element: 'a[href="/recruitment"]', on: 'right' },
+        attachTo: { element: '[href="/recruitment"] > button', on: 'right' },
         when: {
             show: () => { if (pathname !== '/dashboard') router.push('/dashboard'); },
         },
@@ -76,7 +77,7 @@ const AppTour = () => {
         id: 'email-assistance',
         title: 'Email Assistance Module',
         text: 'Need to reply to an employee inquiry? This module uses AI to generate professional draft responses for you based on the employee\'s message.',
-        attachTo: { element: 'a[href="/email-assistance"]', on: 'right' },
+        attachTo: { element: '[href="/email-assistance"] > button', on: 'right' },
         when: {
             show: () => { if (pathname !== '/dashboard') router.push('/dashboard'); },
         },
@@ -86,7 +87,7 @@ const AppTour = () => {
         id: 'attendance',
         title: 'Attendance & Reporting',
         text: 'Clock in/out, view your attendance history, and apply for leave in this section.',
-        attachTo: { element: 'a[href="/attendance-reporting"]', on: 'right' },
+        attachTo: { element: '[href="/attendance-reporting"] > button', on: 'right' },
          when: {
             show: () => { if (pathname !== '/dashboard') router.push('/dashboard'); },
         },
@@ -96,7 +97,7 @@ const AppTour = () => {
         id: 'knowledge-base',
         title: 'Knowledge Base',
         text: 'Manage and access all your important company documents and knowledge sources here. The AI uses this for context.',
-        attachTo: { element: 'a[href="/knowledge-base"]', on: 'right' },
+        attachTo: { element: '[href="/knowledge-base"] > button', on: 'right' },
          when: {
             show: () => { if (pathname !== '/dashboard') router.push('/dashboard'); },
         },
@@ -130,7 +131,7 @@ const AppTour = () => {
       },
     ];
 
-    if (tour) {
+    if (tour && tour.steps.length === 0) { // Ensure steps are only added once
       tour.addSteps(steps);
     }
   }, [tour, pathname, router, user]);
