@@ -4,6 +4,8 @@
 import * as brevo from '@getbrevo/brevo';
 import type { IContactSubmission } from '@/models/ContactSubmission';
 import type { IDemoRequest } from '@/models/DemoRequest';
+import type { IOrganization } from '@/models/Organization';
+import type { IEmployee } from '@/models/Employee';
 
 const SENDER_EMAIL = 'noreply@agentic-hr.in';
 const SENDER_NAME = 'HR Streamline AI';
@@ -94,7 +96,6 @@ function generateUserConfirmationHtml(title: string, name: string, message: stri
                             <td style="padding: 30px 25px;">
                                 <h2 style="margin: 0 0 20px; font-size: 20px; color: #2c3e50;">Hi ${name},</h2>
                                 <p style="color: #555; line-height: 1.6;">${message}</p>
-                                <p style="color: #555; line-height: 1.6;">If you did not make this request, please disregard this email.</p>
                                 <br>
                                 <p style="color: #555; line-height: 1.6;">Best regards,<br>The HR Streamline AI Team</p>
                             </td>
@@ -113,7 +114,10 @@ function generateUserConfirmationHtml(title: string, name: string, message: stri
 }
 
 async function sendEmail(to: { name: string; email: string }, subject: string, htmlContent: string) {
-    if (!apiInstance) return;
+    if (!apiInstance) {
+        console.log(`Email not sent to ${to.email} because Brevo API key is not configured.`);
+        return;
+    }
 
     const sendSmtpEmail = new brevo.SendSmtpEmail();
     sendSmtpEmail.subject = subject;
@@ -173,5 +177,29 @@ export async function sendDemoAdminNotification(request: IDemoRequest) {
     ];
     const subject = `New Demo Request from ${request.companyName}`;
     const htmlContent = generateAdminNotificationHtml('New Demo Request', fields);
+    sendEmail(admin, subject, htmlContent);
+}
+
+
+export async function sendRegistrationWelcomeEmail(org: IOrganization, adminUser: IEmployee) {
+    const user = { name: adminUser.name, email: adminUser.email };
+    const subject = `Welcome to HR Streamline AI, ${org.name}!`;
+    const message = `Your organization, <strong>${org.name}</strong>, has been successfully registered on the HR Streamline AI platform. Your administrator account is now active.<br><br>
+                     You can log in at any time to start managing your employees, setting up integrations, and exploring our AI-powered features. Your Organization ID is: <strong>${org._id}</strong>.<br><br>
+                     We're excited to have you on board!`;
+    const htmlContent = generateUserConfirmationHtml('Welcome Aboard!', user.name, message);
+    sendEmail(user, subject, htmlContent);
+}
+
+export async function sendRegistrationAdminNotification(org: IOrganization, adminUser: IEmployee) {
+    const admin = { name: ADMIN_NOTIFICATION_NAME, email: ADMIN_NOTIFICATION_EMAIL };
+    const fields = [
+        { label: 'Organization Name', value: org.name },
+        { label: 'Organization ID', value: org._id.toString() },
+        { label: 'Admin Name', value: adminUser.name },
+        { label: 'Admin Email', value: adminUser.email },
+    ];
+    const subject = `New Organization Registered: ${org.name}`;
+    const htmlContent = generateAdminNotificationHtml('New Organization Registration', fields);
     sendEmail(admin, subject, htmlContent);
 }

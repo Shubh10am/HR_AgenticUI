@@ -4,6 +4,7 @@ import dbConnect from '@/lib/mongodb';
 import Organization from '@/models/Organization';
 import Employee, { type EmployeeRole } from '@/models/Employee';
 import bcrypt from 'bcryptjs';
+import { sendRegistrationWelcomeEmail, sendRegistrationAdminNotification } from '@/services/mailerService';
 
 type RegisterRequestBody = {
   orgName: string;
@@ -77,6 +78,11 @@ export default async function handler(
       organizationId: newOrganization._id,
     });
     await adminEmployee.save();
+    
+    // Fire-and-forget email notifications
+    sendRegistrationWelcomeEmail(newOrganization, adminEmployee);
+    sendRegistrationAdminNotification(newOrganization, adminEmployee);
+
 
     return res.status(201).json({
       message: 'Organization and admin user registered successfully.',
