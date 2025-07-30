@@ -7,9 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, RefreshCw, LayoutGrid, List, FolderPlus, Plus, File, Folder, UploadCloud, ChevronDown } from 'lucide-react';
-import Link from 'next/link';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Search, RefreshCw, LayoutGrid, List, FolderPlus, Plus, File, Folder, UploadCloud, ChevronDown, HelpCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
@@ -174,9 +173,42 @@ export default function KnowledgeBasePage() {
         description={
           <>
             Manage your document collections and knowledge sources for AI interactions.
-            <Link href="#" className="text-primary hover:underline ml-2">
-              Quick guide
-            </Link>
+             <Dialog>
+              <DialogTrigger asChild>
+                <button className="text-primary hover:underline ml-2">
+                  Quick guide
+                </button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                      <DialogTitle className="flex items-center"><HelpCircle className="mr-2 h-5 w-5 text-primary"/> Using the Knowledge Base</DialogTitle>
+                      <DialogDescription>A guide to effectively manage your organization's knowledge.</DialogDescription>
+                  </DialogHeader>
+                  <div className="py-4 space-y-4 text-sm">
+                      <div>
+                          <h4 className="font-semibold text-foreground">What is it?</h4>
+                          <p className="text-muted-foreground">The Knowledge Base is a central repository for your company's documents, policies, and other important information.</p>
+                      </div>
+                      <div>
+                          <h4 className="font-semibold text-foreground">How is it used by AI?</h4>
+                          <p className="text-muted-foreground">The AI features, especially the HR Copilot, use the documents stored here as a primary source of truth. For example, if you upload your company's leave policy, the Copilot can accurately answer employee questions about it.</p>
+                      </div>
+                       <div>
+                          <h4 className="font-semibold text-foreground">How do I use it?</h4>
+                          <ul className="list-disc pl-5 text-muted-foreground space-y-1">
+                              <li>Use the <strong>"Add New"</strong> button to create folders, create blank files, or upload existing files (like PDFs).</li>
+                              <li>Organize related documents into folders to keep things tidy.</li>
+                              <li>Keep documents up-to-date to ensure the AI provides accurate information.</li>
+                          </ul>
+                      </div>
+                  </div>
+                  <DialogFooter>
+                      <DialogClose asChild>
+                          <Button>Got it!</Button>
+                      </DialogClose>
+                  </DialogFooter>
+              </DialogContent>
+            </Dialog>
             {' '}on using Knowledge Base.
           </>
         }
