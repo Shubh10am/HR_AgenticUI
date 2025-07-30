@@ -275,29 +275,46 @@ export default function KnowledgeBasePage() {
         />
       ) : viewMode === 'list' ? (
         <div className="rounded-lg border mt-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Created At</TableHead>
-                <TableHead>Owner</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {displayedContent.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium flex items-center gap-2">
-                    {item.type === 'Folder' ? <Folder className="h-4 w-4 text-primary"/> : <File className="h-4 w-4 text-muted-foreground"/>}
-                    {item.name}
-                  </TableCell>
-                  <TableCell>{item.type}</TableCell>
-                  <TableCell>{item.createdAt}</TableCell>
-                  <TableCell>{item.owner}</TableCell>
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Created At</TableHead>
+                  <TableHead>Owner</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {displayedContent.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium flex items-center gap-2">
+                      {item.type === 'Folder' ? <Folder className="h-4 w-4 text-primary"/> : <File className="h-4 w-4 text-muted-foreground"/>}
+                      {item.name}
+                    </TableCell>
+                    <TableCell>{item.type}</TableCell>
+                    <TableCell>{item.createdAt}</TableCell>
+                    <TableCell>{item.owner}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="block md:hidden space-y-3 p-3">
+             {displayedContent.map((item) => (
+                <Card key={item.id} className="bg-secondary/30">
+                  <CardContent className="p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                       {item.type === 'Folder' ? <Folder className="h-6 w-6 text-primary"/> : <File className="h-6 w-6 text-muted-foreground"/>}
+                       <div>
+                          <p className="font-semibold">{item.name}</p>
+                          <p className="text-xs text-muted-foreground">By {item.owner} on {item.createdAt}</p>
+                       </div>
+                    </div>
+                  </CardContent>
+                </Card>
+             ))}
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-4">
