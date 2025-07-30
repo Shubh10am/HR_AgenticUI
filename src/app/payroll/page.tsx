@@ -1,3 +1,4 @@
+
 'use client';
 
 import PageHeader from '@/components/page-header';
@@ -49,11 +50,11 @@ export default function PayrollPage() {
         title="Payroll Management"
         description="Run payroll, view history, and manage employee compensation."
       >
-        <div className="flex items-center gap-2">
-            <Button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <Button className="w-full sm:w-auto">
                 <PlayCircle className="mr-2 h-4 w-4" /> Run New Payroll
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" className="w-full sm:w-auto">
                 <Download className="mr-2 h-4 w-4" /> Download Reports
             </Button>
         </div>
