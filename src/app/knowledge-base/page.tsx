@@ -215,8 +215,8 @@ export default function KnowledgeBasePage() {
           </>
         }
       />
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-        <div className="relative w-full sm:w-auto sm:flex-grow max-w-xs">
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+        <div className="relative w-full sm:w-auto sm:flex-grow max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
             placeholder="Search knowledge bases..." 
@@ -225,7 +225,7 @@ export default function KnowledgeBasePage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button variant="outline" onClick={handleRefresh}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
