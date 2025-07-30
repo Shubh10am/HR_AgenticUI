@@ -417,27 +417,25 @@ export default function CommunityPage() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handlePostSubmit} className="space-y-4">
-                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                     <div>
+                  <div className='space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4'>
+                     <div className="space-y-1">
                       <Label htmlFor="postTopic">Topic</Label>
                       <Input
                         id="postTopic"
                         placeholder="e.g., Announcement"
                         value={newPostTopic}
                         onChange={(e) => setNewPostTopic(e.target.value)}
-                        className="mt-1"
                         disabled={isSubmittingPost}
                         required
                       />
                     </div>
-                     <div>
+                     <div className="space-y-1">
                       <Label htmlFor="postSubject">Subject</Label>
                       <Input
                         id="postSubject"
                         placeholder="e.g., Q3 All-Hands Meeting"
                         value={newPostSubject}
                         onChange={(e) => setNewPostSubject(e.target.value)}
-                        className="mt-1"
                         disabled={isSubmittingPost}
                         required
                       />
