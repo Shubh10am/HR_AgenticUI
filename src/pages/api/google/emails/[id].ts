@@ -2,7 +2,6 @@
 import type { NextApiResponse } from 'next';
 import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
 import { getGmailService } from '@/services/google';
-import mongoose from 'mongoose';
 
 async function handler(
   req: NextApiRequestWithAuth,
@@ -25,15 +24,16 @@ async function handler(
       return res.status(401).json({ error: 'Google authentication required.' });
     }
 
-    await gmail.users.messages.delete({
+    // Use trash method which is the standard way to "delete" an email
+    await gmail.users.messages.trash({
       userId: 'me',
       id: messageId,
     });
 
-    res.status(200).json({ message: 'Email deleted successfully.' });
+    res.status(200).json({ message: 'Email moved to trash successfully.' });
   } catch (error: any) {
-    console.error('Error deleting email:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Failed to delete email from Google.' });
+    console.error('Error moving email to trash:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Failed to move email to trash in Google.' });
   }
 }
 
