@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import { Card, CardContent } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface KnowledgeBaseItem {
   id: string;
@@ -184,32 +185,33 @@ export default function KnowledgeBasePage() {
                       <DialogTitle className="flex items-center"><HelpCircle className="mr-2 h-5 w-5 text-primary"/> Using the Knowledge Base</DialogTitle>
                       <DialogDescription>A guide to effectively manage your organization's knowledge.</DialogDescription>
                   </DialogHeader>
-                  <div className="py-4 space-y-4 text-sm">
-                      <div>
-                          <h4 className="font-semibold text-foreground">What is it?</h4>
-                          <p className="text-muted-foreground">The Knowledge Base is a central repository for your company's documents, policies, and other important information.</p>
-                      </div>
-                      <div>
-                          <h4 className="font-semibold text-foreground">How is it used by AI?</h4>
-                          <p className="text-muted-foreground">The AI features, especially the HR Copilot, use the documents stored here as a primary source of truth. For example, if you upload your company's leave policy, the Copilot can accurately answer employee questions about it.</p>
-                      </div>
-                       <div>
-                          <h4 className="font-semibold text-foreground">How do I use it?</h4>
-                          <ul className="list-disc pl-5 text-muted-foreground space-y-1">
-                              <li>Use the <strong>"Add New"</strong> button to create folders, create blank files, or upload existing files (like PDFs).</li>
-                              <li>Organize related documents into folders to keep things tidy.</li>
-                              <li>Keep documents up-to-date to ensure the AI provides accurate information.</li>
-                          </ul>
-                      </div>
-                  </div>
-                  <DialogFooter>
+                  <ScrollArea className="max-h-[60vh] pr-4">
+                    <div className="py-4 space-y-4 text-sm">
+                        <div>
+                            <h4 className="font-semibold text-foreground">What is it?</h4>
+                            <p className="text-muted-foreground">The Knowledge Base is a central repository for your company's documents, policies, and other important information.</p>
+                        </div>
+                        <div>
+                            <h4 className="font-semibold text-foreground">How is it used by AI?</h4>
+                            <p className="text-muted-foreground">The AI features, especially the HR Copilot, use the documents stored here as a primary source of truth. For example, if you upload your company's leave policy, the Copilot can accurately answer employee questions about it.</p>
+                        </div>
+                        <div>
+                            <h4 className="font-semibold text-foreground">How do I use it?</h4>
+                            <ul className="list-disc pl-5 text-muted-foreground space-y-1">
+                                <li>Use the <strong>"Add New"</strong> button to create folders, create blank files, or upload existing files (like PDFs).</li>
+                                <li>Organize related documents into folders to keep things tidy.</li>
+                                <li>Keep documents up-to-date to ensure the AI provides accurate information.</li>
+                            </ul>
+                        </div>
+                    </div>
+                  </ScrollArea>
+                  <DialogFooter className="pt-4 border-t">
                       <DialogClose asChild>
                           <Button>Got it!</Button>
                       </DialogClose>
                   </DialogFooter>
               </DialogContent>
             </Dialog>
-            {' '}on using Knowledge Base.
           </>
         }
       />
