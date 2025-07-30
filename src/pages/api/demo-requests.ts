@@ -2,6 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
 import DemoRequest from '@/models/DemoRequest';
+import { sendDemoRequestEmail } from '@/services/mailerService';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -28,6 +29,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     await newRequest.save();
+
+    // Send email notification (fire-and-forget)
+    sendDemoRequestEmail(newRequest);
 
     res.status(201).json({ message: 'Demo request received successfully.' });
   } catch (error: any) {
