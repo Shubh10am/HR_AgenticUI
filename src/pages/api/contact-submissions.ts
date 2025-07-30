@@ -2,7 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
 import ContactSubmission from '@/models/ContactSubmission';
-import { sendContactSubmissionEmail } from '@/services/mailerService';
+import { sendContactConfirmation, sendContactAdminNotification } from '@/services/mailerService';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -29,8 +29,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     await newSubmission.save();
 
-    // Send email notification (fire-and-forget)
-    sendContactSubmissionEmail(newSubmission);
+    // Send email notifications (fire-and-forget)
+    sendContactConfirmation(newSubmission); // To the user
+    sendContactAdminNotification(newSubmission); // To the admin
 
     res.status(201).json({ message: 'Contact submission received successfully.' });
   } catch (error: any) {

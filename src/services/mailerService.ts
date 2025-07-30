@@ -7,8 +7,8 @@ import type { IDemoRequest } from '@/models/DemoRequest';
 
 const SENDER_EMAIL = 'noreply@agentic-hr.in';
 const SENDER_NAME = 'HR Streamline AI';
-const NOTIFICATION_RECIPIENT_EMAIL = 'support@agentic-hr.in';
-const NOTIFICATION_RECIPIENT_NAME = 'HR Streamline Support';
+const ADMIN_NOTIFICATION_EMAIL = 'support@agentic-hr.in';
+const ADMIN_NOTIFICATION_NAME = 'HR Streamline Support';
 
 let apiInstance: brevo.TransactionalEmailsApi | null = null;
 
@@ -19,7 +19,7 @@ if (process.env.BREVO_API_KEY) {
   console.warn('BREVO_API_KEY is not set. Email notifications will be disabled.');
 }
 
-function generateHtmlTemplate(title: string, fields: { label: string; value: string }[]): string {
+function generateAdminNotificationHtml(title: string, fields: { label: string; value: string }[]): string {
     const fieldsHtml = fields
         .map(
             (field) => `
@@ -70,54 +70,108 @@ function generateHtmlTemplate(title: string, fields: { label: string; value: str
     </html>`;
 }
 
-
-export async function sendContactSubmissionEmail(submission: IContactSubmission) {
-  if (!apiInstance) return;
-
-  const fields = [
-    { label: 'Name', value: submission.name },
-    { label: 'Email', value: submission.email },
-    { label: 'Phone', value: submission.phone || 'N/A' },
-    { label: 'Subject', value: submission.subject },
-    { label: 'Message', value: submission.message },
-  ];
-
-  const sendSmtpEmail = new brevo.SendSmtpEmail();
-  sendSmtpEmail.subject = `New Contact Form Submission: ${submission.subject}`;
-  sendSmtpEmail.htmlContent = generateHtmlTemplate('New Contact Submission', fields);
-  sendSmtpEmail.sender = { name: SENDER_NAME, email: SENDER_EMAIL };
-  sendSmtpEmail.to = [{ name: NOTIFICATION_RECIPIENT_NAME, email: NOTIFICATION_RECIPIENT_EMAIL }];
-  
-  try {
-    await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log('Contact submission notification sent successfully.');
-  } catch (error) {
-    console.error('Failed to send contact submission email:', error);
-  }
+function generateUserConfirmationHtml(title: string, name: string, message: string): string {
+    return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <title>${title}</title>
+    </head>
+    <body style="font-family: 'Poppins', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+                <td align="center">
+                    <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                        <tr>
+                            <td align="center" style="padding: 25px; background-color: #2c3e50; color: #ffffff;">
+                                <h1 style="margin: 0; font-size: 24px; font-weight: 700;">HR Streamline AI</h1>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 30px 25px;">
+                                <h2 style="margin: 0 0 20px; font-size: 20px; color: #2c3e50;">Hi ${name},</h2>
+                                <p style="color: #555; line-height: 1.6;">${message}</p>
+                                <p style="color: #555; line-height: 1.6;">If you did not make this request, please disregard this email.</p>
+                                <br>
+                                <p style="color: #555; line-height: 1.6;">Best regards,<br>The HR Streamline AI Team</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td align="center" style="padding: 20px; font-size: 12px; color: #7f8c8d; border-top: 1px solid #ecf0f1;">
+                                This is an automated confirmation email.
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>`;
 }
 
-export async function sendDemoRequestEmail(request: IDemoRequest) {
-  if (!apiInstance) return;
-  
-  const fields = [
-    { label: 'Name', value: request.name },
-    { label: 'Company Name', value: request.companyName },
-    { label: 'Work Email', value: request.email },
-    { label: 'Phone', value: request.phone || 'N/A' },
-    { label: 'Company Size', value: request.companySize },
-    { label: 'Message', value: request.message || 'N/A' },
-  ];
+async function sendEmail(to: { name: string; email: string }, subject: string, htmlContent: string) {
+    if (!apiInstance) return;
 
-  const sendSmtpEmail = new brevo.SendSmtpEmail();
-  sendSmtpEmail.subject = `New Demo Request from ${request.companyName}`;
-  sendSmtpEmail.htmlContent = generateHtmlTemplate('New Demo Request', fields);
-  sendSmtpEmail.sender = { name: SENDER_NAME, email: SENDER_EMAIL };
-  sendSmtpEmail.to = [{ name: NOTIFICATION_RECIPIENT_NAME, email: NOTIFICATION_RECIPIENT_EMAIL }];
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.subject = subject;
+    sendSmtpEmail.htmlContent = htmlContent;
+    sendSmtpEmail.sender = { name: SENDER_NAME, email: SENDER_EMAIL };
+    sendSmtpEmail.to = [to];
+    
+    try {
+        await apiInstance.sendTransacEmail(sendSmtpEmail);
+        console.log(`Email sent successfully to ${to.email}.`);
+    } catch (error) {
+        console.error(`Failed to send email to ${to.email}:`, error);
+    }
+}
 
-  try {
-    await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log('Demo request notification sent successfully.');
-  } catch (error) {
-    console.error('Failed to send demo request email:', error);
-  }
+
+export async function sendContactConfirmation(submission: IContactSubmission) {
+    const user = { name: submission.name, email: submission.email };
+    const subject = `Thank you for contacting HR Streamline AI`;
+    const message = `We have received your message regarding "${submission.subject}" and will get back to you as soon as possible.`;
+    const htmlContent = generateUserConfirmationHtml('Message Received', user.name, message);
+    sendEmail(user, subject, htmlContent);
+}
+
+export async function sendContactAdminNotification(submission: IContactSubmission) {
+    const admin = { name: ADMIN_NOTIFICATION_NAME, email: ADMIN_NOTIFICATION_EMAIL };
+    const fields = [
+        { label: 'Name', value: submission.name },
+        { label: 'Email', value: submission.email },
+        { label: 'Phone', value: submission.phone || 'N/A' },
+        { label: 'Subject', value: submission.subject },
+        { label: 'Message', value: submission.message },
+    ];
+    const subject = `New Contact Form Submission: ${submission.subject}`;
+    const htmlContent = generateAdminNotificationHtml('New Contact Submission', fields);
+    sendEmail(admin, subject, htmlContent);
+}
+
+
+export async function sendDemoConfirmation(request: IDemoRequest) {
+    const user = { name: request.name, email: request.email };
+    const subject = `Your Demo Request with HR Streamline AI`;
+    const message = `Thank you for your interest in HR Streamline AI! We have received your request for a demo. Our team will review your information and reach out shortly to schedule a time that works for you.`;
+    const htmlContent = generateUserConfirmationHtml('Demo Request Received', user.name, message);
+    sendEmail(user, subject, htmlContent);
+}
+
+export async function sendDemoAdminNotification(request: IDemoRequest) {
+    const admin = { name: ADMIN_NOTIFICATION_NAME, email: ADMIN_NOTIFICATION_EMAIL };
+    const fields = [
+        { label: 'Name', value: request.name },
+        { label: 'Company Name', value: request.companyName },
+        { label: 'Work Email', value: request.email },
+        { label: 'Phone', value: request.phone || 'N/A' },
+        { label: 'Company Size', value: request.companySize },
+        { label: 'Message', value: request.message || 'N/A' },
+    ];
+    const subject = `New Demo Request from ${request.companyName}`;
+    const htmlContent = generateAdminNotificationHtml('New Demo Request', fields);
+    sendEmail(admin, subject, htmlContent);
 }
