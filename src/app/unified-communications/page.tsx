@@ -89,7 +89,8 @@ export default function UnifiedCommunicationsPage() {
           <CardDescription>Overview of the latest interactions across all integrated platforms.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border overflow-x-auto">
+          {/* Table for larger screens */}
+          <div className="hidden md:block rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -121,6 +122,30 @@ export default function UnifiedCommunicationsPage() {
                 ))}
               </TableBody>
             </Table>
+          </div>
+          
+          {/* Card list for smaller screens */}
+          <div className="block md:hidden space-y-4">
+             {communicationLogs.map((log) => (
+                <Card key={log.id} className="bg-secondary/30">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2 font-semibold">
+                          <PlatformIcon platformName={log.platform} />
+                          {log.platform}
+                        </div>
+                        <Badge variant={log.type === 'Received' || log.type === 'Meeting Attended' ? 'secondary' : 'outline'}>
+                          {log.type}
+                        </Badge>
+                    </div>
+                     <p className="text-sm font-medium">{log.subject}</p>
+                     <div className="text-xs text-muted-foreground space-y-1">
+                        <p><strong>User/Channel:</strong> {log.user}</p>
+                        <p><strong>Time:</strong> {log.timestamp}</p>
+                     </div>
+                  </CardContent>
+                </Card>
+             ))}
           </div>
         </CardContent>
       </Card>
