@@ -114,7 +114,8 @@ export default function PayrollPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border overflow-x-auto">
+          {/* Table for larger screens */}
+          <div className="hidden md:block rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -144,6 +145,31 @@ export default function PayrollPage() {
               </TableBody>
             </Table>
           </div>
+          
+          {/* Card list for smaller screens */}
+           <div className="block md:hidden space-y-4">
+             {mockPayrollData.map((payroll) => (
+                <Card key={payroll.id} className="bg-secondary/30">
+                  <CardContent className="p-4 space-y-3">
+                     <div className="flex justify-between items-start">
+                        <span className="font-semibold">{payroll.employee}</span>
+                        <Badge variant={getStatusBadgeVariant(payroll.status)} className={getStatusBadgeClass(payroll.status)}>
+                            {payroll.status}
+                        </Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground space-y-2 border-t pt-3">
+                       <p><strong>Pay Period:</strong> {payroll.payPeriod}</p>
+                       <div className="grid grid-cols-3 gap-2">
+                            <p><strong>Gross:</strong> {payroll.grossPay}</p>
+                            <p className="text-destructive"><strong>Deduct:</strong> {payroll.deductions}</p>
+                            <p className="font-semibold text-foreground"><strong>Net:</strong> {payroll.netPay}</p>
+                       </div>
+                    </div>
+                  </CardContent>
+                </Card>
+             ))}
+          </div>
+
         </CardContent>
       </Card>
     </>
