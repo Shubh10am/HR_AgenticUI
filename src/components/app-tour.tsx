@@ -16,9 +16,12 @@ const AppTour = () => {
   const [hasTourStarted, setHasTourStarted] = useState(false);
 
   useEffect(() => {
+    // Wait until user data is loaded before checking tour status
+    if (!user) return;
+
     const tourCompleted = localStorage.getItem(TOUR_STORAGE_KEY);
     // Always show tour for guests, but check storage for real users
-    const shouldShowTour = user?.organizationId === 'guest-org-id' || !tourCompleted;
+    const shouldShowTour = user.organizationId === 'guest-org-id' ? true : !tourCompleted;
 
     if (shouldShowTour && tour && !hasTourStarted && pathname === '/dashboard') {
       const timer = setTimeout(() => {
@@ -119,9 +122,7 @@ const AppTour = () => {
           {
             text: 'Finish',
             action: () => {
-              if (user?.organizationId === 'guest-org-id') {
-                // Don't set for guests so they see it again if they revisit
-              } else {
+              if (user && user.organizationId !== 'guest-org-id') {
                 localStorage.setItem(TOUR_STORAGE_KEY, 'true');
               }
               tour?.complete();
