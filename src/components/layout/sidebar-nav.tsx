@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -23,6 +22,7 @@ import {
   MessageCircle,
   DollarSign,
   ClipboardList,
+  UserPlus, // Added for Onboarding
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar'; 
@@ -48,6 +48,7 @@ const navItems: NavItem[] = [
   { id: 'communications', href: '/unified-communications', label: 'Communications', icon: MessagesSquare, tooltip: 'Unified Communications' },
   { id: 'recruitment', href: '/recruitment', label: 'Recruitment', icon: GitFork, tooltip: 'AI Recruitment' },
   { id: 'smart-drafting', href: '/smart-drafting', label: 'Smart Drafting', icon: FileSignature, tooltip: 'Smart Email Drafting' },
+  { id: 'onboarding', href: '/employee-onboarding', label: 'Onboarding', icon: UserPlus, tooltip: 'Employee Onboarding', adminOnly: true },
   { id: 'knowledge-base', href: '/knowledge-base', label: 'Knowledge Base', icon: Library, tooltip: 'Knowledge Base' },
   { id: 'manage-employees', href: '/manage-employees', label: 'Manage Employees', icon: Users, tooltip: 'Manage Employees', adminOnly: true },
   { id: 'attendance-mgmt', href: '/attendance-management', label: 'Attendance Mgmt', icon: ClipboardList, tooltip: 'Attendance Management', adminOnly: true },
