@@ -215,3 +215,16 @@ export async function sendNewPlatformAdminWelcomeEmail(email: string, password_p
     const htmlContent = generateUserConfirmationHtml('Welcome to the Admin Team!', 'New Admin', message);
     sendEmail(user, subject, htmlContent);
 }
+
+
+export async function sendNewEmployeeWelcomeEmail(employee: { name: string; email: string }, organizationName: string, password_provided: string) {
+    const user = { name: employee.name, email: employee.email };
+    const subject = `Welcome to ${organizationName}! Your HR Streamline AI Account is Ready`;
+    const message = `An account has been created for you on the HR Streamline AI platform for your organization, <strong>${organizationName}</strong>. You can now log in using the following credentials:<br><br>
+                     <strong>Email:</strong> ${employee.email}<br>
+                     <strong>Password:</strong> ${password_provided}<br><br>
+                     We recommend changing your password after your first login via the 'Profile' section of the dashboard.<br><br>
+                     Welcome aboard!`;
+    const htmlContent = generateUserConfirmationHtml(`Welcome, ${employee.name}!`, user.name, message);
+    sendEmail(user, subject, htmlContent);
+}

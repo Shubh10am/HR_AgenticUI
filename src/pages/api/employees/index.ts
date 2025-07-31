@@ -5,6 +5,7 @@ import Employee, { type EmployeeRole, type IEmployee } from '@/models/Employee';
 import Organization from '@/models/Organization';
 import bcrypt from 'bcryptjs';
 import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
+import { sendNewEmployeeWelcomeEmail } from '@/services/mailerService';
 
 const sanitizeEmployee = (employee: IEmployee) => {
   const { passwordHash, ...sanitized } = employee.toObject ? employee.toObject() : employee;
@@ -34,8 +35,8 @@ async function handler(
       return res.status(400).json({ error: 'Missing required fields: name, email, password, role.' });
     }
     
-    if (typeof role !== 'string' || !role.trim()) {
-        return res.status(400).json({ error: 'Role must be a non-empty string.' });
+    if (typeof role !== 'string' || !['Admin', 'HR', 'Manager', 'Employee'].includes(role)) {
+      return res.status(400).json({ error: `Invalid role specified: ${role}.` });
     }
 
     try {
@@ -66,6 +67,10 @@ async function handler(
       });
 
       await newEmployee.save();
+
+      // Send welcome email
+      sendNewEmployeeWelcomeEmail({ name, email }, organization.name, password);
+
       return res.status(201).json(sanitizeEmployee(newEmployee));
     } catch (error: any) {
       console.error('Error registering employee:', error);

@@ -5,6 +5,7 @@ import Employee, { type EmployeeRole } from '@/models/Employee';
 import Organization from '@/models/Organization';
 import bcrypt from 'bcryptjs';
 import { verifyToken } from '@/lib/jwt';
+import { sendNewEmployeeWelcomeEmail } from '@/services/mailerService';
 
 type BulkEmployeeData = {
   name: string;
@@ -58,7 +59,7 @@ export default async function handler(
     return res.status(404).json({ error: 'Admin\'s organization not found.' });
   }
 
-  const createdEmployees = [];
+  const createdEmployeesData = [];
   const registrationErrors: { email: string; reason: string }[] = [];
 
   // Fetch existing emails in one go for efficiency
@@ -76,9 +77,9 @@ export default async function handler(
       registrationErrors.push({ email: email || 'N/A', reason: 'Missing required fields (name, email, password, role).' });
       continue;
     }
-
-    if (typeof role !== 'string' || !role.trim()) {
-      registrationErrors.push({ email, reason: 'Role must be a non-empty string.' });
+    
+    if (typeof role !== 'string' || !['Admin', 'HR', 'Manager', 'Employee'].includes(role)) {
+      registrationErrors.push({ email, reason: `Invalid role specified: ${role}.` });
       continue;
     }
 
@@ -105,8 +106,8 @@ export default async function handler(
         department: department || undefined,
       });
 
-      // Instead of saving one by one, we collect them to insert all at once.
-      createdEmployees.push(newEmployee);
+      // Collect valid employees to insert
+      createdEmployeesData.push({ employee: newEmployee, plainPassword: password });
       // Add to set to prevent duplicate entries within the same CSV
       existingEmailSet.add(email.toLowerCase());
 
@@ -116,24 +117,42 @@ export default async function handler(
   }
 
   // Bulk insert valid employees
-  if (createdEmployees.length > 0) {
+  if (createdEmployeesData.length > 0) {
+    const employeesToInsert = createdEmployeesData.map(data => data.employee);
     try {
-      await Employee.insertMany(createdEmployees, { ordered: false });
+      const insertedDocs = await Employee.insertMany(employeesToInsert, { ordered: false });
+      
+      // Fire-and-forget welcome emails for successfully inserted employees
+      insertedDocs.forEach(doc => {
+          const originalData = createdEmployeesData.find(d => d.employee.email === doc.email);
+          if (originalData) {
+              sendNewEmployeeWelcomeEmail({ name: doc.name, email: doc.email }, organization.name, originalData.plainPassword);
+          }
+      });
+
     } catch (e: any) {
-        // This catch block handles errors during the bulk insert itself,
-        // though most validation is done above.
+        // Handle potential errors during the bulk insert itself
         const insertedIds = new Set(e.result?.insertedIds?.map((i: any) => i._id.toString()) || []);
-        const failedInserts = createdEmployees.filter(emp => !insertedIds.has(emp._id.toString()));
+        const failedInserts = employeesToInsert.filter(emp => !insertedIds.has(emp._id.toString()));
 
         failedInserts.forEach(emp => {
             registrationErrors.push({ email: emp.email, reason: 'Failed during database insertion.' });
+        });
+        
+        // Also send emails for those that *did* succeed even if others failed
+        const successfulInserts = employeesToInsert.filter(emp => insertedIds.has(emp._id.toString()));
+        successfulInserts.forEach(doc => {
+           const originalData = createdEmployeesData.find(d => d.employee.email === doc.email);
+           if (originalData) {
+              sendNewEmployeeWelcomeEmail({ name: doc.name, email: doc.email }, organization.name, originalData.plainPassword);
+           }
         });
     }
   }
 
   return res.status(201).json({
     message: 'Bulk registration process completed.',
-    createdCount: createdEmployees.length - registrationErrors.length + (createdEmployees.length > 0 ? (registrationErrors.filter(e => e.reason === 'Failed during database insertion.').length) : 0), // Adjust count based on actual DB failures
+    createdCount: createdEmployeesData.length - registrationErrors.length,
     failedCount: registrationErrors.length,
     errors: registrationErrors,
   });
