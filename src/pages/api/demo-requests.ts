@@ -15,15 +15,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { name, companyName, email, phone, companySize, message } = req.body;
 
-    if (!name || !companyName || !email || !companySize) {
-      return res.status(400).json({ error: 'Name, company name, email, and company size are required.' });
+    if (!name || !companyName || !email || !phone || !companySize) {
+      return res.status(400).json({ error: 'Name, company name, email, phone number, and company size are required.' });
     }
 
     const newRequest = new DemoRequest({
       name,
       companyName,
       email,
-      phone: phone || '',
+      phone,
       companySize,
       message: message || '',
     });

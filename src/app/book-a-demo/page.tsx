@@ -147,13 +147,14 @@ export default function BookDemoPage() {
                             />
                         </div>
                          <div className="space-y-2">
-                            <Label htmlFor="phone">Phone Number (Optional)</Label>
+                            <Label htmlFor="phone">Phone Number</Label>
                             <Input
                                 id="phone"
                                 type="tel"
                                 value={phone}
                                 onChange={(e) => setPhone(e.target.value)}
                                 placeholder="+1 (555) 123-4567"
+                                required
                                 disabled={isSubmitting}
                                 className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                             />

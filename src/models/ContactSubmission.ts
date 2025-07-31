@@ -4,7 +4,7 @@ import mongoose, { Schema, Document, models, Model } from 'mongoose';
 export interface IContactSubmission extends Document {
   name: string;
   email: string;
-  phone?: string;
+  phone: string;
   subject: string;
   message: string;
 }
@@ -24,6 +24,7 @@ const ContactSubmissionSchema: Schema<IContactSubmission> = new Schema(
     },
     phone: {
       type: String,
+      required: [true, 'Phone number is required.'],
       trim: true,
     },
     subject: {
