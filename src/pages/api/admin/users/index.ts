@@ -4,6 +4,7 @@ import dbConnect from '@/lib/mongodb';
 import Admin, { type IAdmin, type AdminRole } from '@/models/Admin';
 import { verifyToken } from '@/lib/jwt';
 import bcrypt from 'bcryptjs';
+import { sendNewPlatformAdminWelcomeEmail } from '@/services/mailerService';
 
 export interface AdminUserData {
   _id: string;
@@ -83,6 +84,15 @@ export default async function handler(
       });
 
       await newAdmin.save();
+
+      // Send welcome email with credentials
+      try {
+        await sendNewPlatformAdminWelcomeEmail(newAdmin.email, password);
+      } catch (emailError) {
+        console.error("Failed to send new admin welcome email, but user was created:", emailError);
+        // Do not fail the request if email fails, but log it.
+      }
+
       const { passwordHash: _, ...sanitizedAdmin } = newAdmin.toObject();
 
       return res.status(201).json(sanitizedAdmin);

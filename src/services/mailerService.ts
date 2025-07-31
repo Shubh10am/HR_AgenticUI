@@ -203,3 +203,15 @@ export async function sendRegistrationAdminNotification(org: IOrganization, admi
     const htmlContent = generateAdminNotificationHtml('New Organization Registration', fields);
     sendEmail(admin, subject, htmlContent);
 }
+
+
+export async function sendNewPlatformAdminWelcomeEmail(email: string, password_provided: string) {
+    const user = { name: 'New Admin', email: email };
+    const subject = `Your HR Streamline AI Platform Admin Account`;
+    const message = `An administrator account has been created for you on the HR Streamline AI platform. You can now log in using the following credentials:<br><br>
+                     <strong>Email:</strong> ${email}<br>
+                     <strong>Password:</strong> ${password_provided}<br><br>
+                     It is highly recommended that you change your password upon your first login. You can log in at the main application login page.`;
+    const htmlContent = generateUserConfirmationHtml('Welcome to the Admin Team!', 'New Admin', message);
+    sendEmail(user, subject, htmlContent);
+}
