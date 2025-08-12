@@ -2,14 +2,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/auth-context';
 
 export default function MagicLoginPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { checkAuth } = useAuth();
   const { toast } = useToast();
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -39,16 +42,18 @@ export default function MagicLoginPage() {
         }
 
         // Set the session token and user data in local storage.
-        // The AuthProvider will pick this up on the next page load.
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('authUser', JSON.stringify(data.user));
+        
+        // Manually trigger the AuthProvider to check the new credentials
+        checkAuth();
         
         toast({ title: 'Magic Login Successful', description: 'Welcome!' });
         setStatus('success');
         
-        // Immediately perform a hard redirect to the dashboard.
-        // This forces the app to reload and the AuthProvider to re-check authentication.
-        window.location.href = '/dashboard';
+        // Use the Next.js router to navigate to the dashboard.
+        // This allows the AuthProvider to correctly pick up the new session state.
+        router.push('/dashboard');
 
       } catch (error: any) {
         setErrorMessage(error.message);
@@ -57,7 +62,7 @@ export default function MagicLoginPage() {
     };
 
     performMagicLogin();
-  }, [searchParams, toast]);
+  }, [searchParams, toast, router, checkAuth]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
