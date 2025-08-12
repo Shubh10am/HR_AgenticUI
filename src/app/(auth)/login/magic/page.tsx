@@ -46,7 +46,7 @@ export default function MagicLoginPage() {
         localStorage.setItem('authUser', JSON.stringify(data.user));
         
         // Manually trigger the AuthProvider to check the new credentials
-        checkAuth();
+        await checkAuth();
         
         toast({ title: 'Magic Login Successful', description: 'Welcome!' });
         setStatus('success');
