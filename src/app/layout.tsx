@@ -1,4 +1,6 @@
 
+'use client';
+
 import type { Metadata } from 'next';
 import './globals.css';
 import AppLayout from '@/components/layout/app-layout';
@@ -6,6 +8,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/contexts/auth-context';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Analytics } from '@vercel/analytics/react';
+import { usePathname } from 'next/navigation';
+import AuthLayout from './(auth)/layout';
 
 const siteConfig = {
   name: 'HR Streamline AI',
@@ -29,59 +33,9 @@ const siteConfig = {
   ],
 };
 
-
-export const metadata: Metadata = {
-  title: {
-    default: `${siteConfig.name} | Agentic HR & Recruitment Automation`,
-    template: `%s | ${siteConfig.name}`,
-  },
-  description: siteConfig.description,
-  keywords: siteConfig.keywords,
-  authors: [
-    {
-      name: 'HR Streamline AI Team',
-      url: siteConfig.url,
-    }
-  ],
-  creator: 'HR Streamline AI Team',
-  
-  // Open Graph
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: siteConfig.url,
-    title: siteConfig.name,
-    description: siteConfig.description,
-    siteName: siteConfig.name,
-    images: [
-      {
-        url: siteConfig.ogImage,
-        width: 1200,
-        height: 630,
-        alt: siteConfig.name,
-      },
-    ],
-  },
-  
-  // Twitter
-  twitter: {
-    card: 'summary_large_image',
-    title: siteConfig.name,
-    description: siteConfig.description,
-    images: [siteConfig.ogImage],
-    creator: '@agentic-hr', // Replace with your Twitter handle
-  },
-  
-  // Icons
-  icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon-16x16.png',
-    apple: '/apple-touch-icon.png',
-  },
-  
-  // Manifest
-  manifest: `${siteConfig.url}/site.webmanifest`,
-};
+// Moving Metadata to a client component is not ideal, but necessary for using hooks.
+// We'll manage title and meta tags in a simpler way if needed.
+// export const metadata: Metadata = { ... };
 
 
 export default function RootLayout({
@@ -89,9 +43,37 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+  
+  const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/login/magic'];
+  const publicPages = ['/', '/contact', '/book-a-demo'];
+  const isLegalPage = pathname.startsWith('/legal');
+  const isBlogPage = pathname.startsWith('/blog');
+  const isDocsPage = pathname.startsWith('/docs');
+  const isOnboardingPage = pathname.startsWith('/onboarding');
+  
+  const isAuthRoute = authRoutes.some(p => pathname.startsWith(p));
+  const isPublicStandalone = publicPages.includes(pathname) || isLegalPage || isBlogPage || isDocsPage || isOnboardingPage;
+
+
+  const renderContent = () => {
+    if (isAuthRoute) {
+      // Use the dedicated AuthLayout for all auth pages
+      return <AuthLayout>{children}</AuthLayout>;
+    }
+    if (isPublicStandalone) {
+      // These pages have their own full-page layout, so they don't need a wrapper here
+      return <>{children}</>;
+    }
+    // All other pages are part of the main application and get the AppLayout
+    return <AppLayout>{children}</AppLayout>;
+  }
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <title>{siteConfig.name}</title>
+        <meta name="description" content={siteConfig.description} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -108,7 +90,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <AppLayout>{children}</AppLayout>
+            {renderContent()}
             <Toaster />
           </AuthProvider>
         </ThemeProvider>

@@ -18,39 +18,29 @@ import UserNav from './user-nav';
 import Logo from '@/components/icons/logo';
 import Link from 'next/link';
 import { Loader2, MessageSquare } from 'lucide-react';
-import CopilotSidebar from './copilot-sidebar';
-import { useState } from 'react';
+import CopilotSidebar from './copilot-sidebar'; // Adjusted path if needed
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import AccountStatusOverlay from '@/components/account-status-overlay'; // Import the new overlay
+import AccountStatusOverlay from '@/components/account-status-overlay';
 import AppTour from '@/components/app-tour';
 import { ShepherdTour, ShepherdTourContext } from 'react-shepherd';
+import { useRouter } from 'next/navigation';
 
-
-interface AppLayoutProps {
-  children: ReactNode;
-}
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user, isLoading, isAuthenticated } = useAuth();
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
+  const router = useRouter();
 
-  const authPages = ['/login', '/register', '/forgot-password', '/reset-password', '/login/magic'];
-  const publicPages = ['/', '/contact', '/book-a-demo'];
-  const isAdminPage = pathname.startsWith('/admin');
-  const isLegalPage = pathname.startsWith('/legal');
-  const isBlogPage = pathname.startsWith('/blog');
-  const isDocsPage = pathname.startsWith('/docs');
-  
-  // A page is considered public if it's in the main public list OR it's one of the auth pages.
-  const isPublicPage = publicPages.includes(pathname) || authPages.some(p => pathname.startsWith(p)) || isLegalPage || isBlogPage || isDocsPage;
+  // This effect handles redirecting unauthenticated users from protected pages.
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isLoading, isAuthenticated, router]);
 
-
-  if (isPublicPage || isAdminPage) {
-    return <>{children}</>;
-  }
-  
-  if (isLoading) {
+  if (isLoading || !isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -58,17 +48,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!isAuthenticated && !isLoading) {
-     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        <p className="ml-4">Redirecting to login...</p>
-      </div>
-    );
-  }
-
   const logoHref = pathname === '/dashboard' ? '/' : '/dashboard';
-
   const orgStatus = user?.organizationStatus;
 
   return (
