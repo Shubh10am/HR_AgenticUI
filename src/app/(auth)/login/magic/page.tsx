@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
 
-export default function MagicLoginPage() {
+function MagicLoginComponent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { checkAuth } = useAuth();
@@ -100,4 +100,17 @@ export default function MagicLoginPage() {
       </Card>
     </div>
   );
+}
+
+
+export default function MagicLoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex h-screen w-full items-center justify-center bg-background">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            </div>
+        }>
+            <MagicLoginComponent />
+        </Suspense>
+    )
 }
