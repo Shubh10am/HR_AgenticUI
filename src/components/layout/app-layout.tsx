@@ -35,12 +35,16 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, isLoading, isAuthenticated } = useAuth();
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
 
-  const publicPages = ['/login', '/register', '/', '/contact', '/book-a-demo'];
+  const authPages = ['/login', '/register', '/forgot-password', '/reset-password', '/login/magic'];
+  const publicPages = ['/', '/contact', '/book-a-demo'];
   const isAdminPage = pathname.startsWith('/admin');
   const isLegalPage = pathname.startsWith('/legal');
   const isBlogPage = pathname.startsWith('/blog');
   const isDocsPage = pathname.startsWith('/docs');
-  const isPublicPage = publicPages.includes(pathname) || isLegalPage || isBlogPage || isDocsPage;
+  
+  // A page is considered public if it's in the main public list OR it's one of the auth pages.
+  const isPublicPage = publicPages.includes(pathname) || authPages.includes(pathname) || isLegalPage || isBlogPage || isDocsPage;
+
 
   if (isPublicPage || isAdminPage) {
     return <>{children}</>;
