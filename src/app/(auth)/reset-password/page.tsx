@@ -12,6 +12,8 @@ import { Loader2, KeyRound, AlertCircle, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Logo from '@/components/icons/logo';
 
+export const dynamic = 'force-dynamic';
+
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
