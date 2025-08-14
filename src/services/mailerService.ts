@@ -72,7 +72,12 @@ function generateAdminNotificationHtml(title: string, fields: { label: string; v
     </html>`;
 }
 
-function generateUserConfirmationHtml(title: string, name: string, message: string): string {
+function generateUserConfirmationHtml(title: string, name: string, message: string, ctaLink?: string, ctaText?: string): string {
+    const ctaButton = ctaLink && ctaText ? `
+    <a href="${ctaLink}" target="_blank" style="background-color: #3F51B5; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: 600; display: inline-block; margin-top: 20px;">
+        ${ctaText}
+    </a>` : '';
+
     return `
     <!DOCTYPE html>
     <html lang="en">
@@ -96,13 +101,14 @@ function generateUserConfirmationHtml(title: string, name: string, message: stri
                             <td style="padding: 30px 25px;">
                                 <h2 style="margin: 0 0 20px; font-size: 20px; color: #2c3e50;">Hi ${name},</h2>
                                 <p style="color: #555; line-height: 1.6;">${message}</p>
+                                ${ctaButton}
                                 <br>
-                                <p style="color: #555; line-height: 1.6;">Best regards,<br>The HR Streamline AI Team</p>
+                                <p style="color: #555; line-height: 1.6; margin-top: 30px;">Best regards,<br>The HR Streamline AI Team</p>
                             </td>
                         </tr>
                         <tr>
                             <td align="center" style="padding: 20px; font-size: 12px; color: #7f8c8d; border-top: 1px solid #ecf0f1;">
-                                This is an automated confirmation email.
+                                If you did not request this action, please ignore this email or contact support.
                             </td>
                         </tr>
                     </table>
@@ -226,5 +232,13 @@ export async function sendNewEmployeeWelcomeEmail(employee: { name: string; emai
                      We recommend changing your password after your first login via the 'Profile' section of the dashboard.<br><br>
                      Welcome aboard!`;
     const htmlContent = generateUserConfirmationHtml(`Welcome, ${employee.name}!`, user.name, message);
+    sendEmail(user, subject, htmlContent);
+}
+
+export async function sendPasswordResetEmail(user: { name: string; email: string }, resetUrl: string) {
+    const subject = `Reset Your HR Streamline AI Password`;
+    const message = `We received a request to reset the password for your account. Please click the button below to set a new password. This link is valid for 10 minutes.<br><br>
+                     If you did not request a password reset, you can safely ignore this email.`;
+    const htmlContent = generateUserConfirmationHtml('Password Reset Request', user.name, message, resetUrl, 'Reset Your Password');
     sendEmail(user, subject, htmlContent);
 }
