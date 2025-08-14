@@ -43,7 +43,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const isDocsPage = pathname.startsWith('/docs');
   
   // A page is considered public if it's in the main public list OR it's one of the auth pages.
-  const isPublicPage = publicPages.includes(pathname) || authPages.includes(pathname) || isLegalPage || isBlogPage || isDocsPage;
+  const isPublicPage = publicPages.includes(pathname) || authPages.some(p => pathname.startsWith(p)) || isLegalPage || isBlogPage || isDocsPage;
 
 
   if (isPublicPage || isAdminPage) {
