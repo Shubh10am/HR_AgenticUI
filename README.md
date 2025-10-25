@@ -1,55 +1,100 @@
-# Firebase Studio
+# HR Streamline AI
 
-This is a NextJS starter in Firebase Studio.
+HR Streamline AI is an intelligent, all-in-one platform designed to automate and simplify your HR operations. From recruitment and onboarding to attendance tracking and internal communications, this platform leverages the power of AI to make HR processes more efficient, data-driven, and user-friendly.
 
-## Getting Started
+![HR Streamline AI Dashboard](https://www.agentic-hr.in/_next/image?url=%2Fimages%2Frecruitment.jpg&w=1200&q=75)
 
-To set up this project locally, follow these steps:
+---
 
-1. **Clone the repositorygit clone <repository_url>
-cd firebase-studio
+## ✨ Key Features
+
+- **🤖 AI-Powered Recruitment**: Generate job descriptions, perform ATS-like resume analysis, and conduct initial screening interviews with an AI agent.
+- **✉️ Smart Email Assistance**: Generate professional email drafts for common inquiries and compose new emails from simple prompts.
+- **📈 Analytics Dashboard**: A comprehensive admin panel to monitor platform usage, user signups, feature adoption, and system health.
+- **🤝 Employee Management**: Onboard new employees, manage roles and departments, and track activity within the organization.
+- **📅 Attendance & Leave Management**: Clock-in/out functionality, attendance reporting, and a system for requesting and tracking leave.
+- **🌐 Unified Communications**: A central hub to view and manage communications from integrated platforms like Gmail (more coming soon).
+- **📝 Community Hub**: An internal social feed for company announcements and employee engagement.
+- **🔐 Secure Authentication**: Robust authentication system with JWT, password reset, and secure magic links.
+
+## 🚀 Tech Stack
+
+- **Framework**: [Next.js](https://nextjs.org/) (App Router)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **UI Components**: [ShadCN UI](https://ui.shadcn.com/)
+- **Generative AI**: [Google AI & Genkit](https://firebase.google.com/docs/genkit)
+- **Database**: [MongoDB](https://www.mongodb.com/) with [Mongoose](https://mongoosejs.com/)
+- **Authentication**: [JWT](https://jwt.io/) & [bcrypt.js](https://github.com/dcodeIO/bcrypt.js)
+- **Deployment**: [Vercel](https://vercel.com/)
+
+---
+
+## 🏁 Getting Started
+
+To set up and run this project locally, follow these steps.
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18 or later recommended)
+- [MongoDB](https://www.mongodb.com/try/download/community) instance (local or a cloud service like MongoDB Atlas)
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Shubh10am/HR_AgenticUI.git
+cd HR_AgenticUI
 ```
 
-2. **Install dependencies:**
+### 2. Install Dependencies
 
 ```bash
 npm install
-# or
-yarn install
 ```
 
-3. **Set up Firebase Project:**   **Optional**
+### 3. Set Up Environment Variables
 
-- Create a new Firebase project in the [Firebase Console](https://console.firebase.google.com/).
-- Add a web app to your Firebase project and copy your project's configuration.
-- Create a `.env.local` file in the root of your project and add your Firebase configuration:
+Create a `.env.local` file in the root of your project and add the following environment variables. You can generate the secret keys using a secure method (e.g., `openssl rand -base64 32`).
 
 ```dotenv
+# MongoDB Connection String
+MONGODB_URI="your_mongodb_connection_string"
+
+# JWT Secret for session authentication
+JWT_SECRET="your_strong_jwt_secret_key"
+
+# Encryption Key for sensitive data in the database (must be a 32-byte, base64-encoded string)
+ENCRYPTION_KEY="your_32_byte_base64_encoded_encryption_key"
+
+# Google AI API Key (for Genkit features)
+GOOGLE_API_KEY="your_google_ai_api_key"
+
+# Base URL for your application (for OAuth callbacks)
+NEXT_PUBLIC_BASE_URL="http://localhost:9002"
+
+# Google OAuth Credentials (for Gmail/Calendar integration)
+GOOGLE_CLIENT_ID="your_google_client_id"
+GOOGLE_CLIENT_SECRET="your_google_client_secret"
+
+# Brevo API Key (for sending transactional emails)
+BREVO_API_KEY="your_brevo_api_key"
 ```
 
-4. **Run the development server:**
+### 4. Run the Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The application will be available at [http://localhost:9002](http://localhost:9002).
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## ☁️ Deployment
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The easiest way to deploy this Next.js app is to use the [Vercel Platform](https://vercel.com/new).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+- Fork the repository.
+- Create a new Vercel project and import the forked repository.
+- **Important**: Add all the environment variables from your `.env.local` file to the Vercel project settings.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
-:**
-
+Vercel will automatically build and deploy your application.
