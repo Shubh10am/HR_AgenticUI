@@ -276,7 +276,7 @@ export default function LandingPage() {
         <section
           ref={(el) => (sectionsRef.current[0] = el)}
           className={cn(
-            "container flex flex-col items-center justify-center text-center py-16 sm:py-24 md:py-32 relative group",
+            "flex flex-col items-center justify-center text-center py-16 sm:py-24 md:py-32 relative group px-4 sm:px-6",
             visibleSections.has(0) ? "is-visible" : ""
           )}
         >
@@ -601,7 +601,7 @@ export default function LandingPage() {
             </h2>
             <div className="opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
               <Button size="lg" onClick={handleGuestLogin} disabled={isLoading || isGuestLoading} className="bg-black text-white hover:bg-neutral-800 rounded-full px-8 py-3 h-auto border border-neutral-700 shadow-lg">
-                {(isLoading || isGuestLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                 {(isLoading || isGuestLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Try Now For Free
               </Button>
             </div>
