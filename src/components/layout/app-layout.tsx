@@ -76,7 +76,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         )}
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-md">
           <div className="flex items-center">
-            <SidebarTrigger />
+            {/* The main app layout no longer needs its own trigger, as child layouts like Admin provide it. */}
           </div>
           <div className="flex items-center gap-2">
             <Button
