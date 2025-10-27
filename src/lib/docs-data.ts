@@ -154,4 +154,37 @@ export const docsData: DocSection[] = [
       },
     ],
   },
+  {
+    id: 'integrations',
+    title: 'Integrations',
+    pages: [
+      {
+        slug: 'connecting-your-tools',
+        title: 'Connecting Your Tools',
+        description: 'Learn how to connect your favorite third-party services to unlock the full power of HR Streamline AI.',
+        content: `
+          <p>HR Streamline AI enhances your existing workflows by integrating directly with the tools your team already uses. Connecting your accounts is simple, secure, and unlocks powerful new capabilities.</p>
+          
+          <h3 id="google-suite">Google Suite (Gmail, Calendar, Meet, Workspace)</h3>
+          <p><strong>Why connect?</strong> Integrating with Google is the most powerful way to enhance the platform. It enables the AI to read emails for context, generate replies, send emails on your behalf, and view your calendar for scheduling.</p>
+          <p><strong>How to connect:</strong></p>
+          <ol>
+            <li>Navigate to the <a href="/integrations">Integrations</a> page.</li>
+            <li>Click the "Connect" button on any Google-related service (e.g., Gmail, Calendar).</li>
+            <li>You will be redirected to a Google authentication screen. Log in to the Google account you wish to use.</li>
+            <li>Grant the requested permissions. We only ask for permissions necessary to provide our services, such as reading and sending emails or viewing calendar events.</li>
+            <li>You will be redirected back to the platform, and the integration will be active.</li>
+          </ol>
+          
+          <h3 id="slack">Slack</h3>
+          <p><strong>Why connect?</strong> Receive real-time notifications about important HR events, such as new leave requests or completed interviews, directly in your Slack channels. Future updates will include slash commands to trigger HR actions from within Slack.</p>
+          <p><strong>How to connect:</strong> On the Integrations page, click "Connect" for Slack. You will be prompted to choose a Slack workspace and authorize the HR Streamline AI app.</p>
+
+          <h3 id="github">GitHub</h3>
+          <p><strong>Why connect?</strong> For technical teams, integrating GitHub allows HR and managers to get AI-powered summaries of developer activity, track contributions, and link project progress to performance reviews without needing deep technical knowledge.</p>
+          <p><strong>How to connect:</strong> Similar to other integrations, connect via the Integrations page and authorize access to the repositories you wish to monitor.</p>
+        `
+      }
+    ]
+  }
 ];
