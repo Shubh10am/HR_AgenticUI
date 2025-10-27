@@ -25,7 +25,7 @@ HR Streamline AI is an intelligent, all-in-one platform designed to automate and
 - **Generative AI**: [Google AI & Genkit](https://firebase.google.com/docs/genkit)
 - **Database**: [MongoDB](https://www.mongodb.com/) with [Mongoose](https://mongoosejs.com/)
 - **Authentication**: [JWT](https://jwt.io/) & [bcrypt.js](https://github.com/dcodeIO/bcrypt.js)
-- **Deployment**: [Vercel](https://vercel.com/)
+- **Deployment**: [Vercel](https://vercel.com/), [Docker](https://www.docker.com/), [Kubernetes](https://kubernetes.io/)
 
 ---
 
@@ -91,6 +91,8 @@ The application will be available at [http://localhost:9002](http://localhost:90
 
 ## ☁️ Deployment
 
+### Vercel
+
 The easiest way to deploy this Next.js app is to use the [Vercel Platform](https://vercel.com/new).
 
 - Fork the repository.
@@ -98,3 +100,40 @@ The easiest way to deploy this Next.js app is to use the [Vercel Platform](https
 - **Important**: Add all the environment variables from your `.env.local` file to the Vercel project settings.
 
 Vercel will automatically build and deploy your application.
+
+### Docker
+
+You can also run the application using Docker and Docker Compose.
+
+1.  **Ensure you have a `.env.local` file** with the necessary environment variables as described in the "Getting Started" section.
+2.  **Build and run the container**:
+
+    ```bash
+    docker-compose up --build
+    ```
+
+    The application will be available at [http://localhost:3000](http://localhost:3000).
+
+### Kubernetes
+
+To deploy the application to a Kubernetes cluster, you can use the manifest files provided in the `k8s/` directory.
+
+1.  **Prerequisites**:
+    - A running Kubernetes cluster.
+    - `kubectl` command-line tool configured to communicate with your cluster.
+
+2.  **Create the Secret**:
+    - The `k8s/secret.yaml` file contains placeholder values. You must replace them with your actual secrets, encoded in Base64.
+    - To encode a value, use the following command:
+      ```bash
+      echo -n 'your_secret_value' | base64
+      ```
+    - Update the `data` section in `k8s/secret.yaml` with your encoded values.
+
+3.  **Apply the Manifests**:
+    - Once the secret is configured, apply all the manifests to your cluster:
+      ```bash
+      kubectl apply -f k8s/
+      ```
+    - This will create the Deployment, Service, and Secret resources in your cluster. Your application will be exposed via a LoadBalancer service.
+```
