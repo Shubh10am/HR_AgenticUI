@@ -51,7 +51,7 @@ export default function TaskManagementPage() {
   const [tasks] = useState<Task[]>(initialTasks);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
+    <div className="flex flex-col h-full">
       <div className="flex-shrink-0">
         <PageHeader
           title="Task Management Board"
@@ -63,10 +63,10 @@ export default function TaskManagementPage() {
         </PageHeader>
       </div>
 
-      <div className="flex-grow min-h-0 overflow-x-auto">
-        <div className="flex gap-4 h-full pb-4 px-4 flex-nowrap">
+      <div className="flex-grow min-h-0 overflow-x-auto pb-4">
+        <div className="inline-grid grid-flow-col auto-cols-max gap-4 h-full">
           {columns.map((status) => (
-            <div key={status} className="w-80 flex-shrink-0 h-full flex flex-col">
+            <div key={status} className="w-80 h-full flex flex-col">
               <Card className="h-full flex flex-col bg-muted/50">
                 <CardHeader className="flex flex-row items-center justify-between p-4 border-b flex-shrink-0">
                   <CardTitle className="text-base font-semibold">
