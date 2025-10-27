@@ -24,7 +24,7 @@ import {
   DollarSign,
   ClipboardList,
   UserPlus,
-  Sitemap, // Added for Hierarchy
+  Network, // Changed from Sitemap to Network
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar'; 
@@ -53,7 +53,7 @@ const navItems: NavItem[] = [
   { id: 'onboarding', href: '/employee-onboarding', label: 'Onboarding', icon: UserPlus, tooltip: 'Employee Onboarding', adminOnly: true },
   { id: 'knowledge-base', href: '/knowledge-base', label: 'Knowledge Base', icon: Library, tooltip: 'Knowledge Base' },
   { id: 'manage-employees', href: '/manage-employees', label: 'Manage Employees', icon: Users, tooltip: 'Manage Employees', adminOnly: true },
-  { id: 'employee-hierarchy', href: '/employee-hierarchy', label: 'Hierarchy', icon: Sitemap, tooltip: 'Employee Hierarchy' },
+  { id: 'employee-hierarchy', href: '/employee-hierarchy', label: 'Hierarchy', icon: Network, tooltip: 'Employee Hierarchy' },
   { id: 'attendance-mgmt', href: '/attendance-management', label: 'Attendance Mgmt', icon: ClipboardList, tooltip: 'Attendance Management', adminOnly: true },
   { id: 'integrations', href: '/integrations', label: 'Integrations', icon: Plug, tooltip: 'Manage Integrations' },
   { id: 'support', href: '/support', label: 'Get Support', icon: LifeBuoy, tooltip: 'Get Support' },
