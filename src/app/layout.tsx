@@ -51,6 +51,7 @@ export default function RootLayout({
   const isBlogPage = pathname.startsWith('/blog');
   const isDocsPage = pathname.startsWith('/docs');
   const isOnboardingPage = pathname.startsWith('/onboarding');
+  const isAdminPage = pathname.startsWith('/admin');
   
   const isAuthRoute = authRoutes.some(p => pathname.startsWith(p));
   const isPublicStandalone = publicPages.includes(pathname) || isLegalPage || isBlogPage || isDocsPage || isOnboardingPage;
@@ -58,12 +59,14 @@ export default function RootLayout({
 
   const renderContent = () => {
     if (isAuthRoute) {
-      // Use the dedicated AuthLayout for all auth pages
       return <AuthLayout>{children}</AuthLayout>;
     }
     if (isPublicStandalone) {
-      // These pages have their own full-page layout, so they don't need a wrapper here
       return <>{children}</>;
+    }
+    // Admin pages have their own layout, so they don't get wrapped by AppLayout
+    if (isAdminPage) {
+        return <>{children}</>;
     }
     // All other pages are part of the main application and get the AppLayout
     return <AppLayout>{children}</AppLayout>;
