@@ -86,64 +86,19 @@ export function generateMockHierarchy(): TreeNode {
   
     ceo.children = vps;
   
-    // Engineering Department
-    const engManagers = [
-      { id: '5', ...createEmployee('Engineering Manager'), children: [] as TreeNode[] },
-      { id: '6', ...createEmployee('Engineering Manager'), children: [] as TreeNode[] },
-    ];
-    vps[0].children = engManagers;
+    // Engineering Department (3 people)
+    const engManager = { id: '5', ...createEmployee('Engineering Manager'), children: [] as TreeNode[] };
+    vps[0].children = [engManager];
+    engManager.children.push({ id: `7-0`, ...createEmployee('Software Engineer'), children: [] });
+    engManager.children.push({ id: `7-1`, ...createEmployee('Software Engineer'), children: [] });
   
-    for (let i = 0; i < 5; i++) {
-      engManagers[0].children.push({ id: `7-${i}`, ...createEmployee('Software Engineer'), children: [] });
-    }
-    for (let i = 0; i < 4; i++) {
-        const role = i < 2 ? 'Frontend Developer' : 'Backend Developer';
-        engManagers[1].children.push({ id: `8-${i}`, ...createEmployee(role), children: [] });
-    }
-     engManagers[1].children.push({ id: `8-4`, ...createEmployee('QA Tester'), children: [] });
+    // Product Department (2 people)
+    const prodManager = { id: '9', ...createEmployee('Product Manager'), children: [] as TreeNode[] };
+    vps[1].children = [prodManager];
+    prodManager.children.push({ id: `11-0`, ...createEmployee('UX/UI Designer'), children: [] });
   
-    // Product Department
-    const prodManagers = [
-      { id: '9', ...createEmployee('Product Manager'), children: [] as TreeNode[] },
-      { id: '10', ...createEmployee('Product Manager'), children: [] as TreeNode[] },
-    ];
-    vps[1].children = prodManagers;
-  
-    for (let i = 0; i < 3; i++) {
-      prodManagers[0].children.push({ id: `11-${i}`, ...createEmployee('UX/UI Designer'), children: [] });
-    }
-    for (let i = 0; i < 2; i++) {
-        prodManagers[1].children.push({ id: `12-${i}`, ...createEmployee('Data Scientist'), children: [] });
-    }
-    prodManagers[1].children.push({ id: `12-2`, ...createEmployee('Business Analyst'), children: [] });
-  
-    // Marketing Department
-    const marketingManagers = [
-        { id: '13', ...createEmployee('Marketing Director'), children: [] as TreeNode[] }
-    ];
-    vps[2].children = marketingManagers;
-  
-    for (let i = 0; i < 3; i++) {
-      marketingManagers[0].children.push({ id: `14-${i}`, ...createEmployee('Marketing Specialist'), children: [] });
-    }
-    marketingManagers[0].children.push({ id: `14-3`, ...createEmployee('Content Writer'), children: [] });
-    marketingManagers[0].children.push({ id: `14-4`, ...createEmployee('Graphic Designer'), children: [] });
+    // Marketing Department (1 person)
+    vps[2].children = [{ id: `13-0`, ...createEmployee('Marketing Specialist'), children: [] }];
     
-    // Add more employees to reach ~50
-    let idCounter = 15;
-    const additionalEng = vps[0].children[0] as TreeNode;
-    for (let i=0; i<5; i++) {
-        additionalEng.children.push({ id: `${idCounter++}`, ...createEmployee('Software Engineer'), children: [] });
-    }
-    const additionalProd = vps[1].children[0] as TreeNode;
-    for (let i=0; i<3; i++) {
-        additionalProd.children.push({ id: `${idCounter++}`, ...createEmployee('UX/UI Designer'), children: [] });
-    }
-     const additionalMkt = vps[2].children[0] as TreeNode;
-    for (let i=0; i<4; i++) {
-        additionalMkt.children.push({ id: `${idCounter++}`, ...createEmployee('Sales Representative'), children: [] });
-    }
-
-
     return ceo;
   }
