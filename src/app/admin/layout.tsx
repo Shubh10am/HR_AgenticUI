@@ -78,9 +78,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
         <main className="flex-1 p-4 sm:p-6 overflow-x-hidden animated-background-gradient">
-          <div className="animate-fade-in">
             {children}
-          </div>
         </main>
       </SidebarInset>
     </SidebarProvider>
