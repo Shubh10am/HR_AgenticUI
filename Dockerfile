@@ -1,44 +1,34 @@
-# Dockerfile for a Next.js application
-
-# Stage 1: Build the application
-# Use a Node.js image that includes build tools
-FROM node:18-alpine AS builder
-
-# Set working directory
+# Stage 1: Install dependencies
+FROM node:18-alpine AS deps
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
+# Copy package.json and lock file
+COPY package.json package-lock.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy the rest of the application code
+# Stage 2: Build the application
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Set build-time environment variables (if any are needed during the build process)
-# For example: ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-# These should be passed with --build-arg during `docker build`
-
-# Build the Next.js application for production
+# Build the Next.js application
 RUN npm run build
 
-# Stage 2: Production image
-# Use a smaller, more secure base image for the final container
-FROM node:18-alpine
-
+# Stage 3: Production image
+FROM node:18-alpine AS runner
 WORKDIR /app
 
-# Copy only the necessary files from the builder stage
-# This includes the .next directory (the build output) and node_modules
+ENV NODE_ENV=production
+
+# Copy necessary files from the builder stage
+COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/public ./public
 
-# Expose the port the app runs on
 EXPOSE 3000
 
-# Command to run the app
-# The default command for a production Next.js app is `npm start`
-CMD ["npm", "start"]
+CMD ["npm", "start", "--", "-p", "3000"]
