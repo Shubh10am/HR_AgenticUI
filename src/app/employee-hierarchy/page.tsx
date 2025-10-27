@@ -4,7 +4,7 @@
 import { useState, useMemo } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/auth-context';
 import { generateMockHierarchy, type TreeNode } from '@/lib/hierarchy';
 import { ZoomIn, ZoomOut, RefreshCw } from 'lucide-react';
@@ -15,11 +15,11 @@ import Image from 'next/image';
 const EmployeeNode = ({ node, currentUserEmail }: { node: TreeNode; currentUserEmail?: string | null; }) => {
   const isCurrentUser = node.email === currentUserEmail;
   return (
-    <div className="relative flex flex-col items-center">
+    <div className="relative flex flex-col items-center group">
       {/* Employee Card */}
       <div className="relative z-10">
         <Card className={cn(
-          "p-2 w-48 text-center shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105",
+          "p-2 w-48 text-center shadow-md transition-all duration-300 group-hover:shadow-lg group-hover:scale-105",
           isCurrentUser ? "bg-primary text-primary-foreground border-2 border-primary-foreground/50" : "bg-card"
         )}>
           <div className="flex items-center space-x-3">
@@ -37,21 +37,25 @@ const EmployeeNode = ({ node, currentUserEmail }: { node: TreeNode; currentUserE
 
       {/* Children Nodes */}
       {node.children && node.children.length > 0 && (
-        <div className="flex justify-center mt-12 relative">
-          {/* Vertical line from parent to horizontal line */}
-          <div className="absolute bottom-full h-12 w-px bg-muted-foreground/30" />
+        <>
+          {/* Vertical line from parent down to the horizontal connector */}
+          <div className="absolute top-full h-8 w-px bg-muted-foreground/30" />
           
-          {/* Horizontal line connecting all children */}
-          <div className="absolute top-[-24px] left-0 right-0 h-px bg-muted-foreground/30" />
+          <div className="mt-8 flex justify-center relative">
+            {/* Horizontal line connecting all children */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-muted-foreground/30" />
 
-          {node.children.map((child) => (
-            <div key={child.id} className="px-4 relative flex flex-col items-center">
-              {/* Vertical line from horizontal line to child */}
-              <div className="absolute top-[-24px] h-6 w-px bg-muted-foreground/30" />
-              <EmployeeNode node={child} currentUserEmail={currentUserEmail} />
-            </div>
-          ))}
-        </div>
+            {node.children.map((child) => (
+              <div key={child.id} className="px-4 relative flex flex-col items-center">
+                {/* Vertical line from horizontal line up to child */}
+                <div className="absolute bottom-full h-px w-full" />
+                <div className="absolute top-0 h-px w-full" />
+                <div className="absolute top-0 h-8 w-px bg-muted-foreground/30" />
+                <EmployeeNode node={child} currentUserEmail={currentUserEmail} />
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
@@ -83,19 +87,19 @@ export default function EmployeeHierarchyPage() {
         </div>
       </PageHeader>
 
-      <Card className="shadow-lg overflow-hidden">
-        <CardContent className="p-0">
-          <div className="overflow-auto p-8 bg-secondary/20 min-h-[600px]">
-            <div
-                className="transition-transform duration-300 inline-block min-w-full"
-                style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
-            >
-                {hierarchyData ? (
+      <Card className="shadow-lg h-[calc(100vh-12rem)] overflow-hidden">
+        <CardContent className="p-0 h-full w-full overflow-auto">
+          <div 
+            className="p-8 bg-secondary/20 inline-block min-w-full"
+            style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
+          >
+            {hierarchyData ? (
+                <div className="flex justify-center">
                     <EmployeeNode node={hierarchyData} currentUserEmail={user?.email} />
-                ) : (
-                    <div className="text-center text-muted-foreground">Loading hierarchy...</div>
-                )}
-            </div>
+                </div>
+            ) : (
+                <div className="text-center text-muted-foreground">Loading hierarchy...</div>
+            )}
           </div>
         </CardContent>
       </Card>
