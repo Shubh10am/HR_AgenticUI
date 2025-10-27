@@ -101,6 +101,23 @@ export const docsData: DocSection[] = [
           <p>By connecting your Gmail account via the <a href="/integrations">Integrations</a> page, you can bring your inbox directly into the HR Streamline AI dashboard. This allows you to read and reply to emails without ever leaving the platform. More importantly, you can use the AI Email Assistance and Smart Drafting tools seamlessly within your existing workflow, supercharging your productivity.</p>
         `
       },
+       {
+        slug: 'community-hub',
+        title: 'Community Hub',
+        description: 'Engage with your team, share announcements, and foster company culture.',
+        content: `
+          <h3 id="a-central-place-for-culture">A Central Place for Culture</h3>
+          <p>The Community Hub is a private social feed for your organization. It's designed to be the central place for company-wide announcements, team updates, and informal discussions, helping to build a stronger, more connected company culture, especially in remote or hybrid environments.</p>
+          
+          <h3 id="features">Features</h3>
+          <ul>
+            <li><strong>Create Posts:</strong> Authorized users (Admins, HR, and Managers) can create new posts with topics and subjects to share important information with the entire organization.</li>
+            <li><strong>Likes and Comments:</strong> All employees can react to posts by liking them and can participate in discussions by adding comments, fostering a sense of community and engagement.</li>
+            <li><strong>Real-time Updates:</strong> The feed updates in real-time, ensuring everyone has access to the latest news and conversations.</li>
+            <li><strong>Moderation:</strong> Admins have moderation capabilities to ensure discussions remain professional and productive.</li>
+          </ul>
+        `
+      },
       {
         slug: 'attendance-and-reporting',
         title: 'Attendance & Reporting',
