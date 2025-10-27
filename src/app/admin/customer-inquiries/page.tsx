@@ -154,7 +154,7 @@ export default function AdminCustomerInquiriesPage() {
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Phone</TableHead>
-                      <TableHead>Subject</TableHead>
+                      <TableHead className="w-[300px]">Subject</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -168,7 +168,7 @@ export default function AdminCustomerInquiriesPage() {
                           <TableCell className="font-medium">{c.name}</TableCell>
                           <TableCell>{c.email}</TableCell>
                           <TableCell>{c.phone || 'N/A'}</TableCell>
-                          <TableCell className="max-w-xs truncate">{c.subject}</TableCell>
+                          <TableCell className="truncate max-w-[300px]">{c.subject}</TableCell>
                           <TableCell>{format(new Date(c.createdAt), 'PPP')}</TableCell>
                           <TableCell className="text-right">
                               <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setItemToDelete({ id: c._id, type: 'contact', identifier: c.name }); }}>
