@@ -101,6 +101,57 @@ export const docsData: DocSection[] = [
           <p>By connecting your Gmail account via the <a href="/integrations">Integrations</a> page, you can bring your inbox directly into the HR Streamline AI dashboard. This allows you to read and reply to emails without ever leaving the platform. More importantly, you can use the AI Email Assistance and Smart Drafting tools seamlessly within your existing workflow, supercharging your productivity.</p>
         `
       },
+      {
+        slug: 'attendance-and-reporting',
+        title: 'Attendance & Reporting',
+        description: 'Track time, manage leave, and generate insightful reports.',
+        content: `
+          <h3 id="smart-clock-in">Smart Clock-in/Out System</h3>
+          <p>Our simple and intuitive clock-in/out system allows employees to track their work hours with a single click. The system automatically calculates work duration and logs the data for payroll and reporting.</p>
+          
+          <h3 id="leave-management">AI-Assisted Leave Management</h3>
+          <p>Employees can request leave through a simple form. Our AI assistant can even help draft the reason for leave based on a simple prompt, ensuring professionalism. Managers and HR admins get notified for approvals, and all approved leaves are automatically reflected in attendance reports.</p>
+          
+          <h3 id="powerful-reporting">Powerful Reporting</h3>
+          <p>Go beyond simple logs. Our reporting dashboard visualizes attendance data, showing trends in tardiness, absenteeism, and hours worked. This helps you identify potential burnout or disengagement issues before they become critical.</p>
+        `
+      },
+      {
+        slug: 'unified-communications',
+        title: 'Unified Communications',
+        description: 'Aggregate all your team communication in one place.',
+        content: `
+          <h3 id="a-single-source-of-truth">A Single Source of Truth</h3>
+          <p>In a hybrid work environment, conversations are fragmented across email, Slack, Teams, and more. Our Unified Communications Hub integrates with these platforms to pull all relevant communication logs into one searchable interface.</p>
+          
+          <h3 id="contextual-insights">Contextual Insights</h3>
+          <p>Instead of jumping between apps, get a holistic view of team and project communications. This is invaluable for performance reviews, project management, and compliance. The AI can summarize long threads or find key decisions, saving you hours of searching.</p>
+        `
+      },
+      {
+        slug: 'knowledge-base',
+        title: 'Knowledge Base',
+        description: 'The central brain for your organization and the AI.',
+        content: `
+          <h3 id="your-organizations-brain">Your Organization's Brain</h3>
+          <p>The Knowledge Base is where you store all your important company documents—employee handbooks, leave policies, IT setup guides, and more. It acts as the single source of truth for your entire organization.</p>
+          
+          <h3 id="powering-the-ai">Powering the AI</h3>
+          <p>This module is critical for the platform's AI. When an employee asks the HR Copilot a question like "How many sick days do I get?", the AI securely queries the documents in your Knowledge Base to provide an accurate, context-aware answer based on <strong>your</strong> company's specific policies. Keeping this up-to-date ensures the AI remains a helpful and reliable resource.</p>
+        `
+      },
+      {
+        slug: 'task-management',
+        title: 'Task Management',
+        description: 'Organize workflows with a collaborative Kanban board.',
+        content: `
+          <h3 id="visualize-your-workflow">Visualize Your Workflow</h3>
+          <p>Our built-in Task Management tool uses a Kanban-style board to help you visualize workflows for any process, from onboarding a new hire to planning a company event. Create columns for each stage of your process (e.g., To Do, In Progress, In Review, Done) and move tasks between them.</p>
+          
+          <h3 id="collaboration-and-accountability">Collaboration and Accountability</h3>
+          <p>Assign tasks to team members, set due dates, add attachments, and leave comments. This ensures everyone knows their responsibilities and keeps projects on track. For HR, this is perfect for managing multi-step processes like recruitment pipelines or employee offboarding.</p>
+        `
+      },
     ],
   },
 ];
