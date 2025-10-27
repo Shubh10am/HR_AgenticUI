@@ -203,5 +203,54 @@ export const docsData: DocSection[] = [
         `
       }
     ]
+  },
+  {
+    id: 'administration-support',
+    title: 'Administration & Support',
+    pages: [
+      {
+        slug: 'admin-panel-overview',
+        title: 'Admin Panel Overview',
+        description: 'A guide to the powerful features available in the Admin Control Panel for SuperAdmins.',
+        content: `
+          <h3 id="superadmin-controls">SuperAdmin Controls</h3>
+          <p>The Admin Panel provides SuperAdmins with a birds-eye view of the entire platform, enabling comprehensive management and monitoring of all organizations and users.</p>
+          <ul>
+            <li><strong>Analytics Dashboard:</strong> Monitor platform-wide KPIs, including total users, AI API usage, feature adoption rates, and new user signups.</li>
+            <li><strong>User Management:</strong> View and manage all platform administrators. Add new admins or change roles as needed.</li>
+            <li><strong>Organization Management:</strong> Oversee all registered organizations. View their details, manage their status (Active, Hold, Suspended), and access a list of their employees.</li>
+            <li><strong>Content Moderation:</strong> Review and manage user-generated content from the Community Hub to ensure it adheres to platform policies.</li>
+          </ul>
+        `
+      },
+      {
+        slug: 'payroll-management',
+        title: 'Payroll Management',
+        description: 'Details on running payroll, managing compensation, and generating reports.',
+        content: `
+          <h3 id="payroll-support">Payroll Support</h3>
+          <p>Our Payroll module simplifies the process of paying your employees. It integrates with attendance and leave data to ensure accuracy.</p>
+          <ul>
+            <li><strong>Run Payroll:</strong> Initiate a new payroll cycle for a specific pay period. The system automatically calculates gross pay based on employee data and attendance logs.</li>
+            <li><strong>Review & Approve:</strong> Before finalizing, review a summary of the payroll run, including total costs, deductions, and net pay for each employee.</li>
+            <li><strong>Payroll History:</strong> Access a complete history of all past payroll runs. Download detailed reports for accounting and compliance purposes.</li>
+          </ul>
+        `
+      },
+      {
+        slug: 'integrations-and-addons',
+        title: 'Integrations & Add-ons',
+        description: 'Manage specialized integrations like tax compliance tools.',
+        content: `
+          <h3 id="tax-add-on-control">Tax Add-on Control</h3>
+          <p>For organizations requiring advanced financial compliance, our platform supports specialized add-ons for tax management.</p>
+          <ul>
+            <li><strong>Enable Tax Add-on:</strong> In the organization settings (accessible to Admins), you can enable the Tax Compliance add-on.</li>
+            <li><strong>Configure Settings:</strong> Once enabled, configure your region-specific tax settings, including tax identification numbers and withholding rates.</li>
+            <li><strong>Automated Calculations:</strong> When the add-on is active, the Payroll module will automatically calculate and withhold the necessary taxes during each payroll run, and generate the required reports for tax filing.</li>
+          </ul>
+        `
+      }
+    ]
   }
 ];
