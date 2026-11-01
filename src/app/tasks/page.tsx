@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, type DragEvent, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type DragEvent, type FormEvent, type KeyboardEvent, type WheelEvent } from 'react';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Plus, MoreHorizontal, Paperclip, MessageSquare, Send, UserRound } from 'lucide-react';
@@ -71,6 +71,7 @@ export default function TaskManagementPage() {
   const [dragOverStatus, setDragOverStatus] = useState<TaskStatus | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [commentDraft, setCommentDraft] = useState('');
+  const boardScrollRef = useRef<HTMLDivElement>(null);
   const selectedTask = tasks.find((task) => task.id === selectedTaskId) ?? null;
 
   useEffect(() => {
@@ -159,6 +160,21 @@ export default function TaskManagementPage() {
     }
   };
 
+  const handleBoardWheel = (event: WheelEvent<HTMLDivElement>) => {
+    const horizontalDelta = event.shiftKey
+      ? (event.deltaY || event.deltaX)
+      : event.deltaX;
+    if (!horizontalDelta || !boardScrollRef.current) return;
+
+    const board = boardScrollRef.current;
+    const maxScrollLeft = board.scrollWidth - board.clientWidth;
+    const nextScrollLeft = Math.max(0, Math.min(maxScrollLeft, board.scrollLeft + horizontalDelta));
+    if (nextScrollLeft !== board.scrollLeft) {
+      event.preventDefault();
+      board.scrollLeft = nextScrollLeft;
+    }
+  };
+
   return (
     <div className="flex h-[calc(100dvh-7rem)] min-h-[28rem] w-full min-w-0 flex-col overflow-hidden">
       <div className="flex-shrink-0">
@@ -172,7 +188,11 @@ export default function TaskManagementPage() {
         </PageHeader>
       </div>
 
-      <div className="min-h-0 min-w-0 w-full flex-1 overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-xl border bg-card/40 p-3 pb-4">
+      <div
+        ref={boardScrollRef}
+        onWheelCapture={handleBoardWheel}
+        className="min-h-0 min-w-0 w-full flex-1 overflow-x-auto overflow-y-hidden rounded-xl border bg-card/40 p-3 pb-4"
+      >
         <div className="grid h-full min-h-[28rem] w-max grid-flow-col auto-cols-[20rem] gap-4">
           {columns.map((status) => (
             <div
@@ -196,7 +216,7 @@ export default function TaskManagementPage() {
                   </CardTitle>
                   <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
-                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
                   <CardContent className="p-2 space-y-2">
                     {tasks
                       .filter((task) => task.status === status)
