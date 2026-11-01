@@ -70,7 +70,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           {/* Placeholder for footer content if needed */}
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset>
+      <SidebarInset className="min-w-0 overflow-x-hidden">
         {(orgStatus === 'Hold' || orgStatus === 'Suspended') && (
           <AccountStatusOverlay status={orgStatus} />
         )}
@@ -93,8 +93,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <UserNav />
           </div>
         </header>
-        <main className="flex-1 p-6 overflow-x-hidden animated-background-gradient min-w-0">
-          <div className="animate-fade-in" key={pathname}>
+        <main className="min-h-0 min-w-0 flex-1 overflow-hidden p-6 animated-background-gradient">
+          <div className="min-h-0 min-w-0 animate-fade-in" key={pathname}>
             {children}
           </div>
         </main>
