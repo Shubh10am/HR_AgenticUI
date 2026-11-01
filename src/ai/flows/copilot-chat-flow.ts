@@ -12,6 +12,13 @@ import {genkit, z} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 import { CopilotChatInputSchemaDef as OriginalSchema, CopilotChatOutputSchemaDef } from '@/ai/schemas/copilot-chat-definitions';
 import { logTokenUsage } from '@/services/usageService';
+import { formatPassagesForPrompt } from '@/services/knowledge/prompt';
+import { CHAT_MODEL } from '@/ai/models';
+
+const KNOWLEDGE_GUIDANCE = (block: string) => block
+  ? `\n\nCompany knowledge (from the organization's own documents). Prefer it over general knowledge, follow it exactly when it applies, and cite it like [1]. Ignore passages that are not relevant:\n${block}\n`
+  : '';
+
 
 // Extend original schema to include optional apiKey
 const CopilotChatInputSchemaDef = OriginalSchema.extend({
@@ -32,18 +39,18 @@ const copilotChatFlow = ai.defineFlow(
     outputSchema: CopilotChatOutputSchemaDef,
   },
   async (input) => {
-    const { apiKey, userId, organizationId, ...promptData } = input;
+    const { apiKey, userId, organizationId, knowledgeContext, ...promptData } = input;
     
     const runner = apiKey ? genkit({plugins: [googleAI({apiKey})]}) : ai;
 
     const promptText = `You are a helpful AI assistant called HR Streamline Copilot.
-Respond to the user's message concisely and professionally. If you don't know the answer, say so.
+Respond to the user's message concisely and professionally. If you don't know the answer, say so.${KNOWLEDGE_GUIDANCE(formatPassagesForPrompt(knowledgeContext ?? []))}
 
 User: ${promptData.userInput}
 AI:`;
 
     const response = await runner.generate({
-      model: 'googleai/gemini-2.0-flash',
+      model: CHAT_MODEL,
       prompt: promptText,
       output: {
         schema: CopilotChatOutputSchemaDef,

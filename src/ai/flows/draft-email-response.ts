@@ -17,6 +17,13 @@ import {
   GenerateDraftEmailResponsesOutputSchemaDef,
 } from '@/ai/schemas/draft-email-response-definitions';
 import { logTokenUsage } from '@/services/usageService';
+import { formatPassagesForPrompt } from '@/services/knowledge/prompt';
+import { CHAT_MODEL } from '@/ai/models';
+
+const KNOWLEDGE_GUIDANCE = (block: string) => block
+  ? `\n\nCompany knowledge (from the organization's own documents). Prefer it over general knowledge, follow it exactly when it applies, and cite it like [1]. Ignore passages that are not relevant:\n${block}\n`
+  : '';
+
 
 // Extend original schema to include optional apiKey. The prompt field is now in the base schema.
 const GenerateDraftEmailResponsesInputSchemaDef = OriginalSchema.extend({
@@ -38,12 +45,16 @@ const generateDraftEmailResponsesFlow = ai.defineFlow(
   },
   async (input) => {
     // Correctly destructure all properties, including the optional prompt
-    const { apiKey, userId, organizationId, prompt, query } = input;
+    const { apiKey, userId, organizationId, prompt, query, knowledgeContext } = input;
     
     const runner = apiKey ? genkit({plugins: [googleAI({apiKey})]}) : ai;
 
     // Base prompt text
     let promptText = `You are an HR assistant tasked with drafting professional emails.`;
+    promptText += KNOWLEDGE_GUIDANCE(formatPassagesForPrompt(knowledgeContext ?? []));
+    if (knowledgeContext?.length) {
+      promptText += `When a draft relies on company knowledge, state the facts plainly in the email. Do not include the [n] citation markers in the email itself.\n`;
+    }
 
     if (prompt) {
       // Logic for handling a direct prompt (Quick Reply)
@@ -81,7 +92,7 @@ Format your response as a JSON object that adheres to the GenerateDraftEmailResp
 `;
 
     const response = await runner.generate({
-      model: 'googleai/gemini-2.0-flash',
+      model: CHAT_MODEL,
       prompt: promptText,
       output: {
         schema: GenerateDraftEmailResponsesOutputSchemaDef,

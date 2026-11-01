@@ -6,6 +6,8 @@ export const GenerateDraftEmailResponsesInputSchemaDef = z.object({
   userId: z.string().optional().describe("The ID of the user making the request for logging."),
   organizationId: z.string().optional().nullable().describe("The ID of the organization for logging."),
   prompt: z.string().optional().describe('An optional, short prompt for a specific reply instruction.'),
+  knowledgeContext: z.array(z.object({ sourceName: z.string(), text: z.string() })).max(8).optional()
+    .describe("Passages from the organization's knowledge base, retrieved by an authenticated search."),
 });
 
 export const DraftEmailSchemaDef = z.object({

@@ -6,6 +6,8 @@ export const CopilotChatInputSchemaDef = z.object({
   userInput: z.string().describe('The message sent by the user to the copilot.'),
   userId: z.string().optional().describe("The ID of the user making the request for logging."),
   organizationId: z.string().optional().nullable().describe("The ID of the organization for logging."),
+  knowledgeContext: z.array(z.object({ sourceName: z.string(), text: z.string() })).max(8).optional()
+    .describe("Passages from the organization's knowledge base, retrieved by an authenticated search."),
 });
 
 export const CopilotChatOutputSchemaDef = z.object({

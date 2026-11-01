@@ -6,6 +6,7 @@ import {genkit, z} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 import { AiInterviewerInputSchemaDef as OriginalSchema, AiInterviewerOutputSchemaDef } from '@/ai/schemas/ai-interviewer-definitions';
 import { logTokenUsage } from '@/services/usageService';
+import { CHAT_MODEL } from '@/ai/models';
 
 // Extend original schema to include optional apiKey
 const AiInterviewerInputSchemaDef = OriginalSchema.extend({
@@ -50,7 +51,7 @@ Begin Interview:
 `;
 
     const response = await runner.generate({
-      model: 'googleai/gemini-2.0-flash',
+      model: CHAT_MODEL,
       prompt: promptText,
       output: {
         schema: AiInterviewerOutputSchemaDef,

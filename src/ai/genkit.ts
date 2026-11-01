@@ -1,5 +1,6 @@
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
+import { CHAT_MODEL } from '@/ai/models';
 
 const apiKeyFromEnv = process.env.GOOGLE_API_KEY;
 
@@ -18,7 +19,7 @@ export const ai = genkit({
   plugins: [
     googleAI(apiKeyFromEnv ? { apiKey: apiKeyFromEnv } : undefined)
   ],
-  model: 'googleai/gemini-2.0-flash', // Default model for the application
+  model: CHAT_MODEL, // Default model for the application
 });
 
 if (apiKeyFromEnv) {
