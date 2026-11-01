@@ -1,433 +1,253 @@
-
 'use client';
 
-import { useState, type FormEvent, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { ChevronRight, FolderPlus, Home, LayoutGrid, List, Loader2, Lock, RefreshCw, Search, UploadCloud, X } from 'lucide-react';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, RefreshCw, LayoutGrid, List, FolderPlus, Plus, File, Folder, UploadCloud, ChevronDown, HelpCircle } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose, DialogFooter } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Card, CardContent } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { knowledgeApi, type Breadcrumb, type KnowledgeItem } from '@/lib/knowledge-client';
+import AskPanel from './components/ask-panel';
+import ItemList from './components/item-list';
+import UploadDialog from './components/upload-dialog';
+import DocumentPreview from './components/document-preview';
+import NameDialog from './components/name-dialog';
 
-interface KnowledgeBaseItem {
-  id: string;
-  name: string;
-  type: 'Folder' | 'File';
-  createdAt: string;
-  owner: string;
-}
-
-const initialItems: KnowledgeBaseItem[] = [];
-
-const EmptyState = ({ onAddFolder, onAddFile, onUploadFile, onUploadFolder }: { onAddFolder: () => void; onAddFile: () => void; onUploadFile: () => void; onUploadFolder: () => void; }) => (
-  <div className="text-center py-16">
-    <div className="inline-block bg-secondary p-6 rounded-full">
-      <div className="inline-block bg-background p-4 rounded-full">
-        <Folder className="h-16 w-16 text-muted-foreground" strokeWidth={1} />
-      </div>
-    </div>
-    <h3 className="mt-6 text-xl font-semibold">No Knowledge Bases</h3>
-    <p className="mt-2 text-muted-foreground">Get started by creating or uploading a file or folder.</p>
-    <div className="mt-6 flex justify-center gap-2">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> Add New <ChevronDown className="ml-2 h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem onSelect={onAddFolder}><FolderPlus className="mr-2 h-4 w-4" />Create Folder</DropdownMenuItem>
-          <DropdownMenuItem onSelect={onAddFile}><File className="mr-2 h-4 w-4" />Create File</DropdownMenuItem>
-          <DropdownMenuItem onSelect={onUploadFolder}><UploadCloud className="mr-2 h-4 w-4" />Upload Folder (Simulated)</DropdownMenuItem>
-          <DropdownMenuItem onSelect={onUploadFile}><UploadCloud className="mr-2 h-4 w-4" />Upload File</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  </div>
-);
+const EDITOR_ROLES = ['Admin', 'HR'];
 
 export default function KnowledgeBasePage() {
-  const [items, setItems] = useState<KnowledgeBaseItem[]>(initialItems);
-  const [filteredItems, setFilteredItems] = useState<KnowledgeBaseItem[]>(initialItems);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
-  const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
-  const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [isUploadFolderDialogOpen, setIsUploadFolderDialogOpen] = useState(false);
-  
-  const [newItemName, setNewItemName] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
+  const { token, user } = useAuth();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const isGuest = !token || token.startsWith('guest-') || user?.organizationId === 'guest-org-id';
+  const hasOrganization = Boolean(user?.organizationId);
+  const canEdit = EDITOR_ROLES.includes(user?.role ?? '');
 
+  const [parentId, setParentId] = useState<string | null>(null);
+  const [items, setItems] = useState<KnowledgeItem[]>([]);
+  const [breadcrumbs, setBreadcrumbs] = useState<Breadcrumb[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeSearch, setActiveSearch] = useState('');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isFolderOpen, setIsFolderOpen] = useState(false);
+  const [renaming, setRenaming] = useState<KnowledgeItem | null>(null);
+  const [deleting, setDeleting] = useState<KnowledgeItem | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (isGuest || !token) return;
+    setIsLoading(true);
+    try {
+      const result = await knowledgeApi.list(token, activeSearch ? null : parentId, activeSearch || undefined);
+      setItems(result.items);
+      setBreadcrumbs(result.breadcrumbs);
+      setLoadError(null);
+    } catch (error) {
+      // Shown inline rather than as a toast: a toast here re-renders the page and would retrigger the load.
+      setLoadError(error instanceof Error ? error.message : 'Could not load the knowledge base.');
+      setItems([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isGuest, token, parentId, activeSearch]);
+
+  useEffect(() => { load(); }, [load]);
+
+  // Keep polling while any document is still being indexed.
   useEffect(() => {
-    const results = items.filter(item =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.owner.toLowerCase().includes(searchTerm.toLowerCase())
+    if (!items.some((item) => item.status === 'processing')) return;
+    const timer = setTimeout(load, 4000);
+    return () => clearTimeout(timer);
+  }, [items, load]);
+
+  const currentFolderName = breadcrumbs.at(-1)?.name ?? 'Knowledge Base';
+
+  const openItem = (item: KnowledgeItem) => {
+    if (item.type === 'folder') {
+      setActiveSearch('');
+      setSearchTerm('');
+      setParentId(item._id);
+    } else {
+      setPreviewId(item._id);
+    }
+  };
+
+  const openSource = (sourceId: string) => {
+    if (sourceId.startsWith('policy:')) {
+      toast({ title: 'Built-in company policy', description: 'Edit attendance, leave and code-of-conduct policies in Settings.' });
+      return;
+    }
+    setPreviewId(sourceId);
+  };
+
+  const runAction = async (action: () => Promise<unknown>, success: string) => {
+    try {
+      await action();
+      toast({ title: success });
+      await load();
+    } catch (error) {
+      toast({ title: 'Something went wrong', description: error instanceof Error ? error.message : undefined, variant: 'destructive' });
+      throw error;
+    }
+  };
+
+  if (!isGuest && !hasOrganization) {
+    return (
+      <>
+        <PageHeader title="Knowledge Base" description="Your organization's policies and documents, searchable by AI." />
+        <Card id="kb-no-organization" className="flex flex-col items-center p-10 text-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Lock className="h-7 w-7" /></span>
+          <h2 className="mt-4 text-xl font-semibold">Knowledge bases belong to organizations</h2>
+          <p className="mt-2 max-w-md text-sm text-muted-foreground">You are signed in as a platform administrator, which has no organization of its own. Sign in as an organization&apos;s Admin or HR user to manage its documents.</p>
+        </Card>
+      </>
     );
-    setFilteredItems(results);
-  }, [searchTerm, items]);
-  
-  const resetFormFields = useCallback(() => {
-    setNewItemName('');
-    setSelectedFile(null);
-  }, []);
+  }
 
-  const handleCreateFolder = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!newItemName.trim()) {
-      toast({ title: 'Folder name is required', variant: 'destructive' });
-      return;
-    }
-    const newFolder: KnowledgeBaseItem = {
-      id: `folder-${Date.now()}`,
-      name: newItemName.trim(),
-      type: 'Folder',
-      createdAt: new Date().toLocaleDateString(),
-      owner: user?.name || 'You',
-    };
-    setItems(prev => [...prev, newFolder]);
-    toast({ title: 'Folder Created', description: `Folder "${newFolder.name}" has been created.` });
-    setIsFolderDialogOpen(false);
-    resetFormFields();
-  };
-
-  const handleCreateFile = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!newItemName.trim()) {
-      toast({ title: 'File name is required', variant: 'destructive' });
-      return;
-    }
-    const newFile: KnowledgeBaseItem = {
-      id: `file-${Date.now()}`,
-      name: newItemName.trim(),
-      type: 'File',
-      createdAt: new Date().toLocaleDateString(),
-      owner: user?.name || 'You',
-    };
-    setItems(prev => [...prev, newFile]);
-    toast({ title: 'File Created', description: `File "${newFile.name}" has been created.` });
-    setIsFileDialogOpen(false);
-    resetFormFields();
-  };
-
-  const handleUploadFolder = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!newItemName.trim()) {
-      toast({ title: 'Folder name is required', variant: 'destructive' });
-      return;
-    }
-    const newFolder: KnowledgeBaseItem = {
-      id: `folder-upload-${Date.now()}`,
-      name: newItemName.trim(),
-      type: 'Folder',
-      createdAt: new Date().toLocaleDateString(),
-      owner: user?.name || 'You',
-    };
-    setItems(prev => [...prev, newFolder]);
-    toast({ title: 'Folder Uploaded (Simulated)', description: `Folder "${newFolder.name}" has been added.` });
-    setIsUploadFolderDialogOpen(false);
-    resetFormFields();
-  };
-
-  const handleFileUpload = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!selectedFile) {
-      toast({ title: 'No file selected', description: 'Please choose a file to upload.', variant: 'destructive' });
-      return;
-    }
-    const newFile: KnowledgeBaseItem = {
-      id: `file-upload-${Date.now()}`,
-      name: selectedFile.name,
-      type: 'File',
-      createdAt: new Date().toLocaleDateString(),
-      owner: user?.name || 'You',
-    };
-    setItems(prev => [...prev, newFile]);
-    toast({ title: 'File Uploaded (Simulated)', description: `File "${newFile.name}" has been added.` });
-    setIsUploadDialogOpen(false);
-    resetFormFields();
-  };
-
-  const handleRefresh = () => {
-    setSearchTerm('');
-    toast({
-      title: 'View Refreshed',
-      description: 'Cleared filters and showing all items.',
-    });
-  };
-
-  const displayedContent = searchTerm ? filteredItems : items;
+  if (isGuest) {
+    return (
+      <>
+        <PageHeader title="Knowledge Base" description="Your organization's policies and documents, searchable by AI." />
+        <Card className="flex flex-col items-center p-10 text-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Lock className="h-7 w-7" /></span>
+          <h2 className="mt-4 text-xl font-semibold">Sign in to use the knowledge base</h2>
+          <p className="mt-2 max-w-md text-sm text-muted-foreground">Upload your handbooks and policies so Copilot and AI email replies answer from your own documents.</p>
+          <div className="mt-6 flex gap-2">
+            <Button asChild variant="outline" id="kb-guest-register"><Link href="/register">Register</Link></Button>
+            <Button asChild id="kb-guest-login"><Link href="/login">Log in</Link></Button>
+          </div>
+        </Card>
+      </>
+    );
+  }
 
   return (
     <>
-      <PageHeader
-        title="Knowledge Base"
-        description={
-          <>
-            Manage your document collections and knowledge sources for AI interactions.
-             <Dialog>
-              <DialogTrigger asChild>
-                <button className="text-primary hover:underline ml-2">
-                  Quick guide
-                </button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                      <DialogTitle className="flex items-center"><HelpCircle className="mr-2 h-5 w-5 text-primary"/> Using the Knowledge Base</DialogTitle>
-                      <DialogDescription>A guide to effectively manage your organization's knowledge.</DialogDescription>
-                  </DialogHeader>
-                  <ScrollArea className="max-h-[60vh] pr-4">
-                    <div className="py-4 space-y-4 text-sm">
-                        <div>
-                            <h4 className="font-semibold text-foreground">What is it?</h4>
-                            <p className="text-muted-foreground">The Knowledge Base is a central repository for your company's documents, policies, and other important information.</p>
-                        </div>
-                        <div>
-                            <h4 className="font-semibold text-foreground">How is it used by AI?</h4>
-                            <p className="text-muted-foreground">The AI features, especially the HR Copilot, use the documents stored here as a primary source of truth. For example, if you upload your company's leave policy, the Copilot can accurately answer employee questions about it.</p>
-                        </div>
-                        <div>
-                            <h4 className="font-semibold text-foreground">How do I use it?</h4>
-                            <ul className="list-disc pl-5 text-muted-foreground space-y-1">
-                                <li>Use the <strong>"Add New"</strong> button to create folders, create blank files, or upload existing files (like PDFs).</li>
-                                <li>Organize related documents into folders to keep things tidy.</li>
-                                <li>Keep documents up-to-date to ensure the AI provides accurate information.</li>
-                            </ul>
-                        </div>
-                    </div>
-                  </ScrollArea>
-                  <DialogFooter className="pt-4 border-t">
-                      <DialogClose asChild>
-                          <Button>Got it!</Button>
-                      </DialogClose>
-                  </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </>
-        }
-      />
-      <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
-        <div className="relative w-full sm:w-auto sm:flex-grow max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search knowledge bases..." 
-            className="pl-10" 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button variant="outline" onClick={handleRefresh}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
-          </Button>
-          <div className="flex items-center rounded-md bg-muted p-1">
-            <Button
-              variant={viewMode === 'list' ? 'outline' : 'ghost'}
-              size="icon"
-              className={`h-8 w-8 ${viewMode === 'list' ? 'bg-background shadow-sm' : ''}`}
-              onClick={() => setViewMode('list')}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'grid' ? 'outline' : 'ghost'}
-              size="icon"
-              className={`h-8 w-8 ${viewMode === 'grid' ? 'bg-background shadow-sm' : ''}`}
-              onClick={() => setViewMode('grid')}
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" /> Add New <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={() => setIsFolderDialogOpen(true)}><FolderPlus className="mr-2 h-4 w-4" />Create Folder</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setIsFileDialogOpen(true)}><File className="mr-2 h-4 w-4" />Create File</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setIsUploadFolderDialogOpen(true)}><UploadCloud className="mr-2 h-4 w-4" />Upload Folder (Simulated)</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setIsUploadDialogOpen(true)}><UploadCloud className="mr-2 h-4 w-4" />Upload File</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-        </div>
-      </div>
-      
-      {items.length === 0 ? (
-        <EmptyState
-          onAddFolder={() => setIsFolderDialogOpen(true)}
-          onAddFile={() => setIsFileDialogOpen(true)}
-          onUploadFile={() => setIsUploadDialogOpen(true)}
-          onUploadFolder={() => setIsUploadFolderDialogOpen(true)}
-        />
-      ) : viewMode === 'list' ? (
-        <div className="rounded-lg border mt-4">
-          <div className="hidden md:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Created At</TableHead>
-                  <TableHead>Owner</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {displayedContent.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium flex items-center gap-2">
-                      {item.type === 'Folder' ? <Folder className="h-4 w-4 text-primary"/> : <File className="h-4 w-4 text-muted-foreground"/>}
-                      {item.name}
-                    </TableCell>
-                    <TableCell>{item.type}</TableCell>
-                    <TableCell>{item.createdAt}</TableCell>
-                    <TableCell>{item.owner}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          <div className="block md:hidden space-y-3 p-3">
-             {displayedContent.map((item) => (
-                <Card key={item.id} className="bg-secondary/30">
-                  <CardContent className="p-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                       {item.type === 'Folder' ? <Folder className="h-6 w-6 text-primary"/> : <File className="h-6 w-6 text-muted-foreground"/>}
-                       <div>
-                          <p className="font-semibold">{item.name}</p>
-                          <p className="text-xs text-muted-foreground">By {item.owner} on {item.createdAt}</p>
-                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-             ))}
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-4">
-          {displayedContent.map((item) => (
-            <Card key={item.id} className="cursor-pointer hover:shadow-lg transition-shadow">
-              <CardContent className="flex flex-col items-center justify-center p-6 text-center">
-                {item.type === 'Folder' ? (
-                  <Folder className="h-16 w-16 text-primary mb-4" />
-                ) : (
-                  <File className="h-16 w-16 text-muted-foreground mb-4" />
-                )}
-                <p className="font-semibold truncate w-full" title={item.name}>{item.name}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  By {item.owner} on {item.createdAt}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-       {items.length > 0 && displayedContent.length === 0 && (
-          <div className="text-center py-16">
-            <Search className="h-16 w-16 text-muted-foreground mx-auto" strokeWidth={1} />
-            <h3 className="mt-6 text-xl font-semibold">No Results Found</h3>
-            <p className="mt-2 text-muted-foreground">Your search for "{searchTerm}" did not match any items.</p>
+      <PageHeader title="Knowledge Base" description="Your organization's policies and documents — searchable by AI.">
+        {canEdit && (
+          <div className="flex gap-2">
+            <Button id="kb-new-folder" variant="outline" onClick={() => setIsFolderOpen(true)}><FolderPlus />New folder</Button>
+            <Button id="kb-upload" onClick={() => setIsUploadOpen(true)}><UploadCloud />Upload</Button>
           </div>
         )}
+      </PageHeader>
 
-      {/* Modals */}
-      <Dialog open={isFolderDialogOpen} onOpenChange={(open) => { if (!open) resetFormFields(); setIsFolderDialogOpen(open); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Folder</DialogTitle>
-            <DialogDescription>Enter a name for your new folder.</DialogDescription>
-          </DialogHeader>
-          <form id="create-folder-form" onSubmit={handleCreateFolder}>
-            <div className="py-4">
-              <Label htmlFor="folder-name">Folder Name</Label>
-              <Input id="folder-name" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} required />
-            </div>
-          </form>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsFolderDialogOpen(false)}>Cancel</Button>
-            <Button type="submit" form="create-folder-form">Create</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {token && <AskPanel token={token} onOpenSource={openSource} />}
 
-      <Dialog open={isFileDialogOpen} onOpenChange={(open) => { if (!open) resetFormFields(); setIsFileDialogOpen(open); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New File</DialogTitle>
-            <DialogDescription>Enter a name for your new file.</DialogDescription>
-          </DialogHeader>
-          <form id="create-file-form" onSubmit={handleCreateFile}>
-            <div className="py-4">
-              <Label htmlFor="file-name">File Name</Label>
-              <Input id="file-name" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} required placeholder="e.g., my-document.txt"/>
-            </div>
-          </form>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsFileDialogOpen(false)}>Cancel</Button>
-            <Button type="submit" form="create-file-form">Create</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={isUploadFolderDialogOpen} onOpenChange={(open) => { if (!open) resetFormFields(); setIsUploadFolderDialogOpen(open); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Upload Folder (Simulated)</DialogTitle>
-            <DialogDescription>In a real app, you would select a folder. Here, we'll just name it.</DialogDescription>
-          </DialogHeader>
-          <form id="upload-folder-form" onSubmit={handleUploadFolder}>
-            <div className="py-4">
-              <Label htmlFor="upload-folder-name">Folder Name</Label>
-              <Input id="upload-folder-name" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} required placeholder="e.g., Project Documents"/>
-            </div>
-          </form>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsUploadFolderDialogOpen(false)}>Cancel</Button>
-            <Button type="submit" form="upload-folder-form">Upload</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
+        <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1 text-sm">
+          <button type="button" id="kb-breadcrumb-root" onClick={() => { setActiveSearch(''); setSearchTerm(''); setParentId(null); }} className="flex items-center gap-1.5 rounded-md px-2 py-1 font-medium text-muted-foreground hover:bg-secondary hover:text-foreground">
+            <Home className="h-4 w-4" />All documents
+          </button>
+          {!activeSearch && breadcrumbs.map((crumb, index) => (
+            <span key={crumb.id} className="flex min-w-0 items-center gap-1">
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <button type="button" id={`kb-breadcrumb-${crumb.id}`} onClick={() => setParentId(crumb.id)} disabled={index === breadcrumbs.length - 1} className="truncate rounded-md px-2 py-1 font-medium hover:bg-secondary disabled:cursor-default disabled:hover:bg-transparent">
+                {crumb.name}
+              </button>
+            </span>
+          ))}
+          {activeSearch && <span className="flex items-center gap-1"><ChevronRight className="h-4 w-4 text-muted-foreground" />Results for “{activeSearch}”</span>}
+        </nav>
 
-      <Dialog open={isUploadDialogOpen} onOpenChange={(open) => { if (!open) resetFormFields(); setIsUploadDialogOpen(open); }}>
-         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Upload a File</DialogTitle>
-            <DialogDescription>
-                Select a file from your computer to add to the knowledge base.
-            </DialogDescription>
-          </DialogHeader>
-          <form id="upload-file-form" onSubmit={handleFileUpload}>
-            <div className="py-4">
-              <Label htmlFor="file-upload">File</Label>
-              <Input 
-                id="file-upload" 
-                type="file" 
-                onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}
-                required
-                className="mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-              />
-              {selectedFile && <p className="text-sm text-muted-foreground mt-2">Selected: {selectedFile.name}</p>}
-            </div>
+        <div className="flex items-center gap-2">
+          <form onSubmit={(event) => { event.preventDefault(); setActiveSearch(searchTerm.trim()); }} className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input id="kb-search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search names and contents" className="h-9 w-56 rounded-lg pl-9 pr-8" />
+            {searchTerm && (
+              <button type="button" aria-label="Clear search" onClick={() => { setSearchTerm(''); setActiveSearch(''); }} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" /></button>
+            )}
           </form>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsUploadDialogOpen(false)}>Cancel</Button>
-            <Button type="submit" form="upload-file-form">Upload</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <Button id="kb-refresh" variant="outline" size="icon" className="h-9 w-9" aria-label="Refresh" onClick={load} disabled={isLoading}>
+            {isLoading ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+          </Button>
+          <div className="flex rounded-lg border p-0.5">
+            <Button id="kb-view-list" variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8" aria-label="List view" onClick={() => setViewMode('list')}><List /></Button>
+            <Button id="kb-view-grid" variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8" aria-label="Grid view" onClick={() => setViewMode('grid')}><LayoutGrid /></Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        {loadError ? (
+          <Card id="kb-load-error" className="flex flex-col items-center p-10 text-center">
+            <p className="font-semibold">Could not load the knowledge base</p>
+            <p className="mt-1 text-sm text-muted-foreground">{loadError}</p>
+            <Button id="kb-load-retry" variant="outline" className="mt-4" onClick={load}><RefreshCw />Try again</Button>
+          </Card>
+        ) : isLoading && items.length === 0 ? (
+          <div className="space-y-2">{Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-14 w-full rounded-xl" />)}</div>
+        ) : items.length === 0 ? (
+          <Card className="flex flex-col items-center p-10 text-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary"><UploadCloud className="h-7 w-7" /></span>
+            <h3 className="mt-4 font-semibold">{activeSearch ? 'No matches' : 'Nothing here yet'}</h3>
+            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+              {activeSearch ? 'Try different words.' : canEdit ? 'Upload handbooks and policies. Copilot and AI email replies will start answering from them.' : 'Your Admin or HR team has not added documents here yet.'}
+            </p>
+            {canEdit && !activeSearch && <Button id="kb-empty-upload" className="mt-5" onClick={() => setIsUploadOpen(true)}><UploadCloud />Upload documents</Button>}
+          </Card>
+        ) : (
+          <ItemList
+            items={items}
+            viewMode={viewMode}
+            canEdit={canEdit}
+            onOpen={openItem}
+            onRename={setRenaming}
+            onDelete={setDeleting}
+            onReindex={(item) => runAction(() => knowledgeApi.update(token!, item._id, { reindex: true }), 'Re-indexed for AI').catch(() => undefined)}
+          />
+        )}
+      </div>
+
+      {token && (
+        <>
+          <UploadDialog open={isUploadOpen} onOpenChange={setIsUploadOpen} token={token} parentId={activeSearch ? null : parentId} folderName={activeSearch ? 'Knowledge Base' : currentFolderName} onUploaded={load} />
+          <DocumentPreview token={token} documentId={previewId} onClose={() => setPreviewId(null)} />
+          <NameDialog
+            open={isFolderOpen}
+            title="New folder"
+            description={`Create a folder in ${currentFolderName}.`}
+            submitLabel="Create"
+            onOpenChange={setIsFolderOpen}
+            onSubmit={(name) => runAction(() => knowledgeApi.createFolder(token, name, parentId), 'Folder created')}
+          />
+          <NameDialog
+            open={Boolean(renaming)}
+            title="Rename"
+            description="Give this item a clearer name."
+            submitLabel="Save"
+            initialName={renaming?.name}
+            onOpenChange={(open) => !open && setRenaming(null)}
+            onSubmit={(name) => runAction(() => knowledgeApi.update(token, renaming!._id, { name }), 'Renamed')}
+          />
+          <AlertDialog open={Boolean(deleting)} onOpenChange={(open) => !open && setDeleting(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete “{deleting?.name}”?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {deleting?.type === 'folder' ? 'The folder and everything inside it will be deleted.' : 'This document will be deleted.'} Copilot and AI replies will stop using it. This cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel id="kb-delete-cancel">Cancel</AlertDialogCancel>
+                <AlertDialogAction id="kb-delete-confirm" className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deleting && runAction(() => knowledgeApi.remove(token, deleting._id), 'Deleted').catch(() => undefined)}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
+      )}
     </>
   );
 }
