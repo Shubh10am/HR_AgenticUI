@@ -1,5 +1,5 @@
 import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
+import {googleAI} from '@genkit-ai/google-genai';
 import { CHAT_MODEL } from '@/ai/models';
 
 const apiKeyFromEnv = process.env.GOOGLE_API_KEY;

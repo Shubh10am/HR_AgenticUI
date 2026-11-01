@@ -1,5 +1,5 @@
 import { genkit } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { googleAI } from '@genkit-ai/google-genai';
 import { ai } from '@/ai/genkit';
 import Organization from '@/models/Organization';
 import { decrypt } from '@/lib/encryption';
@@ -15,18 +15,21 @@ export type EmbeddingTask = 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY';
 type Runner = typeof ai;
 
 /**
- * Returns a Genkit instance using the organization's own Google key when one
- * is configured, falling back to the platform key — the same rule every other
- * AI feature follows. The key is read server-side, never from the client.
+ * Returns a Genkit instance for embeddings. Embeddings always use Gemini, so
+ * stored vectors stay comparable whichever chat provider the organization picks:
+ * the organization's own Google key when Gemini is its provider (or it has the
+ * legacy Google key), otherwise the platform key. Keys are read server-side only.
  *
  * @param organizationId - The caller's organization, from the verified token.
- * @returns A Genkit runner.
+ * @returns A Genkit runner with the Google plugin.
  */
 export async function getRunnerForOrganization(organizationId: string): Promise<Runner> {
-  const organization = await Organization.findById(organizationId).select('encryptedGoogleApiKey').lean();
-  const encryptedKey = (organization as { encryptedGoogleApiKey?: string } | null)?.encryptedGoogleApiKey;
+  const organization = await Organization.findById(organizationId).select('encryptedGoogleApiKey aiConfig').lean();
+  const encryptedKey = organization?.aiConfig?.provider === 'google'
+    ? organization.aiConfig.encryptedApiKey
+    : organization?.encryptedGoogleApiKey;
   const apiKey = encryptedKey ? decrypt(encryptedKey) : null;
-  return apiKey ? (genkit({ plugins: [googleAI({ apiKey })] }) as Runner) : ai;
+  return apiKey ? (genkit({ plugins: [googleAI({ apiKey })] }) as unknown as Runner) : ai;
 }
 
 /**

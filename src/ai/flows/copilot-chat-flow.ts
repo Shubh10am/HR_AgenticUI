@@ -8,21 +8,20 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {genkit, z} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
+import { z } from 'genkit';
 import { CopilotChatInputSchemaDef as OriginalSchema, CopilotChatOutputSchemaDef } from '@/ai/schemas/copilot-chat-definitions';
 import { logTokenUsage } from '@/services/usageService';
 import { formatPassagesForPrompt } from '@/services/knowledge/prompt';
-import { CHAT_MODEL } from '@/ai/models';
+import { resolveAiContext } from '@/ai/runtime';
 
 const KNOWLEDGE_GUIDANCE = (block: string) => block
   ? `\n\nCompany knowledge (from the organization's own documents). Prefer it over general knowledge, follow it exactly when it applies, and cite it like [1]. Ignore passages that are not relevant:\n${block}\n`
   : '';
 
 
-// Extend original schema to include optional apiKey
+// Extend original schema with the caller's sign-in token
 const CopilotChatInputSchemaDef = OriginalSchema.extend({
-    apiKey: z.string().optional().nullable(),
+    authToken: z.string().optional().nullable().describe('The caller\'s sign-in token. The organization, user and AI key are derived from it on the server.'),
 });
 
 export type CopilotChatInput = z.infer<typeof CopilotChatInputSchemaDef>;
@@ -39,9 +38,11 @@ const copilotChatFlow = ai.defineFlow(
     outputSchema: CopilotChatOutputSchemaDef,
   },
   async (input) => {
-    const { apiKey, userId, organizationId, knowledgeContext, ...promptData } = input;
+    const { authToken, userId: _untrustedUserId, organizationId: _untrustedOrganizationId, knowledgeContext, ...promptData } = input;
     
-    const runner = apiKey ? genkit({plugins: [googleAI({apiKey})]}) : ai;
+    // Identity and key come from the verified token, not from the client-supplied ids.
+    
+    const { runner, model, userId, organizationId } = await resolveAiContext(authToken);
 
     const promptText = `You are a helpful AI assistant called HR Streamline Copilot.
 Respond to the user's message concisely and professionally. If you don't know the answer, say so.${KNOWLEDGE_GUIDANCE(formatPassagesForPrompt(knowledgeContext ?? []))}
@@ -50,7 +51,7 @@ User: ${promptData.userInput}
 AI:`;
 
     const response = await runner.generate({
-      model: CHAT_MODEL,
+      model,
       prompt: promptText,
       output: {
         schema: CopilotChatOutputSchemaDef,

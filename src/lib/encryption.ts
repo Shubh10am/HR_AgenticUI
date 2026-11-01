@@ -1,5 +1,5 @@
 
-'use server';
+// Server-only module. Deliberately not 'use server': that would expose encrypt/decrypt as server actions callable from the browser.
 import crypto from 'crypto';
 
 // Ensure ENCRYPTION_KEY is loaded from environment variables

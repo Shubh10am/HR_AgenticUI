@@ -2,15 +2,14 @@
 'use server';
 
 import {ai} from '@/ai/genkit';
-import {genkit, z} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
+import { z } from 'genkit';
 import { AiInterviewerInputSchemaDef as OriginalSchema, AiInterviewerOutputSchemaDef } from '@/ai/schemas/ai-interviewer-definitions';
 import { logTokenUsage } from '@/services/usageService';
-import { CHAT_MODEL } from '@/ai/models';
+import { resolveAiContext } from '@/ai/runtime';
 
-// Extend original schema to include optional apiKey
+// Extend original schema with the caller's sign-in token
 const AiInterviewerInputSchemaDef = OriginalSchema.extend({
-  apiKey: z.string().optional().nullable(),
+  authToken: z.string().optional().nullable().describe('The caller\'s sign-in token. The organization, user and AI key are derived from it on the server.'),
 });
 
 export type AiInterviewerInput = z.infer<typeof AiInterviewerInputSchemaDef>;
@@ -27,9 +26,11 @@ const aiInterviewerFlow = ai.defineFlow(
     outputSchema: AiInterviewerOutputSchemaDef,
   },
   async (input) => {
-    const { apiKey, userId, organizationId, ...promptData } = input;
+    const { authToken, userId: _untrustedUserId, organizationId: _untrustedOrganizationId, ...promptData } = input;
     
-    const runner = apiKey ? genkit({plugins: [googleAI({apiKey})]}) : ai;
+    // Identity and key come from the verified token, not from the client-supplied ids.
+    
+    const { runner, model, userId, organizationId } = await resolveAiContext(authToken);
 
     const promptText = `You are an AI interviewer conducting an initial screening interview.
 Your goal is to assess the candidate's qualifications, experience, and fit for the role based on their resume and your questions.
@@ -51,7 +52,7 @@ Begin Interview:
 `;
 
     const response = await runner.generate({
-      model: CHAT_MODEL,
+      model,
       prompt: promptText,
       output: {
         schema: AiInterviewerOutputSchemaDef,

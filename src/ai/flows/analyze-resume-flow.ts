@@ -8,15 +8,14 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {genkit, z} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
+import { z } from 'genkit';
 import { AnalyzeResumeInputSchemaDef as OriginalSchema, AnalyzeResumeOutputSchemaDef } from '@/ai/schemas/analyze-resume-definitions';
 import { logTokenUsage } from '@/services/usageService';
-import { CHAT_MODEL } from '@/ai/models';
+import { resolveAiContext } from '@/ai/runtime';
 
-// Extend original schema to include optional apiKey
+// Extend original schema with the caller's sign-in token
 const AnalyzeResumeInputSchemaDef = OriginalSchema.extend({
-  apiKey: z.string().optional().nullable(),
+  authToken: z.string().optional().nullable().describe('The caller\'s sign-in token. The organization, user and AI key are derived from it on the server.'),
 });
 
 
@@ -34,9 +33,11 @@ const analyzeResumeFlow = ai.defineFlow(
     outputSchema: AnalyzeResumeOutputSchemaDef,
   },
   async (input) => {
-    const { apiKey, userId, organizationId, ...promptData } = input;
+    const { authToken, userId: _untrustedUserId, organizationId: _untrustedOrganizationId, ...promptData } = input;
     
-    const runner = apiKey ? genkit({plugins: [googleAI({apiKey})]}) : ai;
+    // Identity and key come from the verified token, not from the client-supplied ids.
+    
+    const { runner, model, userId, organizationId } = await resolveAiContext(authToken);
 
     const promptText = `You are an expert HR professional and resume analyst with deep knowledge of Applicant Tracking Systems (ATS).
 Analyze the provided resume text thoroughly.
@@ -55,7 +56,7 @@ Ensure your output strictly adheres to the AnalyzeResumeOutputSchemaDef format.
 `;
 
     const response = await runner.generate({
-      model: CHAT_MODEL,
+      model,
       prompt: promptText,
       output: {
         schema: AnalyzeResumeOutputSchemaDef,

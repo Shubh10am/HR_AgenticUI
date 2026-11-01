@@ -10,24 +10,23 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {genkit, z} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
+import { z } from 'genkit';
 import { 
   GenerateDraftEmailResponsesInputSchemaDef as OriginalSchema, 
   GenerateDraftEmailResponsesOutputSchemaDef,
 } from '@/ai/schemas/draft-email-response-definitions';
 import { logTokenUsage } from '@/services/usageService';
 import { formatPassagesForPrompt } from '@/services/knowledge/prompt';
-import { CHAT_MODEL } from '@/ai/models';
+import { resolveAiContext } from '@/ai/runtime';
 
 const KNOWLEDGE_GUIDANCE = (block: string) => block
   ? `\n\nCompany knowledge (from the organization's own documents). Prefer it over general knowledge, follow it exactly when it applies, and cite it like [1]. Ignore passages that are not relevant:\n${block}\n`
   : '';
 
 
-// Extend original schema to include optional apiKey. The prompt field is now in the base schema.
+// Extend original schema with the caller's sign-in token. The prompt field is now in the base schema.
 const GenerateDraftEmailResponsesInputSchemaDef = OriginalSchema.extend({
-  apiKey: z.string().optional().nullable(),
+  authToken: z.string().optional().nullable().describe('The caller\'s sign-in token. The organization, user and AI key are derived from it on the server.'),
 });
 
 export type GenerateDraftEmailResponsesInput = z.infer<typeof GenerateDraftEmailResponsesInputSchemaDef>;
@@ -45,9 +44,11 @@ const generateDraftEmailResponsesFlow = ai.defineFlow(
   },
   async (input) => {
     // Correctly destructure all properties, including the optional prompt
-    const { apiKey, userId, organizationId, prompt, query, knowledgeContext } = input;
+    const { authToken, userId: _untrustedUserId, organizationId: _untrustedOrganizationId, prompt, query, knowledgeContext } = input;
     
-    const runner = apiKey ? genkit({plugins: [googleAI({apiKey})]}) : ai;
+    // Identity and key come from the verified token, not from the client-supplied ids.
+    
+    const { runner, model, userId, organizationId } = await resolveAiContext(authToken);
 
     // Base prompt text
     let promptText = `You are an HR assistant tasked with drafting professional emails.`;
@@ -92,7 +93,7 @@ Format your response as a JSON object that adheres to the GenerateDraftEmailResp
 `;
 
     const response = await runner.generate({
-      model: CHAT_MODEL,
+      model,
       prompt: promptText,
       output: {
         schema: GenerateDraftEmailResponsesOutputSchemaDef,

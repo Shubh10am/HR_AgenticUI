@@ -1,9 +1,8 @@
 import { z } from 'genkit';
 import { logTokenUsage } from '@/services/usageService';
-import { getRunnerForOrganization } from './embeddings';
 import type { KnowledgePassage } from './search';
 import { formatPassagesForPrompt } from './prompt';
-import { CHAT_MODEL } from '@/ai/models';
+import { resolveAiForOrganization } from '@/ai/runtime';
 
 const AnswerSchema = z.object({
   answer: z.string().describe('The answer, using only the provided passages.'),
@@ -35,9 +34,10 @@ export async function answerFromKnowledge(
     return { answer: "I couldn't find this in your knowledge base yet. Try rephrasing, or add a document that covers it.", isAnswered: false };
   }
 
-  const runner = await getRunnerForOrganization(organizationId);
+  // Answers use the organization's chosen chat provider; only embeddings are tied to Gemini.
+  const { runner, model } = await resolveAiForOrganization(organizationId);
   const response = await runner.generate({
-    model: CHAT_MODEL,
+    model,
     prompt: `You are HR Streamline's knowledge assistant. Answer the question using ONLY the numbered passages below.
 Cite the passages you used inline like [1] or [2]. If the passages do not contain the answer, set isAnswered to false and say so briefly — do not guess.
 Keep the answer concise and practical.

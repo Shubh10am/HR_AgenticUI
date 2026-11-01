@@ -1,6 +1,7 @@
 
 'use client';
 
+import AiProviderCard from './components/ai-provider-card';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,14 +51,9 @@ export default function SettingsPage() {
   const [notificationVolume, setNotificationVolume] = useState(10);
   const { theme, setTheme } = useTheme();
   
-  const { token, user, setUserApiKey: setApiKeyInContext, logout } = useAuth();
+  const { token, user, logout } = useAuth();
   const isGuest = user?.organizationId === 'guest-org-id';
 
-  const [dbApiKey, setDbApiKey] = useState<string | null>(null);
-  const [inputApiKey, setInputApiKey] = useState('');
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [isKeyLoading, setIsKeyLoading] = useState(true);
-  const [isKeySaving, setIsKeySaving] = useState(false);
 
   const [tokenUsage, setTokenUsage] = useState(0);
   const [tokenLimit, setTokenLimit] = useState(500000);
@@ -79,34 +75,17 @@ export default function SettingsPage() {
   const [orgName, setOrgName] = useState(''); // To store org name for confirmation
 
   
-  const fetchApiKey = useCallback(async () => {
-    if (!token || token.startsWith('guest-')) {
-        setIsKeyLoading(false);
-        return;
-    };
-    setIsKeyLoading(true);
+  // The organization name is needed to confirm deleting an organization.
+  const fetchOrganizationName = useCallback(async () => {
+    if (!token || token.startsWith('guest-')) return;
     try {
-      const response = await fetch(`/api/settings/api-key`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      const response = await fetch('/api/settings/ai-provider', { headers: { Authorization: `Bearer ${token}` } });
       const data = await response.json();
-      if (response.ok) {
-        setDbApiKey(data.apiKey || null);
-        setInputApiKey(data.apiKey || '');
-        if (data.organizationName) setOrgName(data.organizationName); // Set org name if returned
-      } else {
-        toast({ title: 'Failed to fetch API key', description: data.error || 'Could not retrieve API key.', variant: 'destructive' });
-        setDbApiKey(null);
-        setInputApiKey('');
-      }
+      if (response.ok && data.organizationName) setOrgName(data.organizationName);
     } catch (error) {
-      toast({ title: 'Error fetching API key', description: 'An unexpected error occurred.', variant: 'destructive' });
-      setDbApiKey(null);
-      setInputApiKey('');
-    } finally {
-      setIsKeyLoading(false);
+      console.error('Could not load the organization name:', error);
     }
-  }, [token, toast]);
+  }, [token]);
 
   const fetchUsageData = useCallback(async () => {
     if (!token || token.startsWith('guest-')) {
@@ -147,9 +126,9 @@ export default function SettingsPage() {
     }
 
     fetchUsageData();
-    fetchApiKey();
+    fetchOrganizationName();
     
-  }, [fetchApiKey, fetchUsageData]);
+  }, [fetchOrganizationName, fetchUsageData]);
 
   const handleMockAction = (action: string) => {
     toast({
@@ -216,88 +195,6 @@ export default function SettingsPage() {
     }
   };
 
-
-  const handleSaveApiKeyToDb = async () => {
-    if (!token) {
-      toast({ title: 'Authentication Error', description: 'Please log in again.', variant: 'destructive' });
-      return;
-    }
-    if (!inputApiKey.trim()) {
-      toast({ title: 'API Key Empty', description: 'Please enter an API key to save.', variant: 'destructive' });
-      return;
-    }
-    setIsKeySaving(true);
-    try {
-      const response = await fetch(`/api/settings/api-key`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ apiKey: inputApiKey.trim() }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        const newKey = inputApiKey.trim();
-        setDbApiKey(newKey);
-        setApiKeyInContext(newKey);
-        localStorage.setItem('userApiKey', newKey);
-        toast({
-          title: 'API Key Saved',
-          description: "Your organization's API key has been securely saved and is now active for this session.",
-        });
-      } else {
-        toast({ title: 'Failed to save API key', description: data.error || 'Could not save API key to database.', variant: 'destructive' });
-      }
-    } catch (error) {
-      toast({ title: 'Error saving API key', description: 'An unexpected error occurred.', variant: 'destructive' });
-    } finally {
-      setIsKeySaving(false);
-    }
-  };
-
-  const handleRemoveApiKeyFromDb = async () => {
-    if (!token) {
-      toast({ title: 'Authentication Error', description: 'Please log in again.', variant: 'destructive' });
-      return;
-    }
-    setIsKeySaving(true);
-    try {
-      const response = await fetch(`/api/settings/api-key`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setDbApiKey(null);
-        setInputApiKey('');
-        setShowApiKey(false);
-        setApiKeyInContext(null);
-        localStorage.removeItem('userApiKey');
-        setTokenUsage(0); // Reset token usage in UI
-        toast({ title: 'API Key Removed', description: 'Your key has been removed. The application will now use the fallback key, if available.' });
-      } else {
-        toast({ title: 'Failed to remove API key', description: data.error || 'Could not remove API key from database.', variant: 'destructive' });
-      }
-    } catch (error) {
-      toast({ title: 'Error removing API key', description: 'An unexpected error occurred.', variant: 'destructive' });
-    } finally {
-      setIsKeySaving(false);
-    }
-  };
-
-  const handleCopyToClipboard = () => {
-    if (!inputApiKey && !dbApiKey) {
-        toast({ title: 'No API Key', description: 'No API key is available to copy.', variant: 'destructive' });
-        return;
-    }
-    const keyToCopy = inputApiKey || dbApiKey || '';
-    navigator.clipboard.writeText(keyToCopy).then(() => {
-        toast({ title: 'Copied to Clipboard', description: 'API Key copied to clipboard.' });
-    }).catch(err => {
-        toast({ title: 'Copy Failed', description: 'Could not copy to clipboard.', variant: 'destructive' });
-    });
-  };
 
   const handleDeleteAccountSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -540,82 +437,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2 lg:col-span-3 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <KeyRound className="mr-2 h-5 w-5 text-primary" /> API Key Configuration
-            </CardTitle>
-            <CardDescription>
-             Configure your organization's Google AI API Key. The key is stored encrypted and used for all AI features.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {isKeyLoading ? (
-              <div className="flex items-center space-x-2">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span>Loading API key status...</span>
-              </div>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="apiKeyInput">Google AI API Key for your Organization</Label>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 gap-2">
-                    <Input
-                      id="apiKeyInput"
-                      type={showApiKey ? 'text' : 'password'}
-                      value={inputApiKey}
-                      onChange={(e) => setInputApiKey(e.target.value)}
-                      placeholder="Enter Google AI API Key"
-                      className="flex-grow"
-                      disabled={isKeySaving}
-                    />
-                    <div className="flex items-center gap-2 self-end sm:self-center">
-                        <Button variant="ghost" size="icon" onClick={() => setShowApiKey(!showApiKey)} aria-label={showApiKey ? 'Hide API Key' : 'Show API Key'} disabled={isKeySaving}>
-                        {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                        <Button variant="outline" size="icon" onClick={handleCopyToClipboard} disabled={(!inputApiKey && !dbApiKey) || isKeyLoading}>
-                        <Copy className="h-4 w-4" />
-                        <span className="sr-only">Copy API Key</span>
-                        </Button>
-                    </div>
-                  </div>
-                </div>
-                {dbApiKey && (
-                  <p className="text-xs text-muted-foreground">
-                    Key currently stored in database: <span className="font-mono bg-muted px-1 py-0.5 rounded">{`${dbApiKey.substring(0, 4)}...${dbApiKey.slice(-4)}`}</span>
-                  </p>
-                )}
-                 {!dbApiKey && !inputApiKey && (
-                  <p className="text-xs text-muted-foreground">
-                    No API key is currently configured for your organization in the database.
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-2">
-                  <Button onClick={handleSaveApiKeyToDb} disabled={isKeySaving || (!inputApiKey.trim() && !dbApiKey) || (dbApiKey !== null && inputApiKey.trim() === dbApiKey)}>
-                    {isKeySaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {dbApiKey ? 'Update Stored Key' : 'Save Key to Database'}
-                  </Button>
-                  {dbApiKey && <Button variant="outline" onClick={handleRemoveApiKeyFromDb} disabled={isKeySaving}>
-                    {isKeySaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Remove Stored Key
-                    </Button>}
-                </div>
-              </>
-            )}
-            <Alert variant="default" className="mt-4 border-blue-500 dark:border-blue-400">
-              <Info className="h-5 w-5 text-blue-500 dark:text-blue-400" />
-              <AlertTitle className="text-blue-700 dark:text-blue-300 font-semibold">API Key Usage</AlertTitle>
-              <AlertDescription className="text-blue-600 dark:text-blue-200 space-y-2">
-                  <p>
-                    This API key will be used for all AI features within your organization. Once saved, it is fetched upon login and stored in your browser's local storage for the current session.
-                  </p>
-                  <p>
-                    If no key is provided here, the application will attempt to use a global fallback key set by the system administrator. If the fallback is also not available, AI features will be disabled.
-                  </p>
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
+        <AiProviderCard />
 
         <Card className="md:col-span-2 lg:col-span-3 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
           <CardHeader>

@@ -8,15 +8,14 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {genkit, z} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
+import { z } from 'genkit';
 import { GenerateJobDescriptionInputSchemaDef as OriginalSchema, GenerateJobDescriptionOutputSchemaDef } from '@/ai/schemas/generate-job-description-definitions';
 import { logTokenUsage } from '@/services/usageService';
-import { CHAT_MODEL } from '@/ai/models';
+import { resolveAiContext } from '@/ai/runtime';
 
-// Extend original schema to include optional apiKey
+// Extend original schema with the caller's sign-in token
 const GenerateJobDescriptionInputSchemaDef = OriginalSchema.extend({
-  apiKey: z.string().optional().nullable(),
+  authToken: z.string().optional().nullable().describe('The caller\'s sign-in token. The organization, user and AI key are derived from it on the server.'),
 });
 
 export type GenerateJobDescriptionInput = z.infer<typeof GenerateJobDescriptionInputSchemaDef>;
@@ -33,9 +32,11 @@ const generateJobDescriptionFlow = ai.defineFlow(
     outputSchema: GenerateJobDescriptionOutputSchemaDef,
   },
   async (input) => {
-    const { apiKey, userId, organizationId, ...promptData } = input;
+    const { authToken, userId: _untrustedUserId, organizationId: _untrustedOrganizationId, ...promptData } = input;
     
-    const runner = apiKey ? genkit({plugins: [googleAI({apiKey})]}) : ai;
+    // Identity and key come from the verified token, not from the client-supplied ids.
+    
+    const { runner, model, userId, organizationId } = await resolveAiContext(authToken);
 
     const promptText = `You are an expert HR assistant specializing in creating job descriptions.
 
@@ -44,7 +45,7 @@ const generateJobDescriptionFlow = ai.defineFlow(
     Prompt: ${promptData.prompt}`;
 
     const response = await runner.generate({
-      model: CHAT_MODEL,
+      model,
       prompt: promptText,
       output: {
         schema: GenerateJobDescriptionOutputSchemaDef,

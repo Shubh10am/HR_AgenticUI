@@ -2,7 +2,7 @@
 
 import dbConnect from '@/lib/mongodb';
 import TokenUsageLog from '@/models/TokenUsageLog';
-import type { GenerateResponse } from 'genkit/generate';
+import type { GenerateResponse } from 'genkit';
 
 interface LogUsageParams {
   organizationId: string;

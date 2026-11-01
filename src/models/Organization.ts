@@ -8,6 +8,15 @@ export interface IOrganization extends Document {
   emailDomain: string; // e.g., "example.com"
   status: OrganizationStatus;
   encryptedGoogleApiKey?: string; // Stores iv:authTag:encryptedKey
+  /** The organization's own AI provider. Absent means the platform's Gemini key (or the legacy Google key above). */
+  aiConfig?: {
+    provider: string;
+    model: string;
+    baseURL?: string;
+    encryptedApiKey?: string;
+    updatedBy?: string;
+    updatedAt?: Date;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +44,20 @@ const OrganizationSchema: Schema<IOrganization> = new Schema(
     encryptedGoogleApiKey: {
       type: String,
       required: false, // Optional field
+    },
+    aiConfig: {
+      type: new Schema(
+        {
+          provider: { type: String, required: true },
+          model: { type: String, required: true, trim: true, maxlength: 120 },
+          baseURL: { type: String, trim: true },
+          encryptedApiKey: { type: String },
+          updatedBy: { type: String },
+          updatedAt: { type: Date },
+        },
+        { _id: false }
+      ),
+      required: false,
     },
   },
   {
