@@ -5,6 +5,7 @@ import { AlertTriangle, ArrowLeft, ArrowRight, ExternalLink, Info, Lightbulb, Us
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import type { DocCallout, DocPage } from '@/lib/docs/types';
+import { DOC_SCREENSHOTS } from '@/lib/docs/screenshots';
 import { cn } from '@/lib/utils';
 
 /** Ids of the in-page sections, shared with the "On this page" outline. */
@@ -39,6 +40,7 @@ interface DocArticleProps {
 /** Renders one module's documentation in a consistent structure. */
 export default function DocArticle({ page, sectionTitle, previous, next, onNavigate }: DocArticleProps) {
   const Icon = page.icon;
+  const screenshot = DOC_SCREENSHOTS[page.slug];
   return (
     <article className="max-w-3xl">
       <p className="text-sm font-medium text-primary">{sectionTitle}</p>
@@ -65,6 +67,16 @@ export default function DocArticle({ page, sectionTitle, previous, next, onNavig
           </Button>
         )}
       </div>
+
+      {screenshot && (
+        <figure className="mt-8" id={`docs-screenshot-${page.slug}`}>
+          <a href={screenshot.src} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-xl border bg-muted shadow-lg shadow-primary/5 transition-shadow hover:shadow-xl" aria-label={`Open full-size screenshot of ${page.title}`}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- static screenshots; next/image adds nothing here */}
+            <img src={screenshot.src} alt={screenshot.alt} width={1600} height={1000} loading="lazy" className="h-auto w-full" />
+          </a>
+          <figcaption className="mt-2 text-sm text-muted-foreground">{screenshot.caption}</figcaption>
+        </figure>
+      )}
 
       <section className="mt-10 space-y-3">
         <SectionHeading id="overview">Overview</SectionHeading>
