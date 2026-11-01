@@ -3,8 +3,8 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
 import Organization, { type IOrganization, type OrganizationStatus } from '@/models/Organization';
 import Employee, { type IEmployee } from '@/models/Employee';
-import { verifyToken } from '@/lib/jwt';
 import mongoose from 'mongoose';
+import { requirePlatformAdmin } from '@/lib/platform-admin';
 
 // Interface for a single employee record in the detail view
 interface OrgEmployee {
@@ -31,6 +31,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  if (!requirePlatformAdmin(req, res)) return;
+
   await dbConnect();
 
   const { id } = req.query;
@@ -38,17 +40,6 @@ export default async function handler(
     return res.status(400).json({ error: 'Invalid organization ID format.' });
   }
 
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Authorization token required' });
-  }
-  const token = authHeader.split(' ')[1];
-  
-  // Using a simple token check for admin access for now
-  const isValidAdminToken = token && token.length > 20;
-  if (!isValidAdminToken) {
-    return res.status(403).json({ error: 'Forbidden: Access restricted to platform administrators.' });
-  }
 
   const orgId = new mongoose.Types.ObjectId(id);
 

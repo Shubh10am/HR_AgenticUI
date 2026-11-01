@@ -5,6 +5,7 @@ import Post from '@/models/Post';
 import Employee from '@/models/Employee';
 import { verifyToken } from '@/lib/jwt';
 import mongoose from 'mongoose';
+import { requirePlatformAdmin } from '@/lib/platform-admin';
 
 export interface OrgPostData {
   _id: string;
@@ -17,6 +18,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<OrgPostData[] | { error: string }>
 ) {
+  if (!requirePlatformAdmin(req, res)) return;
+
   if (req.method !== 'GET') {
     res.setHeader('Allow', ['GET']);
     return res.status(405).json({ error: 'Method Not Allowed' });

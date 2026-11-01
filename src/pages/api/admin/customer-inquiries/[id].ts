@@ -5,8 +5,11 @@ import ContactSubmission from '@/models/ContactSubmission';
 import DemoRequest from '@/models/DemoRequest';
 import { verifyToken } from '@/lib/jwt';
 import mongoose from 'mongoose';
+import { requirePlatformAdmin } from '@/lib/platform-admin';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (!requirePlatformAdmin(req, res)) return;
+
   const { id, type } = req.query;
 
   if (req.method !== 'DELETE') {

@@ -5,11 +5,14 @@ import Post from '@/models/Post';
 import Employee from '@/models/Employee';
 import Organization from '@/models/Organization';
 import { verifyToken } from '@/lib/jwt';
+import { requirePlatformAdmin } from '@/lib/platform-admin';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  if (!requirePlatformAdmin(req, res)) return;
+
   if (req.method !== 'GET') {
     res.setHeader('Allow', ['GET']);
     return res.status(405).json({ error: 'Method Not Allowed' });

@@ -7,11 +7,14 @@ import Organization from '@/models/Organization';
 import Admin from '@/models/Admin';
 import { verifyToken } from '@/lib/jwt';
 import mongoose from 'mongoose';
+import { requirePlatformAdmin } from '@/lib/platform-admin';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  if (!requirePlatformAdmin(req, res)) return;
+
   const { id } = req.query;
 
   if (!id || typeof id !== 'string' || !mongoose.Types.ObjectId.isValid(id)) {

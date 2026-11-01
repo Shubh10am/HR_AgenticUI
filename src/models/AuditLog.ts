@@ -18,6 +18,7 @@ export interface IAuditLog extends Document {
   method: string;
   path: string;
   statusCode: number;
+  durationMs: number | null;
   outcome: AuditOutcome;
   ipAddress: string;
   userAgent: string;
@@ -39,6 +40,7 @@ const AuditLogSchema: Schema<IAuditLog> = new Schema(
     method: { type: String, required: true },
     path: { type: String, required: true },
     statusCode: { type: Number, required: true },
+    durationMs: { type: Number, default: null },
     outcome: { type: String, enum: ['success', 'failure'], required: true },
     ipAddress: { type: String, default: '' },
     userAgent: { type: String, default: '' },
@@ -47,6 +49,7 @@ const AuditLogSchema: Schema<IAuditLog> = new Schema(
 );
 
 AuditLogSchema.index({ organizationId: 1, createdAt: -1 });
+AuditLogSchema.index({ actorId: 1, createdAt: -1 });
 AuditLogSchema.index({ createdAt: 1 }, { expireAfterSeconds: AUDIT_RETENTION_DAYS * 24 * 60 * 60 });
 
 const AuditLog: Model<IAuditLog> = models.AuditLog || mongoose.model<IAuditLog>('AuditLog', AuditLogSchema);

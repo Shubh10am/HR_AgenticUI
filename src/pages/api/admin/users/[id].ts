@@ -4,11 +4,14 @@ import dbConnect from '@/lib/mongodb';
 import Admin, { type IAdmin, type AdminRole } from '@/models/Admin';
 import { verifyToken } from '@/lib/jwt';
 import mongoose from 'mongoose';
+import { requirePlatformAdmin } from '@/lib/platform-admin';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  if (!requirePlatformAdmin(req, res)) return;
+
   await dbConnect();
   
   const { id } = req.query;

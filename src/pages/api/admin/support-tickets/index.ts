@@ -6,6 +6,7 @@ import Employee, { type IEmployee } from '@/models/Employee';
 import Organization, { type IOrganization } from '@/models/Organization';
 import { verifyToken } from '@/lib/jwt';
 import Admin from '@/models/Admin'; // Ensure Admin model is registered
+import { requirePlatformAdmin } from '@/lib/platform-admin';
 
 interface PopulatedTicket extends Omit<ISupportTicket, 'submittedBy' | 'organizationId'> {
   submittedBy: IEmployee;
@@ -16,6 +17,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  if (!requirePlatformAdmin(req, res)) return;
+
   if (req.method !== 'GET') {
     res.setHeader('Allow', ['GET']);
     return res.status(405).json({ error: 'Method Not Allowed' });

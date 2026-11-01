@@ -1,6 +1,7 @@
 
 'use client';
 
+import MaintenanceGate from './maintenance-gate';
 import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
@@ -119,7 +120,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </header>
         <main className="min-h-0 min-w-0 flex-1 overflow-hidden p-4 sm:p-6 lg:p-8 animated-background-gradient">
           <div className="mx-auto min-h-0 min-w-0 max-w-[1440px] animate-fade-in" key={pathname}>
-            {children}
+            <MaintenanceGate>{children}</MaintenanceGate>
           </div>
         </main>
         <CopilotSidebar isOpen={isCopilotOpen} onOpenChange={setIsCopilotOpen} />

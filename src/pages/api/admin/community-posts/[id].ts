@@ -3,17 +3,40 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
 import Post from '@/models/Post';
 import Comment from '@/models/Comment';
+import Employee from '@/models/Employee';
 import { verifyToken } from '@/lib/jwt';
 import mongoose from 'mongoose';
+import { requirePlatformAdmin } from '@/lib/platform-admin';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  if (!requirePlatformAdmin(req, res)) return;
+
   const { id } = req.query;
 
+  if (req.method === 'GET') {
+    if (typeof id !== 'string' || !mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ error: 'Invalid Post ID.' });
+    try {
+      await dbConnect();
+      const comments = await Comment.find({ post: id }).sort({ createdAt: 1 }).populate({ path: 'author', select: 'name', model: Employee }).lean();
+      return res.status(200).json({
+        comments: comments.map((comment) => ({
+          _id: String(comment._id),
+          content: comment.content,
+          authorName: (comment.author as unknown as { name?: string } | null)?.name ?? 'Deleted user',
+          createdAt: (comment as unknown as { createdAt: Date }).createdAt,
+        })),
+      });
+    } catch (error) {
+      console.error(`Error loading comments for post ${id}:`, error);
+      return res.status(500).json({ error: 'Could not load comments.' });
+    }
+  }
+
   if (req.method !== 'DELETE') {
-    res.setHeader('Allow', ['DELETE']);
+    res.setHeader('Allow', ['GET', 'DELETE']);
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
   

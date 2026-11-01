@@ -9,6 +9,7 @@ import { signToken, type JwtPayload } from '@/lib/jwt';
 import type { EmployeeRole } from '@/models/Employee';
 import type { OrganizationStatus } from '@/models/Organization';
 import { recordAudit } from '@/services/audit/record';
+import { getPlatformSettingsSafe } from '@/services/platform/settings';
 
 type LoginRequestBody = {
   email: string;
@@ -92,6 +93,11 @@ export default async function handler(
         organizationId: (employee.organizationId as any)?._id?.toString() ?? null,
       }, 401);
       return res.status(401).json({ error: 'Invalid email or password.' });
+    }
+
+    const settings = await getPlatformSettingsSafe();
+    if (settings?.maintenanceMode) {
+      return res.status(503).json({ error: settings.maintenanceMessage });
     }
 
     const organization = employee.organizationId as any;

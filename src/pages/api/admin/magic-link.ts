@@ -4,11 +4,14 @@ import dbConnect from '@/lib/mongodb';
 import Employee from '@/models/Employee';
 import { verifyToken } from '@/lib/jwt';
 import crypto from 'crypto';
+import { requirePlatformAdmin } from '@/lib/platform-admin';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  if (!requirePlatformAdmin(req, res)) return;
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }

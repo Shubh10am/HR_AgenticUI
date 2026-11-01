@@ -5,6 +5,7 @@ import Admin, { type IAdmin, type AdminRole } from '@/models/Admin';
 import { verifyToken } from '@/lib/jwt';
 import bcrypt from 'bcryptjs';
 import { sendNewPlatformAdminWelcomeEmail } from '@/services/mailerService';
+import { requirePlatformAdmin } from '@/lib/platform-admin';
 
 export interface AdminUserData {
   _id: string;
@@ -20,6 +21,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  if (!requirePlatformAdmin(req, res)) return;
+
   await dbConnect();
 
   const authHeader = req.headers.authorization;

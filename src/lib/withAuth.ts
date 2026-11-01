@@ -7,6 +7,8 @@ import Organization from '@/models/Organization';
 import Admin from '@/models/Admin';
 import mongoose from 'mongoose';
 import { AUDITED_METHODS, recordAudit } from '@/services/audit/record';
+import { getPlatformSettingsSafe } from '@/services/platform/settings';
+import { isPlatformAdmin } from './platform-admin';
 
 type AuthenticatedUser = (JwtPayload & { id: string });
 
@@ -68,12 +70,21 @@ export function withAuth(handler: ApiHandler, requiredRole: Role | Role[] = 'Any
          return res.status(403).json({ error: 'Forbidden: You do not have the necessary permissions.' });
     }
 
+    // Maintenance mode locks out everyone except platform administrators.
+    if (!isPlatformAdmin(decodedToken)) {
+      const settings = await getPlatformSettingsSafe();
+      if (settings?.maintenanceMode) {
+        return res.status(503).json({ error: settings.maintenanceMessage, maintenance: true });
+      }
+    }
+
     // Attach user information to the request object for the handler
     const reqWithAuth = req as NextApiRequestWithAuth;
     reqWithAuth.user = { ...decodedToken, id: decodedToken.employeeId };
 
     // Every change made by a signed-in user goes to the audit log once the response is sent.
     if (AUDITED_METHODS.has((req.method ?? '').toUpperCase())) {
+      const startedAt = Date.now();
       res.once('finish', () => {
         void recordAudit(req, {
           id: decodedToken.employeeId,
@@ -81,7 +92,7 @@ export function withAuth(handler: ApiHandler, requiredRole: Role | Role[] = 'Any
           email: decodedToken.email,
           role: decodedToken.role,
           organizationId: decodedToken.organizationId,
-        }, res.statusCode);
+        }, res.statusCode, Date.now() - startedAt);
       });
     }
 
