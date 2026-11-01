@@ -13,6 +13,7 @@ export default {
   	extend: {
 		fontFamily: {
 			sans: ['Poppins', ...fontFamily.sans],
+			display: ['Poppins', ...fontFamily.sans],
 		  },
   		colors: {
   			background: 'hsl(var(--background))',
@@ -41,6 +42,8 @@ export default {
   				DEFAULT: 'hsl(var(--accent))',
   				foreground: 'hsl(var(--accent-foreground))'
   			},
+			success: 'hsl(var(--success))',
+			warning: 'hsl(var(--warning))',
   			destructive: {
   				DEFAULT: 'hsl(var(--destructive))',
   				foreground: 'hsl(var(--destructive-foreground))'
@@ -67,6 +70,7 @@ export default {
   			}
   		},
   		borderRadius: {
+			xl: 'calc(var(--radius) + 4px)',
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
@@ -131,6 +135,7 @@ export default {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
         'fade-in-up': 'fade-in-up 0.6s ease-out forwards',
+        'fade-in': 'fade-in-up 0.35s ease-out',
         'marquee': 'marquee 30s linear infinite',
         'float': 'float 12s ease-in-out infinite',
         'float-slow': 'float-slow 18s ease-in-out infinite',
