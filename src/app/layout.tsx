@@ -49,6 +49,7 @@ export default function RootLayout({
   const publicPages = ['/', '/contact', '/book-a-demo'];
   const isLegalPage = pathname.startsWith('/legal');
   const isBlogPage = pathname.startsWith('/blog');
+  const hasOwnMetadata = isBlogPage || isLegalPage;
   const isDocsPage = pathname.startsWith('/docs');
   const isOnboardingPage = pathname.startsWith('/onboarding');
   const isAdminPage = pathname.startsWith('/admin');
@@ -75,8 +76,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <title>{siteConfig.name}</title>
-        <meta name="description" content={siteConfig.description} />
+        {/* Blog and legal pages set their own title and description via the Metadata API. */}
+        {!hasOwnMetadata && <title>{siteConfig.name}</title>}
+        {!hasOwnMetadata && <meta name="description" content={siteConfig.description} />}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
