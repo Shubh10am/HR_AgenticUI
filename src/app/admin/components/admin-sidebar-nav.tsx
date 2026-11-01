@@ -9,6 +9,7 @@ import type { LucideIcon } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 
 interface NavItem {
+  id: string;
   href: string;
   label: string;
   icon: LucideIcon;
@@ -16,17 +17,17 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Admin Dashboard' },
-  { href: '/admin/analytics', label: 'Analytics', icon: BarChart2, tooltip: 'View Analytics' },
-  { href: '/admin/users', label: 'User Management', icon: Users, tooltip: 'Manage Users' },
-  { href: '/admin/organizations', label: 'Organizations', icon: Briefcase, tooltip: 'Manage Organizations' },
-  { href: '/admin/customer-inquiries', label: 'Customer Inquiries', icon: Handshake, tooltip: 'View Customer Inquiries' },
-  { href: '/admin/community-posts', label: 'Community Posts', icon: MessageSquare, tooltip: 'Manage Community Posts' },
-  { href: '/admin/support-tickets', label: 'Support', icon: LifeBuoy, tooltip: 'Support Tickets' },
-  { href: '/admin/content-management', label: 'Content', icon: FileText, tooltip: 'Content Management' },
-  { href: '/admin/system-health', label: 'System Health', icon: Server, tooltip: 'System Health & Logs' },
-  { href: '/admin/settings', label: 'System Settings', icon: Settings, tooltip: 'System Settings' },
-  { href: '/dashboard', label: 'Back to App', icon: Shield, tooltip: 'Go to Main App' },
+  { id: 'admin-dashboard', href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Admin Dashboard' },
+  { id: 'admin-analytics', href: '/admin/analytics', label: 'Analytics', icon: BarChart2, tooltip: 'View Analytics' },
+  { id: 'admin-users', href: '/admin/users', label: 'User Management', icon: Users, tooltip: 'Manage Users' },
+  { id: 'admin-organizations', href: '/admin/organizations', label: 'Organizations', icon: Briefcase, tooltip: 'Manage Organizations' },
+  { id: 'admin-inquiries', href: '/admin/customer-inquiries', label: 'Customer Inquiries', icon: Handshake, tooltip: 'View Customer Inquiries' },
+  { id: 'admin-community', href: '/admin/community-posts', label: 'Community Posts', icon: MessageSquare, tooltip: 'Manage Community Posts' },
+  { id: 'admin-support', href: '/admin/support-tickets', label: 'Support', icon: LifeBuoy, tooltip: 'Support Tickets' },
+  { id: 'admin-content', href: '/admin/content-management', label: 'Content', icon: FileText, tooltip: 'Content Management' },
+  { id: 'admin-system-health', href: '/admin/system-health', label: 'System Health', icon: Server, tooltip: 'System Health & Logs' },
+  { id: 'admin-settings', href: '/admin/settings', label: 'System Settings', icon: Settings, tooltip: 'System Settings' },
+  { id: 'admin-back-to-app', href: '/dashboard', label: 'Back to App', icon: Shield, tooltip: 'Go to Main App' },
 ];
 
 export default function AdminSidebarNav() {
@@ -44,7 +45,7 @@ export default function AdminSidebarNav() {
       {navItems.map((item) => (
         <SidebarMenuItem key={item.href}>
           <Link href={item.href} passHref legacyBehavior>
-            <a onClick={handleLinkClick} className="block w-full">
+            <a onClick={handleLinkClick} className="block w-full" data-tour-id={item.id}>
               <SidebarMenuButton
                 isActive={pathname === item.href || (item.href !== "/admin/dashboard" && pathname.startsWith(item.href))}
                 tooltip={item.tooltip}
