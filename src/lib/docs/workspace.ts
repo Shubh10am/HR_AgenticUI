@@ -51,7 +51,7 @@ export const workspace: DocSection = {
         { tone: 'tip', title: 'Scanned PDFs', body: 'Image-only PDFs have no readable text. Export them as text-based PDFs or Word documents first.' },
       ],
       faqs: [
-        { question: 'A document says “Not indexed”. What now?', answer: 'Indexing needs a working Google AI key. Check Settings → API key, then choose Re-index for AI from the document’s menu.' },
+        { question: 'A document says “Not indexed”. What now?', answer: 'Indexing uses Gemini, so it needs a working Google key — your own when Gemini is your provider, otherwise the platform’s. Check Settings → AI Provider, then choose Re-index for AI from the document’s menu.' },
         { question: 'Can other organizations see our documents?', answer: 'No. Every search is limited to the organization of the signed-in user.' },
       ],
     },
@@ -115,13 +115,13 @@ export const workspace: DocSection = {
       title: 'Settings',
       icon: Settings,
       route: '/settings',
-      summary: 'Password, organization AI key, usage and account controls.',
+      summary: 'Password, AI provider and key, usage and account controls.',
       audience: ['Everyone'],
       overview: [
-        'Settings holds your personal and organization preferences. Admins manage the organization’s Google AI key here, which every AI feature uses.',
+        'Settings holds your personal and organization preferences. Admins choose the organization’s AI provider, model and API key here; every AI feature uses them.',
       ],
       features: [
-        { title: 'Google AI API key', description: 'Add, replace or remove your organization’s key. It is stored encrypted.' },
+        { title: 'AI Provider', description: 'Choose Gemini, Claude, OpenAI, Grok, Qwen, DeepSeek, Mistral, Groq, OpenRouter or a custom OpenAI-compatible endpoint, pick a model and add your key. Test connection checks it first; keys are encrypted and never shown again.' },
         { title: 'AI usage', description: 'See how much AI your organization has used, by feature.' },
         { title: 'Change password', description: 'Update your password any time.' },
         { title: 'Delete account or organization', description: 'Employees can delete their account. Admins can delete the whole organization after typing its name and their password.' },

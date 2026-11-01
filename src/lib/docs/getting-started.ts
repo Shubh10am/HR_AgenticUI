@@ -42,7 +42,7 @@ export const gettingStarted: DocSection = {
           title: 'Setup checklist',
           steps: [
             { title: 'Register your organization', body: 'Go to Register, enter your organization and admin details. This first account is your organization’s Admin.' },
-            { title: 'Add your Google AI key', body: 'In Settings, add your organization’s Google AI API key. Every AI feature uses it; without one, the platform’s shared key is used if available.' },
+            { title: 'Choose your AI provider', body: 'In Settings → AI Provider, pick Gemini, Claude, OpenAI, Grok, Qwen, DeepSeek, Mistral, Groq, OpenRouter or any OpenAI-compatible service, then add your API key. Without one, the platform’s shared Gemini key is used if available.' },
             { title: 'Add your team', body: 'Open Manage Employees and add people one by one, or import everyone at once with a CSV file (name, email, password, role, optional department).' },
             { title: 'Teach the AI your policies', body: 'Upload your handbook and policies to the Knowledge Base. Copilot and AI email replies will start answering from them.' },
             { title: 'Connect Google', body: 'On Integrations, connect your Google account to use the Gmail inbox, calendar and sending from Smart Drafting.' },
@@ -64,7 +64,7 @@ export const gettingStarted: DocSection = {
         'Each person has one role in their organization. Roles decide which modules appear in the sidebar and which actions are allowed. Your data is always limited to your own organization.',
       ],
       features: [
-        { title: 'Admin', description: 'Full control: employees (add, edit, delete, bulk import), organization settings and API key, attendance management, onboarding, and Knowledge Base editing.' },
+        { title: 'Admin', description: 'Full control: employees (add, edit, delete, bulk import), organization settings and AI provider, attendance management, onboarding, and Knowledge Base editing.' },
         { title: 'HR', description: 'Attendance management, onboarding, Knowledge Base editing and attendance policy editing. Employee records are managed by Admins.' },
         { title: 'Manager', description: 'Everything employees can do, plus creating posts in the Community feed.' },
         { title: 'Employee', description: 'Their own attendance and leave, Copilot, AI email tools, recruitment tools, tasks, Knowledge Base search and Ask, and support tickets.' },
@@ -79,7 +79,8 @@ export const gettingStarted: DocSection = {
       summary: 'Where AI appears, what powers it, and how it stays grounded in your policies.',
       audience: ['Everyone'],
       overview: [
-        'HR Streamline AI uses Google’s Gemini models. Your organization can add its own Google AI key in Settings so usage is billed to you and tracked on the usage page.',
+        'HR Streamline AI works with the AI provider your organization chooses: Google Gemini (the default), Anthropic Claude, OpenAI, xAI Grok, Alibaba Qwen, DeepSeek, Mistral, Groq, OpenRouter, or any OpenAI-compatible service. An Admin picks the provider and model in Settings and adds your own API key, so usage is billed to you and tracked on the usage page.',
+        'Your key stays on the server. It is encrypted, never sent back to the browser, and Settings tests it before saving so a wrong key cannot break AI for your team.',
         'Answers about your company come from your Knowledge Base. When you ask Copilot a question or generate an email reply, the platform first searches your organization’s documents and built-in policies, then asks the AI to answer using those passages and to say which documents it used.',
         'Nothing is sent automatically. AI output is always a draft you review — replies land in the reply box, job descriptions and interview summaries appear on screen for you to copy or edit.',
       ],
@@ -95,7 +96,7 @@ export const gettingStarted: DocSection = {
       ],
       faqs: [
         { question: 'Which AI model is used?', answer: 'Google Gemini Flash for writing and answering, and Gemini embeddings for Knowledge Base search.' },
-        { question: 'Why did an AI feature fail?', answer: 'Usually the Google AI key is missing, invalid or out of quota. Check Settings → API key, then try again.' },
+        { question: 'Why did an AI feature fail?', answer: 'Usually the AI key is missing, invalid or out of quota, or the model name has changed. Open Settings → AI Provider and use Test connection, then try again.' },
       ],
     },
     {

@@ -141,7 +141,9 @@ export default function AiProviderCard() {
         <CardDescription>Choose which AI model powers Copilot, email drafts, recruitment tools and Knowledge Base answers — and bring your own API key.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
-        {loadError ? <p className="text-sm text-destructive">{loadError}</p> : !current ? <Skeleton className="h-40 w-full" /> : (
+        {!token || token.startsWith('guest-') ? (
+          <p className="text-sm text-muted-foreground">Sign in with an organization account to choose an AI provider. Guests use the platform default.</p>
+        ) : loadError ? <p className="text-sm text-destructive">{loadError}</p> : !current ? <Skeleton className="h-40 w-full" /> : (
           <>
             <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-3 text-sm">
               <span className="text-muted-foreground">In use:</span>
