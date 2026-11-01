@@ -86,7 +86,7 @@ export default function SidebarNav() {
   });
 
   const isActive = (href: string) =>
-    pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+    pathname === href || (href !== '/dashboard' && Boolean(pathname?.startsWith(href)));
 
   return (
     <>

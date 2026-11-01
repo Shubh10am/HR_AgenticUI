@@ -50,7 +50,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   const logoHref = pathname === '/dashboard' ? '/' : '/dashboard';
   const orgStatus = user?.organizationStatus;
-  const pageTitle = pathname
+  const pageTitle = (pathname ?? '')
     .split('/')
     .filter(Boolean)[0]
     ?.split('-')
