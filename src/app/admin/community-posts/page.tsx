@@ -2,6 +2,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { Eye } from 'lucide-react';
+import PostDetailSheet from './components/post-detail-sheet';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -27,6 +29,7 @@ interface PostOrganization {
 interface AdminPost {
   _id: string;
   subject: string;
+  content?: string;
   author: PostAuthor;
   organization: PostOrganization;
   likes: any[];
@@ -39,6 +42,7 @@ export default function AdminCommunityPostsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [postToDelete, setPostToDelete] = useState<AdminPost | null>(null);
+  const [postToView, setPostToView] = useState<AdminPost | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { toast } = useToast();
@@ -128,12 +132,12 @@ export default function AdminCommunityPostsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Post Subject</TableHead>
-                  <TableHead>Organization</TableHead>
-                  <TableHead>Author</TableHead>
-                  <TableHead>Likes</TableHead>
-                  <TableHead>Comments</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="hidden md:table-cell">Organization</TableHead>
+                  <TableHead className="hidden lg:table-cell">Author</TableHead>
+                  <TableHead className="hidden xl:table-cell text-center">Likes</TableHead>
+                  <TableHead className="hidden xl:table-cell text-center">Comments</TableHead>
+                  <TableHead className="hidden sm:table-cell whitespace-nowrap">Created</TableHead>
+                  <TableHead className="w-12 text-right"><span className="sr-only sm:not-sr-only">Actions</span></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -145,14 +149,22 @@ export default function AdminCommunityPostsPage() {
                   </TableRow>
                 )}
                 {posts.map((post) => (
-                  <TableRow key={post._id}>
-                    <TableCell className="font-medium max-w-xs truncate">{post.subject}</TableCell>
-                    <TableCell>{post.organization?.name || 'N/A'}</TableCell>
-                    <TableCell>{post.author?.name || 'N/A'}</TableCell>
-                    <TableCell>{post.likes.length}</TableCell>
-                    <TableCell>{post.comments.length}</TableCell>
-                    <TableCell>{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</TableCell>
-                    <TableCell className="text-right">
+                  <TableRow key={post._id} id={`admin-post-${post._id}-row`} onClick={() => setPostToView(post)} className="cursor-pointer">
+                    <TableCell className="max-w-[170px] sm:max-w-xs">
+                      <div className="truncate font-medium" title={post.subject}>{post.subject}</div>
+                      <div className="truncate text-xs text-muted-foreground lg:hidden">
+                        {[post.organization?.name, post.author?.name].filter(Boolean).join(' · ')}
+                      </div>
+                      <div className="truncate text-xs text-muted-foreground xl:hidden">
+                        {post.likes.length} likes · {post.comments.length} comments<span className="sm:hidden"> · {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden max-w-[180px] truncate md:table-cell">{post.organization?.name || 'N/A'}</TableCell>
+                    <TableCell className="hidden max-w-[180px] truncate lg:table-cell">{post.author?.name || 'N/A'}</TableCell>
+                    <TableCell className="hidden text-center xl:table-cell">{post.likes.length}</TableCell>
+                    <TableCell className="hidden text-center xl:table-cell">{post.comments.length}</TableCell>
+                    <TableCell className="hidden whitespace-nowrap sm:table-cell">{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</TableCell>
+                    <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
                        <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0">
@@ -162,6 +174,9 @@ export default function AdminCommunityPostsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Moderation</DropdownMenuLabel>
+                          <DropdownMenuItem onSelect={() => setPostToView(post)}>
+                            <Eye className="mr-2 h-4 w-4" /> View post
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive"
                             onSelect={() => setPostToDelete(post)}
@@ -198,6 +213,11 @@ export default function AdminCommunityPostsPage() {
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <PostDetailSheet
+        post={postToView}
+        onClose={() => setPostToView(null)}
+        onDelete={(post) => { setPostToView(null); setPostToDelete(post as AdminPost); }}
+      />
     </>
   );
 }

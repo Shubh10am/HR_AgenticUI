@@ -138,8 +138,8 @@ export default function AdminCustomerInquiriesPage() {
     return (
       <Tabs defaultValue="contact">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="contact">Contact Submissions ({contacts.length})</TabsTrigger>
-          <TabsTrigger value="demo">Demo Requests ({demos.length})</TabsTrigger>
+          <TabsTrigger id="admin-inquiries-tab-contact" value="contact" className="min-w-0"><span className="truncate"><span className="hidden sm:inline">Contact Submissions</span><span className="sm:hidden">Contact</span> ({contacts.length})</span></TabsTrigger>
+          <TabsTrigger id="admin-inquiries-tab-demo" value="demo" className="min-w-0"><span className="truncate"><span className="hidden sm:inline">Demo Requests</span><span className="sm:hidden">Demos</span> ({demos.length})</span></TabsTrigger>
         </TabsList>
         <TabsContent value="contact" className="mt-4">
           <Card className="shadow-inner">
@@ -152,11 +152,11 @@ export default function AdminCustomerInquiriesPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead className="w-[300px]">Subject</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="hidden md:table-cell">Email</TableHead>
+                      <TableHead className="hidden xl:table-cell">Phone</TableHead>
+                      <TableHead className="hidden sm:table-cell">Subject</TableHead>
+                      <TableHead className="hidden lg:table-cell whitespace-nowrap">Date</TableHead>
+                      <TableHead className="w-12 text-right"><span className="sr-only sm:not-sr-only">Actions</span></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -165,11 +165,16 @@ export default function AdminCustomerInquiriesPage() {
                     ) : (
                       contacts.map((c) => (
                         <TableRow key={c._id} onClick={() => setItemToView({ ...c, type: 'contact' })} className="cursor-pointer">
-                          <TableCell className="font-medium">{c.name}</TableCell>
-                          <TableCell>{c.email}</TableCell>
-                          <TableCell>{c.phone || 'N/A'}</TableCell>
-                          <TableCell className="truncate max-w-[300px]">{c.subject}</TableCell>
-                          <TableCell>{format(new Date(c.createdAt), 'PPP')}</TableCell>
+                          <TableCell className="max-w-[170px] sm:max-w-[220px]">
+                            <div className="truncate font-medium">{c.name}</div>
+                            <div className="truncate text-xs text-muted-foreground md:hidden">{c.email}</div>
+                            <div className="truncate text-xs text-muted-foreground sm:hidden">{c.subject}</div>
+                            <div className="text-xs text-muted-foreground lg:hidden">{format(new Date(c.createdAt), 'd MMM yyyy')}</div>
+                          </TableCell>
+                          <TableCell className="hidden max-w-[240px] truncate md:table-cell">{c.email}</TableCell>
+                          <TableCell className="hidden whitespace-nowrap xl:table-cell">{c.phone || 'N/A'}</TableCell>
+                          <TableCell className="hidden max-w-[320px] truncate sm:table-cell">{c.subject}</TableCell>
+                          <TableCell className="hidden whitespace-nowrap lg:table-cell">{format(new Date(c.createdAt), 'd MMM yyyy')}</TableCell>
                           <TableCell className="text-right">
                               <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setItemToDelete({ id: c._id, type: 'contact', identifier: c.name }); }}>
                                 <Trash2 className="h-4 w-4 text-destructive" />
@@ -195,12 +200,12 @@ export default function AdminCustomerInquiriesPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Company</TableHead>
-                      <TableHead>Company Size</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="hidden md:table-cell">Email</TableHead>
+                      <TableHead className="hidden xl:table-cell">Phone</TableHead>
+                      <TableHead className="hidden sm:table-cell">Company</TableHead>
+                      <TableHead className="hidden xl:table-cell whitespace-nowrap">Company Size</TableHead>
+                      <TableHead className="hidden lg:table-cell">Date</TableHead>
+                      <TableHead className="w-12 text-right"><span className="sr-only sm:not-sr-only">Actions</span></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -209,12 +214,17 @@ export default function AdminCustomerInquiriesPage() {
                     ) : (
                       demos.map((d) => (
                         <TableRow key={d._id} onClick={() => setItemToView({ ...d, type: 'demo' })} className="cursor-pointer">
-                          <TableCell className="font-medium">{d.name}</TableCell>
-                          <TableCell>{d.email}</TableCell>
-                          <TableCell>{d.phone || 'N/A'}</TableCell>
-                          <TableCell>{d.companyName}</TableCell>
-                          <TableCell>{d.companySize}</TableCell>
-                          <TableCell>{format(new Date(d.createdAt), 'PPP')}</TableCell>
+                          <TableCell className="max-w-[170px] sm:max-w-[220px]">
+                            <div className="truncate font-medium">{d.name}</div>
+                            <div className="truncate text-xs text-muted-foreground md:hidden">{d.email}</div>
+                            <div className="truncate text-xs text-muted-foreground sm:hidden">{d.companyName}</div>
+                            <div className="text-xs text-muted-foreground lg:hidden">{format(new Date(d.createdAt), 'd MMM yyyy')}</div>
+                          </TableCell>
+                          <TableCell className="hidden max-w-[240px] truncate md:table-cell">{d.email}</TableCell>
+                          <TableCell className="hidden whitespace-nowrap xl:table-cell">{d.phone || 'N/A'}</TableCell>
+                          <TableCell className="hidden max-w-[200px] truncate sm:table-cell">{d.companyName}</TableCell>
+                          <TableCell className="hidden whitespace-nowrap xl:table-cell">{d.companySize}</TableCell>
+                          <TableCell className="hidden whitespace-nowrap lg:table-cell">{format(new Date(d.createdAt), 'd MMM yyyy')}</TableCell>
                           <TableCell className="text-right">
                               <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setItemToDelete({ id: d._id, type: 'demo', identifier: d.name }); }}>
                                 <Trash2 className="h-4 w-4 text-destructive" />
