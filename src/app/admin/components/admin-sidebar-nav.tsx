@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
-import { LayoutDashboard, Users, BarChart2, Settings, Shield, Briefcase, FileText, Server, LifeBuoy, MessageSquare, Handshake } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart2, Settings, Shield, Briefcase, FileText, Server, LifeBuoy, MessageSquare, Handshake, ScrollText } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 
@@ -25,6 +25,7 @@ const navItems: NavItem[] = [
   { id: 'admin-community', href: '/admin/community-posts', label: 'Community Posts', icon: MessageSquare, tooltip: 'Manage Community Posts' },
   { id: 'admin-support', href: '/admin/support-tickets', label: 'Support', icon: LifeBuoy, tooltip: 'Support Tickets' },
   { id: 'admin-content', href: '/admin/content-management', label: 'Content', icon: FileText, tooltip: 'Content Management' },
+  { id: 'admin-logs', href: '/admin/logs', label: 'Logs', icon: ScrollText, tooltip: 'Logs & User Tracing' },
   { id: 'admin-system-health', href: '/admin/system-health', label: 'System Health', icon: Server, tooltip: 'System Health & Logs' },
   { id: 'admin-settings', href: '/admin/settings', label: 'System Settings', icon: Settings, tooltip: 'System Settings' },
   { id: 'admin-back-to-app', href: '/dashboard', label: 'Back to App', icon: Shield, tooltip: 'Go to Main App' },

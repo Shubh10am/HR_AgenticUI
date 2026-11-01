@@ -1,143 +1,128 @@
 'use client';
 
-import PageHeader from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { AreaChart as AreaChartIcon, BarChart as BarChartIcon, Users, DollarSign, ListOrdered, CheckCircle, Activity } from 'lucide-react';
-import { ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip, AreaChart, Area, BarChart, Bar, Legend } from 'recharts';
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import Link from 'next/link';
-
-const kpiData = [
-  { title: 'Total Users', value: '1,250', icon: Users, change: '+12.5%', changeType: 'increase', href: '/admin/users' },
-  { title: 'Active Subscriptions', value: '340', icon: CheckCircle, change: '+5.2%', changeType: 'increase', href: '/admin/organizations' },
-  { title: 'Monthly Recurring Revenue', value: '$15,600', icon: DollarSign, change: '-1.8%', changeType: 'decrease', href: '/admin/analytics' },
-  { title: 'Open Support Tickets', value: '28', icon: ListOrdered, change: '+3', changeType: 'increase', href: '/admin/support-tickets' },
-];
-
-const userGrowthData = [
-  { month: 'Jan', users: 150 },
-  { month: 'Feb', users: 200 },
-  { month: 'Mar', users: 350 },
-  { month: 'Apr', users: 500 },
-  { month: 'May', users: 680 },
-  { month: 'Jun', users: 820 },
-  { month: 'Jul', users: 1250 },
-];
-
-const planDistributionData = [
-    { plan: 'Free', users: 800, fill: 'var(--color-free)'},
-    { plan: 'Pro', users: 300, fill: 'var(--color-pro)' },
-    { plan: 'Enterprise', users: 150, fill: 'var(--color-enterprise)'},
-];
+import { formatDistanceToNow, format } from 'date-fns';
+import { Activity, AlertTriangle, ArrowRight, Briefcase, Cpu, Handshake, LifeBuoy, RefreshCw, Users } from 'lucide-react';
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import PageHeader from '@/components/page-header';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
+import { Skeleton } from '@/components/ui/skeleton';
+import type { PlatformMetrics } from '@/services/admin/platform-metrics';
+import KpiCard, { formatCompact } from '../components/kpi-card';
+import { useAdminData } from '../components/use-admin-data';
 
 const chartConfig = {
-  users: {
-    label: "Users",
-    color: "hsl(var(--chart-1))",
-  },
-  free: {
-    label: "Free",
-    color: "hsl(var(--chart-2))",
-  },
-  pro: {
-    label: "Pro",
-    color: "hsl(var(--chart-1))",
-  },
-  enterprise: {
-    label: "Enterprise",
-    color: "hsl(var(--chart-5))",
-  }
-} satisfies import('@/components/ui/chart').ChartConfig;
+  actions: { label: 'User actions', color: 'hsl(var(--chart-1))' },
+  aiRequests: { label: 'AI requests', color: 'hsl(var(--chart-2))' },
+  signups: { label: 'New users', color: 'hsl(var(--chart-1))' },
+} satisfies ChartConfig;
+
+const STATUS_STYLES: Record<string, string> = {
+  Active: 'bg-emerald-500',
+  Hold: 'bg-amber-500',
+  Suspended: 'bg-red-500',
+};
 
 export default function AdminDashboardPage() {
+  const { data, error, isLoading, reload } = useAdminData<PlatformMetrics>('/api/admin/analytics?days=30');
+  const kpis = data?.kpis;
+  const orgTotal = data?.organizationStatus.reduce((sum, row) => sum + row.count, 0) ?? 0;
+
   return (
-    <>
-      <PageHeader
-        title="Admin Dashboard"
-        description="Welcome to the control center. Here's an overview of your application."
-      />
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {kpiData.map((kpi) => (
-          <Link key={kpi.title} href={kpi.href}>
-            <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 h-full">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
-                <kpi.icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{kpi.value}</div>
-                <p className={`text-xs ${kpi.changeType === 'increase' ? 'text-green-500' : 'text-red-500'}`}>
-                  {kpi.change} from last month
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+    <div className="space-y-6">
+      <PageHeader title="Admin Dashboard" description="Live overview of the platform for the last 30 days.">
+        <Button id="admin-dashboard-refresh" variant="outline" size="sm" onClick={reload} disabled={isLoading}>
+          <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />Refresh
+        </Button>
+      </PageHeader>
+
+      {error && <Card className="border-destructive/40 p-4 text-sm text-destructive">{error}</Card>}
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard id="admin-kpi-organizations" title="Organizations" icon={Briefcase} value={kpis?.organizations.value ?? null} previous={kpis?.organizations.previous} href="/admin/organizations" hint={kpis ? `· ${kpis.activeOrganizations} active` : undefined} />
+        <KpiCard id="admin-kpi-users" title="Total users" icon={Users} value={kpis?.users.value ?? null} previous={kpis?.users.previous} href="/admin/organizations" />
+        <KpiCard id="admin-kpi-open-tickets" title="Open support tickets" icon={LifeBuoy} value={kpis?.openTickets ?? null} href="/admin/support-tickets" hint="Open or in progress" />
+        <KpiCard id="admin-kpi-inquiries" title="New inquiries" icon={Handshake} value={kpis?.newInquiries.value ?? null} previous={kpis?.newInquiries.previous} href="/admin/customer-inquiries" />
+        <KpiCard id="admin-kpi-ai-requests" title="AI requests" icon={Cpu} value={kpis?.aiRequests.value ?? null} previous={kpis?.aiRequests.previous} href="/admin/analytics" hint={kpis ? `· ${formatCompact(kpis.aiTokens.value)} tokens` : undefined} />
+        <KpiCard id="admin-kpi-actions" title="User actions" icon={Activity} value={kpis?.actions.value ?? null} previous={kpis?.actions.previous} href="/admin/logs" />
+        <KpiCard id="admin-kpi-failures" title="Failed actions" icon={AlertTriangle} value={kpis?.failedActions.value ?? null} previous={kpis?.failedActions.previous} invertTrend href="/admin/logs?outcome=failure" />
+        <KpiCard id="admin-kpi-new-users" title="New users" icon={Users} value={kpis?.newUsers.value ?? null} previous={kpis?.newUsers.previous} />
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card className="shadow-lg">
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="flex items-center"><AreaChartIcon className="mr-2 h-5 w-5 text-primary" /> User Growth</CardTitle>
-            <CardDescription>Monthly new user registrations.</CardDescription>
+            <CardTitle className="text-base">Platform activity</CardTitle>
+            <CardDescription>User actions and AI requests per day.</CardDescription>
           </CardHeader>
-          <CardContent className="h-64">
-            <ChartContainer config={chartConfig} className="h-full w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={userGrowthData}>
-                        <defs>
-                            <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="var(--color-users)" stopOpacity={0.8}/>
-                                <stop offset="95%" stopColor="var(--color-users)" stopOpacity={0}/>
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
-                        <YAxis tickLine={false} axisLine={false} tickMargin={8} />
-                        <Tooltip content={<ChartTooltipContent />} />
-                        <Area type="monotone" dataKey="users" stroke="var(--color-users)" fillOpacity={1} fill="url(#colorUsers)" />
-                    </AreaChart>
-                </ResponsiveContainer>
-            </ChartContainer>
+          <CardContent className="h-72">
+            {data ? (
+              <ChartContainer config={chartConfig} className="h-full w-full">
+                <AreaChart data={data.activityOverTime} margin={{ left: -16, right: 8 }}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} minTickGap={24} tickFormatter={(value) => format(new Date(value), 'd MMM')} />
+                  <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
+                  <ChartTooltip content={<ChartTooltipContent labelFormatter={(value) => format(new Date(value), 'd MMM yyyy')} />} />
+                  <Area dataKey="actions" type="monotone" stroke="var(--color-actions)" fill="var(--color-actions)" fillOpacity={0.25} />
+                  <Area dataKey="aiRequests" type="monotone" stroke="var(--color-aiRequests)" fill="var(--color-aiRequests)" fillOpacity={0.25} />
+                </AreaChart>
+              </ChartContainer>
+            ) : <Skeleton className="h-full w-full" />}
           </CardContent>
         </Card>
-        <Card className="shadow-lg">
+
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center"><BarChartIcon className="mr-2 h-5 w-5 text-primary" /> Plan Distribution</CardTitle>
-            <CardDescription>Distribution of users across subscription plans.</CardDescription>
+            <CardTitle className="text-base">Organization status</CardTitle>
+            <CardDescription>{orgTotal} organizations on the platform.</CardDescription>
           </CardHeader>
-          <CardContent className="h-64">
-             <ChartContainer config={chartConfig} className="h-full w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={planDistributionData} layout="vertical" margin={{ left: 10 }}>
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                        <XAxis type="number" hide />
-                        <YAxis dataKey="plan" type="category" tickLine={false} axisLine={false} tickMargin={8} width={80} />
-                        <Tooltip content={<ChartTooltipContent />} />
-                        <Legend />
-                        <Bar dataKey="users" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                </ResponsiveContainer>
-            </ChartContainer>
+          <CardContent className="space-y-4">
+            {data ? data.organizationStatus.map((row) => (
+              <div key={row.status}>
+                <div className="flex justify-between text-sm"><span>{row.status}</span><span className="font-medium">{row.count}</span></div>
+                <div className="mt-1.5 h-2 rounded-full bg-muted">
+                  <div className={`h-2 rounded-full ${STATUS_STYLES[row.status] ?? 'bg-primary'}`} style={{ width: `${orgTotal ? (row.count / orgTotal) * 100 : 0}%` }} />
+                </div>
+              </div>
+            )) : <Skeleton className="h-24 w-full" />}
+            <Button asChild variant="link" className="h-auto px-0"><Link href="/admin/organizations">Manage organizations <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
           </CardContent>
         </Card>
       </div>
 
-      <div className="mt-6">
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center"><Activity className="mr-2 h-5 w-5 text-primary" /> Recent Activity</CardTitle>
-            <CardDescription>A log of recent important events in the system.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p><span className="font-semibold text-foreground">New User:</span> john.doe@newcorp.com registered.</p>
-              <p><span className="font-semibold text-foreground">Subscription:</span> aisha.smith@techinc.io upgraded to Pro plan.</p>
-              <p><span className="font-semibold text-foreground">System Alert:</span> API latency increased by 200ms.</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </>
+      <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="text-base">Recent activity</CardTitle>
+            <CardDescription>Latest actions across all organizations.</CardDescription>
+          </div>
+          <Button asChild variant="outline" size="sm"><Link href="/admin/logs" id="admin-dashboard-view-logs">Open logs</Link></Button>
+        </CardHeader>
+        <CardContent>
+          {!data ? <Skeleton className="h-40 w-full" /> : data.recentActivity.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">No activity recorded yet.</p>
+          ) : (
+            <ul className="divide-y">
+              {data.recentActivity.map((entry) => (
+                <li key={entry.id} className="flex items-center justify-between gap-4 py-3 text-sm">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className={`h-2 w-2 shrink-0 rounded-full ${entry.outcome === 'success' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                    <div className="min-w-0">
+                      <p className="truncate"><span className="font-medium">{entry.actorName || entry.actorEmail || 'Unknown user'}</span> · {entry.action}</p>
+                      <p className="truncate text-xs text-muted-foreground">{entry.organization}</p>
+                    </div>
+                  </div>
+                  <time className="shrink-0 text-xs text-muted-foreground" title={format(new Date(entry.createdAt), 'd MMM yyyy, HH:mm:ss')}>
+                    {formatDistanceToNow(new Date(entry.createdAt), { addSuffix: true })}
+                  </time>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

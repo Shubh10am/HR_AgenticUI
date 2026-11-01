@@ -10,6 +10,11 @@ interface ActionRule {
 }
 
 const RULES: ActionRule[] = [
+  { method: 'PUT', pattern: /^\/api\/admin\/settings$/, action: 'Updated system settings', category: 'Admin' },
+  { method: 'PUT', pattern: /^\/api\/admin\/email-templates$/, action: 'Edited an email template', category: 'Admin' },
+  { method: 'POST', pattern: /^\/api\/admin\/plans$/, action: 'Created a subscription plan', category: 'Admin' },
+  { method: 'PUT', pattern: /^\/api\/admin\/plans\/[^/]+$/, action: 'Updated a subscription plan', category: 'Admin' },
+  { method: 'DELETE', pattern: /^\/api\/admin\/plans\/[^/]+$/, action: 'Deleted a subscription plan', category: 'Admin' },
   { method: 'POST', pattern: /^\/api\/auth\/login$/, action: 'Signed in', category: 'Authentication' },
   { method: 'POST', pattern: /^\/api\/auth\/change-password$/, action: 'Changed password', category: 'Authentication' },
   { method: 'POST', pattern: /^\/api\/employees\/bulk-delete$/, action: 'Deleted employees in bulk', category: 'Employees' },

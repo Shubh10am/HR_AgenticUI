@@ -1,166 +1,159 @@
-
 'use client';
 
+import { useState } from 'react';
+import { format } from 'date-fns';
+import { Activity, AlertTriangle, Coins, Cpu, RefreshCw, UserPlus } from 'lucide-react';
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
 import PageHeader from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Users, DollarSign, Activity, FileText, BarChart2, AreaChart as AreaChartIcon, LineChart as LineChartIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import type { PlatformMetrics } from '@/services/admin/platform-metrics';
+import KpiCard, { formatCompact } from '../components/kpi-card';
+import { useAdminData } from '../components/use-admin-data';
 
-
-const kpiData = [
-  { title: 'Total Revenue', value: '$250,480', icon: DollarSign, change: '+8.1%', changeType: 'increase', period: 'this month' },
-  { title: 'Total Users', value: '1,250', icon: Users, change: '+12.5%', changeType: 'increase', period: 'this month' },
-  { title: 'API Calls', value: '1.2M', icon: Activity, change: '+20.3%', changeType: 'increase', period: 'this month' },
-  { title: 'Generated Reports', value: '5,820', icon: FileText, change: '-3.2%', changeType: 'decrease', period: 'this month' },
-];
-
-const featureUsageData = [
-    { name: 'AI Interviewer', usage: 450, fill: 'var(--color-interviewer)' },
-    { name: 'Resume Analysis', usage: 820, fill: 'var(--color-analysis)' },
-    { name: 'Job Descriptions', usage: 650, fill: 'var(--color-descriptions)' },
-    { name: 'Email Drafting', usage: 1100, fill: 'var(--color-drafting)' },
-    { name: 'Copilot Chat', usage: 1500, fill: 'var(--color-copilot)' },
-];
-
-const dailyApiUsageData = [
-  { date: 'Jul 1', backend: 35000, ai: 2200 },
-  { date: 'Jul 2', backend: 38000, ai: 2500 },
-  { date: 'Jul 3', backend: 32000, ai: 2100 },
-  { date: 'Jul 4', backend: 41000, ai: 3100 },
-  { date: 'Jul 5', backend: 45000, ai: 3500 },
-  { date: 'Jul 6', backend: 42000, ai: 3200 },
-  { date: 'Jul 7', backend: 50000, ai: 4000 },
-];
-
-const dailySignupsData = [
-  { date: 'Jul 1', signups: 20 },
-  { date: 'Jul 2', signups: 25 },
-  { date: 'Jul 3', signups: 18 },
-  { date: 'Jul 4', signups: 30 },
-  { date: 'Jul 5', signups: 35 },
-  { date: 'Jul 6', signups: 32 },
-  { date: 'Jul 7', signups: 40 },
+const PERIODS = [
+  { value: '1', label: 'Last 24 hours' },
+  { value: '7', label: 'Last 7 days' },
+  { value: '30', label: 'Last 30 days' },
+  { value: '90', label: 'Last 90 days' },
+  { value: 'all', label: 'All time' },
 ];
 
 const chartConfig = {
-  usage: {
-    label: "Usage",
-  },
-  interviewer: { label: "AI Interviewer", color: "hsl(var(--chart-1))" },
-  analysis: { label: "Resume Analysis", color: "hsl(var(--chart-2))" },
-  descriptions: { label: "Job Descriptions", color: "hsl(var(--chart-3))" },
-  drafting: { label: "Email Drafting", color: "hsl(var(--chart-4))" },
-  copilot: { label: "Copilot Chat", color: "hsl(var(--chart-5))" },
-  backend: { label: "Backend API Calls", color: "hsl(var(--chart-2))" },
-  ai: { label: "AI API Calls", color: "hsl(var(--chart-1))" },
-  signups: { label: "New Users", color: "hsl(var(--chart-1))" }
-} satisfies import('@/components/ui/chart').ChartConfig;
+  actions: { label: 'User actions', color: 'hsl(var(--chart-1))' },
+  failures: { label: 'Failed actions', color: 'hsl(var(--chart-5))' },
+  aiRequests: { label: 'AI requests', color: 'hsl(var(--chart-2))' },
+  signups: { label: 'New users', color: 'hsl(var(--chart-1))' },
+  requests: { label: 'Requests', color: 'hsl(var(--chart-1))' },
+} satisfies ChartConfig;
 
+const dayLabel = (value: string) => format(new Date(value), 'd MMM');
+
+function ChartCard({ title, description, children, className }: { title: string; description: string; children: React.ReactNode; className?: string }) {
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle className="text-base">{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="h-72">{children}</CardContent>
+    </Card>
+  );
+}
 
 export default function AdminAnalyticsPage() {
+  const [period, setPeriod] = useState('7');
+  const { data, error, isLoading, reload } = useAdminData<PlatformMetrics>(`/api/admin/analytics?days=${period}`);
+  const kpis = data?.kpis;
+  const failureRate = kpis && kpis.actions.value ? `${((kpis.failedActions.value / kpis.actions.value) * 100).toFixed(1)}% of actions` : undefined;
+  const chartNote = period === 'all' ? ' Charts show the last 90 days.' : '';
+
   return (
-    <>
-      <PageHeader
-        title="Platform Analytics"
-        description="Deep dive into your application's usage and performance metrics."
-      >
-        <Select defaultValue="7d">
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select time period" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7d">Last 7 days</SelectItem>
-            <SelectItem value="30d">Last 30 days</SelectItem>
-            <SelectItem value="90d">Last 90 days</SelectItem>
-            <SelectItem value="all">All time</SelectItem>
-          </SelectContent>
-        </Select>
+    <div className="space-y-6">
+      <PageHeader title="Platform Analytics" description="Usage, AI consumption and growth across every organization.">
+        <div className="flex gap-2">
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger id="admin-analytics-period" className="w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectContent>{PERIODS.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
+          </Select>
+          <Button id="admin-analytics-refresh" variant="outline" size="icon" onClick={reload} disabled={isLoading} aria-label="Refresh">
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
       </PageHeader>
-      
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {kpiData.map((kpi) => (
-          <Card key={kpi.title} className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
-              <kpi.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{kpi.value}</div>
-              <p className={`text-xs ${kpi.changeType === 'increase' ? 'text-green-500' : 'text-red-500'}`}>
-                {kpi.change} vs. last period
-              </p>
-            </CardContent>
-          </Card>
-        ))}
+
+      {error && <Card className="border-destructive/40 p-4 text-sm text-destructive">{error}</Card>}
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <KpiCard id="admin-analytics-ai-requests" title="AI requests" icon={Cpu} value={kpis?.aiRequests.value ?? null} previous={kpis?.aiRequests.previous} />
+        <KpiCard id="admin-analytics-ai-tokens" title="AI tokens" icon={Coins} value={kpis ? formatCompact(kpis.aiTokens.value) : null} hint={kpis ? `${kpis.aiTokens.value.toLocaleString()} total` : undefined} />
+        <KpiCard id="admin-analytics-actions" title="User actions" icon={Activity} value={kpis?.actions.value ?? null} previous={kpis?.actions.previous} />
+        <KpiCard id="admin-analytics-failures" title="Failed actions" icon={AlertTriangle} value={kpis?.failedActions.value ?? null} previous={kpis?.failedActions.previous} invertTrend hint={failureRate} />
+        <KpiCard id="admin-analytics-new-users" title="New users" icon={UserPlus} value={kpis?.newUsers.value ?? null} previous={kpis?.newUsers.previous} />
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center"><AreaChartIcon className="mr-2 h-5 w-5 text-primary" /> API Usage Over Time</CardTitle>
-            <CardDescription>Total backend and AI API calls per day for the selected period.</CardDescription>
-          </CardHeader>
-          <CardContent className="h-80">
-             <ChartContainer config={chartConfig} className="h-full w-full">
-                <AreaChart data={dailyApiUsageData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                    <CartesianGrid vertical={false} />
-                    <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
-                    <YAxis
-                        tickLine={false}
-                        axisLine={false}
-                        tickMargin={8}
-                        tickFormatter={(value) => `${Number(value) / 1000}k`}
-                    />
-                    <Tooltip content={<ChartTooltipContent />} />
-                    <Legend />
-                    <Area type="monotone" dataKey="backend" stackId="1" stroke="var(--color-backend)" fill="var(--color-backend)" fillOpacity={0.4} />
-                    <Area type="monotone" dataKey="ai" stackId="1" stroke="var(--color-ai)" fill="var(--color-ai)" fillOpacity={0.6} />
-                </AreaChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center"><LineChartIcon className="mr-2 h-5 w-5 text-primary" /> New User Signups</CardTitle>
-            <CardDescription>Daily new user registrations.</CardDescription>
-          </CardHeader>
-          <CardContent className="h-80">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ChartCard title="Activity over time" description={`User actions, failures and AI requests per day.${chartNote}`}>
+          {data ? (
             <ChartContainer config={chartConfig} className="h-full w-full">
-               <LineChart data={dailySignupsData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                    <CartesianGrid vertical={false} />
-                    <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
-                    <YAxis tickLine={false} axisLine={false} tickMargin={8} />
-                    <Tooltip content={<ChartTooltipContent />} />
-                    <Legend />
-                    <Line type="monotone" dataKey="signups" stroke="var(--color-signups)" strokeWidth={2} dot={false} />
-                </LineChart>
+              <AreaChart data={data.activityOverTime} margin={{ left: -16, right: 8 }}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} minTickGap={24} tickFormatter={dayLabel} />
+                <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
+                <ChartTooltip content={<ChartTooltipContent labelFormatter={(value) => format(new Date(value), 'd MMM yyyy')} />} />
+                <ChartLegend content={<ChartLegendContent />} />
+                <Area dataKey="actions" type="monotone" stroke="var(--color-actions)" fill="var(--color-actions)" fillOpacity={0.2} />
+                <Area dataKey="aiRequests" type="monotone" stroke="var(--color-aiRequests)" fill="var(--color-aiRequests)" fillOpacity={0.2} />
+                <Area dataKey="failures" type="monotone" stroke="var(--color-failures)" fill="var(--color-failures)" fillOpacity={0.3} />
+              </AreaChart>
             </ChartContainer>
-          </CardContent>
-        </Card>
-      </div>
+          ) : <Skeleton className="h-full w-full" />}
+        </ChartCard>
 
-       <div className="mt-6">
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center"><BarChart2 className="mr-2 h-5 w-5 text-primary" /> Feature Usage Breakdown</CardTitle>
-            <CardDescription>Most frequently used AI features across the platform.</CardDescription>
-          </CardHeader>
-          <CardContent className="h-96">
+        <ChartCard title="New users" description={`Users added to organizations per day.${chartNote}`}>
+          {data ? (
             <ChartContainer config={chartConfig} className="h-full w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={featureUsageData} margin={{ right: 20 }}>
-                        <XAxis type="number" hide />
-                        <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={120} />
-                        <Tooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="usage" radius={5} />
-                    </BarChart>
-                </ResponsiveContainer>
+              <LineChart data={data.signupsOverTime} margin={{ left: -16, right: 8 }}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} minTickGap={24} tickFormatter={dayLabel} />
+                <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
+                <ChartTooltip content={<ChartTooltipContent labelFormatter={(value) => format(new Date(value), 'd MMM yyyy')} />} />
+                <Line dataKey="signups" type="monotone" stroke="var(--color-signups)" strokeWidth={2} dot={false} />
+              </LineChart>
             </ChartContainer>
+          ) : <Skeleton className="h-full w-full" />}
+        </ChartCard>
+
+        <ChartCard title="AI feature usage" description="Requests per AI feature in the selected period.">
+          {!data ? <Skeleton className="h-full w-full" /> : data.featureUsage.length === 0 ? (
+            <p className="flex h-full items-center justify-center text-sm text-muted-foreground">No AI requests in this period.</p>
+          ) : (
+            <ChartContainer config={chartConfig} className="h-full w-full">
+              <BarChart layout="vertical" data={data.featureUsage} margin={{ left: 8, right: 16 }}>
+                <XAxis type="number" hide allowDecimals={false} />
+                <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={150} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="requests" fill="var(--color-requests)" radius={4} />
+              </BarChart>
+            </ChartContainer>
+          )}
+        </ChartCard>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Top organizations by AI usage</CardTitle>
+            <CardDescription>Highest token consumers in the selected period.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!data ? <Skeleton className="h-48 w-full" /> : data.topOrganizations.length === 0 ? (
+              <p className="py-10 text-center text-sm text-muted-foreground">No AI usage in this period.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead id="admin-analytics-top-org-header">Organization</TableHead>
+                    <TableHead className="text-right">Requests</TableHead>
+                    <TableHead className="text-right">Tokens</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.topOrganizations.map((org) => (
+                    <TableRow key={org.id} id={`admin-analytics-top-org-${org.id}-row`}>
+                      <TableCell className="font-medium">{org.name}</TableCell>
+                      <TableCell className="text-right">{org.requests.toLocaleString()}</TableCell>
+                      <TableCell className="text-right">{formatCompact(org.tokens)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>
-    </>
+    </div>
   );
 }
