@@ -6,6 +6,7 @@ import Employee from '@/models/Employee';
 import Organization from '@/models/Organization';
 import Admin from '@/models/Admin';
 import mongoose from 'mongoose';
+import { AUDITED_METHODS, recordAudit } from '@/services/audit/record';
 
 type AuthenticatedUser = (JwtPayload & { id: string });
 
@@ -70,6 +71,19 @@ export function withAuth(handler: ApiHandler, requiredRole: Role | Role[] = 'Any
     // Attach user information to the request object for the handler
     const reqWithAuth = req as NextApiRequestWithAuth;
     reqWithAuth.user = { ...decodedToken, id: decodedToken.employeeId };
+
+    // Every change made by a signed-in user goes to the audit log once the response is sent.
+    if (AUDITED_METHODS.has((req.method ?? '').toUpperCase())) {
+      res.once('finish', () => {
+        void recordAudit(req, {
+          id: decodedToken.employeeId,
+          name: decodedToken.name,
+          email: decodedToken.email,
+          role: decodedToken.role,
+          organizationId: decodedToken.organizationId,
+        }, res.statusCode);
+      });
+    }
 
     return handler(reqWithAuth, res);
   };

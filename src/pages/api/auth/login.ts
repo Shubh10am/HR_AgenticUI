@@ -8,6 +8,7 @@ import bcrypt from 'bcryptjs';
 import { signToken, type JwtPayload } from '@/lib/jwt';
 import type { EmployeeRole } from '@/models/Employee';
 import type { OrganizationStatus } from '@/models/Organization';
+import { recordAudit } from '@/services/audit/record';
 
 type LoginRequestBody = {
   email: string;
@@ -58,6 +59,7 @@ export default async function handler(
           name: adminUser.role === 'SuperAdmin' ? 'Shubham' : 'Admin',
         };
         const token = signToken(tokenPayload);
+        await recordAudit(req, { id: tokenPayload.employeeId, name: tokenPayload.name, email: tokenPayload.email, role: tokenPayload.role }, 200);
         return res.status(200).json({
           message: `${adminUser.role} login successful.`,
           token,
@@ -81,6 +83,14 @@ export default async function handler(
 
     const isMatch = await bcrypt.compare(password, employee.passwordHash);
     if (!isMatch) {
+      // A wrong password for a known account is worth recording; unknown emails are not, as there is no account to attribute them to.
+      await recordAudit(req, {
+        id: String(employee._id),
+        name: employee.name,
+        email: employee.email,
+        role: employee.role,
+        organizationId: (employee.organizationId as any)?._id?.toString() ?? null,
+      }, 401);
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
@@ -99,6 +109,7 @@ export default async function handler(
     };
 
     const token = signToken(tokenPayload);
+    await recordAudit(req, { id: tokenPayload.employeeId, name: tokenPayload.name, email: tokenPayload.email, role: tokenPayload.role, organizationId: tokenPayload.organizationId }, 200);
 
     return res.status(200).json({
       message: 'Login successful.',
