@@ -32,6 +32,12 @@ import {
   Globe,
   Loader2,
   Plug,
+  Mail,
+  CalendarCheck,
+  DollarSign,
+  UserPlus,
+  Library,
+  Sparkles,
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -232,17 +238,17 @@ export default function LandingPage() {
   const taskContent = {
     po: {
       assignee: '@You',
-      message: "Let's add a sun here, @felix",
+      message: "Please collect the signed offer letter from the new hire, @felix",
       replies: 2,
     },
     inProgress: {
       assignee: '@Felix',
-      message: 'Sure, I have added the sun asset. How does this look?',
+      message: 'Offer letter received. Starting the onboarding checklist now.',
       replies: 3,
     },
     question: {
       assignee: '@You',
-      message: 'Looks great! What about making it a bit brighter?',
+      message: 'Great! Can you also schedule their day-one orientation?',
       replies: 4,
     },
   };
@@ -284,24 +290,30 @@ export default function LandingPage() {
           <CollaboratorTag name="HR Admin" className="top-[calc(50%-4rem)] left-[6%] xl:left-[10%] hidden md:flex animate-float-elliptical" cursorClass="!text-cyan-400" />
           <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden md:flex animate-float-elliptical-slow" cursorClass="!text-pink-400" />
 
+          <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-purple-400/30 bg-purple-500/10 px-4 py-1.5 text-sm text-purple-200 opacity-0 group-[.is-visible]:animate-fade-in-up">
+            <Sparkles className="h-4 w-4" /> The agentic HR platform
+          </span>
           {/* Main Headline */}
           <div className="flex flex-col items-center">
              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02] text-center">
                 <span className="block opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                Your creative workflow just got
+                Your HR workflow just got
                 </span>
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 transition-all duration-300 hover:brightness-110 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                1000x more collaborative
+                run by AI agents
                 </span>
             </h1>
+            <p className="max-w-2xl text-base text-neutral-400 sm:text-lg opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+              Email assistance, AI recruitment, attendance, payroll and onboarding in one workspace, with a Copilot that answers from your own policies.
+            </p>
           </div>
 
           {/* Workflow diagram */}
           <div className="relative my-16 sm:my-24 flex w-full max-w-4xl mx-auto items-center justify-around flex-wrap gap-4 sm:gap-0 sm:flex-nowrap sm:justify-between opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
             <div className="absolute left-0 right-0 h-px bg-neutral-700 top-3 -z-10 hidden sm:block" />
 
-            <WorkflowStep icon={FileText} label="Plan" />
             <WorkflowStep icon={Users} label="Recruit" />
+            <WorkflowStep icon={UserPlus} label="Onboard" />
 
             <div className="flex flex-col items-center gap-2 z-10 bg-black px-2 w-full sm:w-auto order-first sm:order-none">
               <div className="flex items-center gap-2">
@@ -309,13 +321,14 @@ export default function LandingPage() {
                 <div className="h-3 w-3 rounded-full bg-purple-500 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
                 <div className="h-3 w-3 rounded-full bg-pink-500 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
               </div>
-              <span className="text-xs sm:text-sm text-neutral-500 mt-1">Onboard</span>
+              <span className="text-xs sm:text-sm text-neutral-500 mt-1">Agents at work</span>
               <div className="mt-2 bg-gradient-to-r from-blue-400/30 via-purple-500/30 to-pink-500/30 border border-purple-400/50 rounded-full px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm text-purple-200">
                   HR Streamline AI
               </div>
             </div>
 
-            <WorkflowStep icon={BarChart3} label="Report" />
+            <WorkflowStep icon={CalendarCheck} label="Attendance" />
+            <WorkflowStep icon={DollarSign} label="Payroll" />
           </div>
 
           {/* CTA Button */}
@@ -323,6 +336,9 @@ export default function LandingPage() {
               <Button size="lg" onClick={handleGuestLogin} disabled={isLoading || isGuestLoading} className="bg-white text-black hover:bg-neutral-200 rounded-full px-8 py-3 h-auto">
                 {(isLoading || isGuestLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Try Now for Free
+              </Button>
+              <Button asChild size="lg" variant="outline" className="rounded-full px-8 py-3 h-auto border-neutral-700 bg-transparent text-white hover:bg-neutral-900 hover:text-white">
+                <Link href="/book-a-demo">Book a Demo</Link>
               </Button>
           </div>
         </section>
@@ -336,28 +352,35 @@ export default function LandingPage() {
           )}
         >
           <div className="group relative rounded-2xl bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 p-6 sm:p-8 md:p-16 overflow-hidden flex flex-col items-center">
-             <HoverPill icon={FileSearch} label="Review" variant="dark" />
+             <HoverPill icon={FileSearch} label="AI Recruitment" variant="dark" />
 
             {/* Floating elements */}
             <CollaboratorTag name="Hiring Manager" className="bottom-1/4 left-8 hidden md:flex animate-float-elliptical" cursorClass="transform -rotate-12 !text-cyan-400" />
             <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden md:flex animate-float-elliptical-slow" cursorClass="transform rotate-[120deg] !text-pink-400" />
 
             <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
-              Review candidate profiles with precision
+              Screen candidates with AI precision
             </h2>
             <p className="text-base sm:text-lg text-blue-200 mb-8 sm:mb-12 md:mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-blue-100 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
-              Collaborate directly on profiles and resumes for clearer feedback and faster decisions.
+              Upload resumes, match them against the job description and get a ranked shortlist with the reasons behind every score.
             </p>
 
             <div className="relative w-full max-w-3xl mx-auto border-2 border-solid border-blue-400/50 rounded-2xl p-4 sm:p-8 min-h-[200px] sm:min-h-[250px] flex items-center justify-center opacity-0 group-[.is-visible]:animate-fade-in-up transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.3s' }}>
-              <div className="relative">
-                <FileText className="h-20 w-20 sm:h-24 sm:w-24 text-pink-400/80" />
-                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2">
-                    <CursorIcon className="h-8 w-8 text-yellow-300 transform -rotate-45" />
-                    <div className="bg-yellow-300 text-black text-sm font-semibold rounded-full px-3 py-1 shadow-md whitespace-nowrap">
-                        Jane Doe (You)
+              <div className="w-full space-y-3">
+                {[
+                  { name: 'Candidate A', role: 'Frontend Engineer', score: 92, note: 'Strong React and TypeScript match' },
+                  { name: 'Candidate B', role: 'Frontend Engineer', score: 81, note: 'Good fit, limited testing experience' },
+                  { name: 'Candidate C', role: 'Frontend Engineer', score: 64, note: 'Missing required design-system work' },
+                ].map((c) => (
+                  <div key={c.name} className="flex items-center gap-4 rounded-xl bg-white/10 p-3 sm:p-4 text-left backdrop-blur-sm">
+                    <FileText className="h-8 w-8 shrink-0 text-pink-300" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-white">{c.name} <span className="font-normal text-blue-200">· {c.role}</span></p>
+                      <p className="truncate text-sm text-blue-200">{c.note}</p>
                     </div>
-                </div>
+                    <span className={cn("rounded-full px-3 py-1 text-sm font-bold", c.score >= 80 ? "bg-emerald-400 text-emerald-950" : "bg-yellow-300 text-yellow-950")}>{c.score}%</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -372,17 +395,17 @@ export default function LandingPage() {
           )}
         >
             <div className="group relative rounded-2xl bg-gradient-to-br from-yellow-200 via-yellow-300 to-amber-300 p-6 sm:p-8 md:p-16 overflow-hidden flex flex-col items-center">
-                <HoverPill icon={FeatureFlagIcon} label="Prioritize" />
+                <HoverPill icon={FeatureFlagIcon} label="Tasks" />
 
                 <DevCollaboratorTag
-                    name="Developer"
+                    name="HR Manager"
                     className="top-1/2 -translate-y-1/2 left-8 hidden md:flex animate-float-elliptical"
                     cursorClass="text-pink-500"
                     tagColorClass="bg-pink-500 text-white border-pink-500/50"
                 />
 
                 <DevCollaboratorTag
-                    name="Developer"
+                    name="Recruiter"
                     className="top-1/2 -translate-y-1/2 right-8 hidden md:flex animate-float-elliptical-slow"
                     cursorClass="text-yellow-600"
                     tagColorClass="bg-yellow-500 text-black border-yellow-600/50"
@@ -392,7 +415,7 @@ export default function LandingPage() {
                     Manage, prioritize<br />& assign
                 </h2>
                 <p className="text-base sm:text-lg text-neutral-700 mb-8 sm:mb-12 md:mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
-                    Use our built-in task manager or integrate your own.
+                    Track onboarding checklists, hiring steps and HR requests on one board, or connect Jira.
                 </p>
 
                 {/* Mock Task Card */}
@@ -458,7 +481,7 @@ export default function LandingPage() {
           )}
         >
             <div className="group relative rounded-2xl bg-gradient-to-br from-violet-200 via-purple-200 to-indigo-200 p-6 sm:p-8 md:p-16 overflow-hidden flex flex-col items-center">
-                <HoverPill icon={Check} label="Approve" />
+                <HoverPill icon={Check} label="Leave & Approvals" />
 
                 <DevCollaboratorTag
                     name="Manager"
@@ -478,7 +501,7 @@ export default function LandingPage() {
                 Get approvals<br />at hyper speed
                 </h2>
                 <p className="text-base sm:text-lg text-neutral-700 mb-8 sm:mb-12 md:mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
-                Built-in approvals for less back-and-forth-ing
+                Employees request leave in a click. Managers approve it from the dashboard, and attendance updates automatically.
                 </p>
 
                 <div className="relative max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-6 sm:p-8 text-center text-black opacity-0 group-[.is-visible]:animate-fade-in-up transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.3s' }}>
@@ -496,7 +519,7 @@ export default function LandingPage() {
                     <Check className="h-4 w-4 text-white" />
                     </div>
                 </div>
-                <p className="text-lg sm:text-xl font-semibold">File was approved</p>
+                <p className="text-lg sm:text-xl font-semibold">Leave request approved</p>
                 <p className="text-lg sm:text-xl font-semibold">by Mike Mulligan</p>
                 <p className="text-sm text-neutral-500 mt-2">on 24th August 2023</p>
                 <p className="font-serif italic text-xl sm:text-2xl text-neutral-600 mt-6">
@@ -520,7 +543,7 @@ export default function LandingPage() {
                     Sync with<br />your tools
                 </h2>
                 <p className="text-base sm:text-lg text-neutral-700 mb-8 sm:mb-12 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
-                    Seamlessly integrate your Slack or favorite task manager
+                    Connect Gmail, Slack, Teams and calendars so agents can read, draft and schedule where your team already works.
                 </p>
 
                 <div className="relative w-full max-w-4xl mx-auto overflow-hidden mt-12 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
@@ -552,7 +575,7 @@ export default function LandingPage() {
           <div className="relative flex flex-col items-center justify-center text-center max-w-4xl mx-auto">
             <div className="absolute top-[-5rem] bottom-[-5rem] left-[-10rem] right-[-10rem] -z-10 hidden lg:block">
                 <AssetIcon
-                    icon={Play}
+                    icon={Mail}
                     className="top-12 left-12"
                     wrapperClassName="border-cyan-500/20 bg-cyan-500/10"
                     iconClassName="text-cyan-400"
@@ -568,7 +591,7 @@ export default function LandingPage() {
                     animationDelay="0.5s"
                 />
                 <AssetIcon
-                    icon={ImageIcon}
+                    icon={CalendarCheck}
                     className="bottom-0 left-1/2 -translate-x-1/2"
                     wrapperClassName="border-purple-500/20 bg-purple-500/10"
                     iconClassName="text-purple-400"
@@ -576,7 +599,7 @@ export default function LandingPage() {
                     animationDelay="0.7s"
                 />
                 <AssetIcon
-                    icon={Signature}
+                    icon={DollarSign}
                     className="top-[60%] right-0"
                     wrapperClassName="border-green-500/20 bg-green-500/10"
                     iconClassName="text-green-400"
@@ -584,7 +607,7 @@ export default function LandingPage() {
                     animationDelay="0.6s"
                 />
                 <AssetIcon
-                    icon={Globe}
+                    icon={Library}
                     className="top-12 right-12"
                     wrapperClassName="border-indigo-500/20 bg-indigo-500/10"
                     iconClassName="text-indigo-400"
@@ -594,9 +617,9 @@ export default function LandingPage() {
             </div>
 
             <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-8 text-white transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                Consistent collaboration <br className="hidden sm:block" /> experience across{' '}
+                Every HR workflow, <br className="hidden sm:block" /> from inbox to payroll,{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
-                    all assets in one place
+                    in one place
                 </span>
             </h2>
             <div className="opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
@@ -688,12 +711,12 @@ export default function LandingPage() {
             {/* Text Content */}
             <div className="relative z-10 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
               <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black">
-                Reviews can move
+                HR shouldn&apos;t move
                 <br />
                 in slow motio<span className="opacity-80">n</span><span className="opacity-60">n</span><span className="opacity-40">n</span>
               </h2>
               <p className="text-base sm:text-lg text-neutral-800 max-w-md mx-auto">
-                Screenshots are for memes. Not precise and efficient review process
+                Chasing emails, spreadsheets and chat threads slows every hire, leave request and payroll run.
               </p>
             </div>
           
@@ -701,7 +724,7 @@ export default function LandingPage() {
             <div className="flex flex-col items-center opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
               <div className="relative bg-neutral-900 text-white rounded-lg px-4 py-2 mb-3 shadow-lg">
                 <p className="text-sm text-center">
-                  You are using <span className="font-bold">more than 6 tools</span> to review
+                  You are using <span className="font-bold">more than 6 tools</span> to run HR
                 </p>
                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-neutral-900 transform rotate-45" style={{ zIndex: -1 }}></div>
               </div>
@@ -734,7 +757,7 @@ export default function LandingPage() {
               <h2 className="text-4xl sm:text-5xl font-bold tracking-tight">
                 Frequently
                 <br />
-                Asked Question
+                Asked Questions
               </h2>
               <div className="text-neutral-400">
                 <p>Got more questions?</p>
@@ -791,7 +814,7 @@ export default function LandingPage() {
                 <CtaLogo className="h-10 w-10 animate-slow-spin" />
               </div>
               <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-black">
-                Streamline operations and build a better workplace.
+                Let AI agents handle the admin. Build a better workplace.
               </h2>
               <Button size="lg" onClick={handleGuestLogin} disabled={isLoading || isGuestLoading} className="bg-black text-white hover:bg-neutral-800 rounded-full px-8 py-3 h-auto shadow-lg transition-transform hover:scale-105">
                  {(isLoading || isGuestLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
