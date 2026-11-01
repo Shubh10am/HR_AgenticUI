@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, MessageSquare, Send, User, Bot, Lock } from 'lucide-react';
+import { Loader2, MessageSquare, Send, User, Bot, Lock, BookOpen } from 'lucide-react';
+import { fetchKnowledgeContext } from '@/lib/knowledge-client';
 import { chatWithCopilot, type CopilotChatInput, type CopilotChatOutput } from '@/ai/flows/copilot-chat-flow';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
@@ -24,6 +25,8 @@ interface ChatMessage {
   avatarUrl?: string;
   avatarFallback: string;
   dataAiHint?: string;
+  /** Knowledge-base documents the answer was grounded in. */
+  sources?: string[];
 }
 
 export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarProps) {
@@ -33,7 +36,7 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const isGuest = user?.organizationId === 'guest-org-id';
 
   useEffect(() => {
@@ -80,11 +83,13 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
 
     try {
       const userApiKey = localStorage.getItem('userApiKey');
+      const passages = await fetchKnowledgeContext(token, trimmedInput);
       const aiInput: CopilotChatInput = { 
         userInput: trimmedInput, 
         apiKey: userApiKey,
         userId: user?.id,
         organizationId: user?.organizationId,
+        knowledgeContext: passages.map(({ sourceName, text }) => ({ sourceName, text })),
       };
       const result: CopilotChatOutput = await chatWithCopilot(aiInput);
       
@@ -92,6 +97,7 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
         id: `ai-${Date.now()}`,
         sender: 'ai',
         text: result.aiResponse,
+        sources: [...new Set(passages.map((passage) => passage.sourceName))],
         avatarUrl: `https://placehold.co/40x40.png?text=AI`,
         avatarFallback: 'AI',
         dataAiHint: 'robot avatar'
@@ -187,6 +193,14 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
                         {i < arr.length - 1 && <br />}
                       </span>
                     ))}
+                    {message.sources && message.sources.length > 0 && (
+                      <span className="mt-2 flex flex-wrap items-center gap-1 border-t border-border/60 pt-2 text-[11px] text-muted-foreground">
+                        <BookOpen className="h-3 w-3" /> From your knowledge base:
+                        {message.sources.map((source) => (
+                          <span key={source} className="rounded-full bg-background px-2 py-0.5 font-medium text-foreground/80">{source}</span>
+                        ))}
+                      </span>
+                    )}
                   </div>
                   {message.sender === 'user' && (
                     <Avatar className="h-7 w-7 border flex-shrink-0">

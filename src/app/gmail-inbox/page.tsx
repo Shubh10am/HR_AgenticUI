@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, Wand2, Send, Reply, MailOpen, RefreshCw, Trash2, FileWarning, Link as LinkIcon, Calendar, File as FileIcon, Sparkles, Inbox, AlertOctagon, Users, Tag, Info, MessagesSquare, Mail, ArrowLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { fetchKnowledgeContext } from '@/lib/knowledge-client';
 import AiReplyAssistant, { type ReplyIntent } from './ai-reply-assistant';
 import { AiTipBanner, EmailBodyFrame, EmailListItem, SenderAvatar, VerificationCodeCard, detectVerificationCode, formatEmailDate, parseSender, type Email } from './inbox-components';
 import { useToast } from '@/hooks/use-toast';
@@ -206,14 +207,22 @@ export default function GmailCalendarPage() {
     }
   };
 
+  /** Policy passages relevant to this email, so AI replies quote the company's real rules. */
+  const getKnowledgeForEmail = async (email: Email, instruction?: string) => {
+    const passages = await fetchKnowledgeContext(token, [email.subject, email.snippet, instruction].filter(Boolean).join('\n'));
+    return passages.map(({ sourceName, text }) => ({ sourceName, text }));
+  };
+
   const handleGenerateReplies = async () => {
     if (!selectedEmail) return;
     setIsGenerating(true);
     setGeneratedDrafts([]);
     try {
         const userApiKey = localStorage.getItem('userApiKey');
+        const knowledgeContext = await getKnowledgeForEmail(selectedEmail);
         const input: GenerateDraftEmailResponsesInput = { 
             query: `From: ${selectedEmail.from}\nSubject: ${selectedEmail.subject}\n\n${selectedEmail.body}`,
+            knowledgeContext,
             apiKey: userApiKey,
             userId: user?.id,
             organizationId: user?.organizationId,
@@ -236,8 +245,10 @@ export default function GmailCalendarPage() {
     if (!selectedEmail || !prompt.trim()) return false;
     try {
         const userApiKey = localStorage.getItem('userApiKey');
+        const knowledgeContext = await getKnowledgeForEmail(selectedEmail, prompt);
         const input: GenerateDraftEmailResponsesInput = { 
             query: `From: ${selectedEmail.from}\nSubject: ${selectedEmail.subject}\n\n${selectedEmail.body}`,
+            knowledgeContext,
             prompt,
             apiKey: userApiKey,
             userId: user?.id,
@@ -318,7 +329,6 @@ export default function GmailCalendarPage() {
         <PageHeader
             title="Gmail & Calendar"
             description="Manage your emails and calendar events with AI assistance."
-            className="mb-4"
         >
             <Button onClick={handleConnectGoogleAccount}>
                 <LinkIcon className="mr-2 h-4 w-4" />
