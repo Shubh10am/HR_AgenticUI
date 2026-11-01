@@ -14,6 +14,8 @@ const FEATURE_LABELS: Record<string, string> = {
   copilotChatFlow: 'Copilot Chat',
   generateDraftEmailResponsesFlow: 'Email Drafting',
   generateJobDescriptionFlow: 'Job Descriptions',
+  interviewKitFlow: 'Interview Kits',
+  screenCandidateFlow: 'Candidate Screening',
   knowledgeAnswer: 'Knowledge Base Answers',
   summarizeGithubActivityFlow: 'GitHub Summaries',
 };
