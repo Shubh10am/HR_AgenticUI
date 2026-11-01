@@ -23,17 +23,23 @@ export default function BlogLayout({ children }: { children: ReactNode }) {
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
-        <div className="container flex h-20 items-center justify-between mx-auto px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <Logo className="h-8 w-8 text-primary" />
-            <span className="font-bold text-lg text-foreground">HR Streamline AI</span>
-          </Link>
+        <div className="container flex h-16 items-center justify-between mx-auto px-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-2.5" id="blog-logo-link">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-white shadow-md shadow-primary/30">
+                <Logo className="h-5 w-5" />
+              </span>
+              <span className="hidden font-display text-lg font-bold sm:inline">HR Streamline</span>
+            </Link>
+            <span className="h-5 w-px bg-border" />
+            <Link href="/blog" className="text-sm font-semibold text-primary" id="blog-header-blog">Blog</Link>
+          </div>
           <div className="flex items-center gap-2">
              <ThemeToggle />
-            <Button variant="ghost" asChild className="text-foreground hover:bg-accent hover:text-accent-foreground hidden sm:flex">
+            <Button variant="ghost" asChild className="hidden sm:flex" id="blog-login">
               <Link href="/login">Log In</Link>
             </Button>
-            <Button onClick={handleGuestLogin} disabled={isLoading || isGuestLoading} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full">
+            <Button onClick={handleGuestLogin} disabled={isLoading || isGuestLoading} className="rounded-full" id="blog-try-now">
               {(isLoading || isGuestLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Try Now
             </Button>
@@ -41,7 +47,7 @@ export default function BlogLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1 container mx-auto px-4 sm:px-6 py-16 sm:py-24">
+      <main className="flex-1 container mx-auto px-4 sm:px-6 py-12 sm:py-16">
         {children}
       </main>
 

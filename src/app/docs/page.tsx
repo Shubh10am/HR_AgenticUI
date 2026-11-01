@@ -1,205 +1,135 @@
-
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { docsData, type DocPage, type DocSection } from '@/lib/docs-data';
-import { Input } from '@/components/ui/input';
-import { Search, ChevronDown, ChevronRight } from 'lucide-react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
+import { docSections, findDocPage, flatDocPages } from '@/lib/docs';
+import type { DocPage, DocSection } from '@/lib/docs/types';
 import { cn } from '@/lib/utils';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import DocArticle, { articleOutline } from './components/doc-article';
+import DocsHome from './components/docs-home';
+import DocsSidebar from './components/docs-sidebar';
+
+function pageText(page: DocPage): string {
+  return [
+    page.title, page.summary, ...page.overview,
+    ...(page.features ?? []).flatMap((f) => [f.title, f.description]),
+    ...(page.howTos ?? []).flatMap((h) => [h.title, ...h.steps.flatMap((s) => [s.title, s.body])]),
+    ...(page.faqs ?? []).flatMap((f) => [f.question, f.answer]),
+  ].join(' ').toLowerCase();
+}
+
+function slugFromHash(): string | null {
+  if (typeof window === 'undefined') return null;
+  const slug = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+  return findDocPage(slug) ? slug : null;
+}
 
 export default function DocsPage() {
-  const [activePage, setActivePage] = useState<DocPage | null>(docsData[0]?.pages[0] || null);
+  const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeHeading, setActiveHeading] = useState<string | null>(null);
 
-  const filteredDocsData = useMemo(() => {
-    if (!searchTerm) return docsData;
-    const lowercasedTerm = searchTerm.toLowerCase();
+  // Deep links: /docs#recruitment opens that guide, and back/forward work.
+  useEffect(() => {
+    const sync = () => setActiveSlug(slugFromHash());
+    sync();
+    window.addEventListener('hashchange', sync);
+    return () => window.removeEventListener('hashchange', sync);
+  }, []);
 
-    const filtered = docsData.map(section => {
-      const filteredPages = section.pages.filter(page =>
-        page.title.toLowerCase().includes(lowercasedTerm) ||
-        page.content.toLowerCase().includes(lowercasedTerm)
-      );
-      return { ...section, pages: filteredPages };
-    }).filter(section => section.pages.length > 0);
-    
-    return filtered;
+  const navigate = useCallback((slug: string | null) => {
+    window.history.pushState(null, '', slug ? `#${slug}` : window.location.pathname);
+    setActiveSlug(slug);
+    window.scrollTo({ top: 0 });
+  }, []);
+
+  const filteredSections: DocSection[] = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return docSections;
+    return docSections
+      .map((section) => ({ ...section, pages: section.pages.filter((page) => pageText(page).includes(term)) }))
+      .filter((section) => section.pages.length > 0);
   }, [searchTerm]);
 
-  const activeSection = useMemo(() => {
-    if (!activePage) return null;
-    return docsData.find(s => s.pages.some(p => p.slug === activePage.slug));
-  }, [activePage]);
+  const activePage = activeSlug ? findDocPage(activeSlug) : undefined;
+  const activeSection = activePage ? docSections.find((section) => section.pages.includes(activePage)) : undefined;
+  const pageIndex = activePage ? flatDocPages.indexOf(activePage) : -1;
+  const outline = useMemo(() => (activePage ? articleOutline(activePage) : []), [activePage]);
 
-  const headings = useMemo(() => {
-    if (!activePage) return [];
-    const matches = activePage.content.matchAll(/<h3 id="([^"]+)">([^<]+)<\/h3>/g);
-    return Array.from(matches, match => ({ id: match[1], title: match[2] }));
-  }, [activePage]);
-
+  // Highlight the outline entry for the section currently in view.
   useEffect(() => {
+    if (outline.length === 0) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        let currentBest: IntersectionObserverEntry | null = null;
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            if (!currentBest || entry.intersectionRatio > currentBest.intersectionRatio) {
-              currentBest = entry;
-            }
-          }
-        }
-        if (currentBest) {
-          setActiveHeading(currentBest.target.id);
-        }
+        const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible[0]) setActiveHeading(visible[0].target.id);
       },
-      { rootMargin: "0px 0px -80% 0px", threshold: 0.1 }
+      { rootMargin: '-80px 0px -70% 0px' }
     );
-
-    const elements = headings.map(h => document.getElementById(h.id)).filter(Boolean);
-    elements.forEach(el => el && observer.observe(el));
-
-    return () => {
-      elements.forEach(el => el && observer.unobserve(el));
-    };
-  }, [headings]);
-
-  const handlePageSelect = (page: DocPage) => {
-    setActivePage(page);
-    // Reset scroll position to top of content area on page change
-    const contentArea = document.getElementById('docs-content-area');
-    if(contentArea) contentArea.scrollTo(0, 0);
-  }
-
-  const handleBreadcrumbClick = (section: DocSection) => {
-    if (section.pages.length > 0) {
-      handlePageSelect(section.pages[0]);
-    }
-  };
-
-  const handleHomeBreadcrumbClick = () => {
-    if (docsData.length > 0 && docsData[0].pages.length > 0) {
-      handlePageSelect(docsData[0].pages[0]);
-    }
-  };
-
-
-  const defaultAccordionValue = docsData.length > 0 ? [docsData[0].id] : [];
+    outline.forEach((item) => {
+      const element = document.getElementById(item.id);
+      if (element) observer.observe(element);
+    });
+    return () => observer.disconnect();
+  }, [outline]);
 
   return (
-    <div className="flex">
-      {/* Left Sidebar */}
-      <aside className="hidden lg:block sticky top-16 h-[calc(100vh-4rem)] w-64 xl:w-72 flex-shrink-0 border-r py-8 pr-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search docs..." 
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <nav className="mt-6">
-          <Accordion type="multiple" defaultValue={defaultAccordionValue} className="w-full">
-            {filteredDocsData.map(section => (
-              <AccordionItem key={section.id} value={section.id}>
-                <AccordionTrigger className="text-base font-semibold hover:no-underline [&[data-state=open]>svg]:rotate-180">
-                  {section.title}
-                </AccordionTrigger>
-                <AccordionContent>
-                  <ul className="space-y-1 mt-2 border-l border-border ml-2">
-                    {section.pages.map(page => (
-                      <li key={page.slug}>
-                        <button
-                          onClick={() => handlePageSelect(page)}
-                          className={cn(
-                            "block w-full text-left pl-4 py-1.5 text-sm rounded-r-md border-l-2",
-                            activePage?.slug === page.slug
-                              ? "text-primary border-primary bg-primary/10"
-                              : "text-muted-foreground hover:text-foreground hover:border-muted-foreground border-transparent"
-                          )}
-                        >
-                          {page.title}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
+    <div className="flex gap-8 py-8">
+      <aside className="sticky top-24 hidden h-[calc(100vh-7rem)] w-64 shrink-0 lg:block">
+        <DocsSidebar sections={filteredSections} activeSlug={activeSlug} searchTerm={searchTerm} onSearch={setSearchTerm} onNavigate={navigate} />
+      </aside>
+
+      <div className="min-w-0 flex-1">
+        <div className="relative mb-6 lg:hidden">
+          <select
+            id="docs-mobile-nav"
+            aria-label="Choose a guide"
+            value={activeSlug ?? ''}
+            onChange={(event) => navigate(event.target.value || null)}
+            className="h-11 w-full appearance-none rounded-xl border bg-background px-4 pr-10 text-sm font-medium"
+          >
+            <option value="">Overview</option>
+            {docSections.map((section) => (
+              <optgroup key={section.id} label={section.title}>
+                {section.pages.map((page) => <option key={page.slug} value={page.slug}>{page.title}</option>)}
+              </optgroup>
             ))}
-          </Accordion>
-        </nav>
-      </aside>
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        </div>
 
-      {/* Main Content */}
-      <main id="docs-content-area" className="flex-1 py-8 lg:py-12 px-4 lg:px-12">
-        {activePage ? (
-          <article className="prose dark:prose-invert max-w-none">
-            {activeSection && (
-                <div className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
-                  <Button variant="link" onClick={handleHomeBreadcrumbClick} className="p-0 h-auto text-muted-foreground hover:text-primary">Docs</Button>
-                  <ChevronRight className="h-4 w-4" />
-                  <Button variant="link" onClick={() => handleBreadcrumbClick(activeSection)} className="p-0 h-auto text-muted-foreground hover:text-primary">{activeSection.title}</Button>
-                  <ChevronRight className="h-4 w-4" />
-                  <span className="text-foreground">{activePage.title}</span>
-                </div>
-            )}
-            <h1>{activePage.title}</h1>
-            <p className="lead">{activePage.description}</p>
-             <div
-              className="prose-p:text-foreground/80
-                         prose-headings:text-foreground prose-headings:font-bold
-                         prose-strong:text-foreground
-                         prose-a:text-primary hover:prose-a:text-primary/80
-                         prose-ul:text-foreground/80
-                         prose-ol:text-foreground/80"
-              dangerouslySetInnerHTML={{ __html: activePage.content }}
-            />
-          </article>
+        {activePage && activeSection ? (
+          <DocArticle
+            key={activePage.slug}
+            page={activePage}
+            sectionTitle={activeSection.title}
+            previous={flatDocPages[pageIndex - 1]}
+            next={flatDocPages[pageIndex + 1]}
+            onNavigate={navigate}
+          />
         ) : (
-          <div className="text-center py-16">
-            <h2 className="text-2xl font-semibold">
-              {searchTerm ? 'No results found' : 'Welcome to the Documentation'}
-            </h2>
-            <p className="text-muted-foreground mt-2">
-              {searchTerm ? `Your search for "${searchTerm}" did not match any documents.` : 'Select a topic from the left to get started.'}
-            </p>
-          </div>
+          <DocsHome sections={searchTerm ? filteredSections : docSections} onNavigate={navigate} />
         )}
-      </main>
+      </div>
 
-      {/* Right Sidebar */}
-      <aside className="hidden xl:block sticky top-16 h-[calc(100vh-4rem)] w-64 flex-shrink-0 py-8 pl-8">
-        {headings.length > 0 && (
-          <div>
-            <h4 className="font-semibold mb-2">On this page</h4>
-            <ul className="space-y-2">
-              {headings.map(heading => (
-                <li key={heading.id}>
-                  <Link
-                    href={`#${heading.id}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      document.getElementById(heading.id)?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className={cn(
-                      "block text-sm border-l-2 pl-3",
-                      activeHeading === heading.id
-                        ? "text-primary border-primary"
-                        : "text-muted-foreground hover:text-foreground border-transparent hover:border-muted-foreground"
-                    )}
-                  >
-                    {heading.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </aside>
+      {activePage && (
+        <aside className="sticky top-24 hidden h-fit w-56 shrink-0 xl:block">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">On this page</p>
+          <ul className="mt-3 space-y-1 border-l">
+            {outline.map((item) => (
+              <li key={item.id}>
+                <a
+                  href={`#${activePage.slug}`}
+                  onClick={(event) => { event.preventDefault(); document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' }); }}
+                  className={cn('-ml-px block border-l-2 py-1 pl-3 text-sm transition-colors', activeHeading === item.id ? 'border-primary font-medium text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')}
+                >
+                  {item.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )}
     </div>
   );
 }

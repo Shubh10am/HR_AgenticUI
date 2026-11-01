@@ -1,56 +1,38 @@
+import type { Metadata } from 'next';
+import { SITE_NAME, SITE_URL, blogPosts } from '@/lib/blog';
+import BlogIndex from './components/blog-index';
 
-'use client';
+const title = `HR Blog: AI, Recruitment & HR Automation Guides | ${SITE_NAME}`;
+const description = 'Practical guides on AI in recruitment, HR automation, people analytics, remote onboarding and hybrid communication from the HR Streamline AI team.';
 
-import Link from 'next/link';
-import Image from 'next/image';
-import { ArrowRight, Calendar, User } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { blogPosts } from '@/lib/blog-data';
-
+export const metadata: Metadata = {
+  title,
+  description,
+  alternates: { canonical: `${SITE_URL}/blog` },
+  openGraph: { type: 'website', url: `${SITE_URL}/blog`, title, description, siteName: SITE_NAME, images: [{ url: `${SITE_URL}${blogPosts[0].image}` }] },
+  twitter: { card: 'summary_large_image', title, description },
+};
 
 export default function BlogPage() {
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: `${SITE_NAME} Blog`,
+    url: `${SITE_URL}/blog`,
+    description,
+    blogPost: blogPosts.map((post) => ({
+      '@type': 'BlogPosting',
+      headline: post.title,
+      url: `${SITE_URL}/blog/${post.slug}`,
+      datePublished: post.datePublished,
+      dateModified: post.dateModified,
+      author: { '@type': 'Person', name: post.author },
+    })),
+  };
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="text-center mb-16">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter mb-4">The HR Streamline AI Blog</h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Insights, tips, and updates on the future of HR technology and workplace productivity.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {blogPosts.map((post) => (
-          <Link key={post.slug} href={`/blog/${post.slug}`} className="group block">
-            <div className="flex flex-col h-full bg-card border border-border rounded-2xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl hover:border-primary/50">
-              <div className="relative">
-                <Image
-                  src={post.image}
-                  alt={post.title}
-                  width={600}
-                  height={400}
-                  className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"
-                  data-ai-hint={post.dataAiHint}
-                />
-                 <div className="absolute top-0 left-0 w-full h-full bg-black/5 dark:bg-black/20 group-hover:bg-black/10 transition-colors"></div>
-              </div>
-
-              <div className="p-6 flex flex-col flex-grow">
-                <Badge variant="outline" className="mb-2 self-start border-primary/50 text-primary">{post.category}</Badge>
-                <h2 className="text-xl font-bold mb-3 flex-grow">{post.title}</h2>
-                <p className="text-muted-foreground text-sm mb-4 flex-grow">{post.description}</p>
-                <div className="text-xs text-muted-foreground flex items-center justify-between mt-auto pt-4 border-t border-border">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    <span>{post.author}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>{post.date}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </div>
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} />
+      <BlogIndex />
+    </>
   );
 }
