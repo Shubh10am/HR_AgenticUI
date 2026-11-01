@@ -7,11 +7,16 @@ import type { IntegrationDefinition } from '../catalog';
 const tile = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border bg-white p-2';
 
 /**
- * The brand logo: a hosted image, else the Simple Icons logo in the brand colour,
- * else (if neither loads) a tile with the brand colour and initials.
+ * The brand logo: a hosted image, else the Simple Icons logo, else the company's
+ * site icon, else (if none loads) a tile with the brand colour and initials.
  */
 export default function IntegrationLogo({ integration }: { integration: IntegrationDefinition }) {
-  const [failed, setFailed] = useState(false);
+  // Try each source in turn: Simple Icons, then the company's site icon, then initials.
+  const sources = [
+    integration.iconSlug && !integration.domain ? `https://cdn.simpleicons.org/${integration.iconSlug}` : null,
+    integration.domain ? `https://www.google.com/s2/favicons?domain=${integration.domain}&sz=64` : null,
+  ].filter((src): src is string => Boolean(src));
+  const [attempt, setAttempt] = useState(0);
 
   if (integration.logoUrl) {
     return (
@@ -20,11 +25,11 @@ export default function IntegrationLogo({ integration }: { integration: Integrat
       </span>
     );
   }
-  if (integration.iconSlug && !failed) {
+  if (attempt < sources.length) {
     return (
       <span className={tile}>
-        {/* eslint-disable-next-line @next/next/no-img-element -- remote SVG; next/image would need SVG enabled globally */}
-        <img src={`https://cdn.simpleicons.org/${integration.iconSlug}`} alt="" width={28} height={28} loading="lazy" className="h-7 w-7 object-contain" onError={() => setFailed(true)} />
+        {/* eslint-disable-next-line @next/next/no-img-element -- remote SVG/ICO; next/image would need SVG enabled globally */}
+        <img key={sources[attempt]} src={sources[attempt]} alt="" width={28} height={28} loading="lazy" className="h-7 w-7 object-contain" onError={() => setAttempt((n) => n + 1)} />
       </span>
     );
   }
