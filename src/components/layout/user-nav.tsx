@@ -16,7 +16,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User as UserIcon, LogOut, Settings, UserCircle2, Sun, Moon, Laptop, Route } from 'lucide-react';
+import { User as UserIcon, LogOut, Settings, UserCircle2, Sun, Moon, Laptop, Route, ScrollText } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation'; // Import useRouter
@@ -72,6 +72,9 @@ export default function UserNav() {
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={handleSettingsClick} className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" />Settings
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => router.push('/audit-log')} className="cursor-pointer" id="user-nav-audit-log">
+            <ScrollText className="mr-2 h-4 w-4" />Audit Log
           </DropdownMenuItem>
            <DropdownMenuItem onSelect={() => tour?.start()} className="cursor-pointer">
             <Route className="mr-2 h-4 w-4" />Start Tour
