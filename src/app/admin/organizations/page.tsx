@@ -147,8 +147,8 @@ export default function AdminOrganizationsPage() {
           <CardDescription>A list of all registered organizations.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border overflow-x-auto">
-            <Table>
+          <div className="rounded-md border">
+            <Table scroll>
               <TableHeader>
                 <TableRow>
                   <TableHead>Organization</TableHead>

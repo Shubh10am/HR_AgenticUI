@@ -147,8 +147,8 @@ export default function AdminCustomerInquiriesPage() {
                 <CardTitle className="flex items-center"><Mail className="mr-2 h-5 w-5"/> Contact Form Submissions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border overflow-x-auto">
-                <Table>
+              <div className="rounded-md border">
+                <Table scroll>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
@@ -195,8 +195,8 @@ export default function AdminCustomerInquiriesPage() {
                  <CardTitle className="flex items-center"><CalendarCheck className="mr-2 h-5 w-5"/> Demo Requests</CardTitle>
             </CardHeader>
             <CardContent>
-               <div className="rounded-md border overflow-x-auto">
-                <Table>
+               <div className="rounded-md border">
+                <Table scroll>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>

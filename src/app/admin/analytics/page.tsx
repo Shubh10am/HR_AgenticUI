@@ -132,7 +132,7 @@ export default function AdminAnalyticsPage() {
             {!data ? <Skeleton className="h-48 w-full" /> : data.topOrganizations.length === 0 ? (
               <p className="py-10 text-center text-sm text-muted-foreground">No AI usage in this period.</p>
             ) : (
-              <Table>
+              <Table scroll>
                 <TableHeader>
                   <TableRow>
                     <TableHead id="admin-analytics-top-org-header">Organization</TableHead>

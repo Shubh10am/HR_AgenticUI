@@ -2,14 +2,22 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * `scroll` caps the table at 60% of the screen height so long lists scroll
+ * inside their box, with the header row pinned while you scroll.
+ */
 const Table = React.forwardRef<
   HTMLTableElement,
-  React.HTMLAttributes<HTMLTableElement>
->(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto">
+  React.HTMLAttributes<HTMLTableElement> & { containerClassName?: string; scroll?: boolean }
+>(({ className, containerClassName, scroll, ...props }, ref) => (
+  <div className={cn("relative w-full overflow-auto", scroll && "max-h-[60vh]", containerClassName)}>
     <table
       ref={ref}
-      className={cn("w-full caption-bottom text-sm", className)}
+      className={cn(
+        "w-full caption-bottom text-sm",
+        scroll && "[&_thead_th]:sticky [&_thead_th]:top-0 [&_thead_th]:z-10 [&_thead_th]:bg-card [&_thead_th]:shadow-[inset_0_-1px_0_hsl(var(--border))]",
+        className
+      )}
       {...props}
     />
   </div>

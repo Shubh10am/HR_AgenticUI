@@ -362,8 +362,8 @@ export default function OrganizationDetailsPage() {
                 <CardContent>
                  {viewMode === 'table' ? (
                   <>
-                    <div className="rounded-md border overflow-x-auto">
-                      <Table>
+                    <div className="rounded-md border">
+                      <Table scroll>
                       <TableHeader>
                           <TableRow>
                           <TableHead>User</TableHead>

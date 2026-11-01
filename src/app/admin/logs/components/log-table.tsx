@@ -15,7 +15,7 @@ const METHOD_STYLES: Record<string, string> = {
 /** Dense, monospaced event rows; clicking one opens its details. */
 export default function LogTable({ entries, onSelect }: { entries: LogEntry[]; onSelect: (entry: LogEntry) => void }) {
   return (
-    <Table className="text-xs">
+    <Table scroll className="text-xs">
       <TableHeader>
         <TableRow>
           <TableHead id="admin-logs-time-header" className="w-40">Timestamp</TableHead>

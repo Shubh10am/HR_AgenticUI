@@ -271,7 +271,7 @@ export default function AdminSupportTicketsPage() {
           <CardDescription>A list of all support tickets in the system.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border overflow-x-auto">
+          <div className="rounded-md border">
             {isLoading && !isUpdating ? (
               <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -284,7 +284,7 @@ export default function AdminSupportTicketsPage() {
                 <p className="text-sm text-destructive/80">{error}</p>
               </div>
             ) : (
-              <Table>
+              <Table scroll>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Customer</TableHead>

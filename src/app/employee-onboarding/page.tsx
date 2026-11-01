@@ -152,8 +152,8 @@ export default function EmployeeOnboardingPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border overflow-x-auto">
-              <Table>
+            <div className="rounded-md border">
+              <Table scroll>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Employee</TableHead>

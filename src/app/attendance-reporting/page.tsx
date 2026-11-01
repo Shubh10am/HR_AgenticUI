@@ -1122,8 +1122,8 @@ export default function AttendanceReportingPage() {
               </Button>
             </div>
           ) : (
-            <div className="rounded-md border overflow-x-auto">
-              <Table>
+            <div className="rounded-md border">
+              <Table scroll>
                 <TableHeader>
                   <TableRow>
                     {canAdminister && <TableHead>Employee</TableHead>}

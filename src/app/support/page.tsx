@@ -184,8 +184,8 @@ export default function SupportPage() {
                       <p className="text-sm text-destructive/80">{error}</p>
                   </div>
               ) : (
-                  <div className="rounded-md border overflow-x-auto">
-                      <Table>
+                  <div className="rounded-md border">
+                      <Table scroll>
                           <TableHeader>
                               <TableRow>
                                   <TableHead>Subject</TableHead>

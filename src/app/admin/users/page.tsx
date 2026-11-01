@@ -258,8 +258,8 @@ export default function AdminUsersPage() {
           <CardDescription>A list of all administrators and their roles.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border overflow-x-auto">
-            <Table>
+          <div className="rounded-md border">
+            <Table scroll>
               <TableHeader>
                 <TableRow>
                   <TableHead>Admin</TableHead>

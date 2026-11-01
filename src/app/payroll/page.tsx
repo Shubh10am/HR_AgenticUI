@@ -116,8 +116,8 @@ export default function PayrollPage() {
         </CardHeader>
         <CardContent>
           {/* Table for larger screens */}
-          <div className="hidden md:block rounded-md border overflow-x-auto">
-            <Table>
+          <div className="hidden md:block rounded-md border">
+            <Table scroll>
               <TableHeader>
                 <TableRow>
                   <TableHead>Employee</TableHead>
