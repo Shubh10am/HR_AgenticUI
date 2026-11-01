@@ -6,11 +6,24 @@ import type { IContactSubmission } from '@/models/ContactSubmission';
 import type { IDemoRequest } from '@/models/DemoRequest';
 import type { IOrganization } from '@/models/Organization';
 import type { IEmployee } from '@/models/Employee';
+import { getPlatformSettingsSafe } from '@/services/platform/settings';
+import { renderTemplate } from '@/services/platform/email-templates';
+import { notifySlack } from '@/services/platform/slack';
 
-const SENDER_EMAIL = 'noreply@agentic-hr.in';
-const SENDER_NAME = 'HR Streamline AI';
-const ADMIN_NOTIFICATION_EMAIL = 'support@agentic-hr.in';
+// Used only if platform settings can't be read; the live values are edited in Admin → System Settings.
+const FALLBACK = {
+  senderEmail: 'noreply@agentic-hr.in',
+  senderName: 'HR Streamline AI',
+  adminNotificationEmail: 'support@agentic-hr.in',
+  appName: 'HR Streamline AI',
+};
 const ADMIN_NOTIFICATION_NAME = 'HR Streamline Support';
+
+type NotificationKind = 'notifyOnNewOrganization' | 'notifyOnContact' | 'notifyOnDemoRequest';
+
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
 let apiInstance: brevo.TransactionalEmailsApi | null = null;
 
@@ -21,13 +34,13 @@ if (process.env.BREVO_API_KEY) {
   console.warn('BREVO_API_KEY is not set. Email notifications will be disabled.');
 }
 
-function generateAdminNotificationHtml(title: string, fields: { label: string; value: string }[]): string {
+function generateAdminNotificationHtml(title: string, fields: { label: string; value: string }[], appName = FALLBACK.appName): string {
     const fieldsHtml = fields
         .map(
             (field) => `
     <tr style="border-bottom: 1px solid #dfe3e8;">
         <td style="padding: 12px 15px; font-weight: 600; color: #333; width: 30%;">${field.label}</td>
-        <td style="padding: 12px 15px; color: #555;">${field.value}</td>
+        <td style="padding: 12px 15px; color: #555;">${escapeHtml(field.value)}</td>
     </tr>`
         )
         .join('');
@@ -48,7 +61,7 @@ function generateAdminNotificationHtml(title: string, fields: { label: string; v
                     <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                         <tr>
                             <td align="center" style="padding: 25px; background-color: #2c3e50; color: #ffffff;">
-                                <h1 style="margin: 0; font-size: 24px; font-weight: 700;">HR Streamline AI</h1>
+                                <h1 style="margin: 0; font-size: 24px; font-weight: 700;">${escapeHtml(appName)}</h1>
                             </td>
                         </tr>
                         <tr>
@@ -61,7 +74,7 @@ function generateAdminNotificationHtml(title: string, fields: { label: string; v
                         </tr>
                         <tr>
                             <td align="center" style="padding: 20px; font-size: 12px; color: #7f8c8d; border-top: 1px solid #ecf0f1;">
-                                This is an automated notification from HR Streamline AI.
+                                This is an automated notification from ${escapeHtml(appName)}.
                             </td>
                         </tr>
                     </table>
@@ -72,7 +85,7 @@ function generateAdminNotificationHtml(title: string, fields: { label: string; v
     </html>`;
 }
 
-function generateUserConfirmationHtml(title: string, name: string, message: string, ctaLink?: string, ctaText?: string): string {
+function generateUserConfirmationHtml(title: string, name: string, message: string, ctaLink?: string, ctaText?: string, appName = FALLBACK.appName): string {
     const ctaButton = ctaLink && ctaText ? `
     <a href="${ctaLink}" target="_blank" style="background-color: #3F51B5; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: 600; display: inline-block; margin-top: 20px;">
         ${ctaText}
@@ -94,16 +107,16 @@ function generateUserConfirmationHtml(title: string, name: string, message: stri
                     <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                         <tr>
                             <td align="center" style="padding: 25px; background-color: #2c3e50; color: #ffffff;">
-                                <h1 style="margin: 0; font-size: 24px; font-weight: 700;">HR Streamline AI</h1>
+                                <h1 style="margin: 0; font-size: 24px; font-weight: 700;">${escapeHtml(appName)}</h1>
                             </td>
                         </tr>
                         <tr>
                             <td style="padding: 30px 25px;">
-                                <h2 style="margin: 0 0 20px; font-size: 20px; color: #2c3e50;">Hi ${name},</h2>
+                                <h2 style="margin: 0 0 20px; font-size: 20px; color: #2c3e50;">Hi ${escapeHtml(name)},</h2>
                                 <p style="color: #555; line-height: 1.6;">${message}</p>
                                 ${ctaButton}
                                 <br>
-                                <p style="color: #555; line-height: 1.6; margin-top: 30px;">Best regards,<br>The HR Streamline AI Team</p>
+                                <p style="color: #555; line-height: 1.6; margin-top: 30px;">Best regards,<br>The ${escapeHtml(appName)} Team</p>
                             </td>
                         </tr>
                         <tr>
@@ -128,7 +141,8 @@ async function sendEmail(to: { name: string; email: string }, subject: string, h
     const sendSmtpEmail = new brevo.SendSmtpEmail();
     sendSmtpEmail.subject = subject;
     sendSmtpEmail.htmlContent = htmlContent;
-    sendSmtpEmail.sender = { name: SENDER_NAME, email: SENDER_EMAIL };
+    const settings = await getPlatformSettingsSafe();
+    sendSmtpEmail.sender = { name: settings?.senderName || FALLBACK.senderName, email: settings?.senderEmail || FALLBACK.senderEmail };
     sendSmtpEmail.to = [to];
     
     try {
@@ -140,105 +154,99 @@ async function sendEmail(to: { name: string; email: string }, subject: string, h
 }
 
 
+/** Sends a user-facing email from an editable template, wrapped in the standard layout. */
+async function sendTemplatedEmail(
+  to: { name: string; email: string },
+  key: string,
+  title: string,
+  variables: Record<string, string>,
+  cta?: { link: string; text: string },
+) {
+  const [settings, rendered] = await Promise.all([getPlatformSettingsSafe(), renderTemplate(key, variables)]);
+  const html = generateUserConfirmationHtml(title, to.name, rendered.html, cta?.link, cta?.text, settings?.appName || FALLBACK.appName);
+  await sendEmail(to, rendered.subject, html);
+}
+
+/** Emails the platform team (and posts to Slack) when that kind of notification is switched on. */
+async function notifyPlatformTeam(kind: NotificationKind, subject: string, title: string, fields: { label: string; value: string }[]) {
+  const settings = await getPlatformSettingsSafe();
+  if (settings && !settings[kind]) return;
+  const appName = settings?.appName || FALLBACK.appName;
+  const admin = { name: ADMIN_NOTIFICATION_NAME, email: settings?.adminNotificationEmail || FALLBACK.adminNotificationEmail };
+  await Promise.all([
+    sendEmail(admin, subject, generateAdminNotificationHtml(title, fields, appName)),
+    notifySlack(`*${title}*\n${fields.map((field) => `• ${field.label}: ${field.value}`).join('\n')}`),
+  ]);
+}
+
 export async function sendContactConfirmation(submission: IContactSubmission) {
-    const user = { name: submission.name, email: submission.email };
-    const subject = `Thank you for contacting HR Streamline AI`;
-    const message = `We have received your message regarding "${submission.subject}" and will get back to you as soon as possible.`;
-    const htmlContent = generateUserConfirmationHtml('Message Received', user.name, message);
-    sendEmail(user, subject, htmlContent);
+  await sendTemplatedEmail({ name: submission.name, email: submission.email }, 'contact-confirmation', 'Message Received', {
+    name: submission.name,
+    subject: submission.subject,
+  });
 }
 
 export async function sendContactAdminNotification(submission: IContactSubmission) {
-    const admin = { name: ADMIN_NOTIFICATION_NAME, email: ADMIN_NOTIFICATION_EMAIL };
-    const fields = [
-        { label: 'Name', value: submission.name },
-        { label: 'Email', value: submission.email },
-        { label: 'Phone', value: submission.phone || 'N/A' },
-        { label: 'Subject', value: submission.subject },
-        { label: 'Message', value: submission.message },
-    ];
-    const subject = `New Contact Form Submission: ${submission.subject}`;
-    const htmlContent = generateAdminNotificationHtml('New Contact Submission', fields);
-    sendEmail(admin, subject, htmlContent);
+  await notifyPlatformTeam('notifyOnContact', `New Contact Form Submission: ${submission.subject}`, 'New Contact Submission', [
+    { label: 'Name', value: submission.name },
+    { label: 'Email', value: submission.email },
+    { label: 'Phone', value: submission.phone || 'N/A' },
+    { label: 'Subject', value: submission.subject },
+    { label: 'Message', value: submission.message },
+  ]);
 }
 
-
 export async function sendDemoConfirmation(request: IDemoRequest) {
-    const user = { name: request.name, email: request.email };
-    const subject = `Your Demo Request with HR Streamline AI`;
-    const message = `Thank you for your interest in HR Streamline AI! We have received your request for a demo. Our team will review your information and reach out shortly to schedule a time that works for you.`;
-    const htmlContent = generateUserConfirmationHtml('Demo Request Received', user.name, message);
-    sendEmail(user, subject, htmlContent);
+  await sendTemplatedEmail({ name: request.name, email: request.email }, 'demo-confirmation', 'Demo Request Received', {
+    name: request.name,
+    companyName: request.companyName,
+  });
 }
 
 export async function sendDemoAdminNotification(request: IDemoRequest) {
-    const admin = { name: ADMIN_NOTIFICATION_NAME, email: ADMIN_NOTIFICATION_EMAIL };
-    const fields = [
-        { label: 'Name', value: request.name },
-        { label: 'Company Name', value: request.companyName },
-        { label: 'Work Email', value: request.email },
-        { label: 'Phone', value: request.phone || 'N/A' },
-        { label: 'Company Size', value: request.companySize },
-        { label: 'Message', value: request.message || 'N/A' },
-    ];
-    const subject = `New Demo Request from ${request.companyName}`;
-    const htmlContent = generateAdminNotificationHtml('New Demo Request', fields);
-    sendEmail(admin, subject, htmlContent);
+  await notifyPlatformTeam('notifyOnDemoRequest', `New Demo Request from ${request.companyName}`, 'New Demo Request', [
+    { label: 'Name', value: request.name },
+    { label: 'Company Name', value: request.companyName },
+    { label: 'Work Email', value: request.email },
+    { label: 'Phone', value: request.phone || 'N/A' },
+    { label: 'Company Size', value: request.companySize },
+    { label: 'Message', value: request.message || 'N/A' },
+  ]);
 }
 
-
 export async function sendRegistrationWelcomeEmail(org: IOrganization, adminUser: IEmployee) {
-    const user = { name: adminUser.name, email: adminUser.email };
-    const subject = `Welcome to HR Streamline AI, ${org.name}!`;
-    const message = `Your organization, <strong>${org.name}</strong>, has been successfully registered on the HR Streamline AI platform. Your administrator account is now active.<br><br>
-                     You can log in at any time to start managing your employees, setting up integrations, and exploring our AI-powered features. Your Organization ID is: <strong>${org._id}</strong>.<br><br>
-                     We're excited to have you on board!`;
-    const htmlContent = generateUserConfirmationHtml('Welcome Aboard!', user.name, message);
-    sendEmail(user, subject, htmlContent);
+  await sendTemplatedEmail({ name: adminUser.name, email: adminUser.email }, 'welcome-organization', 'Welcome Aboard!', {
+    name: adminUser.name,
+    organizationName: org.name,
+    organizationId: String(org._id),
+  });
 }
 
 export async function sendRegistrationAdminNotification(org: IOrganization, adminUser: IEmployee) {
-    const admin = { name: ADMIN_NOTIFICATION_NAME, email: ADMIN_NOTIFICATION_EMAIL };
-    const fields = [
-        { label: 'Organization Name', value: org.name },
-        { label: 'Organization ID', value: org._id.toString() },
-        { label: 'Admin Name', value: adminUser.name },
-        { label: 'Admin Email', value: adminUser.email },
-    ];
-    const subject = `New Organization Registered: ${org.name}`;
-    const htmlContent = generateAdminNotificationHtml('New Organization Registration', fields);
-    sendEmail(admin, subject, htmlContent);
+  await notifyPlatformTeam('notifyOnNewOrganization', `New Organization Registered: ${org.name}`, 'New Organization Registration', [
+    { label: 'Organization Name', value: org.name },
+    { label: 'Organization ID', value: String(org._id) },
+    { label: 'Admin Name', value: adminUser.name },
+    { label: 'Admin Email', value: adminUser.email },
+  ]);
 }
-
 
 export async function sendNewPlatformAdminWelcomeEmail(email: string, password_provided: string) {
-    const user = { name: 'New Admin', email: email };
-    const subject = `Your HR Streamline AI Platform Admin Account`;
-    const message = `An administrator account has been created for you on the HR Streamline AI platform. You can now log in using the following credentials:<br><br>
-                     <strong>Email:</strong> ${email}<br>
-                     <strong>Password:</strong> ${password_provided}<br><br>
-                     It is highly recommended that you change your password upon your first login. You can log in at the main application login page.`;
-    const htmlContent = generateUserConfirmationHtml('Welcome to the Admin Team!', 'New Admin', message);
-    sendEmail(user, subject, htmlContent);
+  await sendTemplatedEmail({ name: 'New Admin', email }, 'platform-admin-welcome', 'Welcome to the Admin Team!', {
+    email,
+    password: password_provided,
+  });
 }
 
-
 export async function sendNewEmployeeWelcomeEmail(employee: { name: string; email: string }, organizationName: string, password_provided: string) {
-    const user = { name: employee.name, email: employee.email };
-    const subject = `Welcome to ${organizationName}! Your HR Streamline AI Account is Ready`;
-    const message = `An account has been created for you on the HR Streamline AI platform for your organization, <strong>${organizationName}</strong>. You can now log in using the following credentials:<br><br>
-                     <strong>Email:</strong> ${employee.email}<br>
-                     <strong>Password:</strong> ${password_provided}<br><br>
-                     We recommend changing your password after your first login via the 'Profile' section of the dashboard.<br><br>
-                     Welcome aboard!`;
-    const htmlContent = generateUserConfirmationHtml(`Welcome, ${employee.name}!`, user.name, message);
-    sendEmail(user, subject, htmlContent);
+  await sendTemplatedEmail({ name: employee.name, email: employee.email }, 'welcome-employee', `Welcome, ${employee.name}!`, {
+    name: employee.name,
+    organizationName,
+    email: employee.email,
+    password: password_provided,
+  });
 }
 
 export async function sendPasswordResetEmail(user: { name: string; email: string }, resetUrl: string) {
-    const subject = `Reset Your HR Streamline AI Password`;
-    const message = `We received a request to reset the password for your account. Please click the button below to set a new password. This link is valid for 10 minutes.<br><br>
-                     If you did not request a password reset, you can safely ignore this email.`;
-    const htmlContent = generateUserConfirmationHtml('Password Reset Request', user.name, message, resetUrl, 'Reset Your Password');
-    sendEmail(user, subject, htmlContent);
+  await sendTemplatedEmail(user, 'password-reset', 'Password Reset Request', { name: user.name }, { link: resetUrl, text: 'Reset Your Password' });
 }
