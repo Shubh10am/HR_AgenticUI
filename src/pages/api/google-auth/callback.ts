@@ -4,6 +4,7 @@ import { getGoogleAuthClient } from './connect'; // Import the configured OAuth2
 import { verifyToken, type JwtPayload } from '@/lib/jwt';
 import dbConnect from '@/lib/mongodb';
 import GoogleApiCredential from '@/models/GoogleApiCredential';
+import { sealToken } from '@/services/google-token-crypto';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { code, state } = req.query;
@@ -37,8 +38,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       {
         employeeId: userPayload.employeeId,
         organizationId: userPayload.organizationId,
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token, // This may not always be present
+        accessToken: sealToken(tokens.access_token),
+        // Google only sends a refresh token on first consent; keep the stored one otherwise.
+        ...(tokens.refresh_token && { refreshToken: sealToken(tokens.refresh_token) }),
         scope: tokens.scope,
         tokenType: tokens.token_type,
         expiryDate: tokens.expiry_date,

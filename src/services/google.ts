@@ -3,6 +3,7 @@ import { google } from 'googleapis';
 import dbConnect from '@/lib/mongodb';
 import GoogleApiCredential from '@/models/GoogleApiCredential';
 import mongoose from 'mongoose';
+import { isSealedToken, openToken, sealToken } from './google-token-crypto';
 
 const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, NEXT_PUBLIC_BASE_URL } = process.env;
 
@@ -38,11 +39,32 @@ export async function getAuthenticatedClient(employeeId: string) {
     return null; // User has not authenticated with Google
   }
   
+  let accessToken: string | undefined;
+  let refreshToken: string | undefined;
+  try {
+    accessToken = openToken(credentials.accessToken);
+    refreshToken = openToken(credentials.refreshToken);
+  } catch (error) {
+    // Unreadable tokens (e.g. the encryption key changed): treat as disconnected so the user reconnects.
+    console.error('Failed to decrypt Google tokens; removing them so the user can reconnect.', { employeeId, error });
+    await GoogleApiCredential.deleteOne({ employeeId });
+    return null;
+  }
+
+  // Encrypt tokens saved before encryption was introduced, the first time they are used.
+  if (!isSealedToken(credentials.accessToken) || (credentials.refreshToken && !isSealedToken(credentials.refreshToken))) {
+    await GoogleApiCredential.updateOne({ employeeId }, {
+      accessToken: sealToken(accessToken),
+      ...(refreshToken && { refreshToken: sealToken(refreshToken) }),
+    });
+    console.info('Encrypted legacy plain-text Google tokens.', { employeeId });
+  }
+
   const client = getGoogleAuthClient();
 
   client.setCredentials({
-    access_token: credentials.accessToken,
-    refresh_token: credentials.refreshToken,
+    access_token: accessToken,
+    refresh_token: refreshToken,
     expiry_date: credentials.expiryDate,
     scope: credentials.scope,
     token_type: credentials.tokenType,
@@ -56,10 +78,10 @@ export async function getAuthenticatedClient(employeeId: string) {
         client.setCredentials(newCredentials);
         // Update the stored credentials with the new ones
         await GoogleApiCredential.updateOne({ employeeId }, {
-            accessToken: newCredentials.access_token,
+            accessToken: sealToken(newCredentials.access_token),
             expiryDate: newCredentials.expiry_date,
             // Refresh token might be updated too
-            ...(newCredentials.refresh_token && { refreshToken: newCredentials.refresh_token }),
+            ...(newCredentials.refresh_token && { refreshToken: sealToken(newCredentials.refresh_token) }),
         });
       }
     } catch (error) {
