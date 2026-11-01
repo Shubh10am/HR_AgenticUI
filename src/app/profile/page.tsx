@@ -13,7 +13,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { ProfileOverview } from '@/services/profile/overview';
-import { DEFAULT_PREFERENCES, type Preferences } from '@/lib/preferences';
+import { DEFAULT_PREFERENCES, START_PAGES, loadGuestPreferences, type Preferences } from '@/lib/preferences';
+import { demoProfileOverview, isGuestToken } from '@/lib/guest-demo';
+import GuestSampleNotice from '@/components/guest-sample-notice';
 import RecentActivityCard from './components/recent-activity-card';
 import PreferencesCard from './components/preferences-card';
 import { formatDateTime } from './format';
@@ -36,8 +38,18 @@ export default function ProfilePage() {
   const [preferences, setPreferences] = useState<Preferences | null>(null);
   const [startPages, setStartPages] = useState<{ path: string; label: string }[]>([]);
 
+  const isGuest = isGuestToken(token);
+
   useEffect(() => {
     if (!token) return;
+    if (isGuest) {
+      // Guests have no account: show sample history and keep preferences in this browser only.
+      setOverview(demoProfileOverview());
+      setIsOverviewLoading(false);
+      setPreferences(loadGuestPreferences());
+      setStartPages(START_PAGES.filter((page) => !page.adminOnly));
+      return;
+    }
     const headers = { Authorization: `Bearer ${token}` };
     fetch('/api/profile/overview', { headers })
       .then((response) => (response.ok ? response.json() : null))
@@ -51,7 +63,7 @@ export default function ProfilePage() {
         setStartPages(data?.startPages ?? []);
       })
       .catch(() => setPreferences(DEFAULT_PREFERENCES));
-  }, [token]);
+  }, [token, isGuest]);
 
   const fetchEmployeeStats = useCallback(async () => {
     if (!user || user.role !== 'Admin' || !token) return;
@@ -140,6 +152,7 @@ export default function ProfilePage() {
         title="User Profile"
         description="Manage your personal information and preferences."
       />
+      {isGuest && <GuestSampleNotice what="your profile activity" />}
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="md:col-span-1 shadow-lg">
           <CardHeader className="items-center text-center">
@@ -212,7 +225,7 @@ export default function ProfilePage() {
             prefs={preferences ?? DEFAULT_PREFERENCES}
             showNewDeviceAlerts={preferences?.newDeviceAlerts ?? true}
           />
-          {token && <PreferencesCard token={token} preferences={preferences} startPages={startPages} onChange={setPreferences} />}
+          {token && <PreferencesCard token={token} isGuest={isGuest} preferences={preferences} startPages={startPages} onChange={setPreferences} />}
         </div>
       </div>
 

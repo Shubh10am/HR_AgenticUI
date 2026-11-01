@@ -22,6 +22,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import GuestSampleNotice from '@/components/guest-sample-notice';
+import { demoCalendarEvents, demoEmails } from '@/lib/guest-demo';
 
 interface CalendarEvent {
   id: string;
@@ -79,7 +81,11 @@ export default function GmailCalendarPage() {
 
 
   const checkAuthStatus = useCallback(async () => {
-    if (!token || isGuest) {
+    if (isGuest) {
+        setIsAuthenticated(true);
+        return;
+    }
+    if (!token) {
         setIsLoading(false);
         setIsAuthenticated(false);
         return;
@@ -109,6 +115,15 @@ export default function GmailCalendarPage() {
       setIsLoadingMore(true);
     }
     
+    if (isGuest) {
+        setEmails(demoEmails(activeMailbox, activeCategory));
+        if (isInitialLoad) setCalendarEvents(demoCalendarEvents());
+        setNextPageToken(null);
+        setIsLoading(false);
+        setIsLoadingMore(false);
+        return;
+    }
+
     try {
         let emailsUrl = `/api/google/emails?mailbox=${activeMailbox}`;
         if (pageToken) emailsUrl += `&pageToken=${pageToken}`;
@@ -142,7 +157,7 @@ export default function GmailCalendarPage() {
           setIsLoadingMore(false);
         }
     }
-  }, [isAuthenticated, token, activeMailbox, activeCategory, toast]);
+  }, [isAuthenticated, token, activeMailbox, activeCategory, toast, isGuest]);
 
   useEffect(() => {
     checkAuthStatus();
@@ -188,6 +203,7 @@ export default function GmailCalendarPage() {
 
   const handleDeleteEmail = async () => {
     if (!selectedEmail) return;
+    if (isGuest) { setIsLoginPromptOpen(true); return; }
     setIsLoading(true);
     try {
       const response = await fetch(`/api/google/emails/${selectedEmail.id}`, {
@@ -286,6 +302,7 @@ export default function GmailCalendarPage() {
   const handleSendReply = async (e: FormEvent) => {
     e.preventDefault();
     if (!selectedEmail || !replyBody.trim()) return;
+    if (isGuest) { setIsLoginPromptOpen(true); return; }
     setIsSending(true);
     try {
         const response = await fetch('/api/google/emails/send', {
@@ -321,74 +338,6 @@ export default function GmailCalendarPage() {
     return 'N/A';
   };
   
-  if (isGuest) {
-    return (
-        <>
-        <PageHeader
-            title="Gmail & Calendar"
-            description="Manage your emails and calendar events with AI assistance."
-        >
-            <Button onClick={handleConnectGoogleAccount}>
-                <LinkIcon className="mr-2 h-4 w-4" />
-                Connect Google Account
-            </Button>
-        </PageHeader>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="md:col-span-1 shadow-lg flex flex-col h-full min-h-0">
-                <CardHeader className="p-4 border-b">
-                    <CardTitle className="text-lg">Inbox & Calendar</CardTitle>
-                    <CardDescription>View emails or calendar events.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-0 flex-grow overflow-hidden">
-                    <div className="p-4 space-y-3">
-                        <Button
-                            variant="outline"
-                            className="w-full justify-start py-2"
-                            disabled
-                        >
-                            <Calendar className="mr-2 h-4 w-4" /> Calendar Events
-                        </Button>
-                        <div className="space-y-2">
-                           <Label>Inbox</Label>
-                           <Select disabled>
-                               <SelectTrigger>
-                                   <SelectValue placeholder="Inbox"/>
-                               </SelectTrigger>
-                           </Select>
-                        </div>
-                        <div className="text-center text-muted-foreground p-6">
-                            <FileIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                            <p>Please connect your Google account to view emails.</p>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-            <div className="md:col-span-2">
-                 <Card className="shadow-lg flex items-center justify-center min-h-[500px] md:min-h-full">
-                      <div className="text-center p-6"><MailOpen className="h-24 w-24 text-muted-foreground mx-auto mb-4" /><p className="text-xl font-semibold text-muted-foreground">Select an email or calendar view</p><p className="text-sm text-muted-foreground">Content will appear here.</p></div>
-                  </Card>
-            </div>
-        </div>
-
-        <Dialog open={isLoginPromptOpen} onOpenChange={setIsLoginPromptOpen}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Connect Your Account</DialogTitle>
-                    <DialogDescription>
-                        Please log in or register to connect your Google account and use this feature.
-                    </DialogDescription>
-                </DialogHeader>
-                <DialogFooter className="gap-2">
-                    <Button asChild variant="outline" onClick={() => setIsLoginPromptOpen(false)}><Link href="/register">Register</Link></Button>
-                    <Button asChild onClick={() => setIsLoginPromptOpen(false)}><Link href="/login">Log In</Link></Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-        </>
-    );
-  }
-
-
   const mailboxes = [
     { id: 'inbox', label: 'Inbox', icon: Inbox },
     { id: 'sent', label: 'Sent', icon: Send },
@@ -418,6 +367,7 @@ export default function GmailCalendarPage() {
           </Button>
         )}
       </PageHeader>
+      {isGuest && <GuestSampleNotice what="your inbox and calendar" />}
 
       {!isAuthenticated && !isLoading && (
         <Card className="flex flex-col items-center p-10 text-center">
@@ -653,6 +603,20 @@ export default function GmailCalendarPage() {
                 </DialogFooter>
             </form>
         </DialogContent>
+      </Dialog>
+      <Dialog open={isLoginPromptOpen} onOpenChange={setIsLoginPromptOpen}>
+          <DialogContent>
+              <DialogHeader>
+                  <DialogTitle>Connect Your Account</DialogTitle>
+                  <DialogDescription>
+                      Please log in or register to connect your Google account and use this feature.
+                  </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="gap-2">
+                  <Button asChild variant="outline" onClick={() => setIsLoginPromptOpen(false)}><Link href="/register">Register</Link></Button>
+                  <Button asChild onClick={() => setIsLoginPromptOpen(false)}><Link href="/login">Log In</Link></Button>
+              </DialogFooter>
+          </DialogContent>
       </Dialog>
     </>
   );

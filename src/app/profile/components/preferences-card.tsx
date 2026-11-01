@@ -9,11 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import type { Preferences } from '@/lib/preferences';
+import { saveGuestPreferences, type Preferences } from '@/lib/preferences';
 import { formatDateTime } from '../format';
 
 interface Props {
   token: string;
+  /** Guests save to this browser only. */
+  isGuest?: boolean;
   preferences: Preferences | null;
   startPages: { path: string; label: string }[];
   onChange: (preferences: Preferences) => void;
@@ -38,7 +40,7 @@ function Row({ icon: Icon, label, hint, htmlFor, children }: { icon: typeof Glob
   );
 }
 
-export default function PreferencesCard({ token, preferences, startPages, onChange }: Props) {
+export default function PreferencesCard({ token, isGuest = false, preferences, startPages, onChange }: Props) {
   const { toast } = useToast();
   const { setTheme } = useTheme();
   const [saving, setSaving] = useState<keyof Preferences | null>(null);
@@ -54,6 +56,11 @@ export default function PreferencesCard({ token, preferences, startPages, onChan
     if (!preferences) return;
     const previous = preferences;
     onChange({ ...preferences, [key]: value });
+    if (isGuest) {
+      saveGuestPreferences({ ...preferences, [key]: value });
+      toast({ title: 'Preference saved', description: 'Saved in this browser. Sign in to keep it on your account.' });
+      return;
+    }
     setSaving(key);
     try {
       const response = await fetch('/api/profile/preferences', {
@@ -81,7 +88,7 @@ export default function PreferencesCard({ token, preferences, startPages, onChan
         <CardTitle className="flex items-center">
           <Settings2 className="mr-2 h-5 w-5 text-primary" /> Preferences
         </CardTitle>
-        <CardDescription>Saved to your account, so they follow you to any device.</CardDescription>
+        <CardDescription>{isGuest ? 'Saved in this browser while you explore as a guest.' : 'Saved to your account, so they follow you to any device.'}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {!preferences ? (

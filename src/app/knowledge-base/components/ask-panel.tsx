@@ -14,6 +14,8 @@ interface AskPanelProps {
   onOpenSource: (sourceId: string) => void;
 }
 
+import { demoKnowledgeAnswer, isGuestToken } from '@/lib/guest-demo';
+
 /** "Ask your knowledge base": a question box that answers only from the organization's documents, with sources. */
 export default function AskPanel({ token, onOpenSource }: AskPanelProps) {
   const [question, setQuestion] = useState('');
@@ -27,7 +29,7 @@ export default function AskPanel({ token, onOpenSource }: AskPanelProps) {
     setIsAsking(true);
     setError(null);
     try {
-      setResult(await knowledgeApi.search(token, text, { answer: true, limit: 5 }));
+      setResult(isGuestToken(token) ? demoKnowledgeAnswer(text) : await knowledgeApi.search(token, text, { answer: true, limit: 5 }));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.');
       setResult(null);

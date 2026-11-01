@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { CheckCircle2, ChevronLeft, ChevronRight, Download, Globe, Lock, RefreshCw, Search, ShieldCheck, XCircle } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, ChevronRight, Download, Globe, RefreshCw, Search, ShieldCheck, XCircle } from 'lucide-react';
 import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useAuth } from '@/contexts/auth-context';
 import { describeDevice } from './device';
+import GuestSampleNotice from '@/components/guest-sample-notice';
+import { demoAuditPage } from '@/lib/guest-demo';
 
 interface AuditEntry {
   _id: string;
@@ -78,14 +80,14 @@ export default function AuditLogPage() {
   }, [query, category, outcome, fromDate, toDate]);
 
   const fetchPage = useCallback(async (pageNumber: number, limit: number): Promise<AuditResponse> => {
+    if (isGuest) return demoAuditPage(buildParams(pageNumber, limit));
     const response = await fetch(`/api/audit-logs?${buildParams(pageNumber, limit)}`, { headers: { Authorization: `Bearer ${token}` } });
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(body.error || `Request failed (${response.status})`);
     return body as AuditResponse;
-  }, [buildParams, token]);
+  }, [buildParams, token, isGuest]);
 
   const load = useCallback(async () => {
-    if (isGuest) return;
     setIsLoading(true);
     try {
       setData(await fetchPage(page, PAGE_SIZE));
@@ -118,19 +120,6 @@ export default function AuditLogPage() {
     setSearchTerm(''); setQuery(''); setCategory(ALL); setOutcome(ALL); setFromDate(''); setToDate('');
   };
 
-  if (isGuest) {
-    return (
-      <div className="space-y-6">
-        <PageHeader title="Audit Log" description="A record of who did what, when and from where." />
-        <Card className="flex flex-col items-center gap-3 p-12 text-center">
-          <Lock className="h-8 w-8 text-muted-foreground" />
-          <p className="font-medium">Sign in to view the audit log</p>
-          <p className="text-sm text-muted-foreground">Activity is only recorded for signed-in accounts.</p>
-        </Card>
-      </div>
-    );
-  }
-
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.limit)) : 1;
   const hasFilters = Boolean(query || category !== ALL || outcome !== ALL || fromDate || toDate);
 
@@ -149,6 +138,7 @@ export default function AuditLogPage() {
           </Button>
         </div>
       </PageHeader>
+      {isGuest && <GuestSampleNotice what="the audit log" />}
 
       <Card className="p-4">
         <div className="flex flex-wrap gap-3">
@@ -187,7 +177,7 @@ export default function AuditLogPage() {
         </Card>
       ) : (
         <Card className="overflow-hidden">
-          <Table>
+          <Table scroll>
             <TableHeader>
               <TableRow>
                 <TableHead id="audit-log-when-header" className="w-44">Date &amp; time</TableHead>

@@ -30,3 +30,18 @@ export const START_PAGES: { path: string; label: string; adminOnly?: boolean }[]
   { path: '/manage-employees', label: 'Manage Employees', adminOnly: true },
 ];
 
+
+const GUEST_PREFERENCES_KEY = 'guestPreferences';
+
+/** Guest preferences live in this browser only. */
+export function loadGuestPreferences(): Preferences {
+  try {
+    return { ...DEFAULT_PREFERENCES, ...JSON.parse(localStorage.getItem(GUEST_PREFERENCES_KEY) ?? '{}') };
+  } catch {
+    return { ...DEFAULT_PREFERENCES };
+  }
+}
+
+export function saveGuestPreferences(preferences: Preferences): void {
+  localStorage.setItem(GUEST_PREFERENCES_KEY, JSON.stringify(preferences));
+}

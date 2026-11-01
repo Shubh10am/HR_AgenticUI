@@ -19,6 +19,8 @@ import ItemList from './components/item-list';
 import UploadDialog from './components/upload-dialog';
 import DocumentPreview from './components/document-preview';
 import NameDialog from './components/name-dialog';
+import GuestSampleNotice from '@/components/guest-sample-notice';
+import { demoKnowledge } from '@/lib/guest-demo';
 
 const EDITOR_ROLES = ['Admin', 'HR'];
 
@@ -45,7 +47,14 @@ export default function KnowledgeBasePage() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (isGuest || !token) return;
+    if (isGuest) {
+      const demo = demoKnowledge(activeSearch ? null : parentId, activeSearch);
+      setItems(demo.items);
+      setBreadcrumbs(demo.breadcrumbs);
+      setIsLoading(false);
+      return;
+    }
+    if (!token) return;
     setIsLoading(true);
     try {
       const result = await knowledgeApi.list(token, activeSearch ? null : parentId, activeSearch || undefined);
@@ -77,12 +86,18 @@ export default function KnowledgeBasePage() {
       setActiveSearch('');
       setSearchTerm('');
       setParentId(item._id);
+    } else if (isGuest) {
+      toast({ title: 'Sample document', description: 'Sign in to open and search your own documents.' });
     } else {
       setPreviewId(item._id);
     }
   };
 
   const openSource = (sourceId: string) => {
+    if (isGuest) {
+      toast({ title: 'Sample document', description: 'Sign in to open and search your own documents.' });
+      return;
+    }
     if (sourceId.startsWith('policy:')) {
       toast({ title: 'Built-in company policy', description: 'Edit attendance, leave and code-of-conduct policies in Settings.' });
       return;
@@ -114,23 +129,6 @@ export default function KnowledgeBasePage() {
     );
   }
 
-  if (isGuest) {
-    return (
-      <>
-        <PageHeader title="Knowledge Base" description="Your organization's policies and documents, searchable by AI." />
-        <Card className="flex flex-col items-center p-10 text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Lock className="h-7 w-7" /></span>
-          <h2 className="mt-4 text-xl font-semibold">Sign in to use the knowledge base</h2>
-          <p className="mt-2 max-w-md text-sm text-muted-foreground">Upload your handbooks and policies so Copilot and AI email replies answer from your own documents.</p>
-          <div className="mt-6 flex gap-2">
-            <Button asChild variant="outline" id="kb-guest-register"><Link href="/register">Register</Link></Button>
-            <Button asChild id="kb-guest-login"><Link href="/login">Log in</Link></Button>
-          </div>
-        </Card>
-      </>
-    );
-  }
-
   return (
     <>
       <PageHeader title="Knowledge Base" description="Your organization's policies and documents — searchable by AI.">
@@ -141,6 +139,7 @@ export default function KnowledgeBasePage() {
           </div>
         )}
       </PageHeader>
+      {isGuest && <GuestSampleNotice what="the knowledge base" />}
 
       {token && <AskPanel token={token} onOpenSource={openSource} />}
 

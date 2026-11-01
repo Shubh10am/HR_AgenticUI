@@ -13,6 +13,8 @@ import { Loader2, AlertTriangle, User, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns-tz';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation'; // Import useRouter
+import GuestSampleNotice from '@/components/guest-sample-notice';
+import { demoAttendanceBoard, isGuestToken } from '@/lib/guest-demo';
 
 interface PresentEmployee {
   _id: string;
@@ -44,6 +46,11 @@ export default function AttendanceManagementPage() {
 
   const fetchDashboardData = useCallback(async () => {
     if (!token) return;
+    if (isGuestToken(token)) {
+      setDashboardData(demoAttendanceBoard());
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
@@ -69,6 +76,7 @@ export default function AttendanceManagementPage() {
   }, [fetchDashboardData]);
 
   const handleRowClick = (employeeId: string) => {
+    if (employeeId.startsWith('demo-')) return;
     router.push(`/manage-employees/${employeeId}`);
   };
 
@@ -106,7 +114,8 @@ export default function AttendanceManagementPage() {
           <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
         </Button>
       </PageHeader>
-      
+      {isGuestToken(token) && <GuestSampleNotice what="the attendance board" />}
+
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -115,7 +124,7 @@ export default function AttendanceManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="rounded-md border">
-              <Table>
+              <Table scroll className="[&_td]:whitespace-nowrap [&_th]:whitespace-nowrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Employee</TableHead>
@@ -160,7 +169,7 @@ export default function AttendanceManagementPage() {
           </CardHeader>
           <CardContent>
              <div className="rounded-md border">
-              <Table>
+              <Table scroll className="[&_td]:whitespace-nowrap [&_th]:whitespace-nowrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Employee</TableHead>

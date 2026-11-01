@@ -52,7 +52,9 @@ const setupFetchInterceptor = (logoutCallback: () => void) => {
         if (response.status === 401) {
             // Don't intercept the login endpoint itself on a 401, as that's expected for wrong passwords.
             const url = typeof args[0] === 'string' ? args[0] : args[0].url;
-            if (!url.includes('/api/auth/login')) {
+            // Guest sessions have no server account, so a 401 is expected and must not sign them out.
+            const isGuest = localStorage.getItem('authToken')?.startsWith('guest-');
+            if (!url.includes('/api/auth/login') && !isGuest) {
                 console.log('API interceptor: Detected 401, logging out.');
                 logoutCallback();
                 // Throw an error to prevent the original caller from processing a bad response
