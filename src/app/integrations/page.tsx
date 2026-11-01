@@ -1,495 +1,188 @@
-
 'use client';
 
-import { useState, type FormEvent, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Plug, Search, Send } from 'lucide-react';
 import PageHeader from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Github, Link as LinkIcon, CheckCircle, Settings, MessageSquare, CalendarDays, Webcam, Users, LayoutGrid, FileSignature, KanbanSquare, Video, Inbox, Loader2, Send, FileText, Trash2 } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import Image from 'next/image';
-import { useToast } from "@/hooks/use-toast";
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/auth-context';
+import { useToast } from '@/hooks/use-toast';
+import { isGuestToken } from '@/lib/guest-demo';
+import { CATEGORIES, INTEGRATIONS } from './catalog';
+import IntegrationCard, { type GoogleState } from './components/integration-card';
+import RequestDialog from './components/request-dialog';
 
-interface Integration {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ElementType;
-  logoUrl?: string;
-  dataAiHint?: string;
-  category: string;
-  isConnected: boolean;
-  features: string[];
-  requiresOAuth?: boolean;
-  isGoogleProduct?: boolean;
-  oauthConnecting?: boolean;
-  isDisconnecting?: boolean;
-}
-
-const initialIntegrations: Integration[] = [
-  {
-    id: 'gmail',
-    name: 'Gmail',
-    description: 'Connect your Gmail account to fetch, read, and reply to emails with AI assistance.',
-    icon: Inbox,
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg',
-    dataAiHint: 'gmail logo',
-    category: 'Email',
-    isConnected: false,
-    features: ['Fetch Emails', 'AI Reply Generation', 'Send Emails'],
-    requiresOAuth: true,
-    isGoogleProduct: true,
-  },
-  {
-    id: 'github',
-    name: 'GitHub',
-    description: 'Connect your GitHub account to sync repositories, track issues, and analyze developer activity.',
-    icon: Github,
-    logoUrl: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
-    dataAiHint: 'github logo',
-    category: 'Development',
-    isConnected: false,
-    features: ['Repository Sync', 'Issue Tracking', 'Activity Summary'],
-    requiresOAuth: true,
-  },
-  {
-    id: 'slack',
-    name: 'Slack',
-    description: 'Integrate Slack for notifications, quick actions, and communication logging.',
-    icon: MessageSquare,
-    logoUrl: 'https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png',
-    dataAiHint: 'slack app logo',
-    category: 'Communication',
-    isConnected: true,
-    features: ['Notifications', 'Slash Commands', 'Message Logging'],
-  },
-   {
-    id: 'google-calendar',
-    name: 'Google Calendar',
-    description: 'Sync calendars for scheduling interviews, meetings, and managing team availability.',
-    icon: CalendarDays,
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Google_Calendar_icon_%282020%29.svg/250px-Google_Calendar_icon_%282020%29.svg.png',
-    dataAiHint: 'google calendar logo',
-    category: 'Productivity',
-    isConnected: false,
-    features: ['Meeting Scheduling', 'Availability Sync', 'Leave Management'],
-    requiresOAuth: true,
-    isGoogleProduct: true,
-  },
-  {
-    id: 'zoom',
-    name: 'Zoom',
-    description: 'Connect Zoom for seamless video conferencing, meeting recordings, and webinar management.',
-    icon: Webcam,
-    logoUrl: 'https://st2.zoom.us/static/6.3.38697/image/new/topNav/Zoom_logo.svg',
-    dataAiHint: 'zoom app logo',
-    category: 'Communication',
-    isConnected: false,
-    features: ['Schedule Meetings', 'Cloud Recordings', 'User Management'],
-  },
-  {
-    id: 'google-meet',
-    name: 'Google Meet',
-    description: 'Integrate Google Meet for easy video calls and team meetings directly from your HR platform.',
-    icon: Video,
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg',
-    dataAiHint: 'google meet logo',
-    category: 'Communication',
-    isConnected: false,
-    features: ['Start Meetings', 'Schedule Calls', 'Sync Recordings'],
-    requiresOAuth: true,
-    isGoogleProduct: true,
-  },
-  {
-    id: 'microsoft-teams',
-    name: 'Microsoft Teams',
-    description: 'Integrate with Microsoft Teams for chat, channels, and file sharing within your HR workflows.',
-    icon: Users,
-    logoUrl: 'https://www.microsoft.com/favicon.ico',
-    dataAiHint: 'microsoft teams logo',
-    category: 'Communication',
-    isConnected: true,
-    features: ['Team Notifications', 'File Sync', 'Automated Approvals'],
-  },
-  {
-    id: 'google-workspace',
-    name: 'Google Workspace',
-    description: 'Sync with Google Drive, Docs, and Sheets for collaborative document management.',
-    icon: LayoutGrid,
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
-    dataAiHint: 'google workspace logo',
-    category: 'Productivity',
-    isConnected: false,
-    features: ['Drive Integration', 'Docs Collaboration', 'Sheet Automation'],
-    requiresOAuth: true,
-    isGoogleProduct: true,
-  },
-  {
-    id: 'docusign',
-    name: 'DocuSign',
-    description: 'Streamline offer letters and HR documents with eSignature capabilities from DocuSign.',
-    icon: FileSignature,
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Docusign_Full_Color.svg/500px-Docusign_Full_Color.svg.png',
-    dataAiHint: 'docusign logo',
-    category: 'Documents',
-    isConnected: false,
-    features: ['Send Envelopes', 'Track Signatures', 'Secure Document Storage'],
-  },
-  {
-    id: 'trello',
-    name: 'Trello',
-    description: 'Manage HR projects, onboarding checklists, and recruitment pipelines using Trello boards.',
-    icon: KanbanSquare,
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/en/thumb/8/8c/Trello_logo.svg/800px-Trello_logo.svg.png',
-    dataAiHint: 'trello logo',
-    category: 'Project Management',
-    isConnected: true,
-    features: ['Board Sync', 'Task Automation', 'Recruitment Tracking'],
-  },
-  {
-    id: 'jira',
-    name: 'Jira',
-    description: 'Track issues, manage projects, and automate workflows for HR and development teams.',
-    icon: KanbanSquare,
-    logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/atlassian_jira_logo_icon_170511.png',
-    dataAiHint: 'jira logo',
-    category: 'Project Management',
-    isConnected: false,
-    features: ['Issue Tracking', 'Project Automation', 'Custom Workflows'],
-  },
-  {
-    id: 'notion',
-    name: 'Notion',
-    description: 'Connect your workspace to sync notes, docs, and project plans with your HR workflows.',
-    icon: FileText,
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png',
-    dataAiHint: 'notion logo',
-    category: 'Productivity',
-    isConnected: false,
-    features: ['Sync Pages', 'Database Integration', 'Knowledge Base Sync'],
-    requiresOAuth: true,
-  },
-  {
-    id: 'calendly',
-    name: 'Calendly',
-    description: 'Automate meeting scheduling to save time and reduce back-and-forth emails.',
-    icon: CalendarDays,
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/7f/Calendly_company_logo.png/500px-Calendly_company_logo.png',
-    dataAiHint: 'calendly logo',
-    category: 'Productivity',
-    isConnected: false,
-    features: ['Embed Scheduling Page', 'Automated Reminders', 'Calendar Sync'],
-    requiresOAuth: true,
-  },
-  {
-    id: 'outlook',
-    name: 'Outlook Calendar',
-    description: 'Sync your Outlook calendar for scheduling and availability tracking across the Microsoft ecosystem.',
-    icon: CalendarDays,
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg/512px-Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg.png',
-    dataAiHint: 'outlook logo',
-    category: 'Email',
-    isConnected: false,
-    features: ['Schedule Meetings', 'Availability Sync', 'Contact Sync'],
-    requiresOAuth: true,
-  },
-];
-
+const REQUESTED_KEY = 'integrationRequests';
+type Filter = 'All' | 'Available now' | (typeof CATEGORIES)[number];
 
 export default function IntegrationsPage() {
-  const [integrations, setIntegrations] = useState<Integration[]>(initialIntegrations);
-  const { toast } = useToast();
   const { token } = useAuth();
+  const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isGuest = isGuestToken(token);
 
-  const checkAuthStatus = useCallback(async () => {
-    if (!token || token.startsWith('guest-')) return;
-    try {
-      const response = await fetch('/api/google-auth/status', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.isAuthenticated) {
-          setIntegrations(prev =>
-            prev.map(int => (int.isGoogleProduct ? { ...int, isConnected: true } : int))
-          );
-        }
-      }
-    } catch (error) {
-      console.error('Failed to check Google auth status:', error);
-    }
-  }, [token]);
-
+  const [googleState, setGoogleState] = useState<GoogleState>('unknown');
+  const [filter, setFilter] = useState<Filter>('All');
+  const [query, setQuery] = useState('');
+  const [requested, setRequested] = useState<string[]>([]);
+  const [requestFor, setRequestFor] = useState<string | null>(null);
+  const [showSignIn, setShowSignIn] = useState(false);
 
   useEffect(() => {
-    checkAuthStatus();
-    
-    if (searchParams.get('connect') === 'success') {
-      toast({
-        title: 'Google Account Connected',
-        description: 'Successfully authenticated with Google. You can now use related integrations.',
-      });
-      setIntegrations(prev =>
-        prev.map(int => 
-          int.isGoogleProduct
-          ? { ...int, isConnected: true }
-          : int
-        )
-      );
+    try { setRequested(JSON.parse(localStorage.getItem(REQUESTED_KEY) ?? '[]')); } catch { setRequested([]); }
+  }, []);
+
+  const checkGoogle = useCallback(async () => {
+    if (isGuest) { setGoogleState('disconnected'); return; }
+    try {
+      const response = await fetch('/api/google-auth/status', { headers: { Authorization: `Bearer ${token}` } });
+      const data = await response.json();
+      setGoogleState(response.ok && data.isAuthenticated ? 'connected' : 'disconnected');
+    } catch {
+      setGoogleState('disconnected');
+    }
+  }, [isGuest, token]);
+
+  useEffect(() => {
+    checkGoogle();
+    if (searchParams?.get('connect') === 'success') {
+      toast({ title: 'Google connected', description: 'Gmail, Calendar and Meet are now linked to your account.' });
       router.replace('/integrations');
     }
-  }, [searchParams, toast, router, checkAuthStatus]);
+  }, [checkGoogle, searchParams, toast, router]);
 
-
-  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
-  const [requestedIntegrationName, setRequestedIntegrationName] = useState('');
-  const [requestReason, setRequestReason] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-
-  const handleConnect = async (id: string) => {
-    const integrationToUpdate = integrations.find(int => int.id === id);
-    if (!integrationToUpdate || !token) return;
-
-    if (integrationToUpdate.requiresOAuth) {
-        const idsToUpdate = integrationToUpdate.isGoogleProduct
-            ? integrations.filter(i => i.isGoogleProduct).map(i => i.id)
-            : [id];
-
-        setIntegrations(prev =>
-            prev.map(int => (idsToUpdate.includes(int.id) ? { ...int, oauthConnecting: true } : int))
-        );
-
-        try {
-            window.location.href = `/api/google-auth/connect`;
-        } catch (error) {
-            console.error("Failed to initiate connection:", error);
-            toast({ title: 'Connection Failed', description: 'Could not start the authentication process.', variant: 'destructive' });
-            setIntegrations(prev =>
-                prev.map(int => (idsToUpdate.includes(int.id) ? { ...int, oauthConnecting: false } : int))
-            );
-        }
-    } else {
-        setIntegrations(prev =>
-            prev.map(int => (int.id === id ? { ...int, isConnected: !int.isConnected } : int))
-        );
-        toast({
-            title: `${integrationToUpdate.name} ${!integrationToUpdate.isConnected ? 'Connected' : 'Disconnected'}`,
-            description: `Successfully ${!integrationToUpdate.isConnected ? 'connected to' : 'disconnected from'} ${integrationToUpdate.name}.`,
-            variant: !integrationToUpdate.isConnected ? "default" : "destructive",
-        });
-    }
+  const connectGoogle = () => {
+    if (isGuest) { setShowSignIn(true); return; }
+    setGoogleState('connecting');
+    // The OAuth route reads the session from this short-lived cookie.
+    document.cookie = `authToken=${token}; path=/; max-age=300`;
+    window.location.href = '/api/google-auth/connect';
   };
 
-  const handleDisconnect = async (id: string) => {
-    if (!token) return;
-
-    const integrationToUpdate = integrations.find(int => int.id === id);
-    if (!integrationToUpdate) return;
-    
-    const idsToUpdate = integrationToUpdate.isGoogleProduct
-      ? integrations.filter(i => i.isGoogleProduct).map(i => i.id)
-      : [id];
-
-    setIntegrations(prev => prev.map(int => idsToUpdate.includes(int.id) ? { ...int, isDisconnecting: true } : int));
-    
+  const disconnectGoogle = async () => {
+    setGoogleState('disconnecting');
     try {
-        const response = await fetch('/api/google-auth/disconnect', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Failed to disconnect.');
-        
-        toast({ title: 'Account Disconnected', description: 'Your Google account credentials have been removed.' });
-        setIntegrations(prev => prev.map(int => 
-            idsToUpdate.includes(int.id) 
-            ? { ...int, isConnected: false, isDisconnecting: false } 
-            : int
-        ));
-    } catch (error: any) {
-        toast({ title: 'Disconnect Failed', description: error.message, variant: 'destructive' });
-        setIntegrations(prev => prev.map(int => idsToUpdate.includes(int.id) ? { ...int, isDisconnecting: false } : int));
+      const response = await fetch('/api/google-auth/disconnect', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Could not disconnect.');
+      setGoogleState('disconnected');
+      toast({ title: 'Google disconnected', description: 'Gmail, Calendar and Meet are no longer linked.' });
+    } catch (error) {
+      setGoogleState('connected');
+      toast({ title: 'Disconnect failed', description: (error as Error).message, variant: 'destructive' });
     }
   };
 
-
-  const handleIntegrationRequestSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!requestedIntegrationName.trim() || !requestReason.trim()) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide the name of the integration and a reason for your request.",
-        variant: "destructive",
-      });
-      return;
-    }
-    // Mock submission
-    console.log("Integration Request:", { requestedIntegrationName, requestReason, contactEmail });
-    toast({
-      title: "Request Submitted (Mock)",
-      description: `Your request for "${requestedIntegrationName}" has been received. Thank you!`,
-    });
-    setRequestedIntegrationName('');
-    setRequestReason('');
-    setContactEmail('');
-    setIsRequestDialogOpen(false);
+  const openRequest = (name: string) => {
+    if (isGuest) { setShowSignIn(true); return; }
+    setRequestFor(name);
   };
+
+  const markRequested = (name: string) => {
+    const match = INTEGRATIONS.find((i) => i.name.toLowerCase() === name.toLowerCase());
+    if (!match) return;
+    const next = Array.from(new Set([...requested, match.id]));
+    setRequested(next);
+    localStorage.setItem(REQUESTED_KEY, JSON.stringify(next));
+  };
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return INTEGRATIONS.filter((i) =>
+      (filter === 'All' || (filter === 'Available now' ? i.availability === 'google' : i.category === filter)) &&
+      (!q || `${i.name} ${i.category} ${i.description} ${i.features.join(' ')}`.toLowerCase().includes(q))
+    );
+  }, [filter, query]);
+
+  const liveCount = INTEGRATIONS.filter((i) => i.availability === 'google').length;
+  const filters: Filter[] = ['All', 'Available now', ...CATEGORIES];
 
   return (
     <>
-      <PageHeader
-        title="Manage Integrations"
-        description="Connect and configure third-party services to enhance your HR workflow."
-      />
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {integrations.map(integration => (
-          <Card 
-            key={integration.id} 
-            className="shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 flex flex-col"
-          >
-            <CardHeader>
-              <div className="flex items-center justify-between mb-2">
-                 <div className="flex items-center">
-                    {integration.logoUrl ? (
-                       <Image src={integration.logoUrl} alt={`${integration.name} logo`} width={40} height={40} className="rounded-md object-contain" data-ai-hint={integration.dataAiHint}/>
-                    ) : (
-                      <integration.icon className="h-10 w-10 text-primary" />
-                    )}
-                    <CardTitle className="ml-3 text-xl">{integration.name}</CardTitle>
-                 </div>
-                 <Badge variant="outline">{integration.category}</Badge>
-              </div>
-              <CardDescription className="text-sm min-h-[40px]">{integration.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow space-y-3">
-              <h4 className="text-xs font-semibold text-muted-foreground">FEATURES:</h4>
-              <ul className="space-y-1 text-xs">
-                {integration.features.map(feature => (
-                  <li key={feature} className="flex items-center">
-                    <CheckCircle className="h-3 w-3 mr-2 text-green-500" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardContent className="border-t pt-4 mt-auto">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex min-w-0 items-center space-x-2 overflow-hidden">
-                  <Label
-                    className={`inline-block truncate ${integration.isConnected ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
-                  >
-                    {integration.oauthConnecting ? 'Connecting...' : (integration.isDisconnecting ? 'Disconnecting...' : (integration.isConnected ? 'Connected' : 'Disconnected'))}
-                  </Label>
-                </div>
-                <div className="flex-shrink-0 flex gap-2">
-                  {integration.isConnected ? (
-                    <>
-                      {integration.requiresOAuth ? (
-                        <Button variant="destructive" size="sm" onClick={() => handleDisconnect(integration.id)} disabled={integration.isDisconnecting}>
-                          {integration.isDisconnecting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Trash2 className="mr-2 h-4 w-4" />}
-                          Disconnect
-                        </Button>
-                      ) : (
-                        <Button variant="outline" size="sm">
-                          <Settings className="mr-2 h-4 w-4" /> Configure
-                        </Button>
-                      )}
-                    </>
-                  ) : (
-                    <Button size="sm" onClick={() => handleConnect(integration.id)} disabled={integration.oauthConnecting}>
-                      {integration.oauthConnecting ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <LinkIcon className="mr-2 h-4 w-4" />
-                      )}
-                       {integration.oauthConnecting ? 'Please wait' : 'Connect'}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-       <Card className="mt-8 shadow-lg">
-        <CardHeader>
-          <CardTitle>Request New Integration</CardTitle>
-          <CardDescription>Can't find an integration you need? Let us know!</CardDescription>
+      <PageHeader title="Manage Integrations" description="Connect the tools your HR team already uses." />
+
+      <Card className="mb-6">
+        <CardHeader className="flex flex-col gap-4 space-y-0 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Plug className="h-5 w-5" /></span>
+            <div>
+              <CardTitle className="text-base">{INTEGRATIONS.length} integrations · {liveCount} available now</CardTitle>
+              <CardDescription>
+                {googleState === 'connected' ? 'Your Google account is connected.' : 'Connect Google to use Gmail, Calendar and Meet.'} Request any other tool to move it up our roadmap.
+              </CardDescription>
+            </div>
+          </div>
+          <div className="relative sm:w-72">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input id="integrations-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search tools or features…" className="pl-8" />
+          </div>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            We are always looking to expand our supported integrations. If there's a service you'd like to see here, please submit a request.
-          </p>
-          <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Send className="mr-2 h-4 w-4" />
-                Request Integration
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[480px]">
-              <DialogHeader>
-                <DialogTitle>Request a New Integration</DialogTitle>
-                <DialogDescription>
-                  Tell us which integration you'd like to see. We'll review your request.
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleIntegrationRequestSubmit} id="integrationRequestForm" className="grid gap-4 py-4">
-                <div>
-                  <Label htmlFor="requestedIntegrationName">Integration Name</Label>
-                  <Input
-                    id="requestedIntegrationName"
-                    value={requestedIntegrationName}
-                    onChange={(e) => setRequestedIntegrationName(e.target.value)}
-                    placeholder="e.g., Awesome Service XYZ"
-                    className="mt-1"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="requestReason">Reason for Request / Use Case</Label>
-                  <Textarea
-                    id="requestReason"
-                    value={requestReason}
-                    onChange={(e) => setRequestReason(e.target.value)}
-                    placeholder="Describe how this integration would help you or your team."
-                    className="mt-1 min-h-[100px]"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="contactEmail">Your Contact Email (Optional)</Label>
-                  <Input
-                    id="contactEmail"
-                    type="email"
-                    value={contactEmail}
-                    onChange={(e) => setContactEmail(e.target.value)}
-                    placeholder="So we can follow up if needed"
-                    className="mt-1"
-                  />
-                </div>
-              </form>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsRequestDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" form="integrationRequestForm">
-                  Submit Request
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </CardContent>
       </Card>
+
+      <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Filter integrations">
+        {filters.map((f) => {
+          const count = f === 'All' ? INTEGRATIONS.length : f === 'Available now' ? liveCount : INTEGRATIONS.filter((i) => i.category === f).length;
+          return (
+            <Button key={f} id={`integrations-filter-${f.toLowerCase().replace(/[^a-z]+/g, '-')}`} role="tab" aria-selected={filter === f}
+              size="sm" variant={filter === f ? 'default' : 'outline'} className="h-8 rounded-full" onClick={() => setFilter(f)}>
+              {f} <span className="ml-1 opacity-70">{count}</span>
+            </Button>
+          );
+        })}
+      </div>
+
+      {visible.length === 0 ? (
+        <Card className="p-10 text-center text-sm text-muted-foreground">
+          No integrations match “{query}”.{' '}
+          <button type="button" className="font-medium text-primary hover:underline" onClick={() => openRequest(query.trim())}>Request it</button>
+        </Card>
+      ) : (
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {visible.map((integration) => (
+            <IntegrationCard
+              key={integration.id}
+              integration={integration}
+              googleState={googleState}
+              isRequested={requested.includes(integration.id)}
+              onConnect={connectGoogle}
+              onDisconnect={disconnectGoogle}
+              onRequest={() => openRequest(integration.name)}
+            />
+          ))}
+        </div>
+      )}
+
+      <Card className="mt-8">
+        <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <CardTitle className="text-base">Don&apos;t see your tool?</CardTitle>
+            <CardDescription>Tell us what you use and we&apos;ll prioritise it.</CardDescription>
+          </div>
+          <Button id="integrations-request-other" onClick={() => openRequest('')}><Send className="mr-2 h-4 w-4" />Request an integration</Button>
+        </CardHeader>
+      </Card>
+
+      {token && (
+        <RequestDialog open={requestFor !== null} integrationName={requestFor ?? ''} token={token} onClose={() => setRequestFor(null)} onRequested={markRequested} />
+      )}
+
+      <Dialog open={showSignIn} onOpenChange={setShowSignIn}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sign in to connect tools</DialogTitle>
+            <DialogDescription>Guests can browse integrations. Sign in or register to connect Google or request a tool.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button asChild variant="outline"><Link href="/register">Register</Link></Button>
+            <Button asChild><Link href="/login">Log in</Link></Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
