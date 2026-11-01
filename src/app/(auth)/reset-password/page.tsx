@@ -18,6 +18,7 @@ function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
+  const isInvite = searchParams?.get('invite') === '1';
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -70,11 +71,11 @@ function ResetPasswordForm() {
         <Link href="/" className="flex items-center justify-center gap-2 mb-4 text-primary hover:text-primary/90">
             <Logo className="h-10 w-10" />
         </Link>
-        <CardTitle className="text-2xl">Reset Your Password</CardTitle>
+        <CardTitle className="text-2xl">{isInvite ? 'Set Up Your Account' : 'Reset Your Password'}</CardTitle>
         <CardDescription>
           {isSuccess 
-            ? 'Your password has been successfully updated.' 
-            : 'Enter your new password below.'
+            ? 'Your password is set. You can sign in now.'
+            : isInvite ? 'Choose a password to finish setting up your account.' : 'Enter your new password below.'
           }
         </CardDescription>
       </CardHeader>
@@ -88,7 +89,7 @@ function ResetPasswordForm() {
         ) : isSuccess ? (
           <div className="flex flex-col items-center justify-center p-8 text-center">
             <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
-            <p className="font-semibold text-lg">Password Reset!</p>
+            <p className="font-semibold text-lg">{isInvite ? 'Account ready!' : 'Password Reset!'}</p>
             <p className="text-muted-foreground mt-2">You can now log in with your new password.</p>
           </div>
         ) : (
@@ -101,7 +102,7 @@ function ResetPasswordForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
                 disabled={isSubmitting}
               />
             </div>
@@ -118,7 +119,7 @@ function ResetPasswordForm() {
             </div>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
-              Reset Password
+              {isInvite ? 'Set Password' : 'Reset Password'}
             </Button>
           </form>
         )}
@@ -126,7 +127,7 @@ function ResetPasswordForm() {
        <CardFooter className="flex-col space-y-2 text-sm">
         {isSuccess || error ? (
             <Button variant="link" asChild className="p-0 h-auto">
-                <Link href="/login">Return to Log in</Link>
+                <Link href="/login">{isSuccess ? 'Sign in' : 'Return to Log in'}</Link>
             </Button>
         ) : null}
       </CardFooter>

@@ -1,59 +1,35 @@
-
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
-import Employee from '@/models/Employee';
-import crypto from 'crypto';
-import bcrypt from 'bcryptjs';
+import { recordAudit } from '@/services/audit/record';
+import { consumePasswordToken, MIN_PASSWORD_LENGTH } from '@/services/auth/password-tokens';
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+/** Sets a password from an invite or reset link. The token is single-use. */
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
-
-  await dbConnect();
-
-  const { token, newPassword } = req.body;
-
-  if (!token || !newPassword) {
-    return res.status(400).json({ error: 'Token and new password are required.' });
+  const { token, newPassword } = req.body ?? {};
+  if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token) || typeof newPassword !== 'string') {
+    return res.status(400).json({ error: 'This link is invalid. Ask for a new one.' });
   }
-
-  if (newPassword.length < 6) {
-    return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+  if (newPassword.length < MIN_PASSWORD_LENGTH) {
+    return res.status(400).json({ error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters long.` });
   }
 
   try {
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-
-    // In a real app, you would find the user by the hashed token and check expiry.
-    // const user = await Employee.findOne({
-    //   passwordResetToken: hashedToken,
-    //   passwordResetExpires: { $gt: Date.now() },
-    // });
-    
-    // For this mock-up, since we are not saving the token, we'll find a user
-    // to simulate the password update process. This is NOT secure for production.
-    const user = await Employee.findOne().sort({ createdAt: -1 }); // Find any user for demo
-
-    if (!user) {
-      return res.status(400).json({ error: 'Password reset token is invalid or has expired.' });
+    await dbConnect();
+    const employee = await consumePasswordToken(token, newPassword);
+    if (!employee) {
+      return res.status(400).json({ error: 'This link is invalid or has expired. Ask for a new one.' });
     }
-
-    // Update password
-    const salt = await bcrypt.genSalt(10);
-    user.passwordHash = await bcrypt.hash(newPassword, salt);
-    
-    // Clear reset token fields
-    // user.passwordResetToken = undefined;
-    // user.passwordResetExpires = undefined;
-    
-    await user.save();
-
-    return res.status(200).json({ message: 'Password has been reset successfully.' });
-
+    await recordAudit(req, {
+      id: String(employee._id),
+      name: employee.name,
+      email: employee.email,
+      role: employee.role,
+      organizationId: String(employee.organizationId),
+    }, 200);
+    return res.status(200).json({ message: 'Your password has been set. You can sign in now.' });
   } catch (error) {
     console.error('Reset password error:', error);
     return res.status(500).json({ error: 'Internal Server Error' });

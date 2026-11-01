@@ -22,9 +22,16 @@ const SAMPLE_VALUES: Record<string, string> = {
   organizationName: 'Acme Corp',
   organizationId: '64f0c2a1b2c3d4e5f6a7b8c9',
   email: 'alex@acme.example',
-  password: '••••••••',
   subject: 'Pricing question',
   companyName: 'Acme Corp',
+};
+
+/** The button the mailer adds below each template's text, if any. */
+const TEMPLATE_BUTTONS: Record<string, string> = {
+  'welcome-employee': 'Set your password',
+  'welcome-organization': 'Sign in',
+  'password-reset': 'Reset Your Password',
+  'platform-admin-welcome': 'Sign in',
 };
 
 const fillSample = (text: string) => text.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, name: string) => SAMPLE_VALUES[name] ?? `{{${name}}}`);
@@ -147,7 +154,7 @@ export default function EmailTemplatesTab() {
               <div className="space-y-3 p-4 text-sm leading-relaxed">
                 <p className="font-semibold">Hi {selected.variables.includes('name') ? SAMPLE_VALUES.name : 'New Admin'},</p>
                 <p className="whitespace-pre-line text-foreground/80">{fillSample(body)}</p>
-                {selected.key === 'password-reset' && <span className="inline-block rounded bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Reset Your Password</span>}
+                {TEMPLATE_BUTTONS[selected.key] && <span id="email-template-preview-button" className="inline-block rounded bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">{TEMPLATE_BUTTONS[selected.key]}</span>}
                 <p className="text-foreground/80">Best regards,<br />The team</p>
               </div>
             </div>

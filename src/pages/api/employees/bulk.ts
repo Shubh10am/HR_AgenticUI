@@ -5,7 +5,8 @@ import Employee, { type EmployeeRole } from '@/models/Employee';
 import Organization from '@/models/Organization';
 import bcrypt from 'bcryptjs';
 import { verifyToken } from '@/lib/jwt';
-import { sendNewEmployeeWelcomeEmail } from '@/services/mailerService';
+import { sendInvite } from '@/services/auth/invite';
+import { MIN_PASSWORD_LENGTH, unusablePasswordHash } from '@/services/auth/password-tokens';
 
 type BulkEmployeeData = {
   name: string;
@@ -17,11 +18,14 @@ type BulkEmployeeData = {
 
 type BulkRegisterRequestBody = {
   employees: BulkEmployeeData[];
+  /** Email each new employee a set-password link. Defaults to true. */
+  sendInvites?: boolean;
 };
 
 type ResponseData = {
   message: string;
   createdCount: number;
+  invitedCount: number;
   failedCount: number;
   errors: { email: string; reason: string }[];
 };
@@ -48,7 +52,10 @@ export default async function handler(
   }
 
   const { organizationId: currentUserOrgId } = decodedToken;
-  const { employees } = req.body as BulkRegisterRequestBody;
+  const { employees, sendInvites = true } = req.body as BulkRegisterRequestBody;
+  if (employees?.length > 500) {
+    return res.status(400).json({ error: 'Import at most 500 employees at a time.' });
+  }
 
   if (!Array.isArray(employees) || employees.length === 0) {
     return res.status(400).json({ error: 'An array of employees is required.' });
@@ -73,8 +80,12 @@ export default async function handler(
   for (const emp of employees) {
     const { name, email, password, role, department } = emp;
 
-    if (!name || !email || !password || !role) {
-      registrationErrors.push({ email: email || 'N/A', reason: 'Missing required fields (name, email, password, role).' });
+    if (!name || !email || !role) {
+      registrationErrors.push({ email: email || 'N/A', reason: 'Missing required fields (name, email, role).' });
+      continue;
+    }
+    if (password && password.length < MIN_PASSWORD_LENGTH) {
+      registrationErrors.push({ email, reason: `Password must be at least ${MIN_PASSWORD_LENGTH} characters, or leave it blank to send a set-password link.` });
       continue;
     }
     
@@ -94,8 +105,7 @@ export default async function handler(
     }
 
     try {
-      const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash(password, salt);
+      const passwordHash = password ? await bcrypt.hash(password, 10) : await unusablePasswordHash();
 
       const newEmployee = new Employee({
         name,
@@ -104,10 +114,11 @@ export default async function handler(
         role: role as EmployeeRole,
         organizationId: currentUserOrgId,
         department: department || undefined,
+        ...(password ? { passwordSetAt: new Date() } : {}),
       });
 
       // Collect valid employees to insert
-      createdEmployeesData.push({ employee: newEmployee, plainPassword: password });
+      createdEmployeesData.push({ employee: newEmployee });
       // Add to set to prevent duplicate entries within the same CSV
       existingEmailSet.add(email.toLowerCase());
 
@@ -116,43 +127,23 @@ export default async function handler(
     }
   }
 
-  // Bulk insert valid employees
-  if (createdEmployeesData.length > 0) {
-    const employeesToInsert = createdEmployeesData.map(data => data.employee);
+  // Insert one by one so a single failure doesn't hide which rows were created.
+  let createdCount = 0;
+  let invitedCount = 0;
+  for (const { employee } of createdEmployeesData) {
     try {
-      const insertedDocs = await Employee.insertMany(employeesToInsert, { ordered: false });
-      
-      // Fire-and-forget welcome emails for successfully inserted employees
-      insertedDocs.forEach(doc => {
-          const originalData = createdEmployeesData.find(d => d.employee.email === doc.email);
-          if (originalData) {
-              sendNewEmployeeWelcomeEmail({ name: doc.name, email: doc.email }, organization.name, originalData.plainPassword);
-          }
-      });
-
+      await employee.save();
+      createdCount += 1;
+      if (sendInvites && (await sendInvite(req, employee, organization.name))) invitedCount += 1;
     } catch (e: any) {
-        // Handle potential errors during the bulk insert itself
-        const insertedIds = new Set(e.result?.insertedIds?.map((i: any) => i._id.toString()) || []);
-        const failedInserts = employeesToInsert.filter(emp => !insertedIds.has(emp._id.toString()));
-
-        failedInserts.forEach(emp => {
-            registrationErrors.push({ email: emp.email, reason: 'Failed during database insertion.' });
-        });
-        
-        // Also send emails for those that *did* succeed even if others failed
-        const successfulInserts = employeesToInsert.filter(emp => insertedIds.has(emp._id.toString()));
-        successfulInserts.forEach(doc => {
-           const originalData = createdEmployeesData.find(d => d.employee.email === doc.email);
-           if (originalData) {
-              sendNewEmployeeWelcomeEmail({ name: doc.name, email: doc.email }, organization.name, originalData.plainPassword);
-           }
-        });
+      registrationErrors.push({ email: employee.email, reason: e.code === 11000 ? 'Email already exists.' : 'Failed during database insertion.' });
     }
   }
 
   return res.status(201).json({
     message: 'Bulk registration process completed.',
-    createdCount: createdEmployeesData.length - registrationErrors.length,
+    createdCount,
+    invitedCount,
     failedCount: registrationErrors.length,
     errors: registrationErrors,
   });

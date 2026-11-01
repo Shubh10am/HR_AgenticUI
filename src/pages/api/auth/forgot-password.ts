@@ -2,7 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '@/lib/mongodb';
 import Employee from '@/models/Employee';
-import crypto from 'crypto';
+import { issuePasswordToken, passwordLink, RESET_TTL_MS } from '@/services/auth/password-tokens';
 import { sendPasswordResetEmail } from '@/services/mailerService';
 
 export default async function handler(
@@ -27,24 +27,9 @@ export default async function handler(
     // Always return a success message to prevent user enumeration attacks.
     // The email will only be sent if the user actually exists.
     if (user) {
-      const resetToken = crypto.randomBytes(32).toString('hex');
-      const passwordResetToken = crypto
-        .createHash('sha256')
-        .update(resetToken)
-        .digest('hex');
+      const resetToken = await issuePasswordToken(user, RESET_TTL_MS);
+      const resetURL = passwordLink(req, resetToken, false);
 
-      const passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // Token expires in 10 minutes
-
-      // In a real app, you would save `passwordResetToken` and `passwordResetExpires` to the user document.
-      // For this mock, we will just generate the link and send it.
-      // user.passwordResetToken = passwordResetToken;
-      // user.passwordResetExpires = passwordResetExpires;
-      // await user.save();
-      
-      const protocol = req.headers['x-forwarded-proto'] || 'http';
-      const host = req.headers.host;
-      const resetURL = `${protocol}://${host}/reset-password?token=${resetToken}`;
-      
       // Fire and forget the email sending
       sendPasswordResetEmail(user, resetURL);
     }

@@ -442,7 +442,7 @@ export default function ManageEmployeesPage() {
                     </DialogHeader>
                     <div className="py-2 text-sm text-muted-foreground bg-secondary/50 p-3 rounded-md">
                         <p className="font-semibold text-foreground mb-1">CSV Format Requirements:</p>
-                        <p>The file must contain a header row with the following columns: <code className="bg-muted px-1 py-0.5 rounded">name</code>, <code className="bg-muted px-1 py-0.5 rounded">email</code>, <code className="bg-muted px-1 py-0.5 rounded">password</code>, <code className="bg-muted px-1 py-0.5 rounded">role</code>, <code className="bg-muted px-1 py-0.5 rounded">department</code> (optional).</p>
+                        <p>The file must contain a header row with the following columns: <code className="bg-muted px-1 py-0.5 rounded">name</code>, <code className="bg-muted px-1 py-0.5 rounded">email</code>, <code className="bg-muted px-1 py-0.5 rounded">role</code>, and optionally <code className="bg-muted px-1 py-0.5 rounded">department</code> and <code className="bg-muted px-1 py-0.5 rounded">password</code>. Anyone without a password is emailed a link to set their own.</p>
                     </div>
                     <form id="bulk-upload-form" onSubmit={handleBulkUpload}>
                         <div className="grid gap-4 py-4">
@@ -553,15 +553,14 @@ export default function ManageEmployeesPage() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Password (optional)</Label>
                 <Input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="********"
-                  required
-                  minLength={6}
+                  placeholder="Leave blank to email a set-password link"
+                  minLength={8}
                   disabled={isSubmitting}
                 />
               </div>
@@ -572,9 +571,8 @@ export default function ManageEmployeesPage() {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="********"
-                  required
-                  minLength={6}
+                  placeholder="Leave blank to email a set-password link"
+                  minLength={8}
                   disabled={isSubmitting}
                 />
               </div>
@@ -642,8 +640,8 @@ export default function ManageEmployeesPage() {
               <p className="text-muted-foreground text-center py-4">No employees match your criteria.</p>
             ) : viewMode === 'list' ? (
                 <>
-                    <div className="rounded-md border overflow-x-auto">
-                        <Table>
+                    <div className="rounded-md border">
+                        <Table id="employees-table" scroll className="min-w-[720px]">
                         <TableHeader>
                             <TableRow>
                             <TableHead>Name</TableHead>
@@ -658,25 +656,26 @@ export default function ManageEmployeesPage() {
                             <TableRow 
                                 key={employee._id}
                                 onClick={() => router.push(`/manage-employees/${employee._id}`)}
+                                id={`employees-table-${employee._id}-row`}
                                 className="cursor-pointer"
                             >
                                 <TableCell className="font-medium">
-                                <div className="flex items-center gap-2">
-                                    <Avatar className="h-8 w-8">
+                                <div className="flex items-center gap-2 whitespace-nowrap">
+                                    <Avatar className="h-8 w-8 shrink-0">
                                     <AvatarImage src={employee.avatarUrl} alt={employee.name} data-ai-hint={employee.dataAiHint} />
                                     <AvatarFallback>{employee.name.charAt(0).toUpperCase()}</AvatarFallback>
                                     </Avatar>
                                     {employee.name}
                                 </div>
                                 </TableCell>
-                                <TableCell>{employee.email}</TableCell>
+                                <TableCell className="whitespace-nowrap">{employee.email}</TableCell>
                                 <TableCell>
                                 <Badge variant={employee.role === 'Admin' ? 'default' : employee.role === 'HR' ? 'secondary' : 'outline'}>
                                     {employee.role}
                                 </Badge>
                                 </TableCell>
-                                <TableCell>{employee.department || 'N/A'}</TableCell>
-                                <TableCell className="text-right space-x-1" onClick={(e) => e.stopPropagation()}>
+                                <TableCell className="whitespace-nowrap">{employee.department || 'N/A'}</TableCell>
+                                <TableCell className="whitespace-nowrap text-right space-x-1" onClick={(e) => e.stopPropagation()}>
                                 <Button variant="ghost" size="icon" className="h-8 w-8"
                                     onClick={() => {
                                     setEmployeeToEdit(employee);

@@ -90,7 +90,7 @@ export default async function handler(
 
       // Send welcome email with credentials
       try {
-        await sendNewPlatformAdminWelcomeEmail(newAdmin.email, password);
+        await sendNewPlatformAdminWelcomeEmail(newAdmin.email);
       } catch (emailError) {
         console.error("Failed to send new admin welcome email, but user was created:", emailError);
         // Do not fail the request if email fails, but log it.

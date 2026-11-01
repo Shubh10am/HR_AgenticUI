@@ -17,6 +17,9 @@ const FALLBACK = {
   adminNotificationEmail: 'support@agentic-hr.in',
   appName: 'HR Streamline AI',
 };
+/** Where email buttons point; set NEXT_PUBLIC_APP_URL in production. */
+const appUrl = (path: string) => `${(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002').replace(/\/+$/, '')}${path}`;
+
 const ADMIN_NOTIFICATION_NAME = 'HR Streamline Support';
 
 type NotificationKind = 'notifyOnNewOrganization' | 'notifyOnContact' | 'notifyOnDemoRequest';
@@ -154,6 +157,21 @@ async function sendEmail(to: { name: string; email: string }, subject: string, h
 }
 
 
+/** The subject and full HTML of a user-facing email, without sending it (also used by tests and previews). */
+export async function buildTemplatedEmail(
+  recipientName: string,
+  key: string,
+  title: string,
+  variables: Record<string, string>,
+  cta?: { link: string; text: string },
+): Promise<{ subject: string; html: string }> {
+  const [settings, rendered] = await Promise.all([getPlatformSettingsSafe(), renderTemplate(key, variables)]);
+  return {
+    subject: rendered.subject,
+    html: generateUserConfirmationHtml(title, recipientName, rendered.html, cta?.link, cta?.text, settings?.appName || FALLBACK.appName),
+  };
+}
+
 /** Sends a user-facing email from an editable template, wrapped in the standard layout. */
 async function sendTemplatedEmail(
   to: { name: string; email: string },
@@ -162,9 +180,8 @@ async function sendTemplatedEmail(
   variables: Record<string, string>,
   cta?: { link: string; text: string },
 ) {
-  const [settings, rendered] = await Promise.all([getPlatformSettingsSafe(), renderTemplate(key, variables)]);
-  const html = generateUserConfirmationHtml(title, to.name, rendered.html, cta?.link, cta?.text, settings?.appName || FALLBACK.appName);
-  await sendEmail(to, rendered.subject, html);
+  const { subject, html } = await buildTemplatedEmail(to.name, key, title, variables, cta);
+  await sendEmail(to, subject, html);
 }
 
 /** Emails the platform team (and posts to Slack) when that kind of notification is switched on. */
@@ -219,7 +236,7 @@ export async function sendRegistrationWelcomeEmail(org: IOrganization, adminUser
     name: adminUser.name,
     organizationName: org.name,
     organizationId: String(org._id),
-  });
+  }, { link: appUrl('/login'), text: 'Sign in' });
 }
 
 export async function sendRegistrationAdminNotification(org: IOrganization, adminUser: IEmployee) {
@@ -231,20 +248,18 @@ export async function sendRegistrationAdminNotification(org: IOrganization, admi
   ]);
 }
 
-export async function sendNewPlatformAdminWelcomeEmail(email: string, password_provided: string) {
-  await sendTemplatedEmail({ name: 'New Admin', email }, 'platform-admin-welcome', 'Welcome to the Admin Team!', {
-    email,
-    password: password_provided,
-  });
+/** The password is never emailed; whoever created the account shares it separately. */
+export async function sendNewPlatformAdminWelcomeEmail(email: string) {
+  await sendTemplatedEmail({ name: 'New Admin', email }, 'platform-admin-welcome', 'Welcome to the Admin Team!', { email }, { link: appUrl('/login'), text: 'Sign in' });
 }
 
-export async function sendNewEmployeeWelcomeEmail(employee: { name: string; email: string }, organizationName: string, password_provided: string) {
-  await sendTemplatedEmail({ name: employee.name, email: employee.email }, 'welcome-employee', `Welcome, ${employee.name}!`, {
+/** The employee invite: no password in the email, just a one-time link to set one. */
+export async function sendEmployeeInviteEmail(employee: { name: string; email: string }, organizationName: string, setPasswordUrl: string, deliverTo?: { name: string; email: string }) {
+  await sendTemplatedEmail(deliverTo ?? employee, 'welcome-employee', `Welcome, ${employee.name}!`, {
     name: employee.name,
     organizationName,
     email: employee.email,
-    password: password_provided,
-  });
+  }, { link: setPasswordUrl, text: 'Set your password' });
 }
 
 export async function sendPasswordResetEmail(user: { name: string; email: string }, resetUrl: string) {

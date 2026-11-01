@@ -14,6 +14,11 @@ export interface IEmployee extends Document {
   department?: string; // Added department
   magicLinkToken?: string;
   magicLinkExpires?: Date;
+  /** SHA-256 of a one-time set/reset-password token; the raw token only ever goes in the email. */
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
+  /** When the person last chose their own password; unset while an invite is pending. */
+  passwordSetAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -61,7 +66,10 @@ const EmployeeSchema: Schema<IEmployee> = new Schema(
     },
     magicLinkExpires: {
       type: Date,
-    }
+    },
+    passwordResetToken: { type: String, index: true, sparse: true },
+    passwordResetExpires: { type: Date },
+    passwordSetAt: { type: Date },
   },
   {
     timestamps: true, // Adds createdAt and updatedAt automatically

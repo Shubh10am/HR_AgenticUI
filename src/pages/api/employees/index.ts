@@ -5,7 +5,8 @@ import Employee, { type EmployeeRole, type IEmployee } from '@/models/Employee';
 import Organization from '@/models/Organization';
 import bcrypt from 'bcryptjs';
 import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
-import { sendNewEmployeeWelcomeEmail } from '@/services/mailerService';
+import { sendInvite } from '@/services/auth/invite';
+import { MIN_PASSWORD_LENGTH, unusablePasswordHash } from '@/services/auth/password-tokens';
 
 const sanitizeEmployee = (employee: IEmployee) => {
   const { passwordHash, ...sanitized } = employee.toObject ? employee.toObject() : employee;
@@ -31,8 +32,11 @@ async function handler(
   if (req.method === 'POST') {
     const { name, email, password, role, department } = req.body;
 
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ error: 'Missing required fields: name, email, password, role.' });
+    if (!name || !email || !role) {
+      return res.status(400).json({ error: 'Missing required fields: name, email, role.' });
+    }
+    if (password && (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH)) {
+      return res.status(400).json({ error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters, or leave it blank to email a set-password link.` });
     }
     
     if (typeof role !== 'string' || !['Admin', 'HR', 'Manager', 'Employee'].includes(role)) {
@@ -54,8 +58,8 @@ async function handler(
         return res.status(409).json({ error: 'An employee with this email already exists in this organization.' });
       }
 
-      const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash(password, salt);
+      // Without a password the account can't be signed into until the invite link is used.
+      const passwordHash = password ? await bcrypt.hash(password, 10) : await unusablePasswordHash();
 
       const newEmployee = new Employee({
         name,
@@ -64,12 +68,13 @@ async function handler(
         role: role as EmployeeRole,
         organizationId: currentUserOrgId,
         department,
+        ...(password ? { passwordSetAt: new Date() } : {}),
       });
 
       await newEmployee.save();
 
-      // Send welcome email
-      sendNewEmployeeWelcomeEmail({ name, email }, organization.name, password);
+      // The email carries a one-time link, never the password.
+      await sendInvite(req, newEmployee, organization.name);
 
       return res.status(201).json(sanitizeEmployee(newEmployee));
     } catch (error: any) {
