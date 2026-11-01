@@ -1,897 +1,295 @@
-
 'use client';
 
-import { useState, useEffect, useRef, type SVGProps, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import Logo from '@/components/icons/logo';
-import {
-  FileText,
-  Users,
-  BarChart3,
-  MessageSquare,
-  Briefcase,
-  Check,
-  Flag,
-  Clock,
-  MoreHorizontal,
-  Monitor,
-  ChevronRight,
-  Asterisk,
-  RefreshCw,
-  FileSearch,
-  Plus,
-  Hash,
-  Linkedin,
-  X,
-  Instagram,
-  Youtube,
-  Play,
-  Image as ImageIcon,
-  Signature,
-  Globe,
-  Loader2,
-  Plug,
-  Mail,
-  CalendarCheck,
-  DollarSign,
-  UserPlus,
-  Library,
-  Sparkles,
-} from 'lucide-react';
-import Image from 'next/image';
-import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
-import ChatWidget from '@/components/chat-widget';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import CtaLogo from '@/components/icons/cta-logo';
+import { ArrowRight, ArrowUpRight, BadgeCheck, BookOpenText, BriefcaseBusiness, CalendarDays, Check, Clock3, FileText, Inbox, Layers3, Menu, MessageSquareText, MousePointer2, ShieldCheck, Sparkles, Users, Workflow, X } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
-import ImageWithFallback from '@/components/image-with-fallback';
+import { Button } from '@/components/ui/button';
+import CopilotSidebar from '@/components/chat-widget';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import Logo from '@/components/icons/logo';
+import ParticleField from '@/components/landing/particle-field';
+import AgentJourney from '@/components/landing/agent-journey';
+import AgentProcess from '@/components/landing/agent-process';
+import ConnectedIntelligence from '@/components/landing/connected-intelligence';
 
+type PreviewKey = 'overview' | 'hiring' | 'inbox' | 'copilot';
+const tabs: { id: PreviewKey; label: string }[] = [
+  { id: 'overview', label: 'People overview' },
+  { id: 'hiring', label: 'Recruitment' },
+  { id: 'inbox', label: 'Gmail inbox' },
+  { id: 'copilot', label: 'HR Copilot' },
+];
+const navItems = [
+  { label: 'Overview', icon: Layers3 },
+  { label: 'People', icon: Users },
+  { label: 'Recruitment', icon: BriefcaseBusiness },
+  { label: 'Attendance', icon: Clock3 },
+  { label: 'Gmail inbox', icon: Inbox },
+];
+const tourSteps: { id: PreviewKey; title: string; description: string; note: string }[] = [
+  { id: 'overview', title: 'Start with the whole team in view.', description: 'See people activity, open roles, and requests that need attention from one workspace overview.', note: 'A live view across people operations' },
+  { id: 'hiring', title: 'Screen candidates with AI precision.', description: 'Compare resumes with the role, review the reasons behind each match, and build a shortlist your hiring team can discuss.', note: 'AI-assisted candidate review' },
+  { id: 'inbox', title: 'Turn HR email into the next step.', description: 'Keep Gmail conversations organized and prepare clear replies that a person can review before sending.', note: 'Gmail inbox and reply drafts' },
+  { id: 'copilot', title: 'Get answers grounded in your policies.', description: 'Ask the HR Copilot a question and follow its answer back to the source material in your knowledge base.', note: 'Answers with source references' },
+];
 
-interface CustomIconProps extends SVGProps<SVGSVGElement> {}
-interface CollaboratorTagProps {
-  name: string;
-  className?: string;
-  cursorClass?: string;
-  style?: React.CSSProperties;
-}
-interface DevCollaboratorTagProps {
-  name: string;
-  className?: string;
-  cursorClass?: string;
-  tagColorClass?: string;
-  style?: React.CSSProperties;
-}
-
-interface HoverPillProps {
-  icon: React.ElementType;
-  label: string;
-  variant?: 'light' | 'dark';
-}
-
-function CursorIcon(props: CustomIconProps) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
-    </svg>
-  );
-}
-
-function FeatureFlagIcon(props: CustomIconProps) {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <path d="M6 3V21M6 4H16L13 8L16 12H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
+function trackPointer(event: ReactPointerEvent<HTMLElement>) {
+  if (event.pointerType === 'touch') return;
+  const bounds = event.currentTarget.getBoundingClientRect();
+  event.currentTarget.style.setProperty('--pointer-x', ((event.clientX - bounds.left) / bounds.width) * 100 + '%');
+  event.currentTarget.style.setProperty('--pointer-y', ((event.clientY - bounds.top) / bounds.height) * 100 + '%');
+  event.currentTarget.classList.add('pointer-active');
 }
 
-function CollaboratorTag({ name, className, cursorClass, style }: CollaboratorTagProps) {
-  return (
-    <div className={cn("absolute flex items-center gap-2 transition-transform duration-300 hover:scale-105", className)} style={style}>
-      <CursorIcon className={cn("h-6 w-6", cursorClass)} />
-      <div className="bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 rounded-full px-4 py-1.5 text-sm">
-        {name}
-      </div>
-    </div>
-  );
+function clearPointer(event: ReactPointerEvent<HTMLElement>) {
+  event.currentTarget.classList.remove('pointer-active');
 }
 
-function DevCollaboratorTag({ name, className, cursorClass, tagColorClass, style }: DevCollaboratorTagProps) {
-  return (
-    <div className={cn("absolute flex items-center gap-2 transition-transform duration-300 hover:scale-105", className)} style={style}>
-      <CursorIcon className={cn("h-6 w-6", cursorClass)} />
-      <div className={cn("border rounded-full px-4 py-1.5 text-sm font-semibold", tagColorClass)}>
-        {name}
-      </div>
-    </div>
-  );
+function Heading({ eyebrow, title, sub }: { eyebrow: string; title: string; sub: string }) {
+  return <div className="mb-4 flex items-start justify-between gap-2"><div className="min-w-0"><p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-indigo-600">{eyebrow}</p><h3 className="mt-1 truncate text-base font-bold tracking-tight sm:text-xl">{title}</h3><p className="mt-1 hidden text-[11px] text-slate-500 sm:block">{sub}</p></div><span className="shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[9px] font-medium text-slate-600">This week⌄</span></div>;
 }
 
-function HoverPill({ icon: Icon, label, variant = 'light' | 'dark' }: HoverPillProps) {
-  const isDark = variant === 'dark';
-  return (
-    <div className={cn(
-      "self-start mb-8 flex cursor-pointer items-center gap-2 rounded-full p-2 text-sm font-semibold transition-all duration-300 ease-in-out group-hover:gap-3 group-hover:pl-2 group-hover:pr-4",
-      isDark
-        ? "bg-white/10 text-neutral-200 group-hover:bg-white/20"
-        : "bg-black/10 text-neutral-800 group-hover:bg-black/20"
-    )}>
-      <div className={cn(
-        "flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full",
-        isDark
-          ? "bg-white/10 text-neutral-300"
-          : "bg-black/10 text-neutral-700"
-      )}>
-        <Icon className="h-4 w-4" />
-      </div>
-      <span className="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out group-hover:max-w-xs">
-        {label}
-      </span>
-    </div>
-  );
+function Overview() {
+  const stats = [
+    { label: 'Team members', value: '128', note: '+6 this month', icon: Users, tone: 'bg-indigo-50 text-indigo-600' },
+    { label: 'Open positions', value: '08', note: '3 new applicants', icon: BriefcaseBusiness, tone: 'bg-violet-50 text-violet-600' },
+    { label: 'Pending requests', value: '05', note: 'Needs a review', icon: CalendarDays, tone: 'bg-amber-50 text-amber-600' },
+  ];
+  return <><Heading eyebrow="Monday, October 26" title="Good morning, Sarah" sub="Here’s a quick look at what’s happening across your team." /><div className="grid grid-cols-3 gap-2 sm:gap-3">{stats.map(({ label, value, note, icon: Icon, tone }) => <div key={label} className="rounded-xl border border-slate-200 bg-white p-2.5 sm:p-3.5"><div className={'mb-2 hidden h-7 w-7 items-center justify-center rounded-lg sm:flex ' + tone}><Icon size={14} /></div><p className="text-[9px] leading-tight text-slate-500 sm:text-[10px]">{label}</p><div className="mt-1 flex flex-wrap items-baseline gap-x-2"><strong className="text-lg font-bold sm:text-2xl">{value}</strong><span className="hidden text-[9px] text-emerald-600 sm:inline">{note}</span></div></div>)}</div><div className="mt-3 grid gap-3 sm:mt-4 sm:grid-cols-[1.15fr_0.85fr]"><div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4"><div className="flex items-center justify-between"><strong className="text-[11px] sm:text-xs">Team activity</strong><span className="text-[9px] text-slate-400">Last 7 days</span></div><div className="mt-4 flex h-[82px] items-end justify-between gap-1.5 sm:h-[112px] sm:gap-2">{[42, 64, 50, 78, 57, 88, 68].map((height, i) => <div key={i} className="flex h-full flex-1 items-end rounded-t-md bg-indigo-50"><div className={'w-full rounded-t-md ' + (i === 5 ? 'bg-indigo-600' : 'bg-indigo-300')} style={{ height: height + '%' }} /></div>)}</div><div className="mt-2 flex justify-between text-[8px] text-slate-400"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div></div><div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4"><strong className="text-[11px] sm:text-xs">Needs your attention</strong><div className="mt-3 space-y-2.5">{[['Leave requests', '2 to review', 'bg-amber-100 text-amber-700'], ['Candidate shortlist', '3 new profiles', 'bg-violet-100 text-violet-700'], ['Team updates', '1 announcement', 'bg-sky-100 text-sky-700']].map(([name, info, tone]) => <div key={name} className="flex items-center gap-2"><span className={'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ' + tone}><ArrowUpRight size={13} /></span><div className="min-w-0"><p className="truncate text-[9px] font-semibold sm:text-[10px]">{name}</p><p className="text-[8px] text-slate-500 sm:text-[9px]">{info}</p></div><ArrowRight className="ml-auto text-slate-300" size={12} /></div>)}</div></div></div></>;
 }
 
-const AssetIcon = ({
-  icon: Icon,
-  className,
-  wrapperClassName,
-  iconClassName,
-  animationDelay,
-  animation,
-}: {
-  icon: React.ElementType;
-  className?: string;
-  wrapperClassName?: string;
-  iconClassName?: string;
-  animationDelay?: string;
-  animation?: 'float' | 'float-slow';
-}) => {
-  return (
-    <div
-      className={cn(
-        'absolute w-20 h-24 rounded-2xl flex items-center justify-center opacity-0 group-[.is-visible]:animate-fade-in-up hidden lg:flex',
-        animation === 'float' ? 'animate-float' : 'animate-float-slow',
-        className
-      )}
-      style={{ animationDelay }}
-    >
-      <div className={cn('absolute inset-0 rounded-2xl border backdrop-blur-sm', wrapperClassName)} />
-      <Icon className={cn('h-10 w-10 z-10', iconClassName)} />
-    </div>
-  );
-};
+function Hiring() {
+  const rows = [['Ava Chen', 'Frontend Engineer', '92%', 'bg-emerald-100 text-emerald-700'], ['Noah Williams', 'Product Designer', '87%', 'bg-indigo-100 text-indigo-700'], ['Mia Patel', 'People Operations', '81%', 'bg-amber-100 text-amber-700']];
+  return <><Heading eyebrow="Recruitment · Frontend Engineer" title="Candidate shortlist" sub="AI-assisted screening with clear reasons behind every match." /><div className="mb-3 flex items-center justify-between rounded-xl bg-indigo-600 p-3 text-white sm:p-4"><div><p className="text-[9px] text-indigo-100">Role match overview</p><p className="mt-1 text-sm font-bold sm:text-base">12 candidates reviewed</p></div><div className="text-right"><p className="text-lg font-bold sm:text-2xl">4.8<span className="text-xs font-medium text-indigo-100"> / 5</span></p><p className="text-[8px] text-indigo-100">Average match</p></div></div><div className="overflow-hidden rounded-xl border border-slate-200 bg-white"><div className="hidden grid-cols-[1.2fr_1fr_0.55fr] border-b border-slate-100 px-3 py-2 text-[8px] font-semibold uppercase tracking-wider text-slate-400 sm:grid"><span>Candidate</span><span>Skills & role</span><span>Score</span></div>{rows.map(([name, role, score, tone]) => <div key={name} className="grid grid-cols-[1fr_auto] items-center gap-2 border-b border-slate-100 px-3 py-2.5 last:border-0 sm:grid-cols-[1.2fr_1fr_0.55fr]"><div className="flex min-w-0 items-center gap-2"><span className={'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ' + tone}>{name.split(' ').map((part) => part[0]).join('')}</span><div className="min-w-0"><p className="truncate text-[10px] font-semibold">{name}</p><p className="truncate text-[8px] text-slate-500">{role}</p></div></div><p className="hidden truncate text-[9px] text-slate-500 sm:block">Relevant experience and skills</p><span className="rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-bold text-emerald-700">{score} match</span></div>)}</div><div className="mt-3 flex items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50 p-2.5 text-[9px] text-indigo-800"><Sparkles size={13} className="shrink-0" /><span>Review the evidence and make the final call. AI suggestions support your hiring team.</span></div></>;
+}
 
-export default function LandingPage() {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const secureText = "SECURE";
+function InboxView() {
+  const messages = [['EL', 'Elena Lopez', 'Leave request for Friday', '9:42 AM'], ['JR', 'James Rivera', 'Re: Interview schedule', '9:18 AM'], ['MT', 'Maya Thompson', 'Updated onboarding plan', 'Yesterday']];
+  return <><Heading eyebrow="Gmail · connected inbox" title="Good morning, Sarah" sub="Triage messages and prepare thoughtful replies in one place." /><div className="grid min-h-[245px] overflow-hidden rounded-xl border border-slate-200 bg-white sm:grid-cols-[0.8fr_1.2fr]"><div className="border-b border-slate-100 sm:border-b-0 sm:border-r">{messages.map(([initials, name, subject, time], i) => <div key={name} className={'border-b border-slate-100 p-2.5 last:border-0 ' + (i === 0 ? 'bg-indigo-50/80' : '')}><div className="flex items-center justify-between gap-1"><span className="truncate text-[9px] font-semibold">{name}</span><span className="shrink-0 text-[8px] text-slate-400">{time}</span></div><div className="mt-1 flex items-center gap-1.5"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[7px] font-bold text-slate-600">{initials}</span><span className="truncate text-[8px] text-slate-600">{subject}</span></div></div>)}</div><div className="p-3 sm:p-4"><div className="flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-rose-100 text-[8px] font-bold text-rose-700">EL</span><div><p className="text-[9px] font-semibold">Elena Lopez</p><p className="text-[8px] text-slate-400">To: Sarah · 9:42 AM</p></div></div><h4 className="mt-3 text-[10px] font-bold">Leave request for Friday</h4><p className="mt-2 text-[9px] leading-relaxed text-slate-500">Hi Sarah, could I take this Friday off? I have submitted the request in the portal. Thanks!</p><div className="mt-3 rounded-lg border border-indigo-100 bg-indigo-50/70 p-2.5"><div className="flex items-center gap-1.5 text-[8px] font-semibold text-indigo-700"><Sparkles size={11} /> Suggested reply</div><p className="mt-1.5 text-[8px] leading-relaxed text-slate-600">Hi Elena, thanks for letting me know. I’ll review your request and get back to you shortly.</p><div className="mt-2 flex items-center justify-between"><span className="text-[7px] text-slate-400">Review before sending</span><span className="rounded-md bg-indigo-600 px-2 py-1 text-[8px] font-semibold text-white">Use draft</span></div></div></div></div></>;
+}
 
-  const sectionsRef = useRef<(HTMLElement | null)[]>([]);
-  const [visibleSections, setVisibleSections] = useState<Set<number>>(new Set());
-  const { loginAsGuest, isLoading } = useAuth();
-  const [isGuestLoading, setIsGuestLoading] = useState(false);
+function Copilot() {
+  return <><Heading eyebrow="Company knowledge" title="Ask HR Copilot" sub="Get clear answers grounded in your organization’s own resources." /><div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4"><p className="text-[9px] font-medium text-slate-400">YOU ASKED</p><p className="mt-1.5 text-xs font-semibold sm:text-sm">How much notice do I need to give for annual leave?</p><div className="my-3 h-px bg-slate-100" /><div className="flex gap-2.5"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white"><Sparkles size={14} /></span><div><p className="text-[9px] font-semibold text-indigo-700">HR Copilot</p><p className="mt-1 text-[9px] leading-relaxed text-slate-600 sm:text-[10px]">Please submit annual leave requests at least <strong>two weeks in advance</strong>. Your manager will review the request based on team coverage and available balance.</p><div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2.5"><div className="flex items-center gap-1.5 text-[8px] font-semibold text-slate-600"><FileText size={11} /> Source used</div><p className="mt-1 text-[8px] text-slate-500">Employee Handbook · Time Off · Section 3.2</p></div></div></div><div className="mt-4 flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-[9px] text-slate-400"><span className="flex-1">Ask about a policy or process…</span><span className="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-600 text-white"><ArrowRight size={12} /></span></div></div><p className="mt-2 text-center text-[8px] text-slate-400">Answers link back to your source material for easy verification.</p></>;
+}
 
-  const [activeTaskState, setActiveTaskState] = useState<'po' | 'inProgress' | 'question'>('po');
+function Preview({ active }: { active: PreviewKey }) {
+  const label = tabs.find((tab) => tab.id === active)?.label ?? 'People overview';
+  return <div className="overflow-hidden rounded-[22px] border border-white/15 bg-[#f7f8fc] text-slate-800 shadow-[0_32px_100px_rgba(0,0,0,0.46)] ring-1 ring-black/10"><div className="flex h-11 items-center justify-between border-b border-slate-200 bg-white px-4"><div className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-[#ff6b67]" /><span className="h-2.5 w-2.5 rounded-full bg-[#ffc34d]" /><span className="h-2.5 w-2.5 rounded-full bg-[#47c978]" /></div><span className="hidden text-[11px] font-medium text-slate-400 sm:block">app.hrstreamline.ai / {label.toLowerCase().replaceAll(' ', '-')}</span><div className="flex items-center gap-2"><span className="text-[10px] font-medium text-slate-500">Sample workspace</span><span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-[9px] font-bold text-indigo-700">SJ</span></div></div><div className="grid min-h-[360px] grid-cols-[56px_1fr] sm:min-h-[430px] sm:grid-cols-[142px_1fr]"><aside className="border-r border-slate-200 bg-white px-2 py-4 sm:px-3"><div className="mb-5 hidden items-center gap-2 px-2 sm:flex"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white"><Layers3 size={15} /></span><span className="text-[11px] font-bold">Streamline</span></div><div className="space-y-1">{navItems.map(({ label: navLabel, icon: Icon }, index) => { const selected = (active === 'overview' && index === 0) || (active === 'hiring' && index === 2) || (active === 'inbox' && index === 4) || (active === 'copilot' && index === 0); return <div key={navLabel} className={'flex items-center justify-center gap-2 rounded-lg px-2 py-2 text-[10px] sm:justify-start ' + (selected ? 'bg-indigo-50 font-semibold text-indigo-700' : 'text-slate-500')}><Icon size={14} /><span className="hidden sm:block">{navLabel}</span></div>; })}</div><div className="mt-6 hidden border-t border-slate-100 pt-4 sm:block"><p className="px-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-400">Workspace</p><div className="mt-2 flex items-center gap-2 px-2 text-[10px] text-slate-500"><BookOpenText size={13} /> Knowledge base</div><div className="mt-3 flex items-center gap-2 px-2 text-[10px] text-slate-500"><Workflow size={13} /> Tasks & workflows</div></div></aside><main key={active} className="preview-screen-enter min-w-0 p-3 sm:p-5">{active === 'overview' && <Overview />}{active === 'hiring' && <Hiring />}{active === 'inbox' && <InboxView />}{active === 'copilot' && <Copilot />}</main></div></div>;
+}
 
-  const handleGuestLogin = async () => {
-    setIsGuestLoading(true);
-    await loginAsGuest();
-    // No need to set isGuestLoading to false, as the page will redirect.
+function ProductTour({ active, onChange }: { active: PreviewKey; onChange: (preview: PreviewKey) => void }) {
+  const track = useRef<HTMLElement>(null);
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const element = track.current;
+      if (!element) return;
+      const bounds = element.getBoundingClientRect();
+      const distance = element.offsetHeight - window.innerHeight;
+      if (bounds.top > 80 || bounds.bottom < window.innerHeight) return;
+      const progress = Math.max(0, Math.min(0.999, -bounds.top / distance));
+      onChange(tourSteps[Math.min(3, Math.floor(progress * 4))].id);
+    };
+    const scroll = () => { if (!frame) frame = requestAnimationFrame(update); };
+    window.addEventListener('scroll', scroll, { passive: true });
+    window.addEventListener('resize', scroll);
+    update();
+    return () => { window.removeEventListener('scroll', scroll); window.removeEventListener('resize', scroll); cancelAnimationFrame(frame); };
+  }, [onChange]);
+  const index = tourSteps.findIndex((step) => step.id === active);
+  const step = tourSteps[index];
+  const selectStep = (id: PreviewKey) => {
+    const element = track.current;
+    if (!element) return;
+    const next = tourSteps.findIndex((item) => item.id === id);
+    window.scrollTo({ top: window.scrollY + element.getBoundingClientRect().top + (element.offsetHeight - window.innerHeight) * ((next + 0.1) / 4), behavior: 'smooth' });
   };
+  return <section ref={track} id="product-tour" className="product-tour-track dark-dot-surface relative bg-[#090a10] text-white" onPointerMove={trackPointer} onPointerLeave={clearPointer}><ParticleField />
+    <div className="product-tour-stage">
+      <div className="relative z-10 mx-auto w-full max-w-[1320px] px-5 sm:px-8">
+        <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-4">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Explore the workspace</span>
+          <span className="text-xs tabular-nums text-slate-400">0{index + 1} / 04</span>
+        </div>
+        <div className="grid items-center gap-7 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16">
+          <div key={active} className="tour-copy-enter">
+            <p className="text-xs font-medium uppercase tracking-[0.16em] text-indigo-300">{tabs[index].label}</p>
+            <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.04em] sm:text-4xl lg:text-5xl">{step.title}</h2>
+            <p className="mt-5 text-sm leading-7 text-slate-400">{step.description}</p>
+            <span className="mt-6 hidden items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-indigo-300 sm:inline-flex"><Sparkles size={13} />{step.note}</span>
+          </div>
+          <div className="min-w-0"><Preview active={active} /></div>
+        </div>
+        <div className="mt-6 flex items-center justify-between gap-4">
+          <div className="flex flex-wrap gap-2">{tabs.map((tab, i) => <button key={tab.id} onClick={() => selectStep(tab.id)} aria-current={active === tab.id ? 'step' : undefined} aria-label={tab.label} className={'h-1.5 rounded-full transition-all duration-500 ' + (active === tab.id ? 'w-12 bg-white' : 'w-6 bg-white/20 hover:bg-white/50')} />)}</div>
+          <span className="text-[10px] text-slate-500">Scroll to explore ↓</span>
+        </div>
+      </div>
+    </div>
+  </section>;
+}
+
+function HiringCard() {
+  return <div className="space-y-2.5"><div className="flex items-center justify-between"><span className="text-[10px] font-semibold">Frontend Engineer</span><span className="rounded-full bg-violet-50 px-2 py-1 text-[8px] text-violet-700">12 applicants</span></div>{[['Ava Chen', 'React · TypeScript', '92%'], ['Noah Williams', 'UI systems · 6 yrs', '87%']].map(([name, skills, score]) => <div key={name} className="flex items-center gap-2.5 rounded-lg border border-slate-100 bg-white p-2.5"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-[8px] font-bold text-indigo-700">{name.split(' ').map((x) => x[0]).join('')}</span><div className="min-w-0 flex-1"><p className="text-[9px] font-semibold">{name}</p><p className="text-[8px] text-slate-400">{skills}</p></div><span className="text-[9px] font-bold text-emerald-600">{score}</span></div>)}</div>;
+}
+function PeopleCard() {
+  const rows = [['AL', 'Ava Lee', 'Checked in · 9:02 AM', 'bg-emerald-100 text-emerald-700'], ['NK', 'Noah Kim', 'Working remotely', 'bg-sky-100 text-sky-700'], ['MS', 'Mia Singh', 'Leave · Approved', 'bg-amber-100 text-amber-700']];
+  return <div className="rounded-xl border border-slate-100 bg-white"><div className="flex items-center justify-between border-b border-slate-100 px-3 py-2.5"><span className="text-[9px] font-semibold">Today · Attendance</span><CalendarDays size={13} className="text-slate-400" /></div>{rows.map(([initials, name, status, tone]) => <div key={name} className="flex items-center gap-2.5 border-b border-slate-50 px-3 py-2 last:border-0"><span className={'flex h-6 w-6 items-center justify-center rounded-full text-[7px] font-bold ' + tone}>{initials}</span><div className="flex-1"><p className="text-[8px] font-semibold">{name}</p><p className="text-[7px] text-slate-400">{status}</p></div><Check size={12} className="text-emerald-500" /></div>)}</div>;
+}
+function EmailCard() {
+  return <div className="rounded-xl border border-slate-100 bg-white p-3"><div className="flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-rose-100 text-[8px] font-bold text-rose-700">EL</span><div><p className="text-[9px] font-semibold">Elena Lopez</p><p className="text-[8px] text-slate-400">Leave request for Friday</p></div></div><div className="mt-3 rounded-lg bg-indigo-50 p-2.5"><p className="flex items-center gap-1 text-[8px] font-semibold text-indigo-700"><Sparkles size={10} /> Suggested reply</p><p className="mt-1.5 text-[8px] leading-relaxed text-slate-600">Thanks for submitting your request. I’ll review it and follow up shortly.</p></div><p className="mt-2 text-right text-[7px] text-slate-400">Review before sending</p></div>;
+}
+function KnowledgeCard() {
+  return <div className="rounded-xl border border-slate-100 bg-white p-3"><div className="flex gap-2"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white"><Sparkles size={13} /></span><div><p className="text-[8px] font-semibold text-indigo-700">HR Copilot</p><p className="mt-1 text-[9px] leading-relaxed text-slate-600">Annual leave requests should be submitted at least two weeks in advance.</p></div></div><div className="mt-3 flex items-center gap-1.5 rounded-lg border border-slate-100 bg-slate-50 p-2 text-[7px] text-slate-500"><FileText size={10} /> Employee Handbook · Time Off</div></div>;
+}
+function TasksCard() {
+  const columns: [string, string[]][] = [['To do', ['Review new candidates', 'Update onboarding']], ['In progress', ['Prepare offer letter']], ['Done', ['Publish job post']]];
+  return <div className="grid grid-cols-3 gap-1.5">{columns.map(([title, cards]) => <div key={title} className="rounded-lg bg-slate-100 p-1.5"><p className="mb-1.5 text-[7px] font-semibold text-slate-500">{title}</p>{cards.map((card) => <div key={card} className="mb-1 rounded-md border border-slate-100 bg-white p-1.5 text-[7px] leading-tight text-slate-600">{card}</div>)}</div>)}</div>;
+}
+function EmployeeCard() {
+  return <div className="rounded-xl border border-slate-100 bg-white p-3"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold">People directory</span><span className="text-[7px] text-slate-400">128 teammates</span></div><div className="mt-3 space-y-2">{[['SC', 'Sarah Chen', 'People · Admin', 'bg-indigo-100 text-indigo-700'], ['AL', 'Ava Lee', 'Engineering · Lead', 'bg-emerald-100 text-emerald-700'], ['NK', 'Noah Kim', 'Design · Member', 'bg-amber-100 text-amber-700']].map(([initials, name, role, tone]) => <div key={name} className="flex items-center gap-2"><span className={'flex h-6 w-6 items-center justify-center rounded-full text-[7px] font-bold ' + tone}>{initials}</span><div><p className="text-[8px] font-semibold">{name}</p><p className="text-[7px] text-slate-400">{role}</p></div><ArrowRight className="ml-auto text-slate-300" size={10} /></div>)}</div></div>;
+}
+function PayrollCard() {
+  return <div className="rounded-xl border border-slate-100 bg-white p-3"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold">Payroll review</span><span className="rounded-full bg-amber-50 px-2 py-1 text-[7px] font-medium text-amber-700">Needs review</span></div><p className="mt-3 text-[7px] text-slate-400">Upcoming pay run · 30 October</p><div className="mt-1 flex items-end justify-between"><strong className="text-lg font-bold">$48,920</strong><span className="text-[8px] text-slate-500">38 employees</span></div><div className="mt-3 h-1.5 rounded-full bg-slate-100"><div className="h-1.5 w-3/4 rounded-full bg-indigo-500" /></div><p className="mt-1.5 text-[7px] text-slate-400">29 of 38 records reviewed</p></div>;
+}
+function CommunicationsCard() {
+  return <div className="rounded-xl border border-slate-100 bg-white p-3"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold">Team updates</span><span className="rounded-full bg-indigo-50 px-2 py-1 text-[7px] text-indigo-700">Company-wide</span></div><div className="mt-3 rounded-lg bg-slate-50 p-2.5"><div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-[7px] font-bold text-violet-700">HR</span><div><p className="text-[8px] font-semibold">October all-hands</p><p className="text-[7px] text-slate-400">People team · 10 min ago</p></div></div><p className="mt-2 text-[8px] leading-relaxed text-slate-500">The monthly team update is ready for review before sharing.</p></div><div className="mt-2 flex items-center gap-1 text-[7px] text-indigo-600"><Sparkles size={9} /> Draft and organize team communications</div></div>;
+}
+
+const featureItems = [
+  { n: '01', icon: BriefcaseBusiness, title: 'Recruit with a clearer signal', text: 'Review a ranked shortlist, understand why each profile matches a role, and keep the hiring team in control of every decision.', tags: ['Resume matching', 'Role pipelines', 'Interview planning'], visual: <HiringCard /> },
+  { n: '02', icon: Clock3, title: 'Make people ops easier', text: 'Bring attendance, time off, employee updates, and onboarding tasks together in one shared workspace.', tags: ['Attendance', 'Leave requests', 'Onboarding'], visual: <PeopleCard /> },
+  { n: '03', icon: Inbox, title: 'Move from email to action', text: 'Connect Gmail, organize HR conversations, and prepare replies with an assistant that keeps your team in the loop.', tags: ['Gmail inbox', 'Reply drafts', 'Follow-ups'], visual: <EmailCard /> },
+  { n: '04', icon: BookOpenText, title: 'Give every answer a source', text: 'Let your team ask about company policies and find answers linked to relevant knowledge base material.', tags: ['HR Copilot', 'Knowledge base', 'Source links'], visual: <KnowledgeCard /> },
+  { n: '05', icon: Workflow, title: 'Keep work moving together', text: 'Track team tasks across a visual board, open each ticket for details, and move work through your process.', tags: ['Task board', 'Ticket details', 'Team workflow'], visual: <TasksCard /> },
+  { n: '06', icon: Users, title: 'Know your people and teams', text: 'Keep employee information and reporting relationships organized, with onboarding steps easy to follow.', tags: ['Employee directory', 'Hierarchy', 'Onboarding'], visual: <EmployeeCard /> },
+  { n: '07', icon: Clock3, title: 'Review attendance and payroll', text: 'Bring attendance reporting and payroll workflows into the same operational view for HR and managers.', tags: ['Attendance reports', 'Payroll', 'Admin review'], visual: <PayrollCard /> },
+  { n: '08', icon: MessageSquareText, title: 'Keep the team in sync', text: 'Support HR communications, shared updates, and guided email drafting across day-to-day work.', tags: ['Team updates', 'Email assistance', 'Smart drafting'], visual: <CommunicationsCard /> },
+];
+
+function HomeContent() {
+  const { loginAsGuest, isLoading } = useAuth();
+  const [active, setActive] = useState<PreviewKey>('overview');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const startWorkspace = () => loginAsGuest();
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const index = sectionsRef.current.findIndex(ref => ref === entry.target);
-          if (index === -1) return;
-
-          if (entry.isIntersecting) {
-            setVisibleSections(prev => new Set(prev).add(index));
-          } else {
-            // This ensures animations re-trigger on scroll up/down
-            setVisibleSections(prev => {
-              const newSet = new Set(prev);
-              newSet.delete(index);
-              return newSet;
-            });
-          }
-        });
-      },
-      {
-        threshold: 0.1,
-        rootMargin: "0px 0px -10% 0px"
-      }
-    );
-
-    const currentSections = sectionsRef.current;
-
-    currentSections.forEach(section => {
-      if (section) observer.observe(section);
-    });
-
-    return () => {
-      currentSections.forEach(section => {
-        if (section) observer.unobserve(section);
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('#features article'));
+    const tileObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('tile-text-revealed');
+        tileObserver.unobserve(entry.target);
+      });
+    }, { threshold: 0.22 });
+    cards.forEach((card) => tileObserver.observe(card));
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      cards.forEach((card) => {
+        const bounds = card.getBoundingClientRect();
+        const progress = Math.max(0, Math.min(1, (window.innerHeight - bounds.top) / (window.innerHeight * 0.72)));
+        card.style.setProperty('--card-scale', String(reduced ? 1 : 0.88 + progress * 0.12));
+        card.style.setProperty('--card-lift', (reduced ? 0 : (1 - progress) * 65) + 'px');
       });
     };
+    const scroll = () => { if (!frame) frame = requestAnimationFrame(update); };
+    window.addEventListener('scroll', scroll, { passive: true });
+    window.addEventListener('resize', scroll);
+    update();
+    return () => { tileObserver.disconnect(); cancelAnimationFrame(frame); window.removeEventListener('scroll', scroll); window.removeEventListener('resize', scroll); };
   }, []);
 
-  const WorkflowStep = ({ icon: Icon, label }: { icon: React.ElementType; label: string }) => (
-    <div className="flex flex-col items-center text-center gap-1 sm:gap-3 z-10 bg-black px-1 sm:px-2">
-      <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-      <span className="text-xs text-center sm:text-sm text-neutral-400">{label}</span>
-    </div>
-  );
 
-  const tools = [
-      { name: 'Gmail', hint: 'gmail logo', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg' },
-      { name: 'Team', hint: 'msteam logo', logoUrl: 'https://www.microsoft.com/favicon.ico' },
-      { name: 'Slack', hint: 'slack logo', logoUrl: 'https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png' },
-      { name: 'Zoom', hint: 'zoom logo', logoUrl: 'https://st2.zoom.us/static/6.3.38697/image/new/topNav/Zoom_logo.svg' },
-      { name: 'Jira', hint: 'jira logo', logoUrl: 'https://cdn.icon-icons.com/icons2/2699/PNG/512/atlassian_jira_logo_icon_170511.png' },
-      { name: 'Outlook', hint: 'outlook logo', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg/512px-Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg.png' },
-      { name: 'Github', hint: 'github logo', logoUrl: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png' },
-      { name: 'Notion', hint: 'notion logo', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png' },
-  ];
+  useEffect(() => {
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('main > section:not(#platform):not(#product-tour):not(#agent-journey)'));
+    const steps = Array.from(document.querySelectorAll<HTMLElement>('[data-preview-step]'));
+    if (typeof IntersectionObserver === 'undefined') {
+      sections.forEach((section) => section.classList.add('is-visible'));
+      return;
+    }
 
-  const taskContent = {
-    po: {
-      assignee: '@You',
-      message: "Please collect the signed offer letter from the new hire, @felix",
-      replies: 2,
-    },
-    inProgress: {
-      assignee: '@Felix',
-      message: 'Offer letter received. Starting the onboarding checklist now.',
-      replies: 3,
-    },
-    question: {
-      assignee: '@You',
-      message: 'Great! Can you also schedule their day-one orientation?',
-      replies: 4,
-    },
-  };
+    sections.forEach((section) => {
+      section.classList.add('scroll-reveal');
+      section.querySelectorAll<HTMLElement>('[data-reveal-item]').forEach((item, index) => {
+        item.style.setProperty('--reveal-delay', String(index * 100) + 'ms');
+      });
+      const bounds = section.getBoundingClientRect();
+      if (bounds.top < window.innerHeight * 0.92 && bounds.bottom > 0) {
+        section.classList.add('is-visible');
+      } else {
+        section.classList.add('is-pending');
+      }
+    });
 
-  return (
-    <div className="flex flex-col min-h-screen bg-black text-white antialiased">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-neutral-800 bg-black/50 backdrop-blur-lg">
-        <div className="container flex h-20 items-center justify-between mx-auto px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <Logo className="h-8 w-8 text-primary" />
-            <span className="font-bold text-lg text-white hidden sm:block">HR Streamline AI</span>
-            <span className="font-bold text-lg text-white block sm:hidden">Agentic-HR</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" asChild className="text-white hover:bg-neutral-800 hover:text-white hidden sm:flex">
-              <Link href="/login">Log In</Link>
-            </Button>
-            <Button onClick={handleGuestLogin} disabled={isLoading || isGuestLoading} className="bg-white text-black hover:bg-neutral-200 rounded-full">
-              {(isLoading || isGuestLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Try Now
-            </Button>
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.remove('is-pending');
+          entry.target.classList.add('is-visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -8% 0px' });
+    sections.filter((section) => !section.classList.contains('is-visible')).forEach((section) => revealObserver.observe(section));
+
+    const stepObserver = new IntersectionObserver((entries) => {
+      const visibleSteps = entries.filter((entry) => entry.isIntersecting);
+      if (!visibleSteps.length) return;
+      const viewportCenter = window.innerHeight / 2;
+      visibleSteps.sort((a, b) => {
+        const aCenter = a.boundingClientRect.top + a.boundingClientRect.height / 2;
+        const bCenter = b.boundingClientRect.top + b.boundingClientRect.height / 2;
+        return Math.abs(aCenter - viewportCenter) - Math.abs(bCenter - viewportCenter);
+      });
+      const nextPreview = visibleSteps[0].target.getAttribute('data-preview-step') as PreviewKey | null;
+      if (nextPreview) setActive(nextPreview);
+    }, { threshold: 0, rootMargin: '-38% 0px -38% 0px' });
+    steps.forEach((step) => stepObserver.observe(step));
+
+    return () => {
+      revealObserver.disconnect();
+      stepObserver.disconnect();
+    };
+  }, []);
+  return <div className="min-h-screen overflow-x-clip bg-[#080a12] text-white selection:bg-indigo-300 selection:text-slate-950">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#080a12]/90 backdrop-blur-xl"><div className="mx-auto flex h-[72px] max-w-[1320px] items-center justify-between px-5 sm:px-8"><Link href="/" aria-label="HR Streamline AI home" className="flex items-center gap-2.5"><Logo className="h-9 w-9" /><span className="text-[15px] font-bold tracking-tight sm:text-lg">HR Streamline <span className="text-indigo-300">AI</span></span></Link><nav className="hidden items-center gap-7 text-[13px] text-slate-300 lg:flex"><a href="#platform" className="transition hover:text-white">Platform</a><a href="#features" className="transition hover:text-white">Features</a><a href="#how-it-works" className="transition hover:text-white">How it works</a><Link href="/blog" className="transition hover:text-white">Resources</Link></nav><div className="hidden items-center gap-3 sm:flex"><Link href="/login" className="px-3 py-2 text-sm text-slate-300 transition hover:text-white">Log in</Link><Button onClick={startWorkspace} disabled={isLoading} className="h-10 rounded-full bg-white px-5 text-sm font-semibold text-slate-950 hover:bg-indigo-100">{isLoading ? 'Opening…' : 'Try the workspace'}<ArrowRight className="ml-2 h-4 w-4" /></Button></div><button aria-label={menuOpen ? 'Close navigation' : 'Open navigation'} className="rounded-lg border border-white/15 p-2 sm:hidden" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X size={18} /> : <Menu size={18} />}</button></div>{menuOpen && <div className="border-t border-white/10 bg-[#080a12] px-5 py-4 sm:hidden"><div className="grid gap-3 text-sm text-slate-300"><a href="#platform" onClick={() => setMenuOpen(false)}>Platform</a><a href="#features" onClick={() => setMenuOpen(false)}>Features</a><a href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a><Link href="/blog">Resources</Link><Link href="/login">Log in</Link><Button onClick={startWorkspace} disabled={isLoading} className="mt-1 w-full rounded-full bg-white text-slate-950">Try the workspace</Button></div></div>}</header>
+    <main>
+      <section id="platform" className="dark-dot-surface relative isolate overflow-hidden bg-[#08090e]" onPointerMove={trackPointer} onPointerLeave={clearPointer}>
+        <ParticleField />
+        <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-20 -z-10 h-[520px] w-[850px] -translate-x-1/2 rounded-full bg-indigo-600/10 blur-[120px]" />
+        <div className="relative z-10 mx-auto flex max-w-[1320px] flex-col items-center px-5 pb-14 pt-16 text-center sm:px-8 sm:pb-20 sm:pt-24">
+          <span className="hero-intro inline-flex items-center gap-2 rounded-full border border-violet-300/25 bg-violet-400/[0.06] px-4 py-2 text-xs font-medium text-violet-200"><Sparkles size={14} /> The agentic HR platform</span>
+          <h1 className="hero-intro mt-7 max-w-[1050px] text-[clamp(2.8rem,6.8vw,6.3rem)] font-semibold leading-[1.02] tracking-[-0.055em]">Your HR workflows,<br /><span className="bg-gradient-to-r from-indigo-300 via-violet-400 to-fuchsia-400 bg-clip-text text-transparent">connected by AI.</span></h1>
+          <p className="hero-intro mt-6 max-w-[740px] text-base leading-7 text-slate-400 sm:text-lg sm:leading-8">Recruiting, onboarding, attendance, and payroll in one workspace—with a Copilot that helps your team find answers in your own policies.</p>
+          <div className="relative mt-12 grid w-full max-w-[940px] grid-cols-2 items-center gap-6 sm:mt-16 sm:grid-cols-[1fr_1fr_1.4fr_1fr_1fr] sm:gap-4">
+            <div aria-hidden="true" className="workflow-line absolute left-[8%] right-[8%] top-7 hidden h-px bg-white/15 sm:block" />
+            {[{ label: 'Recruit', icon: Users }, { label: 'Onboard', icon: BadgeCheck }].map(({ label, icon: Icon }, index) => <div key={label} className="workflow-node relative flex flex-col items-center gap-3" style={{ animationDelay: index * 0.6 + 's' }}><span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-[#0c0d16]"><Icon size={23} strokeWidth={1.5} /></span><span className="text-xs text-slate-400 sm:text-sm">{label}</span></div>)}
+            <div className="relative col-span-2 row-start-1 flex flex-col items-center sm:col-span-1 sm:col-start-3 sm:row-auto"><span className="flex h-14 items-center gap-2 bg-[#08090e] px-6">{[0, 1, 2].map((i) => <span key={i} className="agent-signal h-2.5 w-2.5 rounded-full bg-indigo-400" style={{ animationDelay: i * 0.3 + 's' }} />)}</span><span className="mt-3 text-xs text-slate-500">AI connects the workflow</span><span className="mt-3 rounded-full border border-violet-300/30 bg-gradient-to-r from-indigo-500/15 to-fuchsia-500/15 px-4 py-2 text-xs font-medium text-violet-200">HR Streamline AI</span></div>
+            {[{ label: 'Attendance', icon: CalendarDays }, { label: 'Payroll', icon: BriefcaseBusiness }].map(({ label, icon: Icon }, index) => <div key={label} className="workflow-node relative flex flex-col items-center gap-3" style={{ animationDelay: (index + 2) * 0.6 + 's' }}><span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-[#0c0d16]"><Icon size={23} strokeWidth={1.5} /></span><span className="text-xs text-slate-400 sm:text-sm">{label}</span></div>)}
           </div>
+          <div className="mt-10 flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row"><Button onClick={startWorkspace} disabled={isLoading} className="h-12 rounded-full bg-white px-7 text-sm font-semibold text-slate-950 hover:bg-indigo-100">{isLoading ? 'Opening workspace…' : 'Explore the workspace'}<ArrowRight className="ml-2 h-4 w-4" /></Button><Link href="/book-a-demo" className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/20 px-7 text-sm font-medium text-white transition hover:bg-white/5">Book a demo<ArrowUpRight size={15} /></Link></div>
+          <a href="#product-tour" className="mt-8 inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-slate-500 transition hover:text-white">See the platform in action <span className="scroll-cue" aria-hidden="true">↓</span></a>
         </div>
-      </header>
+      </section>
+      <ProductTour active={active} onChange={setActive} />
+      <section id="features" className="light-dot-surface relative isolate bg-[#f7f8fc] py-20 text-slate-900 sm:py-28"><ParticleField tone="dark" /><div className="mx-auto max-w-[1320px] px-5 sm:px-8"><div className="mx-auto max-w-[720px] text-center"><p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-600">A closer look</p><h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">See the work your platform brings together.</h2><p className="mx-auto mt-4 max-w-[620px] text-sm leading-6 text-slate-500 sm:text-base sm:leading-7">Explore the modules that support an employee’s journey—from hiring and onboarding to payroll, everyday questions, and team workflows. Previews use sample workspace data.</p></div><div className="mt-12 grid gap-4 sm:mt-16 sm:grid-cols-2 lg:grid-cols-6">{featureItems.map(({ n, icon: Icon, title, text, tags, visual }, index) => <article key={n} data-reveal-item className={'group overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_4px_16px_rgba(15,23,42,0.035)] transition hover:-translate-y-1 hover:shadow-[0_18px_44px_rgba(15,23,42,0.09)] ' + (index < 2 ? 'lg:col-span-3' : 'lg:col-span-2')}><div className="flex min-h-[230px] items-center justify-center border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-indigo-50/60 p-5 sm:min-h-[255px] sm:p-7"><div className="w-full max-w-[430px]">{visual}</div></div><div className="p-5 sm:p-7"><div className="flex items-center gap-2.5"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600"><Icon size={17} /></span><span className="text-[10px] font-semibold tracking-[0.14em] text-slate-400">{n}</span></div><h3 className="mt-4 text-xl font-semibold tracking-tight">{title}</h3><p className="mt-2 max-w-[550px] text-[13px] leading-6 text-slate-500">{text}</p><div className="mt-4 flex flex-wrap gap-2">{tags.map((tag) => <span key={tag} className="rounded-full bg-slate-100 px-2.5 py-1 text-[9px] font-medium text-slate-600">{tag}</span>)}</div></div><ParticleField tone="dark" /></article>)}</div></div></section>
+      <ConnectedIntelligence />
+      <AgentProcess />
+      <section className="light-dot-surface relative isolate bg-white py-20 text-slate-900 sm:py-24"><ParticleField tone="dark" /><div className="mx-auto grid max-w-[1320px] gap-10 px-5 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center"><div><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600"><ShieldCheck size={20} /></span><p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-600">Built for clarity</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">People decisions deserve context.</h2><p className="mt-4 max-w-[500px] text-sm leading-7 text-slate-500">From candidate recommendations to policy answers, keep the reasoning visible and give your team a clear place to review what happens next.</p><Link href="/knowledge-base" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-indigo-700 hover:text-indigo-900">Explore the knowledge base<ArrowRight size={15} /></Link></div><div className="grid gap-3 sm:grid-cols-2">{[{ icon: FileText, title: 'Answers tied to sources', text: 'Give employees policy guidance they can check against the original material.' }, { icon: Users, title: 'People in the loop', text: 'Keep managers and HR in control of approvals, hiring, and communication.' }, { icon: Workflow, title: 'Workflows that connect', text: 'Move requests and tasks forward without losing track of ownership.' }, { icon: ShieldCheck, title: 'Workspace-level access', text: 'Organize HR resources and activity within your team workspace.' }].map(({ icon: Icon, title, text }) => <div key={title} className="rounded-2xl border border-slate-200 p-5"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-indigo-600"><Icon size={16} /></span><h3 className="mt-4 text-sm font-semibold">{title}</h3><p className="mt-1.5 text-[11px] leading-5 text-slate-500">{text}</p></div>)}</div></div></section>
+      <section className="light-dot-surface relative isolate bg-[#f7f8fc] py-20 text-slate-900 sm:py-24"><ParticleField tone="dark" /><div className="mx-auto max-w-[900px] px-5 sm:px-8"><div className="text-center"><p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-600">Common questions</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em]">A few things you might be wondering.</h2></div><Accordion type="single" collapsible className="mt-8 divide-y divide-slate-200 border-y border-slate-200">{[{ q: 'What does HR Streamline include?', a: 'The workspace brings together recruitment, employee support, attendance, payroll, onboarding, Gmail inbox assistance, team communications, a knowledge base, and task workflows.' }, { q: 'How does the AI help the HR team?', a: 'AI can help review resumes, summarize context, draft email replies, and answer questions using your knowledge base. Your team reviews important decisions and messages.' }, { q: 'Which integrations are available?', a: 'The platform includes Gmail and Google Calendar connections. Integration availability depends on the configuration of your workspace.' }, { q: 'Can I explore the workspace?', a: 'Use the “Try the workspace” button to open the available guest workspace, or book a demo to discuss your team’s needs.' }].map(({ q, a }, i) => <AccordionItem key={q} value={'item-' + i} className="border-0"><AccordionTrigger className="py-5 text-left text-sm font-semibold hover:no-underline">{q}</AccordionTrigger><AccordionContent className="max-w-[760px] pb-5 text-[13px] leading-6 text-slate-500">{a}</AccordionContent></AccordionItem>)}</Accordion></div></section>
+      <AgentJourney onStart={startWorkspace} loading={isLoading} />
+    </main>
+    <footer className="border-t border-white/10 bg-[#080a12] text-slate-400"><div className="mx-auto grid max-w-[1320px] gap-10 px-5 py-12 sm:px-8 md:grid-cols-[1.4fr_1fr_1fr_1fr]"><div><Link href="/" className="flex items-center gap-2"><Logo className="h-8 w-8" /><span className="font-semibold text-white">HR Streamline AI</span></Link><p className="mt-3 max-w-[280px] text-[11px] leading-5">A connected workspace for recruiting, people operations, and employee support.</p></div><div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-300">Platform</p><div className="mt-3 grid gap-2.5 text-[11px]"><a href="#features" className="hover:text-white">Features</a><Link href="/recruitment" className="hover:text-white">Recruitment</Link><Link href="/knowledge-base" className="hover:text-white">Knowledge base</Link><Link href="/tasks" className="hover:text-white">Task board</Link></div></div><div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-300">Resources</p><div className="mt-3 grid gap-2.5 text-[11px]"><Link href="/blog" className="hover:text-white">Blog</Link><Link href="/docs" className="hover:text-white">Documentation</Link><Link href="/integrations" className="hover:text-white">Integrations</Link><Link href="/contact" className="hover:text-white">Contact</Link></div></div><div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-300">Get started</p><div className="mt-3 grid gap-2.5 text-[11px]"><Link href="/login" className="hover:text-white">Log in</Link><button onClick={startWorkspace} className="w-fit hover:text-white">Try the workspace</button><Link href="/legal/privacy" className="hover:text-white">Privacy</Link><Link href="/legal/terms" className="hover:text-white">Terms</Link></div></div></div><div className="border-t border-white/10"><div className="mx-auto flex max-w-[1320px] flex-col gap-2 px-5 py-4 text-[10px] sm:flex-row sm:items-center sm:justify-between sm:px-8"><span>© {new Date().getFullYear()} HR Streamline AI</span><span>Built to help your people team do its best work.</span></div></div></footer>
+    <button type="button" aria-label="Open HR Copilot" onClick={() => setChatOpen(true)} className="fixed bottom-5 right-5 z-40 flex h-12 items-center gap-2 rounded-full bg-indigo-600 px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-950/30 transition hover:bg-indigo-500"><MessageSquareText size={17} /><span className="hidden sm:inline">Ask HR Copilot</span></button>
+    <CopilotSidebar isOpen={chatOpen} onOpenChange={setChatOpen} />
+  </div>;
+}
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col">
-
-        {/* HERO SECTION */}
-        <section
-          ref={(el) => (sectionsRef.current[0] = el)}
-          className={cn(
-            "flex flex-col items-center justify-center text-center py-16 sm:py-24 md:py-32 relative group px-4 sm:px-6",
-            visibleSections.has(0) ? "is-visible" : ""
-          )}
-        >
-          {/* Floating tags */}
-          <CollaboratorTag name="HR Admin" className="top-[calc(50%-4rem)] left-[6%] xl:left-[10%] hidden md:flex animate-float-elliptical" cursorClass="!text-cyan-400" />
-          <CollaboratorTag name="Employee" className="top-[calc(50%-4rem)] right-[10%] xl:right-[15%] hidden md:flex animate-float-elliptical-slow" cursorClass="!text-pink-400" />
-
-          <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-purple-400/30 bg-purple-500/10 px-4 py-1.5 text-sm text-purple-200 opacity-0 group-[.is-visible]:animate-fade-in-up">
-            <Sparkles className="h-4 w-4" /> The agentic HR platform
-          </span>
-          {/* Main Headline */}
-          <div className="flex flex-col items-center">
-             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter mb-6 transition-transform duration-300 hover:scale-[1.02] text-center">
-                <span className="block opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                Your HR workflow just got
-                </span>
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 transition-all duration-300 hover:brightness-110 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                run by AI agents
-                </span>
-            </h1>
-            <p className="max-w-2xl text-base text-neutral-400 sm:text-lg opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-              Email assistance, AI recruitment, attendance, payroll and onboarding in one workspace, with a Copilot that answers from your own policies.
-            </p>
-          </div>
-
-          {/* Workflow diagram */}
-          <div className="relative my-16 sm:my-24 flex w-full max-w-4xl mx-auto items-center justify-around flex-wrap gap-4 sm:gap-0 sm:flex-nowrap sm:justify-between opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-            <div className="absolute left-0 right-0 h-px bg-neutral-700 top-3 -z-10 hidden sm:block" />
-
-            <WorkflowStep icon={Users} label="Recruit" />
-            <WorkflowStep icon={UserPlus} label="Onboard" />
-
-            <div className="flex flex-col items-center gap-2 z-10 bg-black px-2 w-full sm:w-auto order-first sm:order-none">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse"></div>
-                <div className="h-3 w-3 rounded-full bg-purple-500 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                <div className="h-3 w-3 rounded-full bg-pink-500 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-              </div>
-              <span className="text-xs sm:text-sm text-neutral-500 mt-1">Agents at work</span>
-              <div className="mt-2 bg-gradient-to-r from-blue-400/30 via-purple-500/30 to-pink-500/30 border border-purple-400/50 rounded-full px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm text-purple-200">
-                  HR Streamline AI
-              </div>
-            </div>
-
-            <WorkflowStep icon={CalendarCheck} label="Attendance" />
-            <WorkflowStep icon={DollarSign} label="Payroll" />
-          </div>
-
-          {/* CTA Button */}
-          <div className="flex justify-center gap-4 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
-              <Button size="lg" onClick={handleGuestLogin} disabled={isLoading || isGuestLoading} className="bg-white text-black hover:bg-neutral-200 rounded-full px-8 py-3 h-auto">
-                {(isLoading || isGuestLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Try Now for Free
-              </Button>
-              <Button asChild size="lg" variant="outline" className="rounded-full px-8 py-3 h-auto border-neutral-700 bg-transparent text-white hover:bg-neutral-900 hover:text-white">
-                <Link href="/book-a-demo">Book a Demo</Link>
-              </Button>
-          </div>
-        </section>
-
-        {/* Precision Review Section */}
-        <section
-          ref={(el) => (sectionsRef.current[1] = el)}
-          className={cn(
-            "container mx-auto py-16 sm:py-24 md:py-32 group",
-            visibleSections.has(1) ? "is-visible" : ""
-          )}
-        >
-          <div className="group relative rounded-2xl bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 p-6 sm:p-8 md:p-16 overflow-hidden flex flex-col items-center">
-             <HoverPill icon={FileSearch} label="AI Recruitment" variant="dark" />
-
-            {/* Floating elements */}
-            <CollaboratorTag name="Hiring Manager" className="bottom-1/4 left-8 hidden md:flex animate-float-elliptical" cursorClass="transform -rotate-12 !text-cyan-400" />
-            <CollaboratorTag name="Recruiter" className="bottom-1/4 right-8 hidden md:flex animate-float-elliptical-slow" cursorClass="transform rotate-[120deg] !text-pink-400" />
-
-            <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-white transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
-              Screen candidates with AI precision
-            </h2>
-            <p className="text-base sm:text-lg text-blue-200 mb-8 sm:mb-12 md:mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-blue-100 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
-              Upload resumes, match them against the job description and get a ranked shortlist with the reasons behind every score.
-            </p>
-
-            <div className="relative w-full max-w-3xl mx-auto border-2 border-solid border-blue-400/50 rounded-2xl p-4 sm:p-8 min-h-[200px] sm:min-h-[250px] flex items-center justify-center opacity-0 group-[.is-visible]:animate-fade-in-up transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.3s' }}>
-              <div className="w-full space-y-3">
-                {[
-                  { name: 'Candidate A', role: 'Frontend Engineer', score: 92, note: 'Strong React and TypeScript match' },
-                  { name: 'Candidate B', role: 'Frontend Engineer', score: 81, note: 'Good fit, limited testing experience' },
-                  { name: 'Candidate C', role: 'Frontend Engineer', score: 64, note: 'Missing required design-system work' },
-                ].map((c) => (
-                  <div key={c.name} className="flex items-center gap-4 rounded-xl bg-white/10 p-3 sm:p-4 text-left backdrop-blur-sm">
-                    <FileText className="h-8 w-8 shrink-0 text-pink-300" />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-white">{c.name} <span className="font-normal text-blue-200">· {c.role}</span></p>
-                      <p className="truncate text-sm text-blue-200">{c.note}</p>
-                    </div>
-                    <span className={cn("rounded-full px-3 py-1 text-sm font-bold", c.score >= 80 ? "bg-emerald-400 text-emerald-950" : "bg-yellow-300 text-yellow-950")}>{c.score}%</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Manage, Prioritize & Assign Section */}
-        <section
-          ref={(el) => (sectionsRef.current[2] = el)}
-          className={cn(
-            "container mx-auto py-16 sm:py-24 md:py-32 group",
-            visibleSections.has(2) ? "is-visible" : ""
-          )}
-        >
-            <div className="group relative rounded-2xl bg-gradient-to-br from-yellow-200 via-yellow-300 to-amber-300 p-6 sm:p-8 md:p-16 overflow-hidden flex flex-col items-center">
-                <HoverPill icon={FeatureFlagIcon} label="Tasks" />
-
-                <DevCollaboratorTag
-                    name="HR Manager"
-                    className="top-1/2 -translate-y-1/2 left-8 hidden md:flex animate-float-elliptical"
-                    cursorClass="text-pink-500"
-                    tagColorClass="bg-pink-500 text-white border-pink-500/50"
-                />
-
-                <DevCollaboratorTag
-                    name="Recruiter"
-                    className="top-1/2 -translate-y-1/2 right-8 hidden md:flex animate-float-elliptical-slow"
-                    cursorClass="text-yellow-600"
-                    tagColorClass="bg-yellow-500 text-black border-yellow-600/50"
-                />
-
-                <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
-                    Manage, prioritize<br />& assign
-                </h2>
-                <p className="text-base sm:text-lg text-neutral-700 mb-8 sm:mb-12 md:mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
-                    Track onboarding checklists, hiring steps and HR requests on one board, or connect Jira.
-                </p>
-
-                {/* Mock Task Card */}
-                <div className="relative max-w-lg mx-auto bg-white rounded-2xl shadow-2xl p-4 text-left text-black opacity-0 group-[.is-visible]:animate-fade-in-up transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.3s' }}>
-                    <div className="flex items-center justify-between border-b pb-3 mb-3">
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <button onClick={() => setActiveTaskState('po')} className={cn("flex items-center gap-1.5 px-2 py-1 rounded-md text-sm transition-colors", activeTaskState === 'po' ? "bg-red-100 text-red-700 border border-red-200" : "hover:bg-neutral-100")}>
-                                <Flag className="h-3 w-3"/> PO
-                            </button>
-                             <button onClick={() => setActiveTaskState('inProgress')} className={cn("flex items-center gap-1.5 px-2 py-1 rounded-md text-sm transition-colors", activeTaskState === 'inProgress' ? "bg-yellow-100 text-yellow-800 border border-yellow-200" : "hover:bg-neutral-100")}>
-                                <Clock className="h-3 w-3"/> In Progress
-                            </button>
-                            <button onClick={() => setActiveTaskState('question')} className={cn("flex items-center gap-1.5 px-2 py-1 rounded-md text-sm transition-colors", activeTaskState === 'question' ? "bg-blue-100 text-blue-700 border border-blue-200" : "hover:bg-neutral-100")}>
-                               <span className="font-semibold text-neutral-400">#</span>Question
-                            </button>
-                        </div>
-                        <MoreHorizontal className="h-5 w-5 text-neutral-400" />
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                        <ImageWithFallback
-                            src="https://randomuser.me/api/portraits/men/78.jpg"
-                            fallbackSrc="https://placehold.co/32x32.png"
-                            alt="Calvin F."
-                            width={32}
-                            height={32}
-                            className="rounded-full"
-                            data-ai-hint="man face"
-                        />
-                        <div className="flex-1">
-                            <div className="flex items-center text-sm">
-                                <span className="font-semibold">Calvin F.</span>
-                                <span className="text-neutral-500 ml-2">3h</span>
-                                <div className="w-1.5 h-1.5 bg-red-500 rounded-full ml-2"></div>
-                            </div>
-                            <p className="text-xs text-neutral-500">
-                                Assigned to <span className="text-blue-600 font-medium">{taskContent[activeTaskState].assignee}</span>
-                            </p>
-                            <p className="my-2 text-neutral-800">
-                                {taskContent[activeTaskState].message}
-                            </p>
-
-                            <div className="flex items-center justify-between text-xs text-neutral-500 mt-3">
-                                <button className="flex items-center gap-1 hover:text-blue-600">
-                                    <MessageSquare className="h-4 w-4" /> {taskContent[activeTaskState].replies} Replies
-                                </button>
-                                <div className="flex items-center gap-2">
-                                    <Monitor className="h-4 w-4" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        {/* Get Approvals at Hyper Speed Section */}
-        <section
-          ref={(el) => (sectionsRef.current[3] = el)}
-          className={cn(
-            "container mx-auto py-16 sm:py-24 md:py-32 group",
-            visibleSections.has(3) ? "is-visible" : ""
-          )}
-        >
-            <div className="group relative rounded-2xl bg-gradient-to-br from-violet-200 via-purple-200 to-indigo-200 p-6 sm:p-8 md:p-16 overflow-hidden flex flex-col items-center">
-                <HoverPill icon={Check} label="Leave & Approvals" />
-
-                <DevCollaboratorTag
-                    name="Manager"
-                    className="top-1/4 left-12 hidden md:flex animate-float-elliptical"
-                    cursorClass="text-lime-500"
-                    tagColorClass="bg-lime-300 text-lime-900 font-bold border-lime-400"
-                />
-
-                <DevCollaboratorTag
-                    name="Team Lead"
-                    className="bottom-1/4 right-12 hidden md:flex animate-float-elliptical-slow"
-                    cursorClass="text-pink-500"
-                    tagColorClass="bg-pink-400 text-white font-bold border-pink-500"
-                />
-
-                <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
-                Get approvals<br />at hyper speed
-                </h2>
-                <p className="text-base sm:text-lg text-neutral-700 mb-8 sm:mb-12 md:mb-16 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
-                Employees request leave in a click. Managers approve it from the dashboard, and attendance updates automatically.
-                </p>
-
-                <div className="relative max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-6 sm:p-8 text-center text-black opacity-0 group-[.is-visible]:animate-fade-in-up transition-transform duration-300 hover:-translate-y-1" style={{ animationDelay: '0.3s' }}>
-                <div className="relative inline-block mb-4">
-                    <ImageWithFallback
-                        src="https://randomuser.me/api/portraits/men/4.jpg"
-                        fallbackSrc="https://placehold.co/80x80.png"
-                        alt="Mike Mulligan"
-                        width={80}
-                        height={80}
-                        className="rounded-full w-16 h-16 sm:w-20 sm:h-20 object-cover"
-                        data-ai-hint="man face"
-                    />
-                    <div className="absolute -top-1 -right-1 bg-green-500 rounded-full p-1.5 border-2 border-white">
-                    <Check className="h-4 w-4 text-white" />
-                    </div>
-                </div>
-                <p className="text-lg sm:text-xl font-semibold">Leave request approved</p>
-                <p className="text-lg sm:text-xl font-semibold">by Mike Mulligan</p>
-                <p className="text-sm text-neutral-500 mt-2">on 24th August 2023</p>
-                <p className="font-serif italic text-xl sm:text-2xl text-neutral-600 mt-6">
-                    Mike Mulligan
-                </p>
-                </div>
-            </div>
-        </section>
-
-        {/* Sync With Your Tools Section */}
-        <section
-          ref={(el) => (sectionsRef.current[4] = el)}
-          className={cn(
-            "bg-white text-black py-16 sm:py-24 md:py-32 group",
-            visibleSections.has(4) ? "is-visible" : ""
-          )}
-        >
-            <div className="container mx-auto px-4 sm:px-6 flex flex-col items-center">
-                <HoverPill icon={Plug} label="Integrate" />
-                <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.1s' }}>
-                    Sync with<br />your tools
-                </h2>
-                <p className="text-base sm:text-lg text-neutral-700 mb-8 sm:mb-12 max-w-2xl mx-auto transition-colors duration-300 hover:text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
-                    Connect Gmail, Slack, Teams and calendars so agents can read, draft and schedule where your team already works.
-                </p>
-
-                <div className="relative w-full max-w-4xl mx-auto overflow-hidden mt-12 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-                    <div className="flex animate-marquee">
-                        {[...tools, ...tools].map((tool, index) => (
-                            <div key={`${tool.name}-${index}`} className="flex-shrink-0 flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-lg px-4 py-2 shadow-md text-black mx-2 sm:mx-4 border border-neutral-200">
-                                <Image src={tool.logoUrl} width={24} height={24} alt={`${tool.name} logo`} data-ai-hint={tool.hint} className="object-contain" />
-                                <span className="font-semibold text-sm md:text-base">{tool.name}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <Link href="/integrations" className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-800 hover:text-black mt-12 sm:mt-16 group opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
-                    VIEW INTEGRATIONS
-                    <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-            </div>
-        </section>
-
-        {/* Consistent Collaboration Section */}
-        <section
-          ref={(el) => (sectionsRef.current[5] = el)}
-          className={cn(
-            "container mx-auto py-16 sm:py-24 md:py-32 group",
-            visibleSections.has(5) ? "is-visible" : ""
-          )}
-        >
-          <div className="relative flex flex-col items-center justify-center text-center max-w-4xl mx-auto">
-            <div className="absolute top-[-5rem] bottom-[-5rem] left-[-10rem] right-[-10rem] -z-10 hidden lg:block">
-                <AssetIcon
-                    icon={Mail}
-                    className="top-12 left-12"
-                    wrapperClassName="border-cyan-500/20 bg-cyan-500/10"
-                    iconClassName="text-cyan-400"
-                    animation="float"
-                    animationDelay="0.3s"
-                />
-                <AssetIcon
-                    icon={FileText}
-                    className="top-[60%] left-0"
-                    wrapperClassName="border-red-500/20 bg-red-500/10"
-                    iconClassName="text-red-400"
-                    animation="float-slow"
-                    animationDelay="0.5s"
-                />
-                <AssetIcon
-                    icon={CalendarCheck}
-                    className="bottom-0 left-1/2 -translate-x-1/2"
-                    wrapperClassName="border-purple-500/20 bg-purple-500/10"
-                    iconClassName="text-purple-400"
-                    animation="float"
-                    animationDelay="0.7s"
-                />
-                <AssetIcon
-                    icon={DollarSign}
-                    className="top-[60%] right-0"
-                    wrapperClassName="border-green-500/20 bg-green-500/10"
-                    iconClassName="text-green-400"
-                    animation="float-slow"
-                    animationDelay="0.6s"
-                />
-                <AssetIcon
-                    icon={Library}
-                    className="top-12 right-12"
-                    wrapperClassName="border-indigo-500/20 bg-indigo-500/10"
-                    iconClassName="text-indigo-400"
-                    animation="float"
-                    animationDelay="0.4s"
-                />
-            </div>
-
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-8 text-white transition-transform duration-300 hover:scale-[1.02] relative opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                Every HR workflow, <br className="hidden sm:block" /> from inbox to payroll,{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
-                    in one place
-                </span>
-            </h2>
-            <div className="opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-              <Button size="lg" onClick={handleGuestLogin} disabled={isLoading || isGuestLoading} className="bg-black text-white hover:bg-neutral-800 rounded-full px-8 py-3 h-auto border border-neutral-700 shadow-lg">
-                 {(isLoading || isGuestLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Try Now For Free
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        {/* Super Secure Section */}
-        <section
-          ref={(el) => (sectionsRef.current[6] = el)}
-          className={cn(
-            "bg-white text-black py-16 sm:py-24 md:py-32 group",
-            visibleSections.has(6) ? "is-visible" : ""
-          )}
-        >
-          <div className="container mx-auto px-4 sm:px-6 flex flex-col items-center">
-            <div className="p-1.5 rounded-[30px] sm:rounded-[40px] bg-gradient-to-br from-blue-300 to-purple-400">
-              <div className="p-1.5 rounded-[25px] sm:rounded-[35px] bg-white">
-                <div className="p-1.5 rounded-[20px] sm:rounded-[30px] bg-gradient-to-br from-blue-200/50 to-purple-300/50">
-                  <div className="bg-white rounded-[15px] sm:rounded-[25px] p-6 sm:p-8 md:p-16 text-center flex flex-col items-center">
-
-                    <div className="flex justify-center items-center flex-wrap gap-1.5 sm:gap-3 mb-8" onMouseLeave={() => setHoveredIndex(null)}>
-                      {secureText.split('').map((letter, index) => (
-                        <div
-                          key={index}
-                          onMouseEnter={() => setHoveredIndex(index)}
-                          className="bg-purple-100 border border-purple-200 rounded-lg p-1 sm:p-2 cursor-default transition-all duration-300 flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8"
-                        >
-                          {hoveredIndex === index ? (
-                            <span className="font-bold text-purple-600 text-lg opacity-0 group-[.is-visible]:animate-fade-in-up">{letter}</span>
-                          ) : (
-                            <Asterisk className="h-4 w-4 text-purple-500" />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                      <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-4 text-neutral-800 transition-transform duration-300 hover:scale-[1.02] text-center">
-                        Super secure with
-                      </h2>
-                      <p className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-8 sm:mb-16 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300 hover:brightness-110 text-center">
-                        SOCII Type I Compliance
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-y-4 sm:gap-y-0 gap-x-6 sm:gap-x-12 text-neutral-600 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                      <div className="flex items-center gap-2 transition-transform hover:scale-105">
-                        <Check className="h-5 w-5 text-green-500" />
-                        <span>End-to-End data encryption</span>
-                      </div>
-                      <div className="flex items-center gap-2 transition-transform hover:scale-105">
-                        <Check className="h-5 w-5 text-green-500" />
-                        <span>Dedicated Storage</span>
-                      </div>
-                      <div className="flex items-center gap-2 transition-transform hover:scale-105">
-                        <Check className="h-5 w-5 text-green-500" />
-                        <span>SOC2 Compliant</span>
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Reviews in Slow Motion Section */}
-        <section
-          ref={(el) => (sectionsRef.current[7] = el)}
-          className={cn(
-            "container mx-auto py-16 sm:py-24 md:py-32 group",
-            visibleSections.has(7) ? "is-visible" : ""
-          )}
-        >
-          <div className="relative rounded-2xl bg-gradient-to-br from-orange-400 via-red-500 to-rose-600 p-6 sm:p-8 md:p-16 overflow-hidden min-h-[550px] sm:min-h-[600px] flex flex-col justify-around items-center">
-            
-            {/* Cursor + Spinning Wheel */}
-            <div className="flex items-center gap-2 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
-              <CursorIcon className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
-              <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-[conic-gradient(from_90deg_at_50%_50%,#F59E0B_0%,#EF4444_25%,#8B5CF6_50%,#3B82F6_75%,#4ADE80_100%)] animate-slow-spin"></div>
-            </div>
-
-            {/* Text Content */}
-            <div className="relative z-10 opacity-0 group-[.is-visible]:animate-fade-in-up text-center" style={{ animationDelay: '0.2s' }}>
-              <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter mb-4 text-black">
-                HR shouldn&apos;t move
-                <br />
-                in slow motio<span className="opacity-80">n</span><span className="opacity-60">n</span><span className="opacity-40">n</span>
-              </h2>
-              <p className="text-base sm:text-lg text-neutral-800 max-w-md mx-auto">
-                Chasing emails, spreadsheets and chat threads slows every hire, leave request and payroll run.
-              </p>
-            </div>
-          
-            {/* Tooltip and Icon Bar */}
-            <div className="flex flex-col items-center opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-              <div className="relative bg-neutral-900 text-white rounded-lg px-4 py-2 mb-3 shadow-lg">
-                <p className="text-sm text-center">
-                  You are using <span className="font-bold">more than 6 tools</span> to run HR
-                </p>
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-neutral-900 transform rotate-45" style={{ zIndex: -1 }}></div>
-              </div>
-              <div className="bg-neutral-800/50 backdrop-blur-sm border border-neutral-700 rounded-2xl px-4 py-3 flex items-center justify-center gap-4 sm:gap-5 shadow-2xl">
-                <Image src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" width={28} height={28} alt="Gmail logo" data-ai-hint="gmail logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
-                <Image src="https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png" width={28} height={28} alt="Slack logo" data-ai-hint="slack logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
-                <Image src="https://cdn.icon-icons.com/icons2/2699/PNG/512/atlassian_jira_logo_icon_170511.png" width={28} height={28} alt="Atlassian logo" data-ai-hint="atlassian jira logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
-                <Image src="https://upload.wikimedia.org/wikipedia/commons/c/c9/Microsoft_Office_Teams_%282018%E2%80%93present%29.svg" width={28} height={28} alt="Microsoft Teams logo" data-ai-hint="microsoft teams logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity object-contain" />
-                <Image src="https://upload.wikimedia.org/wikipedia/commons/8/87/Google_Chrome_icon_%282011%29.png" width={28} height={28} alt="Chrome logo" data-ai-hint="chrome browser logo" className="h-6 w-6 sm:h-7 sm:w-7 opacity-90 hover:opacity-100 transition-opacity" />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* FAQ Section */}
-        <section
-          ref={(el) => (sectionsRef.current[8] = el)}
-          className={cn(
-            "container relative mx-auto px-4 sm:px-6 py-16 sm:py-24 md:py-32 group",
-            visibleSections.has(8) ? "is-visible" : ""
-          )}
-        >
-          {/* Decorative background shapes */}
-          <div className="absolute top-0 left-0 w-48 h-48 border-2 border-neutral-800 rounded-full opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}></div>
-          <div className="absolute bottom-0 right-0 w-32 h-32 border-2 border-neutral-800 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.2s' }}></div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-8 items-start relative z-10">
-            {/* Left Column */}
-            <div className="lg:col-span-1 space-y-6 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-              <h2 className="text-4xl sm:text-5xl font-bold tracking-tight">
-                Frequently
-                <br />
-                Asked Questions
-              </h2>
-              <div className="text-neutral-400">
-                <p>Got more questions?</p>
-                <p>
-                  You can{' '}
-                  <Link href="/contact" className="underline hover:text-white">
-                    Contact Us
-                  </Link>{' '}
-                  or{' '}
-                  <Link href="/book-a-demo" className="underline hover:text-white">
-                    Book a Demo
-                  </Link>
-                </p>
-              </div>
-            </div>
-
-            {/* Right Column (Accordion) */}
-            <div className="lg:col-span-2 max-w-3xl space-y-4 opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-              <Accordion type="single" collapsible className="w-full mx-auto">
-                <AccordionItem value="item-1">
-                  <AccordionTrigger className="text-lg">What is HR Streamline AI?</AccordionTrigger>
-                  <AccordionContent className="text-neutral-400">
-                    HR Streamline AI is an intelligent, all-in-one platform designed to automate and simplify your HR operations, from recruitment and onboarding to attendance and communication.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="item-2">
-                  <AccordionTrigger className="text-lg">What integrations are supported?</AccordionTrigger>
-                  <AccordionContent className="text-neutral-400">
-                    We support integrations with many popular tools like Gmail, Slack, Google Calendar, GitHub, and more. You can manage all integrations from the settings page.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="item-3">
-                  <AccordionTrigger className="text-lg">Does HR Streamline AI offer a free plan?</AccordionTrigger>
-                  <AccordionContent className="text-neutral-400">
-                     Yes, we offer a free plan with core features to get you started. You can also explore our premium plans for more advanced capabilities and unlimited access by continuing as a Guest.
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-          </div>
-        </section>
-
-        {/* Final CTA Section */}
-        <section
-          ref={(el) => (sectionsRef.current[9] = el)}
-          className={cn(
-            "container mx-auto py-16 sm:py-24 md:py-32 group",
-            visibleSections.has(9) ? "is-visible" : ""
-          )}
-        >
-          <div className="relative p-8 sm:p-16 rounded-2xl bg-gradient-to-br from-yellow-400 via-orange-500 to-red-600 text-center overflow-hidden grainy-texture opacity-0 group-[.is-visible]:animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-            <div className="relative z-10 flex flex-col items-center justify-center space-y-8">
-              <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 shadow-lg">
-                <CtaLogo className="h-10 w-10 animate-slow-spin" />
-              </div>
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-black">
-                Let AI agents handle the admin. Build a better workplace.
-              </h2>
-              <Button size="lg" onClick={handleGuestLogin} disabled={isLoading || isGuestLoading} className="bg-black text-white hover:bg-neutral-800 rounded-full px-8 py-3 h-auto shadow-lg transition-transform hover:scale-105">
-                 {(isLoading || isGuestLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Try Now For Free
-              </Button>
-            </div>
-          </div>
-        </section>
-
-      </main>
-
-      <footer className="border-t border-neutral-800 bg-black text-white">
-        <div className="container mx-auto px-4 sm:px-6 py-16">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
-            {/* Column 1: Branding & Features */}
-            <div className="col-span-2 lg:col-span-2">
-              <Link href="/" className="flex items-center gap-2 mb-4">
-                <Logo className="h-8 w-8 text-primary" />
-                <span className="font-bold text-lg text-white">HR Streamline AI</span>
-              </Link>
-              <ul className="space-y-2">
-                <li><Link href="/recruitment" className="text-neutral-400 hover:text-white">For Recruitment</Link></li>
-                <li><Link href="/attendance-reporting" className="text-neutral-400 hover:text-white">For Reporting</Link></li>
-                <li><Link href="/unified-communications" className="text-neutral-400 hover:text-white">For Communication</Link></li>
-              </ul>
-            </div>
-
-            {/* Column 2: Integrations */}
-            <div>
-              <h3 className="font-semibold text-white mb-4">Integrations</h3>
-              <ul className="space-y-2">
-                <li><Link href="/integrations" className="text-neutral-400 hover:text-white">Slack</Link></li>
-                <li><Link href="/integrations" className="text-neutral-400 hover:text-white">Gmail</Link></li>
-                <li><Link href="/integrations" className="text-neutral-400 hover:text-white">Google Calendar</Link></li>
-                <li><Link href="/integrations" className="text-neutral-400 hover:text-white">GitHub</Link></li>
-              </ul>
-            </div>
-
-            {/* Column 3: Company */}
-            <div>
-              <h3 className="font-semibold text-white mb-4">Company</h3>
-              <ul className="space-y-2">
-                <li><Link href="/contact" className="text-neutral-400 hover:text-white">Contact Us</Link></li>
-                <li><Link href="/blog" className="text-neutral-400 hover:text-white">Blog</Link></li>
-                <li><Link href="/docs" className="text-neutral-400 hover:text-white">Docs</Link></li>
-              </ul>
-            </div>
-
-            {/* Column 4: Legal */}
-            <div>
-              <h3 className="font-semibold text-white mb-4">Legal</h3>
-              <ul className="space-y-2">
-                <li><Link href="/legal/security" className="text-neutral-400 hover:text-white">Security</Link></li>
-                <li><Link href="/legal/privacy" className="text-neutral-400 hover:text-white">Privacy</Link></li>
-                <li><Link href="/legal/terms" className="text-neutral-400 hover:text-white">Terms</Link></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div className="border-t border-neutral-800">
-          <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between py-6 text-sm text-neutral-500 px-4 sm:px-6 sm:pr-20">
-            <div className="flex items-center gap-6 order-2 sm:order-1 mt-4 sm:mt-0">
-                <Link href="#" className="hover:text-white transition-colors"><Hash className="h-5 w-5" /></Link>
-                <Link href="https://www.linkedin.com/company/agentic-hr" className="hover:text-white transition-colors"><Linkedin className="h-5 w-5" /></Link>
-                <Link href="#" className="hover:text-white transition-colors"><X className="h-5 w-5" /></Link>
-                <Link href="#" className="hover:text-white transition-colors"><Instagram className="h-5 w-5" /></Link>
-                <Link href="#" className="hover:text-white transition-colors"><Youtube className="h-5 w-5" /></Link>
-            </div>
-            <div className="order-1 sm:order-2">
-              © {new Date().getFullYear()} HR Streamline AI. All Rights Reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      {/* Floating Chat Button */}
-      <ChatWidget />
-    </div>
-  );
+export default function HomePage() {
+  return <HomeContent />;
 }
