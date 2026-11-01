@@ -32,6 +32,7 @@ const RULES: ActionRule[] = [
   { method: 'POST', pattern: /^\/api\/settings\/policy$/, action: 'Updated company policy', category: 'Settings' },
   { method: 'PUT', pattern: /^\/api\/settings\/policy$/, action: 'Updated company policy', category: 'Settings' },
   { method: 'PUT', pattern: /^\/api\/profile$/, action: 'Updated profile', category: 'Account' },
+  { method: 'PUT', pattern: /^\/api\/profile\/preferences$/, action: 'Updated preferences', category: 'Account' },
   { method: 'DELETE', pattern: /^\/api\/profile\/delete-account$/, action: 'Deleted account', category: 'Account' },
   { method: 'POST', pattern: /^\/api\/profile\/delete-account$/, action: 'Deleted account', category: 'Account' },
   { method: 'POST', pattern: /^\/api\/google\/emails\/send$/, action: 'Sent an email', category: 'Email' },
