@@ -65,6 +65,17 @@ const setupFetchInterceptor = (logoutCallback: () => void) => {
 };
 
 
+/** The start page the person chose in Profile → Preferences, else the dashboard. */
+async function fetchStartPage(token: string): Promise<string> {
+  try {
+    const response = await fetch('/api/profile/preferences', { headers: { Authorization: `Bearer ${token}` } });
+    const page = response.ok ? (await response.json()).preferences?.startPage : null;
+    return typeof page === 'string' && page.startsWith('/') ? page : '/dashboard';
+  } catch {
+    return '/dashboard';
+  }
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -201,7 +212,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem('adminAuthToken', data.token);
         router.push('/admin/dashboard');
       } else {
-        router.push('/dashboard'); 
+        router.push(await fetchStartPage(data.token));
       }
       
       return true;

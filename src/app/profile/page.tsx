@@ -5,14 +5,18 @@ import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { User, Edit3, Activity, Settings2, Bell, Palette, Loader2, BarChart2 } from 'lucide-react';
+import { User, Edit3, Loader2, BarChart2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import { useEffect, useState, type FormEvent, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import type { ProfileOverview } from '@/services/profile/overview';
+import { DEFAULT_PREFERENCES, type Preferences } from '@/lib/preferences';
+import RecentActivityCard from './components/recent-activity-card';
+import PreferencesCard from './components/preferences-card';
+import { formatDateTime } from './format';
 
 export default function ProfilePage() {
   const { toast } = useToast();
@@ -27,6 +31,27 @@ export default function ProfilePage() {
   const [clientUser, setClientUser] = useState(user);
   const [employeeStats, setEmployeeStats] = useState<Record<string, number> | null>(null);
   const [isStatsLoading, setIsStatsLoading] = useState(false);
+  const [overview, setOverview] = useState<ProfileOverview | null>(null);
+  const [isOverviewLoading, setIsOverviewLoading] = useState(true);
+  const [preferences, setPreferences] = useState<Preferences | null>(null);
+  const [startPages, setStartPages] = useState<{ path: string; label: string }[]>([]);
+
+  useEffect(() => {
+    if (!token) return;
+    const headers = { Authorization: `Bearer ${token}` };
+    fetch('/api/profile/overview', { headers })
+      .then((response) => (response.ok ? response.json() : null))
+      .then(setOverview)
+      .catch(() => setOverview(null))
+      .finally(() => setIsOverviewLoading(false));
+    fetch('/api/profile/preferences', { headers })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        setPreferences(data?.preferences ?? DEFAULT_PREFERENCES);
+        setStartPages(data?.startPages ?? []);
+      })
+      .catch(() => setPreferences(DEFAULT_PREFERENCES));
+  }, [token]);
 
   const fetchEmployeeStats = useCallback(async () => {
     if (!user || user.role !== 'Admin' || !token) return;
@@ -171,52 +196,23 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <p><strong>Role:</strong> {clientUser.role}</p>
               <p><strong>Organization ID:</strong> {clientUser.organizationId ? `${clientUser.organizationId.substring(0,8)}...` : 'N/A'}</p>
-              <p><strong>Joined:</strong> January 1, 2024 (Mock)</p>
-              <p><strong>Last Login:</strong> {new Date().toLocaleDateString()} (Mock)</p>
+              <p><strong>Joined:</strong> {overview?.joinedAt ? formatDateTime(overview.joinedAt, preferences ?? DEFAULT_PREFERENCES, false) : '—'}</p>
+              <p>
+                <strong>Last sign-in:</strong>{' '}
+                {overview?.lastSignIn ? `${formatDateTime(overview.lastSignIn.at, preferences ?? DEFAULT_PREFERENCES)} · IP ${overview.lastSignIn.ipAddress || 'unknown'}` : '—'}
+              </p>
             </div>
           </CardContent>
         </Card>
 
         <div className="md:col-span-2 space-y-6">
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Activity className="mr-2 h-5 w-5 text-primary" /> Recent Activity (Mock)
-              </CardTitle>
-              <CardDescription>A brief overview of your recent actions.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3 text-sm">
-                <li>Logged in from new device (IP: 192.168.1.100) - 2 hours ago</li>
-                <li>Updated 3 tasks in Project Nova - Yesterday</li>
-                <li>Generated 5 email drafts - Yesterday</li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Settings2 className="mr-2 h-5 w-5 text-primary" /> Preferences (Mock)
-              </CardTitle>
-              <CardDescription>Your personalized settings.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="emailNotifications" className="flex items-center">
-                  <Bell className="mr-2 h-4 w-4" /> Email Notifications
-                </Label>
-                <span className="text-sm text-muted-foreground">Enabled</span>
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <Label htmlFor="defaultTheme" className="flex items-center">
-                  <Palette className="mr-2 h-4 w-4" /> Default Theme
-                </Label>
-                <span className="text-sm text-muted-foreground">System</span>
-              </div>
-            </CardContent>
-          </Card>
+          <RecentActivityCard
+            overview={overview}
+            isLoading={isOverviewLoading}
+            prefs={preferences ?? DEFAULT_PREFERENCES}
+            showNewDeviceAlerts={preferences?.newDeviceAlerts ?? true}
+          />
+          {token && <PreferencesCard token={token} preferences={preferences} startPages={startPages} onChange={setPreferences} />}
         </div>
       </div>
 
