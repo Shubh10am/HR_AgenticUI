@@ -7,3 +7,5 @@ import '@/ai/flows/summarize-github-activity.ts';
 import '@/ai/flows/ai-interviewer.ts';
 import '@/ai/flows/copilot-chat-flow.ts'; // Added import for copilot chat
 import '@/ai/flows/analyze-resume-flow.ts'; // Added import for resume analysis
+import '@/ai/flows/screen-candidate-flow.ts';
+import '@/ai/flows/interview-kit-flow.ts';

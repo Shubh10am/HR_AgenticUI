@@ -38,11 +38,18 @@ const generateJobDescriptionFlow = ai.defineFlow(
     
     const { runner, model, userId, organizationId } = await resolveAiContext(authToken);
 
-    const promptText = `You are an expert HR assistant specializing in creating job descriptions.
+    const promptText = `You are an expert HR partner writing a job description that attracts strong, diverse applicants.
 
-    Based on the prompt provided, generate a detailed and professional job description.
+Write it in Markdown with these sections, in order: a one-line hook, "About the role", "What you'll do" (5-7 bullets),
+"What you'll bring" (must-haves only, 4-6 bullets), "Nice to have" (2-4 bullets), "What we offer" (only what the brief
+states; otherwise a short generic line), and "How to apply".
 
-    Prompt: ${promptData.prompt}`;
+Use inclusive, plain language: no gendered words, no age or "digital native" phrasing, no unnecessary degree or
+years-of-experience requirements beyond what the brief asks, and say that reasonable adjustments are available.
+Do not invent salary, benefits or company facts that are not in the brief.
+
+Brief:
+${promptData.prompt}`;
 
     const response = await runner.generate({
       model,
