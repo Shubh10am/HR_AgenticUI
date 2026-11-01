@@ -123,10 +123,9 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
     setIsLoading(true);
 
     try {
-      const userApiKey = localStorage.getItem('userApiKey');
       const aiInput: CopilotChatInput = { 
         userInput: trimmedInput, 
-        apiKey: userApiKey,
+        authToken: token,
         userId: user?.id,
         organizationId: user?.organizationId,
        };

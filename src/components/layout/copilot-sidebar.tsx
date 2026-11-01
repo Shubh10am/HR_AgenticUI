@@ -82,11 +82,10 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
     setIsLoading(true);
 
     try {
-      const userApiKey = localStorage.getItem('userApiKey');
       const passages = await fetchKnowledgeContext(token, trimmedInput);
       const aiInput: CopilotChatInput = { 
         userInput: trimmedInput, 
-        apiKey: userApiKey,
+        authToken: token,
         userId: user?.id,
         organizationId: user?.organizationId,
         knowledgeContext: passages.map(({ sourceName, text }) => ({ sourceName, text })),

@@ -554,10 +554,9 @@ export default function AttendanceReportingPage() {
     }
     setIsGeneratingLeaveReason(true);
     try {
-      const userApiKey = localStorage.getItem('userApiKey');
       const aiInput: GenerateDraftEmailResponsesInput = { 
         query: `Please write a concise and professional reason for a leave application based on the following input: ${leaveReasonPrompt}. Also provide a suitable subject line for this reason.`,
-        apiKey: userApiKey,
+        authToken: token,
         userId: user?.id,
         organizationId: user?.organizationId,
       };

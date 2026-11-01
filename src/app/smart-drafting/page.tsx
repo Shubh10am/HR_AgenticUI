@@ -94,10 +94,9 @@ export default function SmartDraftingPage() {
     setSubject('');
     
     try {
-      const userApiKey = localStorage.getItem('userApiKey');
       const input: GenerateDraftEmailResponsesInput = { 
         query: `Draft an email based on the following prompt: ${prompt}`, 
-        apiKey: userApiKey,
+        authToken: token,
         userId: user?.id,
         organizationId: user?.organizationId,
       };

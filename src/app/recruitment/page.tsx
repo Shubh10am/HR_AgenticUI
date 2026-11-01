@@ -39,7 +39,7 @@ export default function RecruitmentPage() {
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
 
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   async function handleGenerateJd(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -50,10 +50,9 @@ export default function RecruitmentPage() {
     setIsJdLoading(true);
     setGeneratedJd('');
     try {
-      const userApiKey = localStorage.getItem('userApiKey');
       const input: GenerateJobDescriptionInput = { 
         prompt: jdPrompt, 
-        apiKey: userApiKey,
+        authToken: token,
         userId: user?.id,
         organizationId: user?.organizationId,
       };
@@ -96,13 +95,12 @@ export default function RecruitmentPage() {
     setIsInterviewLoading(true);
     setInterviewResult(null);
     try {
-      const userApiKey = localStorage.getItem('userApiKey');
       const input: AiInterviewerInput = {
         jobDescription: interviewerJobDesc,
         candidateResume: candidateResumeTextForInterview,
         candidateName,
         interviewRounds: numInterviewRounds,
-        apiKey: userApiKey,
+        authToken: token,
         userId: user?.id,
         organizationId: user?.organizationId,
       };
@@ -206,10 +204,9 @@ export default function RecruitmentPage() {
     setIsAnalysisLoading(true);
     setAnalysisResult(null);
     try {
-      const userApiKey = localStorage.getItem('userApiKey');
       const input: AnalyzeResumeInput = { 
         resumeText: resumeForAnalysis, 
-        apiKey: userApiKey,
+        authToken: token,
         userId: user?.id,
         organizationId: user?.organizationId,
       };

@@ -218,12 +218,11 @@ export default function GmailCalendarPage() {
     setIsGenerating(true);
     setGeneratedDrafts([]);
     try {
-        const userApiKey = localStorage.getItem('userApiKey');
         const knowledgeContext = await getKnowledgeForEmail(selectedEmail);
         const input: GenerateDraftEmailResponsesInput = { 
             query: `From: ${selectedEmail.from}\nSubject: ${selectedEmail.subject}\n\n${selectedEmail.body}`,
             knowledgeContext,
-            apiKey: userApiKey,
+            authToken: token,
             userId: user?.id,
             organizationId: user?.organizationId,
         };
@@ -244,13 +243,12 @@ export default function GmailCalendarPage() {
   const runQuickReply = async (prompt: string): Promise<boolean> => {
     if (!selectedEmail || !prompt.trim()) return false;
     try {
-        const userApiKey = localStorage.getItem('userApiKey');
         const knowledgeContext = await getKnowledgeForEmail(selectedEmail, prompt);
         const input: GenerateDraftEmailResponsesInput = { 
             query: `From: ${selectedEmail.from}\nSubject: ${selectedEmail.subject}\n\n${selectedEmail.body}`,
             knowledgeContext,
             prompt,
-            apiKey: userApiKey,
+            authToken: token,
             userId: user?.id,
             organizationId: user?.organizationId,
         };

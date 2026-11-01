@@ -23,7 +23,7 @@ export default function EmailAssistancePage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter(); // Initialize useRouter
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,10 +40,9 @@ export default function EmailAssistancePage() {
     setDrafts([]);
 
     try {
-      const userApiKey = localStorage.getItem('userApiKey');
       const input: GenerateDraftEmailResponsesInput = { 
         query, 
-        apiKey: userApiKey,
+        authToken: token,
         userId: user?.id,
         organizationId: user?.organizationId,
       };

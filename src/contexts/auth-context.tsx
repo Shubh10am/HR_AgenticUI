@@ -79,34 +79,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('hrStreamlineClockInTime');
   };
 
-  const fetchAndSetUserApiKey = async (userToken: string) => {
-    if (!userToken || userToken.startsWith('guest-')) {
-      localStorage.removeItem('userApiKey');
-      setUserApiKey(null);
-      return;
-    }
-    try {
-      const response = await fetch('/api/settings/api-key', {
-        headers: { Authorization: `Bearer ${userToken}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.apiKey) {
-          localStorage.setItem('userApiKey', data.apiKey);
-          setUserApiKey(data.apiKey);
-        } else {
-          localStorage.removeItem('userApiKey');
-          setUserApiKey(null);
-        }
-      } else {
-        localStorage.removeItem('userApiKey');
-        setUserApiKey(null);
-      }
-    } catch (e) {
-      console.error("Failed to fetch user API key", e);
-      localStorage.removeItem('userApiKey');
-      setUserApiKey(null);
-    }
+  // AI keys now stay on the server. This only clears copies stored by older versions of the app.
+  const fetchAndSetUserApiKey = async (_userToken: string) => {
+    localStorage.removeItem('userApiKey');
+    setUserApiKey(null);
   };
   
   const logout = useCallback(() => {
