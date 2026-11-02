@@ -3,7 +3,7 @@
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { subtitleOf, type TreeNode } from '@/lib/hierarchy';
 import { cn } from '@/lib/utils';
-import PersonAvatar from './person-avatar';
+import PersonAvatar from '@/components/person-avatar';
 
 const LINE = 'bg-border';
 

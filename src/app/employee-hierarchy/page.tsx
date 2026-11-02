@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { isGuestToken } from '@/lib/guest-demo';
 import { ancestorsOf, buildForest, collectStats, demoOrgPeople, matchingIds, type OrgPerson } from '@/lib/hierarchy';
 import EmployeeNode, { type NodeViewState } from './employee-node';
-import PersonAvatar from './person-avatar';
+import PersonAvatar from '@/components/person-avatar';
 import PersonSheet from './person-sheet';
 
 const MIN_ZOOM = 0.4;

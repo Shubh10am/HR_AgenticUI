@@ -1,5 +1,6 @@
 // Sample data shown in guest mode so visitors can see how each feature works.
 // Everything here is fictional: made-up people at example.com and documentation-range IPs.
+import { dayKeyOf, dayKeysBetween, dayStatusOf, instantAt, isLateClockIn, isWeekend, type BoardRow, type DayBoard, type MyAttendance, type MyDay } from '@/lib/attendance';
 import type { CommItem, CommSourceStatus } from '@/lib/communications';
 import type { ProfileOverview } from '@/services/profile/overview';
 
@@ -155,22 +156,56 @@ export function demoCommunications(): { items: CommItem[]; sources: CommSourceSt
   };
 }
 
-/** Today's sample attendance board: who has clocked in and who is away. */
-export function demoAttendanceBoard() {
-  const today = (h: number, m: number) => { const d = new Date(); d.setHours(h, m, 0, 0); return d.toISOString(); };
+/** A sample attendance board for any day: who clocked in, who is late, on leave or away. */
+export function demoAttendanceBoard(dayKey: string = dayKeyOf()): DayBoard {
+  const people: [string, string, string | null, string | null, string | null][] = [
+    ['Maya Fernandes', 'Operations', '08:52', '17:40', null],
+    ['Leo Hartmann', 'Human Resources', '09:04', '18:10', null],
+    ['Sana Qureshi', 'Engineering', '09:11', null, null],
+    ['Priyanka Rao', 'Engineering', '09:27', '17:05', null],
+    ['Daniel Okafor', 'Sales', '09:45', null, null],
+    ['Ines Duarte', 'Finance', '08:58', '15:20', null],
+    ['Omar Velasco', 'Engineering', null, null, 'Sick'],
+    ['Elena Novak', 'Marketing', null, null, 'Annual'],
+    ['Kenji Watanabe', 'Finance', null, null, null],
+  ];
+  const now = new Date();
+  const today = dayKeyOf(now);
+  const rows: BoardRow[] = people.map(([name, department, inAt, outAt, leaveType], index) => {
+    const usable = dayKey <= today && !isWeekend(dayKey);
+    const clockIn = usable && inAt && instantAt(dayKey, inAt) <= now ? instantAt(dayKey, inAt) : null;
+    const clockOutAt = clockIn && outAt ? instantAt(dayKey, outAt) : null;
+    const clockOut = clockOutAt && clockOutAt <= now ? clockOutAt : dayKey < today && clockIn ? instantAt(dayKey, '18:00') : null;
+    return {
+      employeeId: `demo-${index}`,
+      name,
+      email: `${name.toLowerCase().replace(' ', '.')}@example.com`,
+      department,
+      recordId: clockIn ? `demo-record-${index}` : null,
+      clockIn: clockIn?.toISOString() ?? null,
+      clockOut: clockOut?.toISOString() ?? null,
+      minutes: clockIn ? Math.round(((clockOut ?? now).getTime() - clockIn.getTime()) / 60_000) : null,
+      status: dayStatusOf({ dayKey, clockIn, clockOut, onLeave: Boolean(leaveType) && dayKey <= today && !isWeekend(dayKey), now }),
+      leaveType: leaveType && dayKey <= today && !isWeekend(dayKey) ? leaveType : null,
+      notes: null,
+      adjustedBy: null,
+    };
+  });
+  const count = (...statuses: string[]) => rows.filter((row) => statuses.includes(row.status)).length;
+  const inCount = rows.filter((row) => row.clockIn).length;
+  const onLeave = count('on-leave');
   return {
-    presentEmployees: [
-      { _id: 'demo-p1', name: 'Maya Fernandes', department: 'Operations', clockInTime: today(8, 52) },
-      { _id: 'demo-p2', name: 'Leo Hartmann', department: 'Human Resources', clockInTime: today(9, 4) },
-      { _id: 'demo-p3', name: 'Sana Qureshi', department: 'Engineering', clockInTime: today(9, 11) },
-      { _id: 'demo-p4', name: 'Priyanka Rao', department: 'Engineering', clockInTime: today(9, 27) },
-      { _id: 'demo-p5', name: 'Daniel Okafor', department: 'Sales', clockInTime: today(9, 45) },
-    ],
-    absentEmployees: [
-      { _id: 'demo-a1', name: 'Omar Velasco', department: 'Engineering', leaveType: 'Sick Leave' },
-      { _id: 'demo-a2', name: 'Elena Novak', department: 'Marketing', leaveType: 'Annual Leave' },
-      { _id: 'demo-a3', name: 'Kenji Watanabe', department: 'Finance' },
-    ],
+    dayKey,
+    rows,
+    summary: {
+      total: rows.length,
+      in: inCount,
+      late: rows.filter((row) => row.clockIn && isLateClockIn(new Date(row.clockIn))).length,
+      onLeave,
+      absent: count('absent'),
+      notInYet: count('not-in-yet'),
+      rate: dayKey <= today && !isWeekend(dayKey) ? Math.round((inCount / (rows.length - onLeave)) * 100) : null,
+    },
   };
 }
 
@@ -271,4 +306,42 @@ export function demoKnowledgeAnswer(question: string) {
   const hit = KB_ANSWERS.find((entry) => entry.match.test(question));
   if (!hit) return { passages: [], answer: 'The sample documents don’t cover that. Try asking about leave, working hours, remote work, notice period or the dress code.', isAnswered: false };
   return { passages: [{ sourceId: hit.source[0], sourceName: hit.source[1], text: hit.text, score: 0.92 }], answer: hit.answer, isAnswered: true };
+}
+
+/** A sample month of one person's attendance for the My Attendance calendar. */
+export function demoMyAttendance(month: string): MyAttendance {
+  const now = new Date();
+  const today = dayKeyOf(now);
+  const keys = dayKeysBetween(`${month}-01`, `${month}-31`).filter((key) => key.startsWith(month));
+  const days: MyDay[] = keys.map((dayKey) => {
+    const n = Number(dayKey.slice(8));
+    const onLeave = n === 12 || n === 13;
+    const skip = n === 20;
+    const inAt = n % 6 === 2 ? '09:32' : n % 5 === 0 ? '09:08' : '08:55';
+    const usable = dayKey < today && !isWeekend(dayKey) && !onLeave && !skip;
+    const clockIn = usable ? instantAt(dayKey, inAt) : null;
+    const clockOut = usable ? instantAt(dayKey, n % 9 === 4 ? '16:10' : '18:05') : null;
+    return {
+      dayKey,
+      status: dayStatusOf({ dayKey, clockIn, clockOut, onLeave: onLeave && dayKey <= today && !isWeekend(dayKey), now }),
+      clockIn: clockIn?.toISOString() ?? null,
+      clockOut: clockOut?.toISOString() ?? null,
+      minutes: clockIn && clockOut ? Math.round((clockOut.getTime() - clockIn.getTime()) / 60_000) : null,
+    };
+  });
+  const count = (...statuses: string[]) => days.filter((day) => statuses.includes(day.status)).length;
+  const worked = days.filter((day) => day.minutes != null);
+  return {
+    today: { dayKey: today, clockIn: null, clockOut: null, status: dayStatusOf({ dayKey: today, now }) },
+    month,
+    days,
+    summary: {
+      present: worked.length,
+      late: days.filter((day) => day.clockIn && isLateClockIn(new Date(day.clockIn))).length,
+      absent: count('absent'),
+      onLeave: count('on-leave'),
+      noClockOut: 0,
+      averageMinutes: worked.length ? Math.round(worked.reduce((sum, day) => sum + day.minutes!, 0) / worked.length) : null,
+    },
+  };
 }

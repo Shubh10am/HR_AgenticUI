@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { descendantsOf, subtitleOf, type OrgPerson } from '@/lib/hierarchy';
-import PersonAvatar from './person-avatar';
+import PersonAvatar from '@/components/person-avatar';
 
 const NO_MANAGER = 'none';
 

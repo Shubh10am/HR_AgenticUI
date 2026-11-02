@@ -23,6 +23,9 @@ import { generateDraftEmailResponses, type GenerateDraftEmailResponsesInput } fr
 import { useAuth } from '@/contexts/auth-context';
 import type { TransformedAttendanceRecord } from '@/pages/api/attendance/records';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { dayKeyOf, type MyAttendance } from '@/lib/attendance';
+import { demoMyAttendance } from '@/lib/guest-demo';
+import MyMonthCard from './my-month-card';
 
 interface AttendanceEntry {
   id: string;
@@ -34,18 +37,6 @@ interface AttendanceEntry {
   hoursWorked?: string;
   department?: string;
 }
-
-const mockCalendarAttendanceData: AttendanceEntry[] = [
-  { id: 'cal-1', employee: 'John Doe', date: '2024-07-01', status: 'Present', clockIn: '09:00 AM', clockOut: '05:30 PM', hoursWorked: '8h 30m', department: 'Engineering' },
-  { id: 'cal-2', employee: 'John Doe', date: '2024-07-02', status: 'Present', clockIn: '09:05 AM', clockOut: '05:35 PM', hoursWorked: '8h 30m', department: 'Engineering' },
-  { id: 'cal-3', employee: 'John Doe', date: '2024-07-03', status: 'Absent', hoursWorked: '0h 0m', department: 'Engineering' },
-  { id: 'cal-4', employee: 'Jane Smith', date: '2024-07-03', status: 'Present', clockIn: '09:00 AM', clockOut: '05:00 PM', hoursWorked: '8h 0m', department: 'Marketing' },
-  { id: 'cal-5', employee: 'John Doe', date: '2024-07-04', status: 'Late', clockIn: '09:45 AM', clockOut: '06:00 PM', hoursWorked: '8h 15m', department: 'Engineering' },
-  { id: 'cal-6', employee: 'John Doe', date: '2024-07-05', status: 'Present', clockIn: '08:55 AM', clockOut: '05:25 PM', hoursWorked: '8h 30m', department: 'Engineering' },
-  { id: 'cal-7', employee: 'Alice Brown', date: '2024-07-05', status: 'On Leave', hoursWorked: 'N/A', department: 'Sales' },
-  { id: 'cal-8', employee: 'Bob Green', date: '2024-07-05', status: 'No Check-in', hoursWorked: '0h 0m', department: 'Support' },
-];
-
 
 const productivityData = [
     { employee: 'John Doe', tasksCompleted: 15, targetTasks: 12, project: 'Project Phoenix', rating: 'High' },
@@ -74,7 +65,7 @@ export default function AttendanceReportingPage() {
   const { toast } = useToast();
   const { user, token } = useAuth();
 
-  const isGuest = user?.organizationId === 'guest-org-id' || (token && token.startsWith('guest-'));
+  const isGuest = user?.organizationId === 'guest-org-id' || Boolean(token?.startsWith('guest-'));
   const canAdminister = user?.role === 'Admin' || user?.role === 'HR';
 
   const [filterEmployeeName, setFilterEmployeeName] = useState('');
@@ -108,18 +99,34 @@ export default function AttendanceReportingPage() {
   const [isClocking, setIsClocking] = useState(false);
 
 
-  const [currentCalendarMonth, setCurrentCalendarMonth] = useState<Date>(startOfMonth(new Date()));
-  const [dayModifiers, setDayModifiers] = useState<Record<string, Date[]>>({});
-  const [dayModifiersClassNames, setDayModifiersClassNames] = useState<Record<string, string>>({});
+  // Clock state and the month calendar come from the server, so they are right on every device.
+  const [myMonth, setMyMonth] = useState(() => dayKeyOf().slice(0, 7));
+  const [mine, setMine] = useState<MyAttendance | null>(null);
+  const hasClockedOutToday = !isGuest && Boolean(mine?.today.clockOut);
 
-  const hasClockedOutToday = useMemo(() => {
-    if (isGuest || !user) return false;
-    return allFetchedAttendanceRecords.some(record => 
-      isToday(parseISO(record.date)) &&
-      record.employeeId === user.id &&
-      record.clockOut
-    );
-  }, [allFetchedAttendanceRecords, user, isGuest]);
+  const fetchMine = useCallback(async () => {
+    if (isGuest) {
+      setMine(demoMyAttendance(myMonth));
+      return;
+    }
+    if (!token) return;
+    try {
+      const response = await fetch(`/api/attendance/me?month=${myMonth}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!response.ok) return;
+      const data: MyAttendance = await response.json();
+      setMine(data);
+      const startedAt = data.today.clockIn ? new Date(data.today.clockIn) : null;
+      setIsClockedIn(Boolean(startedAt && !data.today.clockOut));
+      setClockInTime(startedAt);
+      setLastClockInTimeDisplay(startedAt ? startedAt.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' }) : null);
+    } catch {
+      // The rest of the page still works; the calendar just stays empty.
+    }
+  }, [isGuest, token, myMonth]);
+
+  useEffect(() => {
+    void fetchMine();
+  }, [fetchMine]);
 
   const fetchAttendanceRecords = useCallback(async () => {
     if (!token || isGuest) return; // Do not fetch for guests
@@ -243,34 +250,6 @@ export default function AttendanceReportingPage() {
     return filteredData;
   }, [allFetchedAttendanceRecords, isGuest, canAdminister, filterEmployeeName, filterStartDate, filterEndDate, employeeTimeFilter]);
   
-  const monthlyStats = useMemo(() => {
-    if (isGuest || !user) {
-      return { present: 0, late: 0, absent: 0, onLeave: 0 };
-    }
-    
-    const now = new Date();
-    
-    const userRecords = allFetchedAttendanceRecords.filter(
-        (record) => record.employeeName === user.name
-    );
-
-    const stats = userRecords.reduce(
-      (acc, record) => {
-        const recordDate = parse(record.date, 'yyyy-MM-dd', new Date());
-        if (isSameMonth(now, recordDate)) {
-          if (record.status === 'Present') acc.present++;
-          else if (record.status === 'Late') acc.late++;
-          else if (record.status === 'Absent') acc.absent++;
-          else if (record.status === 'On Leave') acc.onLeave++;
-        }
-        return acc;
-      },
-      { present: 0, late: 0, absent: 0, onLeave: 0 }
-    );
-    
-    return stats;
-  }, [allFetchedAttendanceRecords, user, isGuest]);
-
   const IST_TIMEZONE = 'Asia/Kolkata';
 
   useEffect(() => {
@@ -278,56 +257,9 @@ export default function AttendanceReportingPage() {
       setCurrentTime(new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' }));
     }, 1000);
 
-    if (!isGuest) {
-        const storedClockInStatus = localStorage.getItem('hrStreamlineClockInStatus');
-        const storedClockInTime = localStorage.getItem('hrStreamlineClockInTime');
-        if (storedClockInStatus === 'true' && storedClockInTime) {
-          const time = new Date(storedClockInTime);
-          setIsClockedIn(true);
-          setClockInTime(time);
-          setLastClockInTimeDisplay(time.toLocaleTimeString('en-IN', { timeZone: IST_TIMEZONE }));
-        }
-    } else {
-        setIsClockedIn(false);
-        setClockInTime(null);
-        setLastClockInTimeDisplay(null);
-    }
-
     if (user?.name && !leaveRequest.employeeName) {
         setLeaveRequest(prev => ({...prev, employeeName: user.name}));
     }
-
-    const presentDays = mockCalendarAttendanceData
-      .filter(d => d.status === 'Present')
-      .map(d => parse(d.date, 'yyyy-MM-dd', new Date()));
-    const absentDays = mockCalendarAttendanceData
-      .filter(d => d.status === 'Absent')
-      .map(d => parse(d.date, 'yyyy-MM-dd', new Date()));
-    const lateDays = mockCalendarAttendanceData
-      .filter(d => d.status === 'Late')
-      .map(d => parse(d.date, 'yyyy-MM-dd', new Date()));
-    const onLeaveDays = mockCalendarAttendanceData
-      .filter(d => d.status === 'On Leave')
-      .map(d => parse(d.date, 'yyyy-MM-dd', new Date()));
-    const noCheckInDays = mockCalendarAttendanceData
-      .filter(d => d.status === 'No Check-in')
-      .map(d => parse(d.date, 'yyyy-MM-dd', new Date()));
-      
-    setDayModifiers({
-      present: presentDays,
-      absent: absentDays,
-      late: lateDays,
-      onLeave: onLeaveDays,
-      noCheckIn: noCheckInDays,
-    });
-
-    setDayModifiersClassNames({
-      present: 'bg-green-100 dark:bg-green-800/50 text-green-700 dark:text-green-300 rounded-md',
-      absent: 'bg-red-100 dark:bg-red-800/50 text-red-700 dark:text-red-300 rounded-md',
-      late: 'bg-yellow-100 dark:bg-yellow-800/50 text-yellow-700 dark:text-yellow-300 rounded-md',
-      onLeave: 'bg-blue-100 dark:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-md',
-      noCheckIn: 'bg-orange-100 dark:bg-orange-800/50 text-orange-700 dark:text-orange-300 rounded-md',
-    });
 
     return () => clearInterval(timerId);
   }, [user, isGuest]);
@@ -350,6 +282,7 @@ export default function AttendanceReportingPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        void fetchMine(); // e.g. already clocked in from another device
         throw new Error(data.error || 'Failed to clock in.');
       }
       
@@ -357,13 +290,12 @@ export default function AttendanceReportingPage() {
       setIsClockedIn(true);
       setClockInTime(now);
       setLastClockInTimeDisplay(now.toLocaleTimeString('en-IN', { timeZone: IST_TIMEZONE }));
-      localStorage.setItem('hrStreamlineClockInStatus', 'true');
-      localStorage.setItem('hrStreamlineClockInTime', now.toISOString());
       toast({
         title: "Clocked In",
-        description: `You clocked in at ${now.toLocaleTimeString('en-IN', { timeZone: IST_TIMEZONE })}.`,
+        description: `You clocked in at ${now.toLocaleTimeString('en-IN', { timeZone: IST_TIMEZONE })}.${data.record.late ? ' This counts as a late arrival.' : ''}`,
       });
-      fetchAttendanceRecords(); 
+      fetchAttendanceRecords();
+      void fetchMine();
     } catch (error: any) {
       toast({ title: "Clock-In Error", description: error.message, variant: "destructive" });
     } finally {
@@ -402,13 +334,12 @@ export default function AttendanceReportingPage() {
         durationMessage = ` Session duration: ${hours}h ${remainingMinutes}m.`;
       }
       
-      localStorage.removeItem('hrStreamlineClockInStatus');
-      localStorage.removeItem('hrStreamlineClockInTime');
       toast({
         title: "Clocked Out",
         description: `You clocked out at ${clockOutTime.toLocaleTimeString('en-IN', { timeZone: IST_TIMEZONE })}.${durationMessage}`,
       });
-      fetchAttendanceRecords(); 
+      fetchAttendanceRecords();
+      void fetchMine();
     } catch (error: any) {
       toast({ title: "Clock-Out Error", description: error.message, variant: "destructive" });
     } finally {
@@ -923,35 +854,7 @@ export default function AttendanceReportingPage() {
       </div>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
-           <CardHeader>
-            <CardTitle className="flex items-center text-xl">
-              <BarChartHorizontalBig className="mr-2 h-6 w-6 text-primary" />
-              My Monthly Snapshot
-            </CardTitle>
-            <CardDescription>
-                Your attendance summary for {formatDateFn(new Date(), 'MMMM yyyy')}.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between items-center p-3 bg-secondary/30 rounded-md">
-              <span className="font-medium">Total Present</span>
-              <Badge variant="default" className="bg-green-500 text-white">{monthlyStats.present} Days</Badge>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-secondary/30 rounded-md">
-              <span className="font-medium">Total Absent</span>
-              <Badge variant="destructive">{monthlyStats.absent} Days</Badge>
-            </div>
-             <div className="flex justify-between items-center p-3 bg-secondary/30 rounded-md">
-              <span className="font-medium">Late Marks</span>
-              <Badge variant="secondary" className="bg-yellow-500 text-black">{monthlyStats.late} Occasions</Badge>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-secondary/30 rounded-md">
-              <span className="font-medium">Leaves Taken</span>
-              <Badge variant="outline" className="bg-blue-500 text-white">{monthlyStats.onLeave} Days</Badge>
-            </div>
-          </CardContent>
-        </Card>
+        <MyMonthCard data={mine} month={myMonth} isGuest={isGuest} onMonthChange={setMyMonth} />
         <Card className="lg:col-span-2 shadow-lg hover:shadow-xl transition-shadow duration-300">
           <CardHeader>
             <div className="flex justify-between items-center">
