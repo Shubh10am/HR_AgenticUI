@@ -1,57 +1,21 @@
-
 import type { NextApiResponse } from 'next';
-import dbConnect from '@/lib/mongodb';
-import AttendanceRecord from '@/models/AttendanceRecord';
 import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
-import { toZonedTime } from 'date-fns-tz';
+import { clockIn } from '@/services/attendance';
 
-async function handler(
-  req: NextApiRequestWithAuth,
-  res: NextApiResponse
-) {
+async function handler(req: NextApiRequestWithAuth, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
   const { id: employeeId, organizationId } = req.user;
-  const now = new Date(); // Current time on the server (usually UTC)
-  
-  // Normalize the date to the beginning of the day in UTC for consistent querying
-  const todayDate = toZonedTime(now, 'UTC');
-  todayDate.setUTCHours(0, 0, 0, 0);
-
+  if (!organizationId) return res.status(400).json({ error: 'Attendance belongs to an organization.' });
   try {
-    const existingRecord = await AttendanceRecord.findOne({
-      employeeId,
-      date: todayDate,
-    });
-
-    if (existingRecord) {
-      if (!existingRecord.clockOutTime) {
-        return res.status(409).json({ error: 'Already clocked in for today.' });
-      }
-      return res.status(409).json({ error: 'You have already completed a work session for today. Contact HR for adjustments.' });
-    }
-
-    const newRecord = new AttendanceRecord({
-      employeeId,
-      organizationId,
-      date: todayDate,
-      clockInTime: now,
-    });
-
-    await newRecord.save();
-
-    return res.status(201).json({
-      message: 'Clocked in successfully.',
-      record: {
-        id: newRecord._id,
-        clockInTime: newRecord.clockInTime,
-        date: newRecord.date,
-      },
-    });
-  } catch (error: any) {
+    const result = await clockIn(employeeId, organizationId);
+    if (result.error) return res.status(result.status).json({ error: result.error });
+    return res.status(201).json({ message: 'Clocked in successfully.', record: result.record });
+  } catch (error) {
     console.error('Clock-in error:', error);
-    if (error.code === 11000) {
-        return res.status(409).json({ error: 'An attendance record for today might already exist or there was a conflict.' });
-    }
-    return res.status(500).json({ error: 'Internal Server Error during clock-in.' });
+    return res.status(500).json({ error: 'Could not clock you in. Please try again.' });
   }
 }
 

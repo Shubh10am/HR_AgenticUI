@@ -25,6 +25,7 @@ const RULES: ActionRule[] = [
   { method: 'PATCH', pattern: /^\/api\/hierarchy\/[^/]+$/, action: 'Changed a reporting line', category: 'Employees' },
   { method: 'POST', pattern: /^\/api\/attendance\/clock-in$/, action: 'Clocked in', category: 'Attendance' },
   { method: 'POST', pattern: /^\/api\/attendance\/clock-out$/, action: 'Clocked out', category: 'Attendance' },
+  { method: 'PUT', pattern: /^\/api\/attendance\/adjust$/, action: 'Corrected attendance', category: 'Attendance' },
   { method: 'POST', pattern: /^\/api\/leave-requests/, action: 'Submitted a leave request', category: 'Leave' },
   { method: 'PUT', pattern: /^\/api\/leave-requests/, action: 'Reviewed a leave request', category: 'Leave' },
   { method: 'PUT', pattern: /^\/api\/settings\/ai-provider$/, action: 'Changed the AI provider', category: 'Settings' },

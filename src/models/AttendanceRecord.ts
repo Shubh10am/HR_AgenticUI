@@ -17,6 +17,9 @@ export interface IAttendanceRecord extends Document {
   hoursWorked?: number; // in minutes, calculated on clock-out
   status?: AttendanceStatus; // Can be set based on company policy (e.g., if clockInTime > expectedStartTime)
   notes?: string;
+  /** Email of the HR/Admin who last corrected this day, if anyone did. */
+  adjustedBy?: string;
+  adjustedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -59,6 +62,8 @@ const AttendanceRecordSchema: Schema<IAttendanceRecord> = new Schema(
       type: String,
       trim: true,
     },
+    adjustedBy: { type: String },
+    adjustedAt: { type: Date },
   },
   {
     timestamps: true,

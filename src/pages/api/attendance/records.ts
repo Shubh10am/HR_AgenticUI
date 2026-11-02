@@ -4,7 +4,10 @@ import dbConnect from '@/lib/mongodb';
 import AttendanceRecord, { type IAttendanceRecord } from '@/models/AttendanceRecord';
 import Employee, { type IEmployee } from '@/models/Employee';
 import { withAuth, type NextApiRequestWithAuth } from '@/lib/withAuth';
-import { format } from 'date-fns-tz'; // Correctly import the format function
+import { dayKeyOf, isDayKey, storedDateOf } from '@/lib/attendance';
+
+const DEFAULT_RANGE_DAYS = 90;
+const MAX_RECORDS = 5000;
 
 interface PopulatedAttendanceRecord extends Omit<IAttendanceRecord, 'employeeId'> {
   employeeId: IEmployee;
@@ -36,6 +39,10 @@ async function handler(
     } else {
       query.employeeId = currentUserId;
     }
+    // Bounded by date so the list stays fast as history grows: ?from=&to= (YYYY-MM-DD), default the last 90 days.
+    const to = isDayKey(req.query.to) ? req.query.to : dayKeyOf();
+    const from = isDayKey(req.query.from) ? req.query.from : dayKeyOf(new Date(storedDateOf(to).getTime() - DEFAULT_RANGE_DAYS * 86_400_000));
+    query.date = { $gte: storedDateOf(from), $lte: storedDateOf(to) };
     
     const records: PopulatedAttendanceRecord[] = await AttendanceRecord.find(query)
       .populate<{ employeeId: IEmployee }>({
@@ -44,6 +51,7 @@ async function handler(
         select: 'name department',
       })
       .sort({ date: -1, clockInTime: -1 })
+      .limit(MAX_RECORDS)
       .lean();
 
     const transformedRecords: TransformedAttendanceRecord[] = records.map(record => {
@@ -64,7 +72,7 @@ async function handler(
         employeeName: record.employeeId?.name || 'N/A',
         employeeId: record.employeeId?._id?.toString() || 'N/A',
         department: record.employeeId?.department || 'N/A',
-        date: format(new Date(record.date), 'yyyy-MM-dd'),
+        date: new Date(record.date).toISOString().slice(0, 10),
         clockIn: record.clockInTime ? new Date(record.clockInTime).toISOString() : undefined,
         clockOut: record.clockOutTime ? new Date(record.clockOutTime).toISOString() : undefined,
         hoursWorked: hoursWorkedDisplay,
