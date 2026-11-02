@@ -12,6 +12,10 @@ export interface IEmployee extends Document {
   role: EmployeeRole;
   organizationId: mongoose.Types.ObjectId | IOrganization;
   department?: string; // Added department
+  /** Job title shown on the org chart, e.g. "Engineering Manager". */
+  jobTitle?: string;
+  /** Who this person reports to; unset for the top of the org chart. */
+  managerId?: mongoose.Types.ObjectId | null;
   magicLinkToken?: string;
   magicLinkExpires?: Date;
   /** SHA-256 of a one-time set/reset-password token; the raw token only ever goes in the email. */
@@ -59,6 +63,8 @@ const EmployeeSchema: Schema<IEmployee> = new Schema(
       type: String,
       trim: true,
     },
+    jobTitle: { type: String, trim: true, maxlength: 80 },
+    managerId: { type: Schema.Types.ObjectId, ref: 'Employee', default: null, index: true },
     magicLinkToken: {
       type: String,
       unique: true,
