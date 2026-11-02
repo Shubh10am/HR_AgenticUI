@@ -8,12 +8,15 @@ import { Button } from '@/components/ui/button';
 import CopilotSidebar from '@/components/chat-widget';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import Logo from '@/components/icons/logo';
-import ParticleField from '@/components/landing/particle-field';
+import ParticleField, { type ParticleShape } from '@/components/landing/particle-field';
+import { useHeroWorkflowShapes } from '@/components/landing/hero-workflow-shapes';
 import AgentJourney from '@/components/landing/agent-journey';
 import AgentProcess from '@/components/landing/agent-process';
 import ConnectedIntelligence from '@/components/landing/connected-intelligence';
 
 type PreviewKey = 'overview' | 'hiring' | 'inbox' | 'copilot';
+/** Dot shapes for the tour steps, in order: layers, people, envelope, chat bubble. */
+const TOUR_SHAPES = [9, 3, 7, 8];
 const tabs: { id: PreviewKey; label: string }[] = [
   { id: 'overview', label: 'People overview' },
   { id: 'hiring', label: 'Recruitment' },
@@ -100,21 +103,51 @@ function ProductTour({ active, onChange }: { active: PreviewKey; onChange: (prev
   }, [onChange]);
   const index = tourSteps.findIndex((step) => step.id === active);
   const step = tourSteps[index];
+
+  // The dots gather into this step's shape in the open space under the copy.
+  const stage = useRef<HTMLDivElement>(null);
+  const copy = useRef<HTMLDivElement>(null);
+  const [shape, setShape] = useState<ParticleShape>({ index: null, x: 0, y: 0, size: 0 });
+  useEffect(() => {
+    const place = () => {
+      const box = stage.current?.getBoundingClientRect();
+      const text = copy.current?.getBoundingClientRect();
+      if (!box || !text) return;
+      // The space between the copy and the bottom of the preview, clear of the step indicators.
+      const indicators = copy.current?.parentElement?.nextElementSibling?.getBoundingClientRect().top;
+      const floor = (indicators ?? box.bottom) - 14;
+      const room = floor - text.bottom - 18;
+      const side = Math.min(text.width * 0.55, room * 0.9, 210);
+      // Only beside the preview on wide screens, and only when it fits under the copy.
+      if (window.innerWidth < 1024 || side < 64) return setShape((current) => ({ ...current, index: null }));
+      setShape({
+        index: TOUR_SHAPES[index],
+        x: (text.left + side / 2 + 8 - box.left) / box.width,
+        y: ((text.bottom + floor) / 2 - box.top) / box.height,
+        size: side / Math.min(box.width, box.height * 1.6),
+      });
+    };
+    place();
+    window.addEventListener('resize', place);
+    return () => window.removeEventListener('resize', place);
+  }, [index]);
+
   const selectStep = (id: PreviewKey) => {
     const element = track.current;
     if (!element) return;
     const next = tourSteps.findIndex((item) => item.id === id);
     window.scrollTo({ top: window.scrollY + element.getBoundingClientRect().top + (element.offsetHeight - window.innerHeight) * ((next + 0.1) / 4), behavior: 'smooth' });
   };
-  return <section ref={track} id="product-tour" className="product-tour-track dark-dot-surface relative bg-[#090a10] text-white" onPointerMove={trackPointer} onPointerLeave={clearPointer}><ParticleField />
-    <div className="product-tour-stage">
+  return <section ref={track} id="product-tour" className="product-tour-track dark-dot-surface relative bg-[#090a10] text-white" onPointerMove={trackPointer} onPointerLeave={clearPointer}>
+    <div ref={stage} className="product-tour-stage"><ParticleField shape={shape} />
       <div className="relative z-10 mx-auto w-full max-w-[1320px] px-5 sm:px-8">
         <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-4">
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Explore the workspace</span>
           <span className="text-xs tabular-nums text-slate-400">0{index + 1} / 04</span>
         </div>
         <div className="grid items-center gap-7 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16">
-          <div key={active} className="tour-copy-enter">
+          {/* Top-aligned on wide screens so the space below the copy is free for the dot shape. */}
+          <div ref={copy} key={active} className="tour-copy-enter lg:self-start lg:pt-8">
             <p className="text-xs font-medium uppercase tracking-[0.16em] text-indigo-300">{tabs[index].label}</p>
             <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.04em] sm:text-4xl lg:text-5xl">{step.title}</h2>
             <p className="mt-5 text-sm leading-7 text-slate-400">{step.description}</p>
@@ -158,6 +191,15 @@ function CommunicationsCard() {
   return <div className="rounded-xl border border-slate-100 bg-white p-3"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold">Team updates</span><span className="rounded-full bg-indigo-50 px-2 py-1 text-[7px] text-indigo-700">Company-wide</span></div><div className="mt-3 rounded-lg bg-slate-50 p-2.5"><div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-[7px] font-bold text-violet-700">HR</span><div><p className="text-[8px] font-semibold">October all-hands</p><p className="text-[7px] text-slate-400">People team · 10 min ago</p></div></div><p className="mt-2 text-[8px] leading-relaxed text-slate-500">The monthly team update is ready for review before sharing.</p></div><div className="mt-2 flex items-center gap-1 text-[7px] text-indigo-600"><Sparkles size={9} /> Draft and organize team communications</div></div>;
 }
 
+/** Dot shape per feature card: people, calendar, envelope, chat, check, layers, briefcase, sparkle. */
+const FEATURE_SHAPES = [3, 5, 7, 8, 2, 9, 6, 1];
+
+/** Places the shape in the empty top corner of the card's text half (the halves alternate sides). */
+function featureShape(index: number, formed: boolean): ParticleShape {
+  const textOnRight = index % 2 === 0;
+  return { index: formed ? FEATURE_SHAPES[index % FEATURE_SHAPES.length] : null, x: textOnRight ? 0.9 : 0.4, y: 0.17, size: 0.17 };
+}
+
 const featureItems = [
   { n: '01', icon: BriefcaseBusiness, title: 'Recruit with a clearer signal', text: 'Review a ranked shortlist, understand why each profile matches a role, and keep the hiring team in control of every decision.', tags: ['Resume matching', 'Role pipelines', 'Interview planning'], visual: <HiringCard /> },
   { n: '02', icon: Clock3, title: 'Make people ops easier', text: 'Bring attendance, time off, employee updates, and onboarding tasks together in one shared workspace.', tags: ['Attendance', 'Leave requests', 'Onboarding'], visual: <PeopleCard /> },
@@ -175,33 +217,45 @@ function HomeContent() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const startWorkspace = () => loginAsGuest();
+  // Hero dots take the shape of each workflow step in turn, and that step lights up.
+  const heroRef = useRef<HTMLElement>(null);
+  const heroTitleRef = useRef<HTMLHeadingElement>(null);
+  const { step: heroStep, shape: heroShape } = useHeroWorkflowShapes(heroRef, heroTitleRef);
+  // Which feature cards have settled into view, so their dot shape can form.
+  const [featureFormed, setFeatureFormed] = useState<boolean[]>([]);
 
   useEffect(() => {
     const cards = Array.from(document.querySelectorAll<HTMLElement>('#features article'));
-    const tileObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add('tile-text-revealed');
-        tileObserver.unobserve(entry.target);
-      });
-    }, { threshold: 0.22 });
-    cards.forEach((card) => tileObserver.observe(card));
     let frame = 0;
     const update = () => {
       frame = 0;
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      cards.forEach((card) => {
+      const formed = cards.map((card, index) => {
         const bounds = card.getBoundingClientRect();
-        const progress = Math.max(0, Math.min(1, (window.innerHeight - bounds.top) / (window.innerHeight * 0.72)));
-        card.style.setProperty('--card-scale', String(reduced ? 1 : 0.88 + progress * 0.12));
-        card.style.setProperty('--card-lift', (reduced ? 0 : (1 - progress) * 65) + 'px');
+        // 0 while below the fold, 1 once well in view. Tied to position, so scrolling up reverses it.
+        const raw = Math.max(0, Math.min(1, (window.innerHeight - bounds.top) / (window.innerHeight * 0.8)));
+        const progress = reduced ? 1 : 1 - Math.pow(1 - raw, 3);
+        // Alternate sides: even cards sweep in from the left, odd from the right.
+        const side = index % 2 === 0 ? -1 : 1;
+        card.style.setProperty('--card-scale', String(0.78 + progress * 0.22));
+        card.style.setProperty('--card-lift', (1 - progress) * 70 + 'px');
+        card.style.setProperty('--card-x', side * (1 - progress) * 22 + 'vw');
+        card.style.setProperty('--card-tilt', side * (1 - progress) * -4 + 'deg');
+        card.style.setProperty('--card-fade', String(0.15 + progress * 0.85));
+        // The heading flip and copy rise play as the card lands, and reset once it has left,
+        // so they replay every time it comes back into view (scrolling down or up).
+        if (raw > 0.7 && bounds.bottom > 0) card.classList.add('tile-text-revealed');
+        else if (raw < 0.15 || bounds.bottom < 0) card.classList.remove('tile-text-revealed');
+        // Dots form the card's shape once it has settled, and scatter when it leaves view.
+        return raw > 0.92 && bounds.bottom > window.innerHeight * 0.25;
       });
+      setFeatureFormed((current) => (current.length === formed.length && current.every((value, i) => value === formed[i]) ? current : formed));
     };
     const scroll = () => { if (!frame) frame = requestAnimationFrame(update); };
     window.addEventListener('scroll', scroll, { passive: true });
     window.addEventListener('resize', scroll);
     update();
-    return () => { tileObserver.disconnect(); cancelAnimationFrame(frame); window.removeEventListener('scroll', scroll); window.removeEventListener('resize', scroll); };
+    return () => { cancelAnimationFrame(frame); window.removeEventListener('scroll', scroll); window.removeEventListener('resize', scroll); };
   }, []);
 
 
@@ -259,25 +313,25 @@ function HomeContent() {
   return <div className="min-h-screen overflow-x-clip bg-[#080a12] text-white selection:bg-indigo-300 selection:text-slate-950">
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#080a12]/90 backdrop-blur-xl"><div className="mx-auto flex h-[72px] max-w-[1320px] items-center justify-between px-5 sm:px-8"><Link href="/" aria-label="HR Streamline AI home" className="flex items-center gap-2.5"><Logo className="h-9 w-9" /><span className="text-[15px] font-bold tracking-tight sm:text-lg">HR Streamline <span className="text-indigo-300">AI</span></span></Link><nav className="hidden items-center gap-7 text-[13px] text-slate-300 lg:flex"><a href="#platform" className="transition hover:text-white">Platform</a><a href="#features" className="transition hover:text-white">Features</a><a href="#how-it-works" className="transition hover:text-white">How it works</a><Link href="/blog" className="transition hover:text-white">Resources</Link><Link href="/docs" className="transition hover:text-white">Docs</Link></nav><div className="hidden items-center gap-3 sm:flex"><Link href="/login" className="px-3 py-2 text-sm text-slate-300 transition hover:text-white">Log in</Link><Button onClick={startWorkspace} disabled={isLoading} className="h-10 rounded-full bg-white px-5 text-sm font-semibold text-slate-950 hover:bg-indigo-100">{isLoading ? 'Opening…' : 'Try the workspace'}<ArrowRight className="ml-2 h-4 w-4" /></Button></div><button aria-label={menuOpen ? 'Close navigation' : 'Open navigation'} className="rounded-lg border border-white/15 p-2 sm:hidden" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X size={18} /> : <Menu size={18} />}</button></div>{menuOpen && <div className="border-t border-white/10 bg-[#080a12] px-5 py-4 sm:hidden"><div className="grid gap-3 text-sm text-slate-300"><a href="#platform" onClick={() => setMenuOpen(false)}>Platform</a><a href="#features" onClick={() => setMenuOpen(false)}>Features</a><a href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a><Link href="/blog">Resources</Link><Link href="/docs" onClick={() => setMenuOpen(false)}>Docs</Link><Link href="/login">Log in</Link><Button onClick={startWorkspace} disabled={isLoading} className="mt-1 w-full rounded-full bg-white text-slate-950">Try the workspace</Button></div></div>}</header>
     <main>
-      <section id="platform" className="dark-dot-surface relative isolate overflow-hidden bg-[#08090e]" onPointerMove={trackPointer} onPointerLeave={clearPointer}>
-        <ParticleField />
+      <section ref={heroRef} id="platform" className="dark-dot-surface relative isolate overflow-hidden bg-[#08090e]" onPointerMove={trackPointer} onPointerLeave={clearPointer}>
+        <ParticleField shape={heroShape} />
         <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-20 -z-10 h-[520px] w-[850px] -translate-x-1/2 rounded-full bg-indigo-600/10 blur-[120px]" />
         <div className="relative z-10 mx-auto flex max-w-[1320px] flex-col items-center px-5 pb-14 pt-16 text-center sm:px-8 sm:pb-20 sm:pt-24">
           <span className="hero-intro inline-flex items-center gap-2 rounded-full border border-violet-300/25 bg-violet-400/[0.06] px-4 py-2 text-xs font-medium text-violet-200"><Sparkles size={14} /> The agentic HR platform</span>
-          <h1 className="hero-intro mt-7 max-w-[1050px] text-[clamp(2.8rem,6.8vw,6.3rem)] font-semibold leading-[1.02] tracking-[-0.055em]">Your HR workflows,<br /><span className="bg-gradient-to-r from-indigo-300 via-violet-400 to-fuchsia-400 bg-clip-text text-transparent">connected by AI.</span></h1>
+          <h1 ref={heroTitleRef} className="hero-intro mt-7 max-w-[1050px] text-[clamp(2.8rem,6.8vw,6.3rem)] font-semibold leading-[1.02] tracking-[-0.055em]">Your HR workflows,<br /><span className="bg-gradient-to-r from-indigo-300 via-violet-400 to-fuchsia-400 bg-clip-text text-transparent">connected by AI.</span></h1>
           <p className="hero-intro mt-6 max-w-[740px] text-base leading-7 text-slate-400 sm:text-lg sm:leading-8">Recruiting, onboarding, attendance, and payroll in one workspace—with a Copilot that helps your team find answers in your own policies.</p>
           <div className="relative mt-12 grid w-full max-w-[940px] grid-cols-2 items-center gap-6 sm:mt-16 sm:grid-cols-[1fr_1fr_1.4fr_1fr_1fr] sm:gap-4">
             <div aria-hidden="true" className="workflow-line absolute left-[8%] right-[8%] top-7 hidden h-px bg-white/15 sm:block" />
-            {[{ label: 'Recruit', icon: Users }, { label: 'Onboard', icon: BadgeCheck }].map(({ label, icon: Icon }, index) => <div key={label} className="workflow-node relative flex flex-col items-center gap-3" style={{ animationDelay: index * 0.6 + 's' }}><span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-[#0c0d16]"><Icon size={23} strokeWidth={1.5} /></span><span className="text-xs text-slate-400 sm:text-sm">{label}</span></div>)}
+            {[{ label: 'Recruit', icon: Users }, { label: 'Onboard', icon: BadgeCheck }].map(({ label, icon: Icon }, index) => <div key={label} className={'workflow-node relative flex flex-col items-center gap-3' + (heroStep === index ? ' is-current' : '')} style={{ animationDelay: index * 0.6 + 's' }}><span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-[#0c0d16]"><Icon size={23} strokeWidth={1.5} /></span><span className="text-xs text-slate-400 sm:text-sm">{label}</span></div>)}
             <div className="relative col-span-2 row-start-1 flex flex-col items-center sm:col-span-1 sm:col-start-3 sm:row-auto"><span className="flex h-14 items-center gap-2 bg-[#08090e] px-6">{[0, 1, 2].map((i) => <span key={i} className="agent-signal h-2.5 w-2.5 rounded-full bg-indigo-400" style={{ animationDelay: i * 0.3 + 's' }} />)}</span><span className="mt-3 text-xs text-slate-500">AI connects the workflow</span><span className="mt-3 rounded-full border border-violet-300/30 bg-gradient-to-r from-indigo-500/15 to-fuchsia-500/15 px-4 py-2 text-xs font-medium text-violet-200">HR Streamline AI</span></div>
-            {[{ label: 'Attendance', icon: CalendarDays }, { label: 'Payroll', icon: BriefcaseBusiness }].map(({ label, icon: Icon }, index) => <div key={label} className="workflow-node relative flex flex-col items-center gap-3" style={{ animationDelay: (index + 2) * 0.6 + 's' }}><span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-[#0c0d16]"><Icon size={23} strokeWidth={1.5} /></span><span className="text-xs text-slate-400 sm:text-sm">{label}</span></div>)}
+            {[{ label: 'Attendance', icon: CalendarDays }, { label: 'Payroll', icon: BriefcaseBusiness }].map(({ label, icon: Icon }, index) => <div key={label} className={'workflow-node relative flex flex-col items-center gap-3' + (heroStep === index + 2 ? ' is-current' : '')} style={{ animationDelay: (index + 2) * 0.6 + 's' }}><span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-[#0c0d16]"><Icon size={23} strokeWidth={1.5} /></span><span className="text-xs text-slate-400 sm:text-sm">{label}</span></div>)}
           </div>
           <div className="mt-10 flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row"><Button onClick={startWorkspace} disabled={isLoading} className="h-12 rounded-full bg-white px-7 text-sm font-semibold text-slate-950 hover:bg-indigo-100">{isLoading ? 'Opening workspace…' : 'Explore the workspace'}<ArrowRight className="ml-2 h-4 w-4" /></Button><Link href="/book-a-demo" className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/20 px-7 text-sm font-medium text-white transition hover:bg-white/5">Book a demo<ArrowUpRight size={15} /></Link></div>
           <a href="#product-tour" className="mt-8 inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-slate-500 transition hover:text-white">See the platform in action <span className="scroll-cue" aria-hidden="true">↓</span></a>
         </div>
       </section>
       <ProductTour active={active} onChange={setActive} />
-      <section id="features" className="light-dot-surface relative isolate bg-[#f7f8fc] py-20 text-slate-900 sm:py-28"><ParticleField tone="dark" /><div className="mx-auto max-w-[1320px] px-5 sm:px-8"><div className="mx-auto max-w-[720px] text-center"><p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-600">A closer look</p><h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">See the work your platform brings together.</h2><p className="mx-auto mt-4 max-w-[620px] text-sm leading-6 text-slate-500 sm:text-base sm:leading-7">Explore the modules that support an employee’s journey—from hiring and onboarding to payroll, everyday questions, and team workflows. Previews use sample workspace data.</p></div><div className="mt-12 grid gap-4 sm:mt-16 sm:grid-cols-2 lg:grid-cols-6">{featureItems.map(({ n, icon: Icon, title, text, tags, visual }, index) => <article key={n} data-reveal-item className={'group overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_4px_16px_rgba(15,23,42,0.035)] transition hover:-translate-y-1 hover:shadow-[0_18px_44px_rgba(15,23,42,0.09)] ' + (index < 2 ? 'lg:col-span-3' : 'lg:col-span-2')}><div className="flex min-h-[230px] items-center justify-center border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-indigo-50/60 p-5 sm:min-h-[255px] sm:p-7"><div className="w-full max-w-[430px]">{visual}</div></div><div className="p-5 sm:p-7"><div className="flex items-center gap-2.5"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600"><Icon size={17} /></span><span className="text-[10px] font-semibold tracking-[0.14em] text-slate-400">{n}</span></div><h3 className="mt-4 text-xl font-semibold tracking-tight">{title}</h3><p className="mt-2 max-w-[550px] text-[13px] leading-6 text-slate-500">{text}</p><div className="mt-4 flex flex-wrap gap-2">{tags.map((tag) => <span key={tag} className="rounded-full bg-slate-100 px-2.5 py-1 text-[9px] font-medium text-slate-600">{tag}</span>)}</div></div><ParticleField tone="dark" /></article>)}</div></div></section>
+      <section id="features" className="light-dot-surface relative isolate bg-[#f7f8fc] py-20 text-slate-900 sm:py-28"><ParticleField tone="dark" /><div className="mx-auto max-w-[1320px] px-5 sm:px-8"><div className="mx-auto max-w-[720px] text-center"><p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-600">A closer look</p><h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">See the work your platform brings together.</h2><p className="mx-auto mt-4 max-w-[620px] text-sm leading-6 text-slate-500 sm:text-base sm:leading-7">Explore the modules that support an employee’s journey—from hiring and onboarding to payroll, everyday questions, and team workflows. Previews use sample workspace data.</p></div><div className="mt-12 grid gap-4 sm:mt-16 sm:grid-cols-2 lg:grid-cols-6">{featureItems.map(({ n, icon: Icon, title, text, tags, visual }, index) => <article key={n} data-reveal-item className={'group overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_4px_16px_rgba(15,23,42,0.035)] transition hover:-translate-y-1 hover:shadow-[0_18px_44px_rgba(15,23,42,0.09)] ' + (index < 2 ? 'lg:col-span-3' : 'lg:col-span-2')}><div className="flex min-h-[230px] items-center justify-center border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-indigo-50/60 p-5 sm:min-h-[255px] sm:p-7"><div className="w-full max-w-[430px]">{visual}</div></div><div className="p-5 sm:p-7"><div className="flex items-center gap-2.5"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600"><Icon size={17} /></span><span className="text-[10px] font-semibold tracking-[0.14em] text-slate-400">{n}</span></div><h3 className="mt-4 text-xl font-semibold tracking-tight">{title}</h3><p className="mt-2 max-w-[550px] text-[13px] leading-6 text-slate-500">{text}</p><div className="mt-4 flex flex-wrap gap-2">{tags.map((tag) => <span key={tag} className="rounded-full bg-slate-100 px-2.5 py-1 text-[9px] font-medium text-slate-600">{tag}</span>)}</div></div><ParticleField tone="dark" shape={featureShape(index, Boolean(featureFormed[index]))} /></article>)}</div></div></section>
       <ConnectedIntelligence />
       <AgentProcess />
       <section className="light-dot-surface relative isolate bg-white py-20 text-slate-900 sm:py-24"><ParticleField tone="dark" /><div className="mx-auto grid max-w-[1320px] gap-10 px-5 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center"><div><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600"><ShieldCheck size={20} /></span><p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-600">Built for clarity</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">People decisions deserve context.</h2><p className="mt-4 max-w-[500px] text-sm leading-7 text-slate-500">From candidate recommendations to policy answers, keep the reasoning visible and give your team a clear place to review what happens next.</p><Link href="/knowledge-base" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-indigo-700 hover:text-indigo-900">Explore the knowledge base<ArrowRight size={15} /></Link></div><div className="grid gap-3 sm:grid-cols-2">{[{ icon: FileText, title: 'Answers tied to sources', text: 'Give employees policy guidance they can check against the original material.' }, { icon: Users, title: 'People in the loop', text: 'Keep managers and HR in control of approvals, hiring, and communication.' }, { icon: Workflow, title: 'Workflows that connect', text: 'Move requests and tasks forward without losing track of ownership.' }, { icon: ShieldCheck, title: 'Workspace-level access', text: 'Organize HR resources and activity within your team workspace.' }].map(({ icon: Icon, title, text }) => <div key={title} className="rounded-2xl border border-slate-200 p-5"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-indigo-600"><Icon size={16} /></span><h3 className="mt-4 text-sm font-semibold">{title}</h3><p className="mt-1.5 text-[11px] leading-5 text-slate-500">{text}</p></div>)}</div></div></section>

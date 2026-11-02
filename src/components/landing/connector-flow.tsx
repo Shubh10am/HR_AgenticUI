@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import ParticleField from './particle-field';
+import { useScrollSteps } from '@/hooks/use-scroll-steps';
 import { ArrowRight, Check, Database, FileText, GitBranch, Link2, ShieldCheck, Sparkles } from 'lucide-react';
 
 const stages = [
@@ -20,21 +21,31 @@ const sources = [
 ];
 
 export default function ConnectorFlow() {
-  const [active, setActive] = useState(0);
+  // Wide screens: the diagram pins and scrolling walks through the stages in order.
+  const { trackRef, active: scrollStage, enabled: scrollDriven, trackStyle, goTo } = useScrollSteps(stages.length, 40);
+  const [timedStage, setTimedStage] = useState(0);
   const [paused, setPaused] = useState(false);
+  const active = scrollDriven ? scrollStage : timedStage;
   const root = useRef<HTMLDivElement>(null);
+  // Elsewhere (phones, reduced motion) it plays on a timer that can be paused.
   useEffect(() => {
+    if (scrollDriven) return;
     let timer: ReturnType<typeof setInterval> | undefined;
     const observer = new IntersectionObserver(([entry]) => {
       if (timer) clearInterval(timer);
-      if (entry.isIntersecting && !paused && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) timer = setInterval(() => setActive((step) => (step + 1) % stages.length), 1800);
+      if (entry.isIntersecting && !paused && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) timer = setInterval(() => setTimedStage((step) => (step + 1) % stages.length), 1800);
     }, { threshold: .3 });
     if (root.current) observer.observe(root.current);
     return () => { observer.disconnect(); if (timer) clearInterval(timer); };
-  }, [paused]);
-  return <div ref={root} className="connector-map"><ParticleField tone="dark" />
-    <div className="connector-map-top"><div><span className="connected-eyebrow">From scattered updates to shared understanding</span><h3>Watch the context connect.</h3></div><button onClick={() => setPaused(!paused)} aria-label={paused ? 'Play connector flow' : 'Pause connector flow'}>{paused ? 'Play flow' : 'Pause flow'}<span className={paused ? '' : 'flow-live-dot'} /></button></div>
-    <div className="connector-map-tabs" aria-label="Connector flow stages">{stages.map(({ title, icon: Icon }, index) => <button key={title} aria-pressed={active === index} onClick={() => { setActive(index); setPaused(true); }}><span>0{index + 1}</span><Icon size={14} />{title}</button>)}</div>
+  }, [paused, scrollDriven]);
+  const choose = (index: number) => {
+    if (scrollDriven) return goTo(index);
+    setTimedStage(index);
+    setPaused(true);
+  };
+  return <div ref={trackRef} style={trackStyle} className={scrollDriven ? 'connector-map-track' : undefined}><div ref={root} className="connector-map"><ParticleField tone="dark" />
+    <div className="connector-map-top"><div><span className="connected-eyebrow">From scattered updates to shared understanding</span><h3>Watch the context connect.</h3></div>{scrollDriven ? <span className="connector-map-progress" id="connector-flow-progress">Stage {active + 1} of {stages.length} · scroll to follow</span> : <button onClick={() => setPaused(!paused)} aria-label={paused ? 'Play connector flow' : 'Pause connector flow'}>{paused ? 'Play flow' : 'Pause flow'}<span className={paused ? '' : 'flow-live-dot'} /></button>}</div>
+    <div className="connector-map-tabs" aria-label="Connector flow stages">{stages.map(({ title, icon: Icon }, index) => <button key={title} id={`connector-flow-stage-${index}`} aria-pressed={active === index} onClick={() => choose(index)}><span>0{index + 1}</span><Icon size={14} />{title}</button>)}</div>
     <div className={'connector-map-diagram flow-stage-' + active}>
       <div className="connector-source-stack">{sources.map((source) => <div key={source.name}><img src={'https://www.google.com/s2/favicons?domain=' + source.domain + '&sz=64'} alt="" width={23} height={23} loading="lazy" /><div><strong>{source.name}</strong><span>{source.note}</span></div><span className="connector-source-dot" /></div>)}</div>
       <div className="connector-wire connector-wire-merge" aria-hidden="true"><svg viewBox="0 0 140 300" preserveAspectRatio="none">{[30,90,150,210,270].map((y) => <path key={y} d={'M0 ' + y + ' C75 ' + y + ',55 150,140 150'} />)}</svg><span /></div>
@@ -46,5 +57,5 @@ export default function ConnectorFlow() {
     </div>
     <div className="connector-map-explanation" key={active}><span className="connector-map-step">0{active + 1}</span><div><h4>{stages[active].title}</h4><p>{stages[active].detail}</p></div><ArrowRight size={20} /></div>
     <p className="connector-map-caption">Illustrative connector flow · Explore a sample Copilot answer below</p>
-  </div>;
+  </div></div>;
 }

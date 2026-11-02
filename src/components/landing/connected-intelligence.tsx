@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useScrollSteps } from '@/hooks/use-scroll-steps';
 import ConnectorDeck from './connector-deck';
 import ConnectorFlow from './connector-flow';
 import { ArrowRight, Check, FileText, GitBranch, Layers3, Link2, MessageSquareText, ShieldCheck, Sparkles } from 'lucide-react';
@@ -12,16 +12,18 @@ const questions = [
 ];
 
 export default function ConnectedIntelligence() {
-  const [selected, setSelected] = useState(0);
+  // While the preview is pinned, scrolling walks through the questions in order.
+  const { trackRef, active: selected, progress: stepProgress, enabled: scrollDriven, trackStyle, goTo: choose } = useScrollSteps(questions.length);
   const response = questions[selected];
+
   return <section id="connected-intelligence" className="connected-intelligence">
     <div className="connected-inner">
       <div className="connected-heading"><span className="connected-planned">Connected work intelligence</span><h2>Your tools hold the context.<br /><span>Let your agent bring it together.</span></h2><p>A connected Copilot for project status, current discussions, blockers, and evidence-based contribution summaries—without asking everyone for another update.</p></div>
       <ConnectorDeck />
       <ConnectorFlow />
-      <div className="connected-demo"><aside><span className="connected-eyebrow">Questions leaders can ask</span><h3>One question.<br />A connected picture.</h3><div>{questions.map((item, index) => <button key={item.question} aria-pressed={selected === index} onClick={() => setSelected(index)}><MessageSquareText size={17} /><span>{item.question}</span><ArrowRight size={14} /></button>)}</div><p><ShieldCheck size={14} /> Choose the workspace sources your Copilot can use, then review the supporting context with each answer.</p></aside>
+      <div ref={trackRef} className={scrollDriven ? 'connected-track' : undefined} style={trackStyle}><div className="connected-demo"><aside><span className="connected-eyebrow">Questions leaders can ask</span><h3>One question.<br />A connected picture.</h3><div>{questions.map((item, index) => <button key={item.question} id={`connected-question-${index}`} aria-pressed={selected === index} onClick={() => choose(index)}><MessageSquareText size={17} /><span>{item.question}</span><ArrowRight size={14} />{scrollDriven && selected === index && <i className="connected-progress" style={{ transform: `scaleX(${stepProgress})` }} aria-hidden />}</button>)}</div><p><ShieldCheck size={14} /> Choose the workspace sources your Copilot can use, then review the supporting context with each answer.</p></aside>
         <div className="connected-response" key={selected}><div className="connected-response-top"><span><Sparkles size={16} /> Copilot</span><small>Illustrative response · sample data</small></div><h3>{response.title}</h3><p>{response.answer}</p><div className="connected-evidence"><span>Supporting sources</span>{response.sources.map((source, index) => <div key={source}>{index === 1 ? <GitBranch size={14} /> : <FileText size={14} />}<span>{source}</span><small>View context ↗</small></div>)}</div><div className="connected-review"><Check size={14} /><span>{selected === 2 ? 'Contribution evidence supports human review. Activity counts and message volume are not performance ratings.' : 'Check original sources, timestamps, and unresolved questions before acting.'}</span></div></div>
-      </div>
+      </div></div>
       <div className="connected-principles"><span><Layers3 size={16} /> Status, themes, and dependencies</span><span><FileText size={16} /> Answers linked to source evidence</span><span><ShieldCheck size={16} /> People review employee evaluations</span></div>
       <p className="connected-disclosure">Connect the sources relevant to your workspace. The interactive preview above uses sample data to show how a connected answer is presented.</p>
     </div>

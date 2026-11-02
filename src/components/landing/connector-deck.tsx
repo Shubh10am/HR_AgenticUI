@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import ParticleField from './particle-field';
+import { useScrollSteps } from '@/hooks/use-scroll-steps';
 import { ArrowRight, FileText, GitBranch, MessageSquareText, Sparkles } from 'lucide-react';
 
 const groups = [
@@ -13,7 +14,11 @@ const groups = [
 
 export default function ConnectorDeck() {
   const root = useRef<HTMLDivElement>(null);
-  const [selected, setSelected] = useState(0);
+  // Wide screens: the deck pins and scrolling moves through the cards in order.
+  const { trackRef, active: scrollStep, enabled: scrollDriven, trackStyle, goTo } = useScrollSteps(groups.length, 45);
+  const [clicked, setClicked] = useState(0);
+  const selected = scrollDriven ? scrollStep : clicked;
+  const setSelected = (index: number) => (scrollDriven ? goTo(index) : setClicked(index));
   const [flipped, setFlipped] = useState<number | null>(null);
   useEffect(() => {
     let frame = 0;
@@ -31,9 +36,13 @@ export default function ConnectorDeck() {
     return () => { cancelAnimationFrame(frame); window.removeEventListener('scroll', scroll); window.removeEventListener('resize', scroll); };
   }, []);
   const group = groups[selected];
-  return <div ref={root} className="connector-deck-showcase"><ParticleField />
-    <div className="connector-deck-heading"><span>Many tools. One connected perspective.</span><p>Explore the connector cards</p></div>
-    <div className="connector-deck" aria-label="Explore connector categories">{groups.map(({ name, icon: Icon, tools, text }, index) => <button key={name} className={'connector-playing-card connector-playing-card-' + index + (selected === index ? ' is-selected' : '') + (flipped === index ? ' is-flipped' : '')} onClick={() => { setSelected(index); setFlipped(flipped === index ? null : index); }} aria-pressed={selected === index} aria-label={name + ': ' + text}>
+  // A card turned over while scrolling turns back when the scroll moves to another card.
+  useEffect(() => {
+    if (scrollDriven) setFlipped((current) => (current === scrollStep ? current : null));
+  }, [scrollDriven, scrollStep]);
+  return <div ref={trackRef} style={trackStyle} className={scrollDriven ? 'connector-deck-track' : undefined}><div ref={root} className="connector-deck-showcase"><ParticleField />
+    <div className="connector-deck-heading"><span>Many tools. One connected perspective.</span><p>{scrollDriven ? `Card ${selected + 1} of ${groups.length} · scroll to explore` : 'Explore the connector cards'}</p></div>
+    <div className="connector-deck" aria-label="Explore connector categories">{groups.map(({ name, icon: Icon, tools, text }, index) => <button key={name} id={`connector-card-${index}`} className={'connector-playing-card connector-playing-card-' + index + (selected === index ? ' is-selected' : '') + (flipped === index ? ' is-flipped' : '')} onClick={() => { setSelected(index); setFlipped(flipped === index ? null : index); }} aria-pressed={selected === index} aria-label={name + ': ' + text}>
       <div className="connector-card-flipper"><div className="connector-card-front">
       <div className="connector-card-frame" aria-hidden="true"><span /><span /><span /><span /></div>
       <div className="connector-card-corner"><span>0{index + 1}</span><Icon size={18} /></div>
@@ -45,5 +54,5 @@ export default function ConnectorDeck() {
     </button>)}</div>
     <div className="connector-deck-detail" key={selected}><div><span className="connector-deck-detail-label">{group.name}</span><p>{group.text}</p></div><div className="connector-deck-tool-list">{group.tools.map((tool) => <span key={tool.name}><img src={'https://www.google.com/s2/favicons?domain=' + tool.domain + '&sz=64'} alt="" width={18} height={18} loading="lazy" />{tool.name}</span>)}</div></div>
     <div className="connector-deck-destination"><span className="connector-deck-line" /><span><Sparkles size={16} /> Context for your Copilot <ArrowRight size={14} /></span><span className="connector-deck-line" /></div>
-  </div>;
+  </div></div>;
 }
