@@ -707,7 +707,14 @@ html {
 .connector-map > .particle-field { z-index:0; opacity:.7; }
 .connector-map > :not(.particle-field) { position:relative; z-index:1; }
 
-.connector-deck-showcase { isolation:isolate; }.connector-deck-track { position:relative; margin-top:55px; }.connector-deck-track > .connector-deck-showcase { position:sticky; top:max(84px, calc(50vh - 380px)); margin-top:0; }.connector-deck-track .connector-playing-card { transition: opacity 450ms ease, filter 450ms ease, translate 450ms ease, scale 450ms ease, background 450ms ease, box-shadow 450ms ease; }.connector-deck-track .connector-deck:not(:has(.connector-playing-card:hover)) .connector-playing-card:not(.is-selected) { opacity:.5; filter:blur(1.5px) saturate(.7); }.connector-deck-track .connector-playing-card.is-selected { translate:0 -16px; scale:1.05; z-index:5; }
+.connector-deck-showcase { isolation:isolate; }.connector-deck-track { position:relative; margin-top:55px; }.connector-deck-track > .connector-deck-showcase { position:sticky; top:max(84px, calc(50vh - 380px)); margin-top:0; }.connector-deck-track .connector-playing-card { transition: opacity 450ms ease, filter 450ms ease, translate 450ms ease, scale 450ms ease, background 450ms ease, box-shadow 450ms ease; }/* While scrolling drives the deck, the scroll alone picks the focused card. Hover effects here
+   fought it: cards moving under a resting pointer flipped the hover on and off, and the blur
+   repaints made scrolling stutter. */
+.connector-deck-track .connector-deck .connector-playing-card:not(.is-selected),
+.connector-deck-track .connector-deck:has(.connector-playing-card:hover) .connector-playing-card:not(:hover):not(.is-selected) { opacity:.5; filter:saturate(.6) brightness(.85); scale:1; }
+.connector-deck-track .connector-deck:has(.connector-playing-card:hover) .connector-playing-card.is-selected,
+.connector-deck-track .connector-deck .connector-playing-card.is-selected:hover { opacity:1; filter:none; scale:1.05; }
+.connector-deck-track .connector-deck .connector-playing-card:not(.is-selected):hover { opacity:.75; filter:none; scale:1; box-shadow:none; }.connector-deck-track .connector-playing-card.is-selected { translate:0 -16px; scale:1.05; z-index:5; }
 .connector-deck-showcase > .particle-field { z-index:0; }
 .connector-deck-showcase > :not(.particle-field) { position:relative; z-index:1; }
 
@@ -756,3 +763,6 @@ html {
 .connector-map-track { position: relative; margin-top: 30px; }
 .connector-map-track > .connector-map { position: sticky; top: max(80px, calc(50vh - 400px)); margin-top: 0; }
 .connector-map-progress { align-self: flex-start; padding: 10px 16px; border: 1px solid #e3d9f1; border-radius: 999px; font-size: 11px; color: #7b6797; background: #ffffffb3; }
+
+/* Scroll mode: no flip on hover (a resting pointer flipped every card that slid under it); a click still flips. */
+@media(hover:hover) { .connector-deck-track .connector-playing-card:hover:not(.is-flipped) .connector-card-flipper { transform:none; } }
