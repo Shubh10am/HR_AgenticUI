@@ -50,13 +50,13 @@ export default function RegisterPage() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="orgName">Organization Name</Label>
               <Input id="orgName" value={orgName} onChange={(e) => setOrgName(e.target.value)} placeholder="Your Company Inc." required disabled={isSubmitting} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="orgDomain">Organization Email Domain</Label>
+              <Label htmlFor="orgDomain">Email Domain</Label>
               <Input id="orgDomain" value={orgDomain} onChange={(e) => setOrgDomain(e.target.value)} placeholder="yourcompany.com" required disabled={isSubmitting} />
             </div>
           </div>
@@ -69,7 +69,7 @@ export default function RegisterPage() {
             <Input id="adminEmail" type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} placeholder="admin@yourcompany.com" required disabled={isSubmitting} />
              <p className="text-xs text-muted-foreground">Must match organization domain (e.g., if domain is acme.com, email must be user@acme.com)</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="********" required disabled={isSubmitting} />

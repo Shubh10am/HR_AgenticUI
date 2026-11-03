@@ -9,7 +9,6 @@ import { AuthProvider } from '@/contexts/auth-context';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Analytics } from '@vercel/analytics/react';
 import { usePathname } from 'next/navigation';
-import AuthLayout from './(auth)/layout';
 
 const siteConfig = {
   name: 'HR Streamline AI',
@@ -59,8 +58,9 @@ export default function RootLayout({
 
 
   const renderContent = () => {
+    // Auth pages get their layout from app/(auth)/layout.tsx; wrapping here as well rendered it twice.
     if (isAuthRoute) {
-      return <AuthLayout>{children}</AuthLayout>;
+      return <>{children}</>;
     }
     if (isPublicStandalone) {
       return <>{children}</>;
