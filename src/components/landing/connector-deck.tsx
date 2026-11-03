@@ -36,6 +36,20 @@ export default function ConnectorDeck() {
     return () => { cancelAnimationFrame(frame); window.removeEventListener('scroll', scroll); window.removeEventListener('resize', scroll); };
   }, []);
   const group = groups[selected];
+  // Scrolling marks the pointer idle so a card sliding under it doesn't flip; moving the mouse clears it.
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!scrollDriven || !track) return;
+    const idle = () => track.classList.add('is-pointer-idle');
+    const active = () => track.classList.remove('is-pointer-idle');
+    window.addEventListener('scroll', idle, { passive: true });
+    track.addEventListener('pointermove', active);
+    return () => {
+      window.removeEventListener('scroll', idle);
+      track.removeEventListener('pointermove', active);
+      active();
+    };
+  }, [scrollDriven, trackRef]);
   // A card turned over while scrolling turns back when the scroll moves to another card.
   useEffect(() => {
     if (scrollDriven) setFlipped((current) => (current === scrollStep ? current : null));

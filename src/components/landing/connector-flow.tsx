@@ -14,10 +14,15 @@ const stages = [
 ];
 const sources = [
   { name: 'Slack', domain: 'slack.com', note: 'Team discussions' },
-  { name: 'Jira', domain: 'atlassian.com', note: 'Tickets & blockers' },
+  { name: 'Atlassian', domain: 'atlassian.com', note: 'Jira & Confluence' },
   { name: 'GitHub', domain: 'github.com', note: 'Code & reviews' },
-  { name: 'Teams', domain: 'teams.microsoft.com', note: 'Project updates' },
-  { name: 'Workspace', domain: 'workspace.google.com', note: 'Docs & decisions' },
+  { name: 'Microsoft 365', domain: 'microsoft.com', note: 'Teams, Outlook & files' },
+  { name: 'Google Workspace', domain: 'workspace.google.com', note: 'Gmail, Drive & Calendar' },
+  { name: 'Workday', domain: 'workday.com', note: 'Employee records' },
+  { name: 'Greenhouse', domain: 'greenhouse.io', note: 'Hiring pipeline' },
+  { name: 'Salesforce', domain: 'salesforce.com', note: 'Deals & accounts' },
+  { name: 'Zendesk', domain: 'zendesk.com', note: 'Support tickets' },
+  { name: 'Notion', domain: 'notion.so', note: 'Plans & wikis' },
 ];
 
 export default function ConnectorFlow() {
@@ -47,7 +52,7 @@ export default function ConnectorFlow() {
     <div className="connector-map-top"><div><span className="connected-eyebrow">From scattered updates to shared understanding</span><h3>Watch the context connect.</h3></div>{scrollDriven ? <span className="connector-map-progress" id="connector-flow-progress">Stage {active + 1} of {stages.length} · scroll to follow</span> : <button onClick={() => setPaused(!paused)} aria-label={paused ? 'Play connector flow' : 'Pause connector flow'}>{paused ? 'Play flow' : 'Pause flow'}<span className={paused ? '' : 'flow-live-dot'} /></button>}</div>
     <div className="connector-map-tabs" aria-label="Connector flow stages">{stages.map(({ title, icon: Icon }, index) => <button key={title} id={`connector-flow-stage-${index}`} aria-pressed={active === index} onClick={() => choose(index)}><span>0{index + 1}</span><Icon size={14} />{title}</button>)}</div>
     <div className={'connector-map-diagram flow-stage-' + active}>
-      <div className="connector-source-stack">{sources.map((source) => <div key={source.name}><img src={'https://www.google.com/s2/favicons?domain=' + source.domain + '&sz=64'} alt="" width={23} height={23} loading="lazy" /><div><strong>{source.name}</strong><span>{source.note}</span></div><span className="connector-source-dot" /></div>)}</div>
+      <div className="connector-source-stack">{sources.map((source) => <div key={source.name} id={`connector-flow-source-${source.domain}`}><img src={'https://www.google.com/s2/favicons?domain=' + source.domain + '&sz=64'} alt="" width={23} height={23} loading="lazy" /><div><strong>{source.name}</strong><span>{source.note}</span></div><span className="connector-source-dot" /></div>)}</div>
       <div className="connector-wire connector-wire-merge" aria-hidden="true"><svg viewBox="0 0 140 300" preserveAspectRatio="none">{[30,90,150,210,270].map((y) => <path key={y} d={'M0 ' + y + ' C75 ' + y + ',55 150,140 150'} />)}</svg><span /></div>
       <div className={'connector-context-node ' + (active === 1 || active === 2 ? 'node-active' : '')}><span className="connector-node-icon"><ShieldCheck size={23} /></span><h4>Workspace context</h4><p>Selected sources<br />Relevant projects & teams</p><span className="connector-context-tag"><Database size={11} /> Linked evidence</span></div>
       <div className="connector-wire connector-wire-straight" aria-hidden="true"><span /></div>

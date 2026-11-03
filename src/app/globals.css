@@ -764,5 +764,25 @@ html {
 .connector-map-track > .connector-map { position: sticky; top: max(80px, calc(50vh - 400px)); margin-top: 0; }
 .connector-map-progress { align-self: flex-start; padding: 10px 16px; border: 1px solid #e3d9f1; border-radius: 999px; font-size: 11px; color: #7b6797; background: #ffffffb3; }
 
-/* Scroll mode: no flip on hover (a resting pointer flipped every card that slid under it); a click still flips. */
-@media(hover:hover) { .connector-deck-track .connector-playing-card:hover:not(.is-flipped) .connector-card-flipper { transform:none; } }
+/* Scroll mode: while the page is scrolling under a resting pointer, hovering doesn't flip a card
+   (that flipped every card sliding past). Moving the mouse brings the hover flip back. */
+@media(hover:hover) { .connector-deck-track.is-pointer-idle .connector-playing-card:hover:not(.is-flipped) .connector-card-flipper { transform:none; } }
+
+/* Auth pages: the form card sits on the light half beside the dark showcase. */
+.auth-form > .rounded-lg { border-radius: 24px; border-color: #ffffff1a; box-shadow: 0 30px 90px #00000080, 0 0 0 1px #8b5cf614, 0 0 60px #6366f11a; background: linear-gradient(160deg, #13152499, #0c0d16e6); backdrop-filter: blur(14px); color: #f8fafc; }
+.auth-form input { background: #ffffff0a; border-color: #ffffff1a; color: #f8fafc; }
+.auth-form input:focus-visible { border-color: #a78bfa99; box-shadow: 0 0 0 4px #8b5cf626; }
+.auth-form input::placeholder { color: #64748b; }
+.auth-form .bg-card { background: #0f111b; }
+.auth-form button[type='submit'] { height: 44px; border-radius: 9999px; background: #fff; color: #020617; }
+.auth-form button[type='submit']:hover { background: #e0e7ff; }
+
+/* Ten sources in a two-column grid, so the stack stays the height of the diagram beside it. */
+@media(min-width:768px) {
+  .connector-map-diagram { grid-template-columns: 1.9fr .5fr 1fr .3fr 1fr .3fr 1.1fr; }
+  .connector-source-stack { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .connector-source-stack > div { padding: 9px 10px; min-width: 0; }
+  .connector-source-stack > div > div { min-width: 0; }
+  .connector-source-stack .connector-source-dot { display: none; }
+  .connector-source-stack strong, .connector-source-stack div div > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
