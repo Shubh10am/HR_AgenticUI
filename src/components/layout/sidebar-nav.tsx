@@ -58,6 +58,7 @@ const navItems: NavItem[] = [
   { section: 'People', id: 'recruitment', href: '/recruitment', label: 'Recruitment', icon: GitFork, tooltip: 'AI Recruitment' },
   { section: 'Communication', id: 'smart-drafting', href: '/smart-drafting', label: 'Smart Drafting', icon: FileSignature, tooltip: 'Smart Email Drafting' },
   { section: 'People', id: 'onboarding', href: '/employee-onboarding', label: 'Onboarding', icon: UserPlus, tooltip: 'Employee Onboarding', adminOnly: true },
+  { section: 'Workspace', id: 'project-briefs', href: '/project-briefs', label: 'Project Briefs', icon: ClipboardList, tooltip: 'Cross-team Project Briefs' },
   { section: 'Workspace', id: 'knowledge-base', href: '/knowledge-base', label: 'Knowledge Base', icon: Library, tooltip: 'Knowledge Base' },
   { section: 'People', id: 'manage-employees', href: '/manage-employees', label: 'Manage Employees', icon: Users, tooltip: 'Manage Employees', adminOnly: true },
   { section: 'People', id: 'employee-hierarchy', href: '/employee-hierarchy', label: 'Hierarchy', icon: Network, tooltip: 'Employee Hierarchy' },
