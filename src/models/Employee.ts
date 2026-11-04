@@ -23,6 +23,10 @@ export interface IEmployee extends Document {
   passwordResetExpires?: Date;
   /** When the person last chose their own password; unset while an invite is pending. */
   passwordSetAt?: Date;
+  /** Opt-in, shared with colleagues for celebrations. Day and month only — never the year. */
+  birthday?: { month: number; day: number } | null;
+  /** First working day; falls back to when the account was created. */
+  joinedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -65,6 +69,8 @@ const EmployeeSchema: Schema<IEmployee> = new Schema(
     },
     jobTitle: { type: String, trim: true, maxlength: 80 },
     managerId: { type: Schema.Types.ObjectId, ref: 'Employee', default: null, index: true },
+    birthday: { type: new Schema({ month: { type: Number, min: 1, max: 12 }, day: { type: Number, min: 1, max: 31 } }, { _id: false }), default: null },
+    joinedAt: { type: Date },
     magicLinkToken: {
       type: String,
       unique: true,

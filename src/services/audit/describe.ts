@@ -45,6 +45,13 @@ const RULES: ActionRule[] = [
   { method: 'POST', pattern: /^\/api\/support\/tickets/, action: 'Opened a support ticket', category: 'Support' },
   { method: 'POST', pattern: /^\/api\/community\/posts$/, action: 'Published a community post', category: 'Community' },
   { method: 'POST', pattern: /^\/api\/community\/posts\/[^/]+\/like$/, action: 'Liked a post', category: 'Community' },
+  { method: 'POST', pattern: /^\/api\/community\/posts\/[^/]+\/react$/, action: 'Reacted to a post', category: 'Community' },
+  { method: 'POST', pattern: /^\/api\/community\/posts\/[^/]+\/vote$/, action: 'Voted in a poll', category: 'Community' },
+  { method: 'POST', pattern: /^\/api\/community\/posts\/[^/]+\/rsvp$/, action: 'Responded to an event', category: 'Community' },
+  { method: 'POST', pattern: /^\/api\/community\/posts\/[^/]+\/save$/, action: 'Saved a post', category: 'Community' },
+  { method: 'PATCH', pattern: /^\/api\/community\/posts\/[^/]+$/, action: 'Pinned or unpinned a post', category: 'Community' },
+  { method: 'PUT', pattern: /^\/api\/community\/posts\/[^/]+\/comment\/[^/]+$/, action: 'Edited a comment', category: 'Community' },
+  { method: 'PUT', pattern: /^\/api\/community\/birthday$/, action: 'Updated birthday sharing', category: 'Community' },
   { method: 'POST', pattern: /^\/api\/community\/posts\/[^/]+\/comment$/, action: 'Commented on a post', category: 'Community' },
   { method: 'DELETE', pattern: /^\/api\/community\/posts/, action: 'Deleted community content', category: 'Community' },
 ];

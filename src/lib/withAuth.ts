@@ -14,6 +14,8 @@ type AuthenticatedUser = (JwtPayload & { id: string });
 
 export interface NextApiRequestWithAuth extends NextApiRequest {
   user: AuthenticatedUser;
+  /** Set by a handler acting for an anonymous author: the audit entry then names no one and keeps no IP. */
+  auditAnonymously?: boolean;
 }
 
 type ApiHandler<T = any> = (
@@ -86,6 +88,11 @@ export function withAuth(handler: ApiHandler, requiredRole: Role | Role[] = 'Any
     if (AUDITED_METHODS.has((req.method ?? '').toUpperCase())) {
       const startedAt = Date.now();
       res.once('finish', () => {
+        // An anonymous community post must not be traceable through the audit log either.
+        if ((req as NextApiRequestWithAuth).auditAnonymously) {
+          void recordAudit(req, { id: 'anonymous', name: 'Anonymous colleague', organizationId: decodedToken.organizationId }, res.statusCode, Date.now() - startedAt, { anonymous: true });
+          return;
+        }
         void recordAudit(req, {
           id: decodedToken.employeeId,
           name: decodedToken.name,

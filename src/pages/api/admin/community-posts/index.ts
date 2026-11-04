@@ -48,6 +48,8 @@ export default async function handler(
 
     const formattedPosts = posts.map(post => ({
         ...post,
+        // Anonymous authors stay anonymous to platform admins too.
+        author: post.anonymous ? { _id: 'anonymous', name: 'Anonymous colleague' } : post.author,
         organization: post.organizationId, // Remap for easier frontend access
     }));
 

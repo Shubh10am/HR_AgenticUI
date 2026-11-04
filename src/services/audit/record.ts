@@ -32,7 +32,13 @@ export function requestPath(req: NextApiRequest): string {
  * Saves one audit entry. Never throws: a failed write is logged and the
  * user's request carries on unaffected.
  */
-export async function recordAudit(req: NextApiRequest, actor: AuditActor, statusCode: number, durationMs: number | null = null): Promise<void> {
+export async function recordAudit(
+  req: NextApiRequest,
+  actor: AuditActor,
+  statusCode: number,
+  durationMs: number | null = null,
+  options: { anonymous?: boolean } = {}
+): Promise<void> {
   try {
     const method = (req.method ?? 'GET').toUpperCase();
     const path = requestPath(req);
@@ -56,8 +62,8 @@ export async function recordAudit(req: NextApiRequest, actor: AuditActor, status
       statusCode,
       durationMs,
       outcome: statusCode < 400 ? 'success' : 'failure',
-      ipAddress: getClientIp(req),
-      userAgent: (Array.isArray(userAgent) ? userAgent[0] : userAgent ?? '').slice(0, 300),
+      ipAddress: options.anonymous ? '' : getClientIp(req),
+      userAgent: options.anonymous ? '' : (Array.isArray(userAgent) ? userAgent[0] : userAgent ?? '').slice(0, 300),
     });
   } catch (error) {
     console.error('[audit] Failed to record audit entry:', error);

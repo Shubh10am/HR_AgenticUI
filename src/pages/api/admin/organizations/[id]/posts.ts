@@ -57,7 +57,7 @@ export default async function handler(
     const formattedPosts: OrgPostData[] = posts.map(post => ({
       _id: post._id.toString(),
       subject: post.subject,
-      authorName: (post.author as any)?.name || 'Unknown Author',
+      authorName: post.anonymous ? 'Anonymous colleague' : (post.author as any)?.name || 'Unknown Author',
       createdAt: post.createdAt.toISOString(),
     }));
 

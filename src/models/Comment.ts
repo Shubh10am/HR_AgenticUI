@@ -7,6 +7,8 @@ export interface IComment extends Document {
   post: mongoose.Types.ObjectId | IPost;
   author: mongoose.Types.ObjectId | IEmployee;
   content: string;
+  /** Set on a reply; replies are one level deep. */
+  parent?: mongoose.Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,6 +26,7 @@ const CommentSchema: Schema<IComment> = new Schema(
       ref: 'Employee',
       required: true,
     },
+    parent: { type: Schema.Types.ObjectId, ref: 'Comment', default: null },
     content: {
       type: String,
       required: [true, 'Comment content cannot be empty.'],
