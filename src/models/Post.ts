@@ -35,6 +35,8 @@ export interface IPost extends Document {
   kudos?: { recipient: mongoose.Types.ObjectId; value: string };
   poll?: { options: IPollOption[]; closesAt?: Date };
   event?: { startsAt: Date; location?: string; going: mongoose.Types.ObjectId[] };
+  /** Read receipts for announcements. */
+  readBy: { employee: mongoose.Types.ObjectId; at: Date }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -56,6 +58,7 @@ const PostSchema: Schema<IPost> = new Schema(
     comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
     pinned: { type: Boolean, default: false },
     savedBy: [{ type: Schema.Types.ObjectId, ref: 'Employee' }],
+    readBy: [{ _id: false, employee: { type: Schema.Types.ObjectId, ref: 'Employee' }, at: Date }],
     kudos: { type: new Schema({ recipient: { type: Schema.Types.ObjectId, ref: 'Employee' }, value: String }, { _id: false }), default: undefined },
     poll: {
       type: new Schema(

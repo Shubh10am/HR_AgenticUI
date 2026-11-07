@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
-import { Award, Bookmark, BookmarkCheck, CalendarDays, Check, Link2, MapPin, MessageCircle, MoreHorizontal, Pin, PinOff, Trash2, Trophy, Users } from 'lucide-react';
+import { Award, BadgeCheck, Bookmark, Eye, BookmarkCheck, CalendarDays, Check, Link2, MapPin, MessageCircle, MoreHorizontal, Pin, PinOff, Trash2, Trophy, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -123,12 +123,12 @@ export default function PostCard({ post, me, canPin, canModerate, community, onT
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-400 text-white shadow">
             <Award className="h-5 w-5" />
           </span>
-          <p className="text-sm">
+          <div className="text-sm">
             <span className="font-semibold">{post.author?.name}</span> gave kudos to <span className="font-semibold">{post.kudos.recipient?.name ?? 'a former colleague'}</span>
             <Badge variant="outline" className="ml-2 border-amber-400 text-amber-800 dark:text-amber-200">
               {post.kudos.value}
             </Badge>
-          </p>
+          </div>
         </div>
       )}
       {post.kind === 'achievement' && (
@@ -192,6 +192,16 @@ export default function PostCard({ post, me, canPin, canModerate, community, onT
         {post.content && post.content !== post.subject && <RichText text={post.content} onTag={onTag} />}
         {post.poll && <PollBody post={post} onVote={(optionId) => void community.vote(post.id, optionId)} />}
         {post.event && <EventBody post={post} onRsvp={() => void community.rsvp(post.id)} />}
+        {post.receipt && (
+          <div id={`community-post-${post.id}-receipt`} className="flex flex-wrap items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-sm">
+            <span className="flex items-center gap-1.5 text-muted-foreground"><Eye className="h-4 w-4" /> Read by {post.receipt.readCount} of {post.receipt.audience}</span>
+            {post.receipt.read ? (
+              <span className="ml-auto flex items-center gap-1.5 font-medium text-primary"><BadgeCheck className="h-4 w-4" /> {post.mine ? 'Your announcement' : 'You’ve read this'}</span>
+            ) : (
+              <Button id={`community-post-${post.id}-mark-read`} size="sm" className="ml-auto" onClick={() => void community.markRead(post.id)}><Check /> Mark as read</Button>
+            )}
+          </div>
+        )}
 
         {(totalReactions > 0 || post.comments.length > 0) && (
           <div className="flex items-center justify-between text-xs text-muted-foreground">

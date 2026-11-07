@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Comment from '@/models/Comment';
+import Post from '@/models/Post';
 import { isReactionKey, isStaff, type FeedPost } from '@/lib/community';
 import { CommunityError, feedPostById, ownedPost, type Viewer } from './feed';
 
@@ -49,6 +50,14 @@ export async function toggleSaved(viewer: Viewer, postId: unknown): Promise<Feed
   const saved = post.savedBy.some((id) => same(id, viewer.id));
   post.savedBy = saved ? post.savedBy.filter((id) => !same(id, viewer.id)) : [...post.savedBy, oid(viewer.id)];
   await post.save();
+  return feedPostById(viewer, String(post._id));
+}
+
+/** Marks an announcement as read by the viewer. Repeating it changes nothing. */
+export async function markRead(viewer: Viewer, postId: unknown): Promise<FeedPost> {
+  const post = await ownedPost(viewer, postId);
+  if (post.kind !== 'announcement') throw new CommunityError('Only announcements take read receipts.');
+  await Post.updateOne({ _id: post._id, 'readBy.employee': { $ne: oid(viewer.id) } }, { $push: { readBy: { employee: oid(viewer.id), at: new Date() } } });
   return feedPostById(viewer, String(post._id));
 }
 

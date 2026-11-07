@@ -120,6 +120,7 @@ export function useCommunity() {
     vote: (postId: string, optionId: string) => mutate(postId, '/vote', { method: 'POST', body: { optionId } }),
     rsvp: (postId: string) => mutate(postId, '/rsvp', { method: 'POST' }, true),
     save: (postId: string) => mutate(postId, '/save', { method: 'POST' }),
+    markRead: (postId: string) => mutate(postId, '/read', { method: 'POST' }),
     pin: (postId: string, pinned: boolean) => mutate(postId, '', { method: 'PATCH', body: { pinned } }),
     comment: (postId: string, content: string, parentId?: string) => mutate(postId, '/comment', { method: 'POST', body: { content, parentId } }),
     editComment: (postId: string, commentId: string, content: string) => mutate(postId, `/comment/${commentId}`, { method: 'PUT', body: { content } }),

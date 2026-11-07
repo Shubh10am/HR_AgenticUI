@@ -16,18 +16,11 @@ import {
   type ReactionKey,
 } from '@/lib/community';
 
-/** A refusal the API turns into a 4xx with this message. */
-export class CommunityError extends Error {
-  constructor(message: string, readonly status = 400) {
-    super(message);
-  }
-}
+import { ApiError, type Viewer } from '@/lib/api-route';
 
-export interface Viewer {
-  id: string;
-  organizationId: string;
-  role: string;
-}
+/** Kept as the community's name for the shared API error. */
+export class CommunityError extends ApiError {}
+export type { Viewer };
 
 const FEED_LIMIT = 200;
 const PERSON_FIELDS = 'name department';
@@ -39,16 +32,17 @@ const personOf = (doc: PersonDoc): FeedPerson | null =>
 const idOf = (value: unknown) => String((value as { _id?: unknown })?._id ?? value);
 
 /** Turns a stored post into what the viewer may see. Anonymous authors are dropped here, before anything leaves the server. */
-export function toFeedPost(post: any, viewerId: string): FeedPost {
+export function toFeedPost(post: any, viewerId: string, headcount = 0): FeedPost {
   const reactions = emptyReactions();
   let myReaction: ReactionKey | null = null;
   const counted = new Set<string>();
   for (const reaction of post.reactions ?? []) {
-    if (!isReactionKey(reaction.emoji)) continue;
+    const emoji: unknown = reaction.emoji;
+    if (!isReactionKey(emoji)) continue;
     const who = idOf(reaction.employee);
     counted.add(who);
-    reactions[reaction.emoji] += 1;
-    if (who === viewerId) myReaction = reaction.emoji;
+    reactions[emoji] += 1;
+    if (who === viewerId) myReaction = emoji;
   }
   for (const like of post.likes ?? []) {
     const who = idOf(like);
@@ -106,8 +100,14 @@ export function toFeedPost(post: any, viewerId: string): FeedPost {
       going: (post.event.going ?? []).some((id: unknown) => idOf(id) === viewerId),
     };
   }
+  if (feed.kind === 'announcement') {
+    const readBy = (post.readBy ?? []).map((entry: any) => idOf(entry.employee));
+    feed.receipt = { read: readBy.includes(viewerId) || feed.mine, readCount: readBy.length, audience: Math.max(headcount - 1, readBy.length) };
+  }
   return feed;
 }
+
+const headcountOf = (organizationId: string) => Employee.countDocuments({ organizationId });
 
 const populated = <T>(query: mongoose.Query<T, any>) =>
   query
@@ -118,14 +118,15 @@ const populated = <T>(query: mongoose.Query<T, any>) =>
 /** The organisation's feed, pinned posts first. */
 export async function listFeed(viewer: Viewer): Promise<FeedPost[]> {
   const posts = await populated(Post.find({ organizationId: viewer.organizationId }).sort({ pinned: -1, createdAt: -1 }).limit(FEED_LIMIT)).lean();
-  return posts.map((post) => toFeedPost(post, viewer.id));
+  const headcount = await headcountOf(viewer.organizationId);
+  return posts.map((post) => toFeedPost(post, viewer.id, headcount));
 }
 
 /** One post as the viewer sees it, after a change. */
 export async function feedPostById(viewer: Viewer, postId: string): Promise<FeedPost> {
   const post = await populated(Post.findById(postId)).lean();
   if (!post) throw new CommunityError('Post not found.', 404);
-  return toFeedPost(post, viewer.id);
+  return toFeedPost(post, viewer.id, await headcountOf(viewer.organizationId));
 }
 
 /** Loads a post the viewer's organisation owns, or refuses. */
@@ -188,6 +189,7 @@ export async function createPost(viewer: Viewer, input: Partial<NewPostInput>): 
   }
 
   const post = await Post.create(doc);
+  if (kind === 'kudos') await (await import('@/services/rewards')).awardKudosPoints(viewer, String(input.kudos!.recipientId), String(post._id));
   return feedPostById(viewer, String(post._id));
 }
 

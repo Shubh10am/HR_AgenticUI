@@ -61,6 +61,8 @@ export interface FeedPost {
   kudos?: { recipient: FeedPerson | null; value: string };
   poll?: { options: { id: string; label: string; votes: number }[]; myVote: string | null; totalVotes: number; closesAt: string | null; closed: boolean };
   event?: { startsAt: string; location: string; goingCount: number; going: boolean };
+  /** Announcements only: whether the viewer has marked it read, and how many colleagues have. */
+  receipt?: { read: boolean; readCount: number; audience: number };
   createdAt: string;
 }
 

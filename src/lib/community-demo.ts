@@ -1,4 +1,4 @@
-import { emptyReactions, type CommunityHighlights, type FeedPerson, type FeedPost } from './community';
+import { emptyReactions, type CommunityHighlights, type FeedComment, type FeedPerson, type FeedPost, type ReactionKey } from './community';
 
 /** A fictional organisation's feed, so guests can see how the community works. */
 const people: Record<string, FeedPerson> = {
@@ -18,7 +18,7 @@ const ahead = (days: number, hour = 16) => {
   return date.toISOString();
 };
 const reactions = (values: Partial<ReturnType<typeof emptyReactions>>) => ({ ...emptyReactions(), ...values });
-const base = { anonymous: false, mine: false, pinned: false, saved: false, myReaction: null, comments: [] } as const;
+const base = { anonymous: false, mine: false, pinned: false, saved: false, myReaction: null as ReactionKey | null, comments: [] as FeedComment[] };
 
 export function demoFeed(): FeedPost[] {
   return [
