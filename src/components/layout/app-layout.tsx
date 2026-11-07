@@ -20,6 +20,7 @@ import Logo from '@/components/icons/logo';
 import Link from 'next/link';
 import { Loader2, MessageSquare, Sparkles } from 'lucide-react';
 import CopilotSidebar from './copilot-sidebar'; // Adjusted path if needed
+import MobileTabBar from './mobile-tab-bar';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import AccountStatusOverlay from '@/components/account-status-overlay';
@@ -51,9 +52,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   const logoHref = pathname === '/dashboard' ? '/' : '/dashboard';
   const orgStatus = user?.organizationStatus;
-  const pageTitle = (pathname ?? '')
-    .split('/')
-    .filter(Boolean)[0]
+  const firstSegment = (pathname ?? '').split('/').filter(Boolean)[0];
+  const pageTitle = (firstSegment === 'one-on-ones' ? '1:1s' : undefined) ?? firstSegment
     ?.split('-')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ') ?? 'Dashboard';
@@ -118,12 +118,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <UserNav />
           </div>
         </header>
-        <main className="min-h-0 min-w-0 flex-1 overflow-hidden p-4 sm:p-6 lg:p-8 animated-background-gradient">
+        <main className="min-h-0 min-w-0 flex-1 overflow-hidden p-4 pb-24 sm:p-6 sm:pb-24 md:pb-6 lg:p-8 animated-background-gradient">
           <div className="mx-auto min-h-0 min-w-0 max-w-[1440px] animate-fade-in" key={pathname}>
             <MaintenanceGate>{children}</MaintenanceGate>
           </div>
         </main>
         <CopilotSidebar isOpen={isCopilotOpen} onOpenChange={setIsCopilotOpen} />
+        <MobileTabBar onCopilot={() => setIsCopilotOpen(true)} />
       </SidebarInset>
       <AppTour />
     </SidebarProvider>

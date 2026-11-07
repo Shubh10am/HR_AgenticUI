@@ -183,7 +183,10 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { state } = useSidebar()
+    const { state, isMobile } = useSidebar()
+    // On phones the bottom tab bar is the main navigation, so a closed sidebar hides fully
+    // and an open one slides over the page instead of pushing it aside.
+    const mode = isMobile && collapsible === "icon" ? "offcanvas" : collapsible
 
     if (collapsible === "none") {
       return (
@@ -205,13 +208,14 @@ const Sidebar = React.forwardRef<
         ref={ref}
         className="group peer text-sidebar-foreground"
         data-state={state}
-        data-collapsible={state === "collapsed" ? collapsible : ""}
+        data-collapsible={state === "collapsed" ? mode : ""}
         data-variant={variant}
         data-side={side}
       >
         <div
           className={cn(
             "duration-200 relative h-svh w-[--sidebar-width] bg-transparent transition-[width] ease-linear",
+            isMobile && "!w-0",
             "group-data-[collapsible=offcanvas]:w-0",
             "group-data-[side=right]:rotate-180",
             variant === "floating" || variant === "inset"
@@ -222,6 +226,7 @@ const Sidebar = React.forwardRef<
         <div
           className={cn(
             "duration-200 fixed inset-y-0 z-10 flex h-svh w-[--sidebar-width] transition-[left,right,width] ease-linear",
+            isMobile && "z-50 shadow-2xl",
             side === "left"
               ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
               : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",

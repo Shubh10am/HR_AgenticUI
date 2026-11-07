@@ -28,6 +28,21 @@ import {
   ClipboardList,
   UserPlus,
   Network, // Changed from Sitemap to Network
+  CheckSquare,
+  Receipt,
+  DoorOpen,
+  Target,
+  BarChart3,
+  Laptop,
+  FileText,
+  Palmtree,
+  CalendarClock,
+  Timer,
+  Handshake,
+  GraduationCap,
+  Gift,
+  PieChart,
+  AppWindow,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar'; 
@@ -43,8 +58,8 @@ interface NavItem {
   section: NavSection;
 }
 
-type NavSection = 'Overview' | 'Communication' | 'People' | 'Workspace';
-const sections: NavSection[] = ['Overview', 'Communication', 'People', 'Workspace'];
+type NavSection = 'Overview' | 'Communication' | 'People' | 'Growth' | 'Workspace';
+const sections: NavSection[] = ['Overview', 'Communication', 'People', 'Growth', 'Workspace'];
 
 const navItems: NavItem[] = [
   { section: 'Overview', id: 'dashboard', href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
@@ -63,6 +78,21 @@ const navItems: NavItem[] = [
   { section: 'People', id: 'manage-employees', href: '/manage-employees', label: 'Manage Employees', icon: Users, tooltip: 'Manage Employees', adminOnly: true },
   { section: 'People', id: 'employee-hierarchy', href: '/employee-hierarchy', label: 'Hierarchy', icon: Network, tooltip: 'Employee Hierarchy' },
   { section: 'People', id: 'attendance-mgmt', href: '/attendance-management', label: 'Attendance Mgmt', icon: ClipboardList, tooltip: 'Attendance Management', adminOnly: true },
+  { section: 'Overview', id: 'approvals', href: '/approvals', label: 'Approvals', icon: CheckSquare, tooltip: 'Approvals inbox' },
+  { section: 'People', id: 'expenses', href: '/expenses', label: 'Expenses', icon: Receipt, tooltip: 'Expense claims' },
+  { section: 'People', id: 'offboarding', href: '/offboarding', label: 'Offboarding', icon: DoorOpen, tooltip: 'Resignations and exits' },
+  { section: 'People', id: 'leave', href: '/leave', label: 'Leave', icon: Palmtree, tooltip: 'Leave and holidays' },
+  { section: 'People', id: 'timesheets', href: '/timesheets', label: 'Timesheets', icon: Timer, tooltip: 'Weekly timesheets' },
+  { section: 'People', id: 'shifts', href: '/shifts', label: 'Shifts', icon: CalendarClock, tooltip: 'Shifts and roster' },
+  { section: 'People', id: 'assets', href: '/assets', label: 'Assets', icon: Laptop, tooltip: 'Equipment' },
+  { section: 'People', id: 'documents', href: '/documents', label: 'Documents', icon: FileText, tooltip: 'Policies and letters' },
+  { section: 'Growth', id: 'performance', href: '/performance', label: 'Performance', icon: Target, tooltip: 'Goals and reviews' },
+  { section: 'Growth', id: 'surveys', href: '/surveys', label: 'Surveys', icon: BarChart3, tooltip: 'Pulse surveys' },
+  { section: 'Growth', id: 'one-on-ones', href: '/one-on-ones', label: '1:1s', icon: Handshake, tooltip: 'One-on-one meetings' },
+  { section: 'Growth', id: 'learning', href: '/learning', label: 'Learning', icon: GraduationCap, tooltip: 'Courses and training' },
+  { section: 'Growth', id: 'rewards', href: '/rewards', label: 'Rewards', icon: Gift, tooltip: 'Points and rewards' },
+  { section: 'Overview', id: 'reports', href: '/reports', label: 'Reports', icon: PieChart, tooltip: 'People reports', adminOnly: true },
+  { section: 'Workspace', id: 'apps', href: '/apps', label: 'Apps', icon: AppWindow, tooltip: 'App access' },
   { section: 'Workspace', id: 'integrations', href: '/integrations', label: 'Integrations', icon: Plug, tooltip: 'Manage Integrations' },
   { section: 'Workspace', id: 'support', href: '/support', label: 'Get Support', icon: LifeBuoy, tooltip: 'Get Support' },
 ];
