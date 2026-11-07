@@ -45,7 +45,8 @@ export const instantAt = (dayKey: string, time: string) => fromZonedTime(`${dayK
 
 export const isWeekend = (dayKey: string) => (ATTENDANCE_RULES.weekendDays as readonly number[]).includes(storedDateOf(dayKey).getUTCDay());
 
-export const isLateClockIn = (clockIn: Date) => clockIn.getTime() > instantAt(dayKeyOf(clockIn), ATTENDANCE_RULES.lateAfter).getTime();
+/** Late when clocking in after the shift's cut-off (start + grace); the standard rule when no shift is given. */
+export const isLateClockIn = (clockIn: Date, lateAfter: string = ATTENDANCE_RULES.lateAfter) => clockIn.getTime() > instantAt(dayKeyOf(clockIn), lateAfter).getTime();
 
 /** The day keys from `from` to `to`, inclusive. */
 export function dayKeysBetween(from: string, to: string): string[] {
@@ -67,21 +68,25 @@ interface DayFacts {
   clockOut?: Date | null;
   onLeave?: boolean;
   now?: Date;
+  /** From the person's shift; defaults to the standard rule. */
+  lateAfter?: string;
+  /** The person's days off each week (0 = Sunday); defaults to the weekend. */
+  weeklyOff?: number[];
 }
 
 /** One person's status for one day. */
-export function dayStatusOf({ dayKey, clockIn, clockOut, onLeave, now = new Date() }: DayFacts): DayStatus {
+export function dayStatusOf({ dayKey, clockIn, clockOut, onLeave, now = new Date(), lateAfter = ATTENDANCE_RULES.lateAfter, weeklyOff }: DayFacts): DayStatus {
   if (clockIn) {
     if (!clockOut) return dayKey < dayKeyOf(now) ? 'no-clock-out' : 'working';
-    if (isLateClockIn(clockIn)) return 'late';
+    if (isLateClockIn(clockIn, lateAfter)) return 'late';
     const minutes = (clockOut.getTime() - clockIn.getTime()) / 60_000;
     return minutes < ATTENDANCE_RULES.fullDayMinutes ? 'early-departure' : 'present';
   }
   if (onLeave) return 'on-leave';
   const today = dayKeyOf(now);
   if (dayKey > today) return 'upcoming';
-  if (isWeekend(dayKey)) return 'weekend';
-  if (dayKey === today && now < instantAt(dayKey, ATTENDANCE_RULES.lateAfter)) return 'not-in-yet';
+  if (weeklyOff ? weeklyOff.includes(storedDateOf(dayKey).getUTCDay()) : isWeekend(dayKey)) return 'weekend';
+  if (dayKey === today && now < instantAt(dayKey, lateAfter)) return 'not-in-yet';
   return 'absent';
 }
 
@@ -98,6 +103,9 @@ export interface BoardRow {
   leaveType: string | null;
   notes: string | null;
   adjustedBy: string | null;
+  /** The person's shift that day and its late cut-off (HH:mm). */
+  shiftName?: string;
+  lateAfter?: string;
 }
 
 export interface DaySummary {
@@ -124,11 +132,13 @@ export interface MyDay {
   clockIn: string | null;
   clockOut: string | null;
   minutes: number | null;
+  /** The late cut-off from that day's shift (HH:mm). */
+  lateAfter?: string;
 }
 
 /** What `/api/attendance/me` returns. */
 export interface MyAttendance {
-  today: { dayKey: string; clockIn: string | null; clockOut: string | null; status: DayStatus };
+  today: { dayKey: string; clockIn: string | null; clockOut: string | null; status: DayStatus; shift?: { name: string; start: string; end: string; lateAfter: string } };
   month: string;
   days: MyDay[];
   summary: { present: number; late: number; absent: number; onLeave: number; noClockOut: number; averageMinutes: number | null };

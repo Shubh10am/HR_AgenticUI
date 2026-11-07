@@ -24,7 +24,8 @@ const AUTO_REFRESH_MS = 60_000;
 
 export default function AttendanceManagementPage() {
   const { toast } = useToast();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  const canManage = user?.role === 'Admin' || user?.role === 'HR' || user?.role === 'SuperAdmin';
   const router = useRouter();
   const isGuest = isGuestToken(token);
 
@@ -42,6 +43,11 @@ export default function AttendanceManagementPage() {
         setIsLoading(false);
         return;
       }
+      if (!canManage) {
+        setError('Attendance Management is for HR and admins. Your own attendance is under My Attendance.');
+        setIsLoading(false);
+        return;
+      }
       if (!quiet) setIsLoading(true);
       setError(null);
       try {
@@ -55,7 +61,7 @@ export default function AttendanceManagementPage() {
         setIsLoading(false);
       }
     },
-    [dayKey, isGuest, token]
+    [canManage, dayKey, isGuest, token]
   );
 
   useEffect(() => {

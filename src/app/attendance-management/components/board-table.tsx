@@ -148,4 +148,4 @@ export default function BoardTable({ rows, canAdjust, onAdjust, onOpen }: BoardT
 }
 
 /** Late by clock-in time, whatever happened after: a late arrival still working still counts. */
-const lateFlag = (row: BoardRow) => row.clockIn !== null && isLateClockIn(new Date(row.clockIn));
+const lateFlag = (row: BoardRow) => row.clockIn !== null && isLateClockIn(new Date(row.clockIn), row.lateAfter);

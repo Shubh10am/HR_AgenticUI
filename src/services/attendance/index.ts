@@ -3,6 +3,7 @@ import dbConnect from '@/lib/mongodb';
 import AttendanceRecord from '@/models/AttendanceRecord';
 import Employee from '@/models/Employee';
 import LeaveRequest from '@/models/LeaveRequest';
+import { shiftResolver } from '@/services/shifts';
 import {
   ATTENDANCE_RULES,
   dayKeyOf,
@@ -20,8 +21,8 @@ import {
 const minutesBetween = (from: Date, to: Date) => Math.max(0, Math.round((to.getTime() - from.getTime()) / 60_000));
 
 /** Recorded status saved on the record, kept in step with the shared rules. */
-function recordStatus(clockIn: Date, clockOut?: Date | null) {
-  if (isLateClockIn(clockIn)) return 'Late' as const;
+function recordStatus(clockIn: Date, clockOut?: Date | null, lateAfter?: string) {
+  if (isLateClockIn(clockIn, lateAfter)) return 'Late' as const;
   if (clockOut && minutesBetween(clockIn, clockOut) < ATTENDANCE_RULES.fullDayMinutes) return 'EarlyDeparture' as const;
   return 'Present' as const;
 }
@@ -56,7 +57,8 @@ export async function clockIn(employeeId: string, organizationId: string) {
     return { status: 409, error: existing.clockOutTime ? 'You have already finished today. Ask HR if a time needs correcting.' : 'You are already clocked in.' };
   }
   try {
-    const record = await AttendanceRecord.create({ employeeId, organizationId, date: storedDateOf(dayKey), clockInTime: now, status: recordStatus(now) });
+    const shift = (await shiftResolver(organizationId, [employeeId], dayKey, dayKey))(employeeId, dayKey);
+    const record = await AttendanceRecord.create({ employeeId, organizationId, date: storedDateOf(dayKey), clockInTime: now, status: recordStatus(now, null, shift.lateAfter) });
     return { status: 201, record: { id: String(record._id), clockInTime: now.toISOString(), late: record.status === 'Late' } };
   } catch (error: any) {
     if (error?.code === 11000) return { status: 409, error: 'You are already clocked in.' };
@@ -91,9 +93,11 @@ export async function dayBoard(organizationId: string, dayKey: string): Promise<
     leaveByDay(organizationId, dayKey, dayKey),
   ]);
   const recordOf = new Map(records.map((record) => [String(record.employeeId), record]));
+  const shiftOf = await shiftResolver(organizationId, people.map((person) => String(person._id)), dayKey, dayKey);
 
   const rows: BoardRow[] = people.map((person) => {
     const id = String(person._id);
+    const shift = shiftOf(id, dayKey);
     const record = recordOf.get(id);
     const leaveType = leave.get(`${id}:${dayKey}`) ?? null;
     const clockOut = record?.clockOutTime ?? null;
@@ -106,8 +110,10 @@ export async function dayBoard(organizationId: string, dayKey: string): Promise<
       clockIn: record ? record.clockInTime.toISOString() : null,
       clockOut: clockOut ? clockOut.toISOString() : null,
       minutes: record ? minutesBetween(record.clockInTime, clockOut ?? (dayKey === dayKeyOf(now) ? now : record.clockInTime)) : null,
-      status: dayStatusOf({ dayKey, clockIn: record?.clockInTime, clockOut, onLeave: Boolean(leaveType), now }),
+      status: dayStatusOf({ dayKey, clockIn: record?.clockInTime, clockOut, onLeave: Boolean(leaveType), now, lateAfter: shift.lateAfter, weeklyOff: shift.weeklyOff }),
       leaveType,
+      shiftName: shift.name,
+      lateAfter: shift.lateAfter,
       notes: record?.notes ?? null,
       adjustedBy: record?.adjustedBy ?? null,
     };
@@ -124,7 +130,7 @@ export async function dayBoard(organizationId: string, dayKey: string): Promise<
     summary: {
       total: rows.length,
       in: inCount,
-      late: rows.filter((row) => row.clockIn && isLateClockIn(new Date(row.clockIn))).length,
+      late: rows.filter((row) => row.clockIn && isLateClockIn(new Date(row.clockIn), row.lateAfter)).length,
       onLeave,
       absent: count('absent'),
       notInYet: count('not-in-yet'),
@@ -145,16 +151,19 @@ export async function myAttendance(employeeId: string, organizationId: string, m
     leaveByDay(organizationId, first, last, employeeId),
   ]);
   const recordOf = new Map(records.map((record) => [record.date.toISOString().slice(0, 10), record]));
+  const shiftOf = await shiftResolver(organizationId, [employeeId], first < today ? first : today, last > today ? last : today);
 
   const days = dayKeysBetween(first, last).map((dayKey) => {
     const record = recordOf.get(dayKey);
-    const status = dayStatusOf({ dayKey, clockIn: record?.clockInTime, clockOut: record?.clockOutTime, onLeave: leave.has(`${employeeId}:${dayKey}`), now });
+    const shift = shiftOf(employeeId, dayKey);
+    const status = dayStatusOf({ dayKey, clockIn: record?.clockInTime, clockOut: record?.clockOutTime, onLeave: leave.has(`${employeeId}:${dayKey}`), now, lateAfter: shift.lateAfter, weeklyOff: shift.weeklyOff });
     return {
       dayKey,
       status,
       clockIn: record?.clockInTime.toISOString() ?? null,
       clockOut: record?.clockOutTime?.toISOString() ?? null,
       minutes: record?.clockOutTime ? minutesBetween(record.clockInTime, record.clockOutTime) : null,
+      lateAfter: shift.lateAfter,
     };
   });
   const count = (...statuses: DayStatus[]) => days.filter((day) => statuses.includes(day.status)).length;
@@ -166,13 +175,14 @@ export async function myAttendance(employeeId: string, organizationId: string, m
       dayKey: today,
       clockIn: todayRecord?.clockInTime.toISOString() ?? null,
       clockOut: todayRecord?.clockOutTime?.toISOString() ?? null,
-      status: dayStatusOf({ dayKey: today, clockIn: todayRecord?.clockInTime, clockOut: todayRecord?.clockOutTime, now }),
+      status: dayStatusOf({ dayKey: today, clockIn: todayRecord?.clockInTime, clockOut: todayRecord?.clockOutTime, now, lateAfter: shiftOf(employeeId, today).lateAfter, weeklyOff: shiftOf(employeeId, today).weeklyOff }),
+      shift: shiftOf(employeeId, today),
     },
     month,
     days,
     summary: {
       present: count('present', 'late', 'early-departure', 'working', 'no-clock-out'),
-      late: days.filter((day) => day.clockIn && isLateClockIn(new Date(day.clockIn))).length,
+      late: days.filter((day) => day.clockIn && isLateClockIn(new Date(day.clockIn), day.lateAfter)).length,
       absent: count('absent'),
       onLeave: count('on-leave'),
       noClockOut: count('no-clock-out'),
