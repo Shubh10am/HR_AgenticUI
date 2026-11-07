@@ -586,7 +586,7 @@ sequenceDiagram
   Manager->>Inbox: Open "Waiting on me"
   Inbox->>Engine: decide(approve)
   Engine->>Leave: onLeaveSettled(approved)
-  Leave->>DB: Mark request Approved; balance updates
+  Leave->>DB: Mark request Approved and update balance
   Employee->>Page: Sees Approved and the new balance
 ```
 
