@@ -101,16 +101,37 @@ export const communication: DocSection = {
       title: 'Community',
       icon: MessageCircle,
       route: '/community',
-      summary: 'Your organization’s internal feed for updates, likes and comments.',
+      summary: 'Your organization’s private social feed: updates, kudos, polls, events and celebrations.',
       audience: ['Everyone'],
       overview: [
-        'Community is a private feed for your organization. Leaders post announcements and updates; everyone can like and comment.',
+        'Community is a private feed that only people in your organization can see. Share an update, thank a colleague, run a quick poll or invite people to an event.',
+        'The right-hand side celebrates birthdays, work anniversaries and new joiners, shows who received the most kudos this month, and lists upcoming events.',
       ],
       features: [
-        { title: 'Posts', description: 'Admins, HR and Managers create posts with a topic, subject and content.' },
-        { title: 'Likes & comments', description: 'Everyone can like and comment. Authors and Admins can edit or delete comments.' },
-        { title: 'Events & birthdays', description: 'Side cards highlight upcoming events and team birthdays.' },
+        { title: 'Post types', description: 'Update, Kudos, Poll, Event, Achievement and Announcement. Announcements are for HR, managers and admins.' },
+        { title: 'Reactions & comments', description: 'React with an emoji, comment, and reply to comments in a thread.' },
+        { title: 'Anonymous posts', description: 'Post an update or question without your name. Your name is never shown to anyone, admins included.' },
+        { title: 'Kudos earn points', description: 'Every kudos you receive adds 25 points to your Rewards balance.' },
+        { title: 'Read receipts', description: 'Announcements have a “Mark as read” button and show how many colleagues have read them.' },
+        { title: 'Pin, save and filter', description: 'HR and admins pin important posts to the top. Anyone can save a post for later and filter the feed by type or #hashtag.' },
       ],
+      howTos: [
+        {
+          id: 'give-kudos',
+          title: 'Thank a colleague with kudos',
+          steps: [
+            { title: 'Choose Kudos', body: 'At the top of the feed, pick the Kudos post type.' },
+            { title: 'Pick the person and a value', body: 'Choose who it is for and a value such as “Team player”, then write a short thank-you.' },
+            { title: 'Post', body: 'Your thank-you appears in the feed and they get 25 Rewards points.' },
+          ],
+        },
+        {
+          id: 'confirm-announcement',
+          title: 'Confirm you have read an announcement',
+          steps: [{ title: 'Find the announcement', body: 'Announcements have a highlighted box under the text.' }, { title: 'Click “Mark as read”', body: 'The box changes to “You’ve read this” and the read count goes up.' }],
+        },
+      ],
+      callouts: [{ tone: 'tip', title: 'Keep it kind', body: 'Anonymous posts are for honest questions, not for criticising named people. Admins can remove posts that break your organization’s rules.' }],
     },
     {
       slug: 'unified-communications',

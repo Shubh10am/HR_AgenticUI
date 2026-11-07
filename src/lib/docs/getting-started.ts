@@ -65,9 +65,9 @@ export const gettingStarted: DocSection = {
       ],
       features: [
         { title: 'Admin', description: 'Full control: employees (add, edit, delete, bulk import), organization settings and AI provider, attendance management, onboarding, and Knowledge Base editing.' },
-        { title: 'HR', description: 'Attendance management, onboarding, Knowledge Base editing and attendance policy editing. Employee records are managed by Admins.' },
-        { title: 'Manager', description: 'Everything employees can do, plus creating posts in the Community feed.' },
-        { title: 'Employee', description: 'Their own attendance and leave, Copilot, AI email tools, recruitment tools, tasks, Knowledge Base search and Ask, and support tickets.' },
+        { title: 'HR', description: 'Attendance, onboarding, leave policy and holidays, shifts, assets, policies and letters, courses, rewards, surveys, reports, and HR approval steps. Employee records are managed by Admins.' },
+        { title: 'Manager', description: 'Everything employees can do, plus approving their team’s requests, 1:1s and reviews for their reports, assigning courses, and posting announcements.' },
+        { title: 'Employee', description: 'Their own attendance, leave, expenses, timesheets, goals, courses, rewards and 1:1s, plus Copilot, AI email tools, tasks, the Community, Knowledge Base and support.' },
         { title: 'Guest', description: 'A read-only preview with sample data. Sign up to save anything or use AI and Google features.' },
         { title: 'Platform admin', description: 'Operators of HR Streamline itself. They use the separate admin console and have no organization workspace.' },
       ],
@@ -85,7 +85,7 @@ export const gettingStarted: DocSection = {
         'Nothing is sent automatically. AI output is always a draft you review — replies land in the reply box, job descriptions and interview summaries appear on screen for you to copy or edit.',
       ],
       features: [
-        { title: 'Copilot', description: 'A chat panel available on every page. Ask about policies, get help writing, or think through a task.' },
+        { title: 'Copilot', description: 'A chat panel available on every page. It knows your own leave balance, approvals waiting on you, upcoming 1:1s, courses due and reward points — so you can ask “How much leave do I have left?” or “What needs my attention today?”. It never sees colleagues’ records or pay amounts.' },
         { title: 'AI email replies', description: 'Generate several reply options, or one-click replies such as Acknowledge or Ask for details, right inside the inbox.' },
         { title: 'Recruitment AI', description: 'Job descriptions from a prompt, ATS scoring of resumes against a job, and a simulated AI interviewer.' },
         { title: 'Knowledge answers', description: 'Ask your Knowledge Base directly and get an answer with clickable sources.' },
@@ -107,13 +107,25 @@ export const gettingStarted: DocSection = {
       summary: 'The dashboard, sidebar, Copilot panel and guided tour.',
       audience: ['Everyone'],
       overview: [
-        'After signing in you land on the Dashboard: a greeting, key numbers and quick links to every module. The sidebar groups modules into Overview, Communication, People and Workspace, and can be collapsed to icons.',
+        'After signing in you land on the Dashboard: a greeting, key numbers and quick links to every module. The sidebar groups modules into Overview, Communication, People, Growth and Workspace, and can be collapsed to icons.',
       ],
       features: [
         { title: 'Dashboard', description: 'Your starting point, with shortcuts to drafting, your inbox and every module.' },
         { title: 'Sidebar', description: 'Grouped navigation. Collapse it with the button in the header or Ctrl/⌘ + B.' },
         { title: 'Copilot', description: 'Open it from the header or “Ask Copilot” at the bottom of the sidebar. Answers show which knowledge-base documents they used.' },
+        { title: 'On your phone', description: 'A bottom bar gives one-tap access to Home, Leave, Approvals, Community and Copilot; the menu button opens the full sidebar.' },
         { title: 'Guided tour', description: 'Runs on first sign-in, step by step through each module you have access to. Restart it from the user menu.' },
+      ],
+      howTos: [
+        {
+          id: 'install-app',
+          title: 'Install HR Streamline on your phone',
+          steps: [
+            { title: 'Open the app in your phone’s browser', body: 'Sign in as usual.' },
+            { title: 'Add to Home Screen', body: 'On iPhone, tap Share then “Add to Home Screen”. On Android, tap the menu then “Install app”.' },
+            { title: 'Open it like any app', body: 'It opens full screen with a bottom bar for Home, Leave, Approvals, Community and Copilot.' },
+          ],
+        },
       ],
     },
     {

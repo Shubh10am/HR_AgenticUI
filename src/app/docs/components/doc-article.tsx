@@ -72,7 +72,7 @@ export default function DocArticle({ page, sectionTitle, previous, next, onNavig
         <figure className="mt-8" id={`docs-screenshot-${page.slug}`}>
           <a href={screenshot.src} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-xl border bg-muted shadow-lg shadow-primary/5 transition-shadow hover:shadow-xl" aria-label={`Open full-size screenshot of ${page.title}`}>
             {/* eslint-disable-next-line @next/next/no-img-element -- static screenshots; next/image adds nothing here */}
-            <img src={screenshot.src} alt={screenshot.alt} width={1600} height={1000} loading="lazy" className="h-auto w-full" />
+            <img src={screenshot.src} alt={screenshot.alt} width={2880} height={1800} loading="lazy" className="h-auto w-full" />
           </a>
           <figcaption className="mt-2 text-sm text-muted-foreground">{screenshot.caption}</figcaption>
         </figure>

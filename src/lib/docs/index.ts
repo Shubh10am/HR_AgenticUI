@@ -1,11 +1,13 @@
 import { communication } from './communication';
+import { everydayHr } from './everyday-hr';
 import { gettingStarted } from './getting-started';
+import { growth } from './growth';
 import { people } from './people';
 import type { DocPage, DocSection } from './types';
 import { workspace } from './workspace';
 
 /** All documentation, in reading order. */
-export const docSections: DocSection[] = [gettingStarted, communication, people, workspace];
+export const docSections: DocSection[] = [gettingStarted, communication, people, everydayHr, growth, workspace];
 
 export const flatDocPages: DocPage[] = docSections.flatMap((section) => section.pages);
 

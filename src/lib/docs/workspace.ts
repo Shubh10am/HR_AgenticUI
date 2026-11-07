@@ -1,4 +1,4 @@
-import { Building2, ClipboardList, LibraryBig, LifeBuoy, Plug, Settings } from 'lucide-react';
+import { AppWindow, Building2, ClipboardList, LibraryBig, LifeBuoy, Plug, Settings } from 'lucide-react';
 import type { DocSection } from './types';
 
 export const workspace: DocSection = {
@@ -68,6 +68,37 @@ export const workspace: DocSection = {
       callouts: [
         { tone: 'warning', title: 'Saved in your browser', body: 'Tasks are currently stored on your own device and are not shared with teammates. The board starts with sample tasks.' },
       ],
+    },
+    {
+      slug: 'apps',
+      title: 'Apps & access',
+      icon: AppWindow,
+      route: '/apps',
+      summary: 'Request access to work apps, see what you have, and give joiners and leavers the right access.',
+      audience: ['Everyone', 'HR', 'Admin'],
+      overview: [
+        'Apps lists the tools your company uses, like Slack, Google Workspace or GitHub. Request one you need; if it needs approval, your manager approves it in Approvals, then the app’s admin sets up your account.',
+        'For HR and admins it is a to-do list: accounts to set up for new joiners and approved requests, and accounts to remove for people who are leaving.',
+      ],
+      features: [
+        { title: 'My apps', description: 'Each app you have, with its status: awaiting approval, being set up, active or being removed.' },
+        { title: 'Catalogue', description: 'Every app with what it is for. Click “Request access” and say why you need it.' },
+        { title: 'Tasks (HR and admins)', description: 'Set up or remove an account in the app itself, then click Done.' },
+        { title: 'Joiners & leavers (HR and admins)', description: 'One click creates setup tasks for a new joiner’s default apps, or removal tasks for everything a leaver has.' },
+        { title: 'Exit check', description: 'An exit in Offboarding lists the apps the person can still sign in to.' },
+      ],
+      howTos: [
+        {
+          id: 'request-app',
+          title: 'Get access to an app',
+          steps: [
+            { title: 'Open the Catalogue tab', body: 'Find the app you need.' },
+            { title: 'Request access', body: 'Say briefly why you need it and send.' },
+            { title: 'Wait for setup', body: 'Your manager approves it if needed, then it shows “Being set up” and finally “Active” with an Open button.' },
+          ],
+        },
+      ],
+      callouts: [{ tone: 'info', title: 'Accounts are created in each app', body: 'HR Streamline tracks who should have access; it does not create or delete accounts in other apps automatically.' }],
     },
     {
       slug: 'integrations',
