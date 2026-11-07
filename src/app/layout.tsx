@@ -9,6 +9,7 @@ import { AuthProvider } from '@/contexts/auth-context';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Analytics } from '@vercel/analytics/react';
 import { usePathname } from 'next/navigation';
+import PwaRegister from '@/components/pwa-register';
 
 const siteConfig = {
   name: 'HR Streamline AI',
@@ -79,6 +80,12 @@ export default function RootLayout({
         {/* Blog and legal pages set their own title and description via the Metadata API. */}
         {!hasOwnMetadata && <title>{siteConfig.name}</title>}
         {!hasOwnMetadata && <meta name="description" content={siteConfig.description} />}
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <meta name="theme-color" content="#4F46E5" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="HR Streamline" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -88,6 +95,7 @@ export default function RootLayout({
         <link rel="preload" href="/sound/message.wav" as="audio" type="audio/wav" />
       </head>
       <body className={`font-sans antialiased`}>
+        <PwaRegister />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
