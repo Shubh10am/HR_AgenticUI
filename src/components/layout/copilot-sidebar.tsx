@@ -29,6 +29,8 @@ interface ChatMessage {
   sources?: string[];
 }
 
+const COPILOT_STARTERS = ['What needs my attention today?', 'How much leave do I have left?', 'Which courses are due soon?', 'When is my next 1:1?'];
+
 export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarProps) {
   const [userInput, setUserInput] = useState('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
@@ -55,7 +57,7 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
     }
   }, [chatHistory]);
 
-  const handleSendMessage = async (event?: FormEvent<HTMLFormElement>) => {
+  const handleSendMessage = async (event?: FormEvent<HTMLFormElement>, preset?: string) => {
     if (event) event.preventDefault();
     
     if (isGuest) {
@@ -66,7 +68,7 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
       return;
     }
 
-    const trimmedInput = userInput.trim();
+    const trimmedInput = (preset ?? userInput).trim();
     if (!trimmedInput) return;
 
     const newUserMessage: ChatMessage = {
@@ -162,8 +164,15 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
                 <div className="text-center text-muted-foreground py-10">
                   <MessageSquare className="h-10 w-10 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">
-                    No messages yet. Start a conversation!
+                    Ask about your leave, approvals, 1:1s, courses or company policies.
                   </p>
+                  <div className="mt-4 flex flex-col items-stretch gap-2 px-2">
+                    {COPILOT_STARTERS.map((starter, i) => (
+                      <Button key={starter} id={`copilot-starter-${i}`} variant="outline" size="sm" className="h-auto justify-start whitespace-normal py-2 text-left" onClick={() => void handleSendMessage(undefined, starter)}>
+                        {starter}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
               )}
               {chatHistory.map(message => (

@@ -13,6 +13,7 @@ import { CopilotChatInputSchemaDef as OriginalSchema, CopilotChatOutputSchemaDef
 import { logTokenUsage } from '@/services/usageService';
 import { formatPassagesForPrompt } from '@/services/knowledge/prompt';
 import { resolveAiContext } from '@/ai/runtime';
+import { myHrSnapshot } from '@/services/copilot/context';
 
 const KNOWLEDGE_GUIDANCE = (block: string) => block
   ? `\n\nCompany knowledge (from the organization's own documents). Prefer it over general knowledge, follow it exactly when it applies, and cite it like [1]. Ignore passages that are not relevant:\n${block}\n`
@@ -44,8 +45,14 @@ const copilotChatFlow = ai.defineFlow(
     
     const { runner, model, userId, organizationId } = await resolveAiContext(authToken);
 
+    // The person's own records, read on the server from the verified identity.
+    const snapshot = userId && organizationId ? await myHrSnapshot(userId, organizationId).catch(() => '') : '';
+    const SNAPSHOT_GUIDANCE = snapshot
+      ? `\n\nThe person asking — their own HR records right now (use these for questions about their leave, approvals, 1:1s, courses, points, apps or payslips; quote the numbers exactly, never guess others, and point them to the page shown, e.g. "open Leave (/leave)"). You have no information about other employees; say so if asked:\n${snapshot}\n`
+      : '';
+
     const promptText = `You are a helpful AI assistant called HR Streamline Copilot.
-Respond to the user's message concisely and professionally. If you don't know the answer, say so.${KNOWLEDGE_GUIDANCE(formatPassagesForPrompt(knowledgeContext ?? []))}
+Respond to the user's message concisely and professionally. If you don't know the answer, say so. Don't give legal, tax or medical advice; suggest HR or a qualified adviser instead.${SNAPSHOT_GUIDANCE}${KNOWLEDGE_GUIDANCE(formatPassagesForPrompt(knowledgeContext ?? []))}
 
 User: ${promptData.userInput}
 AI:`;
