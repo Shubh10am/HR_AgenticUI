@@ -10,6 +10,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Analytics } from '@vercel/analytics/react';
 import { usePathname } from 'next/navigation';
 import PwaRegister from '@/components/pwa-register';
+import UiMotion from '@/components/motion/ui-motion';
 
 const siteConfig = {
   name: 'HR Streamline AI',
@@ -96,6 +97,7 @@ export default function RootLayout({
       </head>
       <body className={`font-sans antialiased`}>
         <PwaRegister />
+        <UiMotion />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

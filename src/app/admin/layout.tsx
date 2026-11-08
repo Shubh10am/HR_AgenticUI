@@ -18,6 +18,7 @@ import UserNav from '@/components/layout/user-nav';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isLoading, logout } = useAuth();
   const [isVerifying, setIsVerifying] = useState(true);
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
@@ -76,7 +77,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </div>
           </header>
           <main className="min-w-0 flex-1 p-4 sm:p-6 overflow-x-hidden animated-background-gradient">
-              {children}
+              <div key={pathname} data-ui-motion="page">{children}</div>
           </main>
           <CopilotSidebar isOpen={isCopilotOpen} onOpenChange={setIsCopilotOpen} />
         </SidebarInset>

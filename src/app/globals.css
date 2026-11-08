@@ -786,3 +786,12 @@ html {
   .connector-source-stack .connector-source-dot { display: none; }
   .connector-source-stack strong, .connector-source-stack div div > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
+
+/* Shared UI motion follows the device's accessibility preference, including Radix exits. */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui-motion],
+  [data-ui-press] {
+    animation: none !important;
+    transition: none !important;
+  }
+}

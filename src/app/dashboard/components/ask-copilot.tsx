@@ -23,15 +23,15 @@ export default function AskCopilot() {
   };
 
   return (
-    <section id="dashboard-ask-copilot" aria-labelledby="dashboard-ask-copilot-title" className="flex flex-col items-center px-2 py-4 text-center sm:py-6">
-      <span className="flex h-16 w-16 items-center justify-center rounded-full border bg-background shadow-sm">
-        <CopilotMascot className="h-14 w-11" />
+    <section id="dashboard-ask-copilot" data-ui-motion="heading" aria-labelledby="dashboard-ask-copilot-title" className="flex w-full min-w-0 flex-col items-center py-4 text-center sm:py-6">
+      <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border bg-background shadow-sm">
+        <CopilotMascot className="h-16 w-12" />
       </span>
       <h2 id="dashboard-ask-copilot-title" className="mt-4 font-serif text-3xl font-normal tracking-tight text-foreground sm:text-4xl">
         What do you want <em className="text-primary">to know?</em>
       </h2>
       <form
-        className="mt-6 w-full max-w-2xl rounded-2xl border bg-card text-left shadow-sm transition-shadow focus-within:border-primary/40 focus-within:shadow-lg focus-within:shadow-primary/10"
+        className="mt-6 w-full rounded-2xl border bg-card text-left shadow-sm transition-shadow focus-within:border-primary/40 focus-within:shadow-lg focus-within:shadow-primary/10"
         onSubmit={(event) => {
           event.preventDefault();
           send(question);
@@ -52,6 +52,7 @@ export default function AskCopilot() {
           <p className="text-xs text-muted-foreground">Answers use your own records and company documents</p>
           <button
             id="dashboard-ask-copilot-send"
+            data-ui-press="true"
             type="submit"
             aria-label="Ask Copilot"
             disabled={!question.trim()}
@@ -66,6 +67,7 @@ export default function AskCopilot() {
           <button
             key={starter}
             id={`dashboard-ask-copilot-starter-${index}`}
+            data-ui-press="true"
             type="button"
             onClick={() => send(starter)}
             className="rounded-full border bg-background/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"

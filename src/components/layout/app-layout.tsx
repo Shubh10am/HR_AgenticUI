@@ -129,7 +129,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
         <main className="min-h-0 min-w-0 flex-1 overflow-hidden p-4 pb-24 sm:p-6 sm:pb-24 md:pb-6 lg:p-8 animated-background-gradient">
-          <div className="mx-auto min-h-0 min-w-0 max-w-[1440px] animate-fade-in" key={pathname}>
+          <div className="mx-auto min-h-0 min-w-0 max-w-[1440px]" data-ui-motion="page" key={pathname}>
             <MaintenanceGate>{children}</MaintenanceGate>
           </div>
         </main>

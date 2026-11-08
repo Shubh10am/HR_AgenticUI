@@ -7,6 +7,7 @@ const Card = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
   <div
+    data-ui-motion="card"
     ref={ref}
     className={cn(
       "rounded-xl border border-border/70 bg-card text-card-foreground shadow-[0_1px_2px_rgba(16,24,40,0.04),0_1px_3px_rgba(16,24,40,0.06)]",
