@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import CopilotSidebar from '@/components/chat-widget';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import Logo from '@/components/icons/logo';
+import { useScrollSteps } from '@/hooks/use-scroll-steps';
 import ParticleField, { type ParticleShape } from '@/components/landing/particle-field';
 import { useHeroWorkflowShapes } from '@/components/landing/hero-workflow-shapes';
 import AgentJourney from '@/components/landing/agent-journey';
@@ -82,25 +83,10 @@ function Preview({ active }: { active: PreviewKey }) {
 }
 
 function ProductTour({ active, onChange }: { active: PreviewKey; onChange: (preview: PreviewKey) => void }) {
-  const track = useRef<HTMLElement>(null);
+  const { trackRef: track, active: scrollStep, enabled: scrollDriven, trackStyle, goTo } = useScrollSteps<HTMLElement>(tourSteps.length);
   useEffect(() => {
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      const element = track.current;
-      if (!element) return;
-      const bounds = element.getBoundingClientRect();
-      const distance = element.offsetHeight - window.innerHeight;
-      if (bounds.top > 80 || bounds.bottom < window.innerHeight) return;
-      const progress = Math.max(0, Math.min(0.999, -bounds.top / distance));
-      onChange(tourSteps[Math.min(3, Math.floor(progress * 4))].id);
-    };
-    const scroll = () => { if (!frame) frame = requestAnimationFrame(update); };
-    window.addEventListener('scroll', scroll, { passive: true });
-    window.addEventListener('resize', scroll);
-    update();
-    return () => { window.removeEventListener('scroll', scroll); window.removeEventListener('resize', scroll); cancelAnimationFrame(frame); };
-  }, [onChange]);
+    if (scrollDriven) onChange(tourSteps[scrollStep].id);
+  }, [scrollDriven, scrollStep, onChange]);
   const index = tourSteps.findIndex((step) => step.id === active);
   const step = tourSteps[index];
 
@@ -133,12 +119,13 @@ function ProductTour({ active, onChange }: { active: PreviewKey; onChange: (prev
   }, [index]);
 
   const selectStep = (id: PreviewKey) => {
-    const element = track.current;
-    if (!element) return;
-    const next = tourSteps.findIndex((item) => item.id === id);
-    window.scrollTo({ top: window.scrollY + element.getBoundingClientRect().top + (element.offsetHeight - window.innerHeight) * ((next + 0.1) / 4), behavior: 'smooth' });
+    if (!scrollDriven) {
+      onChange(id);
+      return;
+    }
+    goTo(tourSteps.findIndex((item) => item.id === id));
   };
-  return <section ref={track} id="product-tour" className="product-tour-track dark-dot-surface relative bg-[#090a10] text-white" onPointerMove={trackPointer} onPointerLeave={clearPointer}>
+  return <section ref={track} id="product-tour" style={trackStyle} className={(scrollDriven ? 'product-tour-track' : 'product-tour-static') + ' dark-dot-surface relative bg-[#090a10] text-white'} onPointerMove={trackPointer} onPointerLeave={clearPointer}>
     <div ref={stage} className="product-tour-stage"><ParticleField shape={shape} />
       <div className="relative z-10 mx-auto w-full max-w-[1320px] px-5 sm:px-8">
         <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-4">
@@ -156,8 +143,8 @@ function ProductTour({ active, onChange }: { active: PreviewKey; onChange: (prev
           <div className="min-w-0"><Preview active={active} /></div>
         </div>
         <div className="mt-6 flex items-center justify-between gap-4">
-          <div className="flex flex-wrap gap-2">{tabs.map((tab, i) => <button key={tab.id} onClick={() => selectStep(tab.id)} aria-current={active === tab.id ? 'step' : undefined} aria-label={tab.label} className={'h-1.5 rounded-full transition-all duration-500 ' + (active === tab.id ? 'w-12 bg-white' : 'w-6 bg-white/20 hover:bg-white/50')} />)}</div>
-          <span className="text-[10px] text-slate-500">Scroll to explore ↓</span>
+          <div className="flex flex-wrap gap-2">{tabs.map((tab, i) => <button key={tab.id} onClick={() => selectStep(tab.id)} aria-current={active === tab.id ? 'step' : undefined} aria-label={tab.label} className={'product-tour-step min-h-11 rounded-full px-3 text-xs transition-colors ' + (active === tab.id ? 'bg-white text-slate-950' : 'bg-white/10 text-slate-300 hover:bg-white/20')}>{tab.label}</button>)}</div>
+          <span className="text-[10px] text-slate-500">{scrollDriven ? 'Scroll to explore ↓' : 'Choose a preview above'}</span>
         </div>
       </div>
     </div>
@@ -229,7 +216,7 @@ function HomeContent() {
     let frame = 0;
     const update = () => {
       frame = 0;
-      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce), (max-width: 1023px), (max-height: 699px)').matches;
       const formed = cards.map((card, index) => {
         const bounds = card.getBoundingClientRect();
         // 0 while below the fold, 1 once well in view. Tied to position, so scrolling up reverses it.

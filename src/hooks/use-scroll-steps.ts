@@ -11,8 +11,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * @returns A ref for the tall track, the active step, progress through it (0–1), whether
  *   scrolling drives it, the track's height, and `goTo` for clicks.
  */
-export function useScrollSteps(count: number, stepVh = 55) {
-  const trackRef = useRef<HTMLDivElement>(null);
+export function useScrollSteps<T extends HTMLElement = HTMLDivElement>(count: number, stepVh = 55) {
+  const trackRef = useRef<T>(null);
   const [active, setActive] = useState(0);
   const [progress, setProgress] = useState(0);
   const [enabled, setEnabled] = useState(false);
@@ -20,7 +20,7 @@ export function useScrollSteps(count: number, stepVh = 55) {
   const [pinnedHeight, setPinnedHeight] = useState(0);
 
   useEffect(() => {
-    const query = window.matchMedia('(min-width: 768px) and (prefers-reduced-motion: no-preference)');
+    const query = window.matchMedia('(min-width: 1024px) and (min-height: 700px) and (prefers-reduced-motion: no-preference)');
     const update = () => setEnabled(query.matches);
     update();
     query.addEventListener('change', update);

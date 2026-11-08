@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useScrollSteps } from '@/hooks/use-scroll-steps';
 import Link from 'next/link';
 import { ArrowRight, BookOpenText, BriefcaseBusiness, CalendarDays, Check, Inbox, ShieldCheck, Sparkles, Users, Workflow } from 'lucide-react';
 import ParticleField from './particle-field';
@@ -19,28 +19,10 @@ const modules = [
 ];
 
 export default function AgentJourney({ onStart, loading }: { onStart: () => void; loading: boolean }) {
-  const track = useRef<HTMLElement>(null);
-  const [scene, setScene] = useState(0);
-  useEffect(() => {
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      const element = track.current;
-      if (!element) return;
-      const bounds = element.getBoundingClientRect();
-      const distance = element.offsetHeight - window.innerHeight;
-      const progress = Math.max(0, Math.min(0.999, -bounds.top / Math.max(1, distance)));
-      setScene(Math.min(3, Math.floor(progress * 4)));
-    };
-    const scroll = () => { if (!frame) frame = requestAnimationFrame(update); };
-    window.addEventListener('scroll', scroll, { passive: true });
-    window.addEventListener('resize', scroll);
-    update();
-    return () => { cancelAnimationFrame(frame); window.removeEventListener('scroll', scroll); window.removeEventListener('resize', scroll); };
-  }, []);
+  const { trackRef: track, active: scene, enabled: scrollDriven, trackStyle, goTo } = useScrollSteps<HTMLElement>(scenes.length);
   const current = scenes[scene];
   const Icon = current.icon;
-  return <section ref={track} id="agent-journey" className="agent-journey" aria-label="Illustrative HR agent journey">
+  return <section ref={track} id="agent-journey" style={trackStyle} className={'agent-journey' + (scrollDriven ? '' : ' is-manual')} aria-label="Illustrative HR agent journey">
     <div className={'agent-journey-stage ' + (scene === 3 ? 'is-finale' : '')}>
       <ParticleField />
       <BouncingShapes />
@@ -60,7 +42,7 @@ export default function AgentJourney({ onStart, loading }: { onStart: () => void
         <p className="agent-scene-description">{current.text}</p>
       </div>
       {scene < 3 ? <div key={'message-' + scene} className="agent-message"><span className="agent-message-icon"><Icon size={18} /></span><div><p>{current.message}</p><span><Check size={11} />{current.result}</span></div></div> : <div className="agent-finale-actions"><button onClick={onStart} disabled={loading}>{loading ? 'Opening…' : 'Explore the workspace'}<ArrowRight size={17} /></button><Link href="/book-a-demo">Book a demo ↗</Link></div>}
-      <div className="agent-journey-bottom"><div className="agent-scene-progress">{scenes.map((item, index) => <span key={item.label} className={index <= scene ? 'is-complete' : ''} />)}</div><span>{scene === 3 ? 'Built for the people behind your business.' : 'Keep scrolling to follow the journey ↓'}</span></div>
+      <div className="agent-journey-bottom"><div className="agent-scene-progress">{scenes.map((item, index) => <button key={item.label} type="button" onClick={() => goTo(index)} aria-label={item.label} aria-current={index === scene ? 'step' : undefined} className={index <= scene ? 'is-complete' : ''}><span className="sr-only">{index + 1}</span></button>)}</div><span>{scene === 3 ? 'Built for the people behind your business.' : scrollDriven ? 'Keep scrolling to follow the journey ↓' : 'Choose a step to follow the journey'}</span></div>
     </div>
   </section>;
 }
