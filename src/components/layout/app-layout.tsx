@@ -21,6 +21,7 @@ import Link from 'next/link';
 import { Loader2, MessageSquare, Sparkles } from 'lucide-react';
 import CopilotSidebar from './copilot-sidebar'; // Adjusted path if needed
 import MobileTabBar from './mobile-tab-bar';
+import { COPILOT_ASK_EVENT } from '@/lib/copilot-events';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import AccountStatusOverlay from '@/components/account-status-overlay';
@@ -33,6 +34,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user, isLoading, isAuthenticated } = useAuth();
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
+  const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
+  useEffect(() => {
+    const onAsk = (event: Event) => {
+      setPendingQuestion((event as CustomEvent<string>).detail);
+      setIsCopilotOpen(true);
+    };
+    window.addEventListener(COPILOT_ASK_EVENT, onAsk);
+    return () => window.removeEventListener(COPILOT_ASK_EVENT, onAsk);
+  }, []);
   const router = useRouter();
 
   // This effect handles redirecting unauthenticated users from protected pages.
@@ -123,7 +133,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <MaintenanceGate>{children}</MaintenanceGate>
           </div>
         </main>
-        <CopilotSidebar isOpen={isCopilotOpen} onOpenChange={setIsCopilotOpen} />
+        <CopilotSidebar isOpen={isCopilotOpen} onOpenChange={setIsCopilotOpen} pendingQuestion={pendingQuestion} onPendingHandled={() => setPendingQuestion(null)} />
         <MobileTabBar onCopilot={() => setIsCopilotOpen(true)} />
       </SidebarInset>
       <AppTour />

@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, MessageSquare, Send, User, Bot, Lock, BookOpen } from 'lucide-react';
 import { fetchKnowledgeContext } from '@/lib/knowledge-client';
+import { COPILOT_STARTERS } from '@/lib/copilot-events';
 import { chatWithCopilot, type CopilotChatInput, type CopilotChatOutput } from '@/ai/flows/copilot-chat-flow';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
@@ -16,6 +17,9 @@ import { useAuth } from '@/contexts/auth-context';
 interface CopilotSidebarProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  /** A question asked from elsewhere (e.g. the dashboard); sent once the panel opens. */
+  pendingQuestion?: string | null;
+  onPendingHandled?: () => void;
 }
 
 interface ChatMessage {
@@ -29,9 +33,7 @@ interface ChatMessage {
   sources?: string[];
 }
 
-const COPILOT_STARTERS = ['What needs my attention today?', 'How much leave do I have left?', 'Which courses are due soon?', 'When is my next 1:1?'];
-
-export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarProps) {
+export default function CopilotSidebar({ isOpen, onOpenChange, pendingQuestion, onPendingHandled }: CopilotSidebarProps) {
   const [userInput, setUserInput] = useState('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -127,6 +129,13 @@ export default function CopilotSidebar({ isOpen, onOpenChange }: CopilotSidebarP
       }
     }
   };
+
+  useEffect(() => {
+    if (!isOpen || !pendingQuestion || isLoading) return;
+    onPendingHandled?.();
+    void handleSendMessage(undefined, pendingQuestion);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- send once per question
+  }, [isOpen, pendingQuestion]);
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
